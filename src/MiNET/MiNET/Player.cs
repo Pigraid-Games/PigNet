@@ -115,6 +115,8 @@ namespace MiNET
 		public ResourcePackInfos PlayerPackDataB { get; set; } = new ResourcePackInfos();
 		public Dictionary<string, PlayerPackMapData> PlayerPackMap = new Dictionary<string, PlayerPackMapData>();
 
+		public static Dictionary<string, long> Pings { get; set; } = new();
+
 		public Player(MiNetServer server, IPEndPoint endPoint) : base(EntityType.None, null)
 		{
 			Server = server;

@@ -224,13 +224,10 @@ namespace MiNET
 			Entity.Knockback(velocity);
 		}
 
-		public event EventHandler<HealthEventArgs> PlayerKilled;
-
 		protected virtual void OnPlayerKilled(HealthEventArgs e)
 		{
 			EventHandler<HealthEventArgs> handler = PlayerKilled;
-			if (handler != null)
-				handler(this, e);
+			if (handler != null) handler(this, e);
 		}
 
 		public event EventHandler<HealthEventArgs> PlayerTakeHit;
@@ -261,6 +258,8 @@ namespace MiNET
 			}
 		}
 
+		public event EventHandler<HealthEventArgs> PlayerKilled;
+
 		private object _killSync = new object();
 
 		public virtual void Kill()
@@ -272,12 +271,14 @@ namespace MiNET
 
 				Health = 0;
 			}
+			
 
 			var player = Entity as Player;
 			if (player != null)
 			{
 				player.SendUpdateAttributes();
 			}
+
 
 			Entity.BroadcastEntityEvent();
 

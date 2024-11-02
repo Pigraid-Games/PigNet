@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Threading;
@@ -78,6 +79,8 @@ namespace MiNET.Net.RakNet
 		public DateTime LastUpdatedTime { get; set; }
 		public bool WaitForAck { get; set; }
 		public int ResendCount { get; set; }
+
+		public long Ping { get; set; }
 
 		/// <summary>
 		/// </summary>
@@ -358,7 +361,18 @@ namespace MiNET.Net.RakNet
 		{
 			var packet = ConnectedPong.CreateObject();
 			packet.sendpingtime = message.sendpingtime;
-			packet.sendpongtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			packet.sendpongtime = Stopwatch.GetTimestamp() / (Stopwatch.Frequency / 1000);
+
+			Ping = packet.sendpongtime - packet.sendpingtime;
+
+			if (!string.IsNullOrEmpty(Username))
+			{
+				lock (Player.Pings)
+				{
+					Player.Pings[Username] = Ping;
+				}
+			}
+
 			SendPacket(packet);
 		}
 

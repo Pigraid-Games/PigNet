@@ -98,6 +98,11 @@ namespace MiNET
 			_session.EnableCompression = true;
 		}
 
+		public virtual long GetPing()
+		{
+			return _session.Ping;
+		}
+
 		public virtual void HandleMcpeLogin(McpeLogin message)
 		{
 			// Only one login!
