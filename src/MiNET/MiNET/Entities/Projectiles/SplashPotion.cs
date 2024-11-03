@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
 using System.Numerics;
 using MiNET.Effects;
-using MiNET.Entities.World;
 using MiNET.Particles;
 using MiNET.Worlds;
 
@@ -60,7 +57,6 @@ namespace MiNET.Entities.Projectiles
 		private void ApplyPotionEffect(List<Player> players)
 		{
 			Effect effect = null;
-			Console.WriteLine($@"Metadata {Metadata}");
 			switch (Metadata)
 			{
 				case 5: // Splash Potion of Night Vision (2:15)
