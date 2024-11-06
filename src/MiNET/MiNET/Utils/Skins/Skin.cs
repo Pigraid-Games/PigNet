@@ -97,7 +97,7 @@ namespace MiNET.Utils.Skins
 
 		public List<PersonaPiece> PersonaPieces { get; set; } = new List<PersonaPiece>();
 		public List<SkinPiece> SkinPieces { get; set; } = new List<SkinPiece>();
-		public bool IsVerified { get; set; }
+		public bool IsVerified { get; set; } = true;
 		public bool IsPrimaryUser { get; set; }
 		public bool isOverride { get; set; } = true;
 

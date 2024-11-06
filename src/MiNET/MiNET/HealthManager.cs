@@ -227,7 +227,8 @@ namespace MiNET
 		protected virtual void OnPlayerKilled(HealthEventArgs e)
 		{
 			EventHandler<HealthEventArgs> handler = PlayerKilled;
-			if (handler != null) handler(this, e);
+			if (handler != null)
+				handler(this, e);
 		}
 
 		public event EventHandler<HealthEventArgs> PlayerTakeHit;
@@ -281,7 +282,7 @@ namespace MiNET
 
 
 			Entity.BroadcastEntityEvent();
-
+			Console.WriteLine(@"Triggering OnPlayerKilled");
 			OnPlayerKilled(new HealthEventArgs(this, LastDamageSource, Entity));
 
 			if (player != null)

@@ -546,7 +546,7 @@ namespace MiNET.Net
 			{
 				foreach (var record in records)
 				{
-					Write(record.Skin.IsVerified); // is verified
+					Write(true); // is verified
 				}
 			}
 		}
@@ -610,7 +610,7 @@ namespace MiNET.Net
 					bool isVerified = ReadBool();
 
 					if (player.Skin != null) 
-						player.Skin.IsVerified = isVerified;
+						player.Skin.IsVerified = true;
 				}
 			}
 			//if (!_reader.Eof) ReadBool(); // damn BS
