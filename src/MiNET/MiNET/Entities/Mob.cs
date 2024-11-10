@@ -88,7 +88,8 @@ namespace MiNET.Entities
 
 		public virtual void SetTarget(Entity target)
 		{
-			if (Target == target) return;
+			if (Target == target)
+				return;
 
 			Target = target;
 
@@ -147,7 +148,8 @@ namespace MiNET.Entities
 		{
 			base.OnTick(entities);
 
-			if (HealthManager.IsDead) return;
+			if (HealthManager.IsDead)
+				return;
 
 			//RenderBbox(this);
 
@@ -236,7 +238,8 @@ namespace MiNET.Entities
 			_currentTargetBehavior?.OnTick(entities);
 			_currentBehavior?.OnTick(entities);
 
-			if (IsRidden) return;
+			if (IsRidden)
+				return;
 
 			if (noPlayersWithin32)
 			{
@@ -250,7 +253,8 @@ namespace MiNET.Entities
 			}
 			else if (IsOnGround)
 			{
-				if (Velocity.Y < 0) Velocity *= new Vector3(1, 0, 1);
+				if (Velocity.Y < 0)
+					Velocity *= new Vector3(1, 0, 1);
 			}
 			else
 			{
@@ -317,7 +321,8 @@ namespace MiNET.Entities
 						int face = IntersectSides(block.GetBoundingBox(), ray);
 
 						//Log.Warn($"Hit block {block} at angle of {yaw} on face {face}");
-						if (face == -1) continue;
+						if (face == -1)
+							continue;
 						switch (face)
 						{
 							case 0:
@@ -335,10 +340,10 @@ namespace MiNET.Entities
 							case 4: // Under
 								Velocity *= new Vector3(1, 0, 1);
 								break;
-							//case 5:
-							//	float ff = 0.6f * 0.98f;
-							//	Velocity *= new Vector3(ff, 0.0f, ff);
-							//	break;
+								//case 5:
+								//	float ff = 0.6f * 0.98f;
+								//	Velocity *= new Vector3(ff, 0.0f, ff);
+								//	break;
 						}
 						return;
 					}
@@ -391,8 +396,8 @@ namespace MiNET.Entities
 			return side;
 		}
 
-		private static readonly int[] Layers = {-1, 0, +1};
-		private static readonly int[] Arounds = {0, 1, -1};
+		private static readonly int[] Layers = { -1, 0, +1 };
+		private static readonly int[] Arounds = { 0, 1, -1 };
 
 		protected Block Intersects(Vector3 position)
 		{
@@ -429,7 +434,8 @@ namespace MiNET.Entities
 
 			var block = Level.GetBlock(waterPos);
 
-			if (block == null || (block.Id != 8 && block.Id != 9)) return false;
+			if (block == null || (block.Id != 8 && block.Id != 9))
+				return false;
 
 			return y < Math.Floor(y) + 1 - ((1f / 9f) - 0.1111111);
 		}
@@ -501,115 +507,154 @@ namespace MiNET.Entities
 			GeometryModel model = new GeometryModel()
 			{
 				Geometry = new List<Geometry>()
+	{
+		new Geometry()
+		{
+			Description = new Description() { Identifier = skinGeometryName },
+			Name = skinGeometryName,
+			TextureHeight = 64,
+			TextureWidth = 64,
+			Bones = new List<Bone>()
+			{
+				new Bone()
 				{
-					new Geometry()
+					Name = BoneName.Body.ToString(),
+					Pivot = new float[3],
+					Cubes = new List<Cube>()
 					{
-						Description = new Description() {Identifier = skinGeometryName},
-						Name = skinGeometryName,
-						TextureHeight = 64,
-						TextureWidth = 64,
-						Bones = new List<Bone>()
+                        // Sides
+
+                        new Cube()
 						{
-							new Bone()
+							Origin = new float[] { -(geoW / 2f), 0, -(geoW / 2f) },
+							Size = new float[] { 1, geoH, 1 },
+							Uv = new Dictionary<string, FaceUv>
 							{
-								Name = BoneName.Body.ToString(),
-								Pivot = new float[3],
-								Cubes = new List<Cube>()
-								{
-									//Origin = new float[3],
-									//Size = new float[] {geoW, geoH, geoW},
-
-									// sides
-
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), 0, -(geoW / 2f)},
-										Size = new float[] {1, geoH, 1},
-										Uv = new float[] {64, 0},
-									},
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), 0, +(geoW / 2f)},
-										Size = new float[] {1, geoH, 1},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {+(geoW / 2f), 0, -(geoW / 2f)},
-										//Origin = new float[3],
-										Size = new float[] {1, geoH, 1},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {+(geoW / 2f), 0, +(geoW / 2f)},
-										//Origin = new float[3],
-										Size = new float[] {1, geoH, 1},
-										Uv = new float[] {64, 0}
-									},
-
-									// bottom
-
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), 0, -(geoW / 2f)},
-										Size = new float[] {1, 1, geoW},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), 0, -(geoW / 2f)},
-										//Origin = new float[3],
-										Size = new float[] {geoW, 1, 1},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), 0, +(geoW / 2f)},
-										Size = new float[] {geoW, 1, 1},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {+(geoW / 2f), 0, -(geoW / 2f)},
-										//Origin = new float[3],
-										Size = new float[] {1, 1, geoW},
-										Uv = new float[] {64, 0}
-									},
-
-									// top
-
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), geoH, -(geoW / 2f)},
-										Size = new float[] {1, 1, geoW},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), geoH, -(geoW / 2f)},
-										//Origin = new float[3],
-										Size = new float[] {geoW, 1, 1},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {-(geoW / 2f), geoH, +(geoW / 2f)},
-										Size = new float[] {geoW, 1, 1},
-										Uv = new float[] {64, 0}
-									},
-									new Cube()
-									{
-										Origin = new float[] {+(geoW / 2f), geoH, -(geoW / 2f)},
-										//Origin = new float[3],
-										Size = new float[] {1, 1, geoW},
-										Uv = new float[] {64, 0}
-									},
-								}
+								{ "front", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "back", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "left", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "right", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
 							}
-						}
+						},
+						new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), 0, +(geoW / 2f) },
+							Size = new float[] { 1, geoH, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "front", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "back", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "left", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "right", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { +(geoW / 2f), 0, -(geoW / 2f) },
+							Size = new float[] { 1, geoH, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "front", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "back", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "left", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "right", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { +(geoW / 2f), 0, +(geoW / 2f) },
+							Size = new float[] { 1, geoH, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "front", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "back", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "left", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } },
+								{ "right", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+
+                        // Bottom
+
+                        new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), 0, -(geoW / 2f) },
+							Size = new float[] { 1, 1, geoW },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "bottom", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), 0, -(geoW / 2f) },
+							Size = new float[] { geoW, 1, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "bottom", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), 0, +(geoW / 2f) },
+							Size = new float[] { geoW, 1, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "bottom", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { +(geoW / 2f), 0, -(geoW / 2f) },
+							Size = new float[] { 1, 1, geoW },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "bottom", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+
+                        // Top
+
+                        new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), geoH, -(geoW / 2f) },
+							Size = new float[] { 1, 1, geoW },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "top", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), geoH, -(geoW / 2f) },
+							Size = new float[] { geoW, 1, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "top", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { -(geoW / 2f), geoH, +(geoW / 2f) },
+							Size = new float[] { geoW, 1, 1 },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "top", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
+						new Cube()
+						{
+							Origin = new float[] { +(geoW / 2f), geoH, -(geoW / 2f) },
+							Size = new float[] { 1, 1, geoW },
+							Uv = new Dictionary<string, FaceUv>
+							{
+								{ "top", new FaceUv { Uv = new float[] { 64, 0 }, UvSize = new float[] { 16, 16 } } }
+							}
+						},
 					}
-				},
+				}
+			}
+		}
+	}
 			};
 
 			PlayerMob fake = new PlayerMob(string.Empty, theMob.Level)

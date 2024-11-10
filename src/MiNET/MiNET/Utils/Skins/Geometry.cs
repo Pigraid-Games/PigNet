@@ -136,14 +136,18 @@ namespace MiNET.Utils.Skins
 				var realBoneName = Regex.Replace(bone.Name, "\\d+", ""); //Blockbench ad numbers to bones with same names so lets remove them
 				var cubes = bone.Cubes.ToArray();
 				bone.Cubes.Clear();
+
 				foreach (var cube in cubes)
 				{
 					int width = (int) cube.Size[0];
 					int height = (int) cube.Size[1];
 					int depth = (int) cube.Size[2];
+					
+					float u = cube.Uv["front"].Uv[0];
+					float v = cube.Uv["front"].Uv[1];
+					
+					float[] insideUv = cube.Uv.ContainsKey("inside") ? cube.Uv["inside"].Uv : new float[] { 20, 4 };
 
-					float u = cube.Uv[0];
-					float v = cube.Uv[1];
 
 					//inside
 					if (renderSkeleton)
@@ -158,27 +162,29 @@ namespace MiNET.Utils.Skins
 									{
 										var cubeOrigin = cube.Origin;
 
-										Cube c = new Cube
+										Cube insideCube = new Cube
 										{
 											Face = Face.Inside,
-											Size = new[] {1f, 1f, 1f},
-											Origin = new[] {cubeOrigin[0] + w, cubeOrigin[1] + h, cubeOrigin[2] + d},
-											Uv = new float[] {20, 4},
+											Size = new[] { 1f, 1f, 1f },
+											Origin = new[] { cubeOrigin[0] + w, cubeOrigin[1] + h, cubeOrigin[2] + d },
+											Uv = new Dictionary<string, FaceUv>
+											{
+												{ "inside", new FaceUv { Uv = insideUv, UvSize = new float[] { 1f, 1f } } }
+											},
 											Velocity = Vector3.Zero
 										};
+
+										bool isHead = realBoneName.Equals(BoneName.Head.ToString(), StringComparison.InvariantCultureIgnoreCase);
+										if (packInBody)
 										{
-											bool isHead = realBoneName.Equals(BoneName.Head.ToString(), StringComparison.InvariantCultureIgnoreCase);// == BoneName.Head.ToString();
-											if (packInBody)
-											{
-												if (keepHead && isHead)
-													bone.Cubes.Add(c);
-												else
-													newCubes.Add(c);
-											}
+											if (keepHead && isHead)
+												bone.Cubes.Add(insideCube);
 											else
-											{
-												bone.Cubes.Add(c);
-											}
+												newCubes.Add(insideCube);
+										}
+										else
+										{
+											bone.Cubes.Add(insideCube);
 										}
 									}
 								}
@@ -210,9 +216,12 @@ namespace MiNET.Utils.Skins
 									Cube c = new Cube
 									{
 										Face = Face.Front,
-										Size = new[] {1f, 1f, 1f},
-										Origin = new[] {cubeOrigin[0] + w, cubeOrigin[1] + h, cubeOrigin[2] + d - ZTearFactor},
-										Uv = bone.Mirror ? new[] {uvx - w, uvy--} : new[] {uvx + w, uvy--},
+										Size = new[] { 1f, 1f, 1f },
+										Origin = new[] { cubeOrigin[0] + w, cubeOrigin[1] + h, cubeOrigin[2] + d - ZTearFactor },
+										Uv = new Dictionary<string, FaceUv>
+										{
+											{ "front", new FaceUv { Uv = cube.Uv["front"].Uv, UvSize = cube.Uv["front"].UvSize } }
+										},
 										Velocity = new Vector3(0, (float) (random.NextDouble() * -0.01), 0)
 									};
 									bool isHead = realBoneName == BoneName.Head.ToString();
@@ -256,12 +265,15 @@ namespace MiNET.Utils.Skins
 
 									var cubeOrigin = cube.Origin;
 
-									Cube c = new Cube
+									Cube backCube = new Cube
 									{
 										Face = Face.Back,
-										Size = new[] {1f, 1f, 1f},
-										Origin = new[] {cubeOrigin[0] + w, cubeOrigin[1] + h, cubeOrigin[2] + d + ZTearFactor},
-										Uv = !bone.Mirror ? new[] {uvx - w, uvy--} : new[] {uvx + w, uvy--},
+										Size = new[] { 1f, 1f, 1f },
+										Origin = new[] { cubeOrigin[0] + w, cubeOrigin[1] + h, cubeOrigin[2] + d + ZTearFactor },
+										Uv = new Dictionary<string, FaceUv>
+										{
+											{ "back", new FaceUv { Uv = cube.Uv["back"].Uv, UvSize = cube.Uv["back"].UvSize } }
+										},
 										Velocity = new Vector3(0, (float) (random.NextDouble() * -0.01), 0)
 									};
 									if (random.NextDouble() < CubeFilterFactor)
@@ -270,13 +282,13 @@ namespace MiNET.Utils.Skins
 										if (packInBody)
 										{
 											if (keepHead && isHead)
-												bone.Cubes.Add(c);
+												bone.Cubes.Add(backCube);
 											else
-												newCubes.Add(c);
+												newCubes.Add(backCube);
 										}
 										else
 										{
-											bone.Cubes.Add(c);
+											bone.Cubes.Add(backCube);
 										}
 									}
 								}
@@ -301,12 +313,15 @@ namespace MiNET.Utils.Skins
 
 									var cubeOrigin = cube.Origin;
 
-									Cube c = new Cube
+									Cube topCube = new Cube
 									{
 										Face = Face.Top,
-										Size = new[] {1f, 1f, 1f},
-										Origin = new[] {cubeOrigin[0] + w, cubeOrigin[1] + h + ZTearFactor, cubeOrigin[2] + d},
-										Uv = !bone.Mirror ? new[] {uvx - w, uvy--} : new[] {uvx + w, uvy--},
+										Size = new[] { 1f, 1f, 1f },
+										Origin = new[] { cubeOrigin[0] + w, cubeOrigin[1] + h + ZTearFactor, cubeOrigin[2] + d },
+										Uv = new Dictionary<string, FaceUv>
+										{
+											{ "top", new FaceUv { Uv = cube.Uv["top"].Uv, UvSize = cube.Uv["top"].UvSize } }
+										},
 										Velocity = new Vector3(0, (float) (random.NextDouble() * -0.01), 0)
 									};
 									if (random.NextDouble() < CubeFilterFactor)
@@ -315,13 +330,13 @@ namespace MiNET.Utils.Skins
 										if (packInBody)
 										{
 											if (keepHead && isHead)
-												bone.Cubes.Add(c);
+												bone.Cubes.Add(topCube);
 											else
-												newCubes.Add(c);
+												newCubes.Add(topCube);
 										}
 										else
 										{
-											bone.Cubes.Add(c);
+											bone.Cubes.Add(topCube);
 										}
 									}
 								}
@@ -344,12 +359,15 @@ namespace MiNET.Utils.Skins
 
 									var cubeOrigin = cube.Origin;
 
-									Cube c = new Cube
+									Cube bottomCube = new Cube
 									{
 										Face = Face.Bottom,
-										Size = new[] {1f, 1f, 1f},
-										Origin = new[] {cubeOrigin[0] + w, cubeOrigin[1] + h - ZTearFactor, cubeOrigin[2] + d},
-										Uv = new[] {uvx + w, uvy--},
+										Size = new[] { 1f, 1f, 1f },
+										Origin = new[] { cubeOrigin[0] + w, cubeOrigin[1] + h - ZTearFactor, cubeOrigin[2] + d },
+										Uv = new Dictionary<string, FaceUv>
+										{
+											{ "bottom", new FaceUv { Uv = cube.Uv["bottom"].Uv, UvSize = cube.Uv["bottom"].UvSize } }
+										},
 										Velocity = new Vector3(0, (float) (random.NextDouble() * -0.01), 0)
 									};
 									if (random.NextDouble() < CubeFilterFactor)
@@ -358,13 +376,13 @@ namespace MiNET.Utils.Skins
 										if (packInBody)
 										{
 											if (keepHead && isHead)
-												bone.Cubes.Add(c);
+												bone.Cubes.Add(bottomCube);
 											else
-												newCubes.Add(c);
+												newCubes.Add(bottomCube);
 										}
 										else
 										{
-											bone.Cubes.Add(c);
+											bone.Cubes.Add(bottomCube);
 										}
 									}
 								}
@@ -389,13 +407,15 @@ namespace MiNET.Utils.Skins
 
 									var cubeOrigin = cube.Origin;
 
-									Cube c = new Cube
+									Cube rightCube = new Cube
 									{
 										Face = Face.Right,
-										Mirror = bone.Mirror,
-										Size = new[] {1f, 1f, 1f},
-										Origin = new[] {cubeOrigin[0] + w - ZTearFactor, cubeOrigin[1] + h, cubeOrigin[2] + d},
-										Uv = !bone.Mirror ? new[] {uvx - d, uvy--} : new[] {uvx + d, uvy--},
+										Size = new[] { 1f, 1f, 1f },
+										Origin = new[] { cubeOrigin[0] + w - ZTearFactor, cubeOrigin[1] + h, cubeOrigin[2] + d },
+										Uv = new Dictionary<string, FaceUv>
+										{
+											{ "right", new FaceUv { Uv = cube.Uv["right"].Uv, UvSize = cube.Uv["right"].UvSize } }
+										},
 										Velocity = new Vector3(0, (float) (random.NextDouble() * -0.01), 0)
 									};
 									if (random.NextDouble() < CubeFilterFactor)
@@ -404,13 +424,13 @@ namespace MiNET.Utils.Skins
 										if (packInBody)
 										{
 											if (keepHead && isHead)
-												bone.Cubes.Add(c);
+												bone.Cubes.Add(rightCube);
 											else
-												newCubes.Add(c);
+												newCubes.Add(rightCube);
 										}
 										else
 										{
-											bone.Cubes.Add(c);
+											bone.Cubes.Add(rightCube);
 										}
 									}
 								}
@@ -435,13 +455,15 @@ namespace MiNET.Utils.Skins
 
 									var cubeOrigin = cube.Origin;
 
-									Cube c = new Cube
+									Cube leftCube = new Cube
 									{
 										Face = Face.Left,
-										Mirror = bone.Mirror,
-										Size = new[] {1f, 1f, 1f},
-										Origin = new[] {cubeOrigin[0] + w + ZTearFactor, cubeOrigin[1] + h, cubeOrigin[2] + d},
-										Uv = bone.Mirror ? new[] {uvx - d, uvy--} : new[] {uvx + d, uvy--},
+										Size = new[] { 1f, 1f, 1f },
+										Origin = new[] { cubeOrigin[0] + w + ZTearFactor, cubeOrigin[1] + h, cubeOrigin[2] + d },
+										Uv = new Dictionary<string, FaceUv>
+										{
+											{ "left", new FaceUv { Uv = cube.Uv["left"].Uv, UvSize = cube.Uv["left"].UvSize } }
+										},
 										Velocity = new Vector3(0, (float) (random.NextDouble() * -0.01), 0)
 									};
 									if (random.NextDouble() < CubeFilterFactor)
@@ -450,13 +472,13 @@ namespace MiNET.Utils.Skins
 										if (packInBody)
 										{
 											if (keepHead && isHead)
-												bone.Cubes.Add(c);
+												bone.Cubes.Add(leftCube);
 											else
-												newCubes.Add(c);
+												newCubes.Add(leftCube);
 										}
 										else
 										{
-											bone.Cubes.Add(c);
+											bone.Cubes.Add(leftCube);
 										}
 									}
 								}

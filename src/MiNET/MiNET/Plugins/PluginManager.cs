@@ -1167,7 +1167,6 @@ namespace MiNET.Plugins
 
 				if (rules.Count != 0) target.Rules = rules.ToArray();
 			}
-
 			return target;
 		}
 
