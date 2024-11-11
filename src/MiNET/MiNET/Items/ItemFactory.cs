@@ -543,7 +543,6 @@ namespace MiNET.Items
 	public class ItemNameTag : Item { public ItemNameTag() : base("minecraft:name_tag", 421) {} }
 	public class ItemCake : Item { public ItemCake() : base("minecraft:cake", 354) {} }
 	public class ItemRepeater : Item { public ItemRepeater() : base("minecraft:repeater", 356) {} }
-	public class ItemEnderPearl : Item { public ItemEnderPearl() : base("minecraft:ender_pearl", 368) {} }
 	public class ItemGhastTear : Item { public ItemGhastTear() : base("minecraft:ghast_tear", 370) {} }
 	public class ItemGlassBottle : Item { public ItemGlassBottle() : base("minecraft:glass_bottle", 374) {} }
 	public class ItemFermentedSpiderEye : Item { public ItemFermentedSpiderEye() : base("minecraft:fermented_spider_eye", 376) {} }

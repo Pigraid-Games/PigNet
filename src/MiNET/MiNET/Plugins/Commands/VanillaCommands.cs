@@ -558,22 +558,31 @@ namespace MiNET.Plugins.Commands
 		[Authorize(Permission = 4)]
 		public void Enchant(Player commander, Target target, EnchantmentTypeEnum enchantmentTypeName, int level = 1)
 		{
-			Player targetPlayer = target.Players.First();
-			Item item = targetPlayer.Inventory.GetItemInHand();
-			if (item is ItemAir) return;
-
-			EnchantingType enchanting;
-			if (!Enum.TryParse(enchantmentTypeName.Value.Replace("_", ""), true, out enchanting)) return;
-
-			var enchanings = item.GetEnchantings();
-			enchanings.RemoveAll(ench => ench.Id == enchanting);
-			enchanings.Add(new Enchanting
+			try
 			{
-				Id = enchanting,
-				Level = (short) level
-			});
-			item.SetEnchantings(enchanings);
-			targetPlayer.Inventory.SendSetSlot(targetPlayer.Inventory.InHandSlot);
+				Player targetPlayer = target.Players.First();
+				Item item = targetPlayer.Inventory.GetItemInHand();
+				if (item is ItemAir)
+					return;
+
+				EnchantingType enchanting;
+				if (!Enum.TryParse(enchantmentTypeName.Value.Replace("_", ""), true, out enchanting))
+					return;
+
+				var enchanings = item.GetEnchantings();
+				enchanings.RemoveAll(ench => ench.Id == enchanting);
+				enchanings.Add(new Enchanting
+				{
+					Id = enchanting,
+					Level = (short) level
+				});
+				item.SetEnchantings(enchanings);
+				targetPlayer.Inventory.SendSetSlot(targetPlayer.Inventory.InHandSlot);
+			} catch (Exception e)
+			{
+				commander.SendMessage("Player wasn't found");
+				return;
+			}
 		}
 
 		[Command(Name = "gamemode", Description = "Change worlds GameMode")]
