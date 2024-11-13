@@ -144,6 +144,9 @@ namespace MiNET.Entities
 		Camera = 62,
 		Chalkboard = 78,
 
+		WindCharge = 143,
+		BreezeWindCharge = 141,
+
 		Herobrine = 666
 	}
 
@@ -250,6 +253,8 @@ namespace MiNET.Entities
 			{ EntityType.Phantom, "minecraft:phantom" },
 			{ EntityType.Camera, "minecraft:tripod_camera" },
 			{ EntityType.Pillager, "minecraft:pillager" },
+			{ EntityType.WindCharge, "minecraft:wind_charge_projectile" } ,
+			{ EntityType.BreezeWindCharge, "minecraft:breeze_wind_charge_projectile" }
 		};
 
 		public static TStore Store<TStore>(this Entity entity) where TStore : new()

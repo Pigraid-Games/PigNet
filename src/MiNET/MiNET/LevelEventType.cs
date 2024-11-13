@@ -133,6 +133,8 @@ namespace MiNET
 		StartBlockCracking = 3600,
 		StopBlockCracking = 3601,
 		UpdateBlockCracking = 3602,
+		BreezeWindExplosion = 3610,
+		WindExplosion = 3614,
 		AllPlayersSleeping = 9800,
 		SleepingPlayers = 9801,
 		JumpPrevented = 9810,
@@ -385,6 +387,7 @@ namespace MiNET
 		AmbientTame = 242,
 		Scared = 243,
 		BlockScaffoldingClimb = 244,
+
 		CrossbowLoadingStart = 245,
 		CrossbowLoadingMiddle = 246,
 		CrossbowLoadingEnd = 247,
@@ -392,6 +395,7 @@ namespace MiNET
 		CrossbowQuickChargeStart = 249,
 		CrossbowQuickChargeMiddle = 250,
 		CrossbowQuickChargeEnd = 251,
+
 		AmbientAggressive = 252,
 		AmbientWorried = 253,
 		CantBreed = 254,
@@ -420,5 +424,8 @@ namespace MiNET
 		PressurePlateOn = 449,
 		ButtonOff = 450,
 		ButtonOn = 451,
+
+		BreezeWindChargeBurst = 493,
+		WindChargeBurst = 509,
 	}
 }

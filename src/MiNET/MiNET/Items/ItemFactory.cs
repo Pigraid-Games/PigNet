@@ -450,6 +450,8 @@ namespace MiNET.Items
             else if (id == 623) item = new ItemAmethystShard();
             else if (id == 624) item = new ItemSpyglass();
             else if (id == 630) item = new ItemGlowBerries();
+			else if (id == 1046) item = new ItemWindCharge();
+			else if (id == 1047) item = new ItemMace();
 			
 			else if (id <= 255)
 			{
@@ -582,7 +584,6 @@ namespace MiNET.Items
 	public class ItemShulkerShell : Item { public ItemShulkerShell() : base("minecraft:shulker_shell", 445) {} }
 	public class ItemTotemOfUndying : Item { public ItemTotemOfUndying() : base("minecraft:totem_of_undying", 450) {} }
 	public class ItemTurtleShellPiece : Item { public ItemTurtleShellPiece() : base("minecraft:scute", 468) {} }
-	public class ItemCrossbow : Item { public ItemCrossbow() : base("minecraft:crossbow", 471) {} }
 	public class ItemBalloon : Item { public ItemBalloon() : base("minecraft:balloon", 448) {} }
 	public class ItemBannerPattern : Item { public ItemBannerPattern() : base("minecraft:banner_pattern", 434) {} }
 	public class ItemHoneycomb : Item { public ItemHoneycomb() : base("minecraft:honeycomb", 736) {} }
@@ -598,6 +599,7 @@ namespace MiNET.Items
 	public class ItemNetherSprouts : Item { public ItemNetherSprouts() : base("minecraft:nether_sprouts", 760) {} }
 	public class ItemSoulCampfire : Item { public ItemSoulCampfire() : base("minecraft:soul_campfire", 801) {} }
 	public class ItemEndCrystal : Item { public ItemEndCrystal() : base("minecraft:end_crystal", 426) {} }
+	public class ItemMace : ItemSword { public ItemMace() : base("minecraft:mace", 1047) {} }
 	public class ItemGlowBerries : Item { public ItemGlowBerries() : base(630) {} }
 	public class ItemPandaSpawnEgg : Item { public ItemPandaSpawnEgg() : base(489) {} }
 	public class ItemParrotSpawnEgg : Item { public ItemParrotSpawnEgg() : base(478) {} }

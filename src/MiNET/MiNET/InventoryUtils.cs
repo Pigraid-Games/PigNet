@@ -996,6 +996,8 @@ namespace MiNET
             new Item(339, 0), //paper
             new Item(340, 0), //book
             new Item(386, 0), //book_and_quill
+			new Item(1046, 0), //wind_charge
+			new Item(1047, 0), //mace
 			new Item(403, 0){ ExtraData = new NbtCompound { new NbtList("ench", (NbtTagType)10) { new NbtCompound { new NbtShort("id", 0), new NbtShort("lvl", 1) } } } }, //enchanted_book_protection
             new Item(403, 0){ ExtraData = new NbtCompound { new NbtList("ench", (NbtTagType)10) { new NbtCompound { new NbtShort("id", 0), new NbtShort("lvl", 2) } } } }, //enchanted_book_protection
             new Item(403, 0){ ExtraData = new NbtCompound { new NbtList("ench", (NbtTagType)10) { new NbtCompound { new NbtShort("id", 0), new NbtShort("lvl", 3) } } } }, //enchanted_book_protection
