@@ -94,7 +94,7 @@ namespace MiNET.Entities.Projectiles
 
 		public override void OnTick(Entity[] entities)
 		{
-			//base.OnTick();
+			//base.OnTick(entities);
 
 			if (KnownPosition.Y <= -16
 				|| (Velocity.Length() <= 0 && DespawnOnImpact)
@@ -111,9 +111,15 @@ namespace MiNET.Entities.Projectiles
 
 			Ttl--;
 
-			if (KnownPosition.Y <= 0 || Velocity.Length() <= 0) return;
+			if (KnownPosition.Y <= 0 || Velocity.Length() <= 0)
+				return;
 
 			Entity entityCollided = CheckEntityCollide(KnownPosition, Velocity);
+			if (entityCollided is Player playerCollided)
+			{
+				if (playerCollided == Shooter)
+					return;
+			}
 
 			bool collided = false;
 			Block collidedWithBlock = null;
@@ -147,13 +153,16 @@ namespace MiNET.Entities.Projectiles
 				entityCollided.HealthManager.TakeHit(this, (int) damage, DamageCause.Projectile);
 				entityCollided.HealthManager.LastDamageSource = Shooter;
 				OnHitEntity(entityCollided);
-				if (entityCollided is not ExperienceOrb) { DespawnEntity(); } //todo add collision values
+				if (entityCollided is not ExperienceOrb)
+				{ DespawnEntity(); } //todo add collision values
 				return;
-			}else if (entityCollided != null && Damage == -1)
+			}
+			else if (entityCollided != null && Damage == -1)
 			{
 				entityCollided.HealthManager.LastDamageSource = Shooter;
 				OnHitEntity(entityCollided);
-				if (entityCollided is not ExperienceOrb) { DespawnEntity(); } //todo add collision values
+				if (entityCollided is not ExperienceOrb)
+				{ DespawnEntity(); } //todo add collision values
 			}
 			else
 			{
