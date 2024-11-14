@@ -71,19 +71,19 @@ namespace MiNET
 		public virtual void Move(double distance)
 		{
 			if (distance < 0) throw new Exception("Distance: " + distance);
-			// 0.01 per meter for walking
-			// 0.005 for sneaking
-			// 0.1 for sprinting
+			// 0.01 per meter for walking -> SINCE 11-14-2024: 0.005
+			// 0.005 for sneaking -> SINCE 11-14-2024 0.0
+			// 0.1 for sprinting -> SINCE 11-14-2024: 0.01
 
-			double movementStrainFactor = 0.01; // Default for walking
+			double movementStrainFactor = 0.005; // Default for walking
 
 			if (Player.IsSneaking)
 			{
-				movementStrainFactor = 0.005;
+				movementStrainFactor = 0.0;
 			}
 			else if (Player.IsSprinting)
 			{
-				movementStrainFactor = 0.1;
+				movementStrainFactor = 0.01;
 			}
 
 			Exhaustion += (distance * movementStrainFactor);
