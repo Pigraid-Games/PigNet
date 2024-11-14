@@ -6789,6 +6789,7 @@ namespace MiNET.Net
 
 		public string serverAddress; // = null;
 		public ushort port; // = null;
+		public bool reload; // = null;
 
 		public McpeTransfer()
 		{
@@ -6804,6 +6805,7 @@ namespace MiNET.Net
 
 			Write(serverAddress);
 			Write(port);
+			Write(reload);
 
 			AfterEncode();
 		}
@@ -6819,6 +6821,7 @@ namespace MiNET.Net
 
 			serverAddress = ReadString();
 			port = ReadUshort();
+			reload = ReadBool();
 
 			AfterDecode();
 		}
@@ -6832,6 +6835,7 @@ namespace MiNET.Net
 
 			serverAddress=default(string);
 			port=default(ushort);
+			reload=default(bool);
 		}
 
 	}

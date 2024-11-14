@@ -268,6 +268,7 @@ namespace MiNET.Worlds
 						entity.SpawnToPlayers(new[] {newPlayer});
 					}
 
+					newPlayer.Skin.IsVerified = true;
 					SpawnToAll(newPlayer);
 				}
 
@@ -309,28 +310,21 @@ namespace MiNET.Worlds
 				var spawnedPlayers = players.ToList();
 				spawnedPlayers.Add(newPlayer);
 
-				Player[] sendList = spawnedPlayers.ToArray();
-
-				SendPlayerList();
-
 				newPlayer.SpawnToPlayers(players);
 
 				foreach (Player spawnedPlayer in players)
 				{
 					spawnedPlayer.SpawnToPlayers(new[] {newPlayer});
 				}
-			}
-		}
 
-		public async void SendPlayerList()
-		{
-			await Task.Delay(4000);
-			Player[] players = GetAllPlayers();
-			var spawnedPlayers = players.ToList();
-			McpePlayerList playerListMessage = McpePlayerList.CreateObject();
-			playerListMessage.records = new PlayerAddRecords(spawnedPlayers);
-			RelayBroadcast(CreateMcpeBatch(playerListMessage.Encode()));
-			playerListMessage.PutPool();
+				McpePlayerList playerListMessage = McpePlayerList.CreateObject();
+				playerListMessage.records = new PlayerAddRecords(spawnedPlayers);
+				newPlayer.SendPacket(playerListMessage);
+
+				McpePlayerList playerList = McpePlayerList.CreateObject();
+				playerList.records = new PlayerAddRecords { newPlayer };
+				RelayBroadcast(playerList);
+			}
 		}
 
 		public virtual void RemovePlayer(Player player, bool despawn = true)

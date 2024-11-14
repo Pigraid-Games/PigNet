@@ -207,12 +207,13 @@ namespace MiNET
 		public virtual void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
 			McpePlayerSkin pk = McpePlayerSkin.CreateObject();
-			pk.uuid = this.ClientUuid;
+			pk.uuid = ClientUuid;
 			pk.skin = message.skin;
-			pk.oldSkinName = this.Skin.SkinId;
+			pk.oldSkinName = Skin.SkinId;
 			pk.skinName = message.skinName;
-			this.Skin = message.skin;
-			this.Level.RelayBroadcast(pk);
+			pk.isVerified = true;
+			Skin = message.skin;
+			Level.RelayBroadcast(pk);
 		}
 
 		public virtual void HandleMcpePhotoTransfer(McpePhotoTransfer message)
@@ -1924,7 +1925,7 @@ namespace MiNET
 
 				CleanCache();
 
-				ForcedSendChunk(Level.SpawnPoint);
+				ForcedSendChunk(SpawnPosition);
 
 				MiNetServer.FastThreadPool.QueueUserWorkItem(() =>
 				{
@@ -3245,6 +3246,24 @@ namespace MiNET
 					closePacket.windowId = inventory.WindowsId;
 					closePacket.server = message == null ? true : false;
 					SendPacket(closePacket);
+
+					Block block = Level.GetBlock(inventory.Coordinates);
+					if (block is Chest or TrappedChest)
+					{
+						Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.ChestClosed);
+					}
+					else if (block is EnderChest)
+					{
+						Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.EnderchestClosed);
+					}
+					else if (block is ShulkerBox)
+					{
+						Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.ShulkerboxClosed);
+					}
+					else if (block is Barrel)
+					{
+						Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.BlockBarrelClose);
+					}
 				}
 				else if (_openInventory is HorseInventory horseInventory)
 				{
@@ -3498,7 +3517,7 @@ namespace MiNET
 			levelSettings.bonusChest = false;
 			levelSettings.mapEnabled = false;
 			levelSettings.permissionLevel = (byte) PermissionLevel;
-			levelSettings.gameVersion = "";
+			levelSettings.gameVersion = McpeProtocolInfo.GameVersion;
 			levelSettings.hasEduFeaturesEnabled = true;
 			levelSettings.onlySpawnV1Villagers = false;
 
