@@ -78,7 +78,7 @@ namespace MiNET.Items
 			long timeUsed = world.TickTime - _useTime;
 			if (timeUsed < 6) // questionable, but we go with it for now.
 			{
-				player.SendPlayerInventory(); // Need to reset inventory, because we don't know what the client did here
+				//player.SendPlayerInventory(); // Need to reset inventory, because we don't know what the client did here
 				return;
 			}
 
