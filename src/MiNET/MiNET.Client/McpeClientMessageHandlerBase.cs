@@ -256,6 +256,8 @@ namespace MiNET.Client
 
 		public virtual void HandleMcpeEntityEvent(McpeEntityEvent message)
 		{
+			Log.Warn($"got entity event: {message.runtimeEntityId} / {message.eventId} / {message.data}");
+
 		}
 
 		public virtual void HandleMcpeMobEffect(McpeMobEffect message)
@@ -669,6 +671,7 @@ namespace MiNET.Client
 
 		public virtual void HandleMcpeOnScreenTextureAnimation(McpeOnScreenTextureAnimation message)
 		{
+			Log.Warn($"Got onscreen animation {message.effectId}");
 		}
 
 		public virtual void HandleMcpeMapCreateLockedCopy(McpeMapCreateLockedCopy message)

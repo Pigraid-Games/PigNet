@@ -29,9 +29,11 @@ using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using log4net;
+using MiNET.Effects;
 using MiNET.Entities;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -265,8 +267,42 @@ namespace MiNET
 
 		public virtual void Kill()
 		{
+			var player = Entity as Player;
 			lock (_killSync)
 			{
+				if (player != null)
+				{
+					if (player.Inventory.GetItemInHand() is ItemTotemOfUndying || player.Inventory.OffHand is ItemTotemOfUndying)
+					{
+						IsDead = false;
+						Health = 2;
+
+						player.RemoveAllEffects();
+						player.SetEffect(new Regeneration() { Duration = 900, Level = 1 });
+						player.SetEffect(new FireResistance() { Duration = 800 });
+						player.SetEffect(new Absorption() { Duration = 100, Level = 1 });
+
+						var sound = new Sound((short) LevelEventType.SoundTotemUsed, player.KnownPosition);
+						sound.Spawn(player.Level);
+
+						var entityEvent = McpeEntityEvent.CreateObject();
+						entityEvent.runtimeEntityId = 2;
+						entityEvent.eventId = 65; // 65 - consume totem. todo make entity event enum table
+						player.SendPacket(entityEvent);
+
+						if (player.Inventory.GetItemInHand() is ItemTotemOfUndying)
+						{
+							player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, new ItemAir());
+						}
+						else
+						{
+							player.Inventory.OffHand = new ItemAir();
+							player.SendPlayerInventory();
+						}
+						return;
+					}
+				}
+
 				if (IsDead) return;
 				IsDead = true;
 
@@ -274,7 +310,6 @@ namespace MiNET
 			}
 			
 
-			var player = Entity as Player;
 			if (player != null)
 			{
 				player.SendUpdateAttributes();

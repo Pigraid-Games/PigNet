@@ -9065,7 +9065,7 @@ namespace MiNET.Net
 
 	public partial class McpeOnScreenTextureAnimation : Packet<McpeOnScreenTextureAnimation>
 	{
-
+		public int effectId; // = null;
 
 		public McpeOnScreenTextureAnimation()
 		{
@@ -9079,6 +9079,7 @@ namespace MiNET.Net
 
 			BeforeEncode();
 
+			Write(effectId);
 
 			AfterEncode();
 		}
@@ -9092,6 +9093,7 @@ namespace MiNET.Net
 
 			BeforeDecode();
 
+			effectId = ReadInt();
 
 			AfterDecode();
 		}
@@ -9103,6 +9105,7 @@ namespace MiNET.Net
 		{
 			base.ResetPacket();
 
+			effectId = default(int);
 		}
 
 	}
