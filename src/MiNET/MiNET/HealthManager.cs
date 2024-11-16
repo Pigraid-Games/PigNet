@@ -229,8 +229,7 @@ namespace MiNET
 		protected virtual void OnPlayerKilled(HealthEventArgs e)
 		{
 			EventHandler<HealthEventArgs> handler = PlayerKilled;
-			if (handler != null)
-				handler(this, e);
+			if (handler != null) handler(this, e);
 		}
 
 		public event EventHandler<HealthEventArgs> PlayerTakeHit;

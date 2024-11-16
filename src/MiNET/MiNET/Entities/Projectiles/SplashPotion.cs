@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
 using System.Numerics;
 using MiNET.Effects;
 using MiNET.Particles;
-using MiNET.Utils.Vectors;
+using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 
 namespace MiNET.Entities.Projectiles
@@ -26,13 +26,37 @@ namespace MiNET.Entities.Projectiles
 			BroadcastMovement = true;
 			Metadata = metadata;
 		}
+
+		public override void DespawnEntity()
+		{
+			var effects = Effect.GetEffects(Metadata);
+			var particle = new SplashPotionParticle(Level, KnownPosition, effects.Count == 0 ? Color.FromArgb(0x38, 0x5d, 0xc6) : effects[0].ParticleColor);
+			particle.Spawn();
+			Level.BroadcastSound(KnownPosition, LevelSoundEventType.Glass);
+
+			var playersInArea = new List<Player>();
+
+			foreach (var player in Level.Players.Values)
+			{
+				var box = player.GetBoundingBox() + 4.00f;
+				if (box.Intersects(GetBoundingBox()))
+				{
+					playersInArea.Add(player);
+				}
+			}
+			if (playersInArea.Count <= 0)
+			{
+				base.DespawnEntity();
+				return;
+			}
 			ApplyPotionEffects(playersInArea, effects);
 			base.DespawnEntity();
 		}
 
 		private void ApplyPotionEffects(List<Player> players, List<Effect> effects)
 		{
-			if (effects == null) return;
+			if (effects == null)
+				return;
 			foreach (var player in players)
 			{
 				foreach (var effect in effects)
