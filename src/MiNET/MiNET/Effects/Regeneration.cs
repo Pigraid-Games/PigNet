@@ -40,7 +40,11 @@ namespace MiNET.Effects
 
 		public override void OnTick(Player player)
 		{
-			if (Duration % (Level == 1 ? 25 : 50) == 0)
+			const int baseIntervalTicks = 50;
+			
+			int ticksPerRegen = baseIntervalTicks / Level;
+			
+			if (Duration % ticksPerRegen == 0)
 			{
 				player.HealthManager.Regen(1);
 			}

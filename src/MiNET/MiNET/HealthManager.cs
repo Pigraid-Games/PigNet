@@ -113,6 +113,11 @@ namespace MiNET
 
 		public virtual void Regen(int amount = 1)
 		{
+			if (IsDead)
+			{
+				Kill();
+				return;
+			}
 			Health += amount * 10;
 			if (Health > MaxHealth) Health = MaxHealth;
 
