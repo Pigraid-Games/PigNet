@@ -1019,5 +1019,12 @@ namespace MiNET.Entities
 			SeenEntities.Add(target);
 			return true;
 		}
+
+		public event EventHandler<PlayerDamageToEntityEventArgs> PlayerDamageToEntity;
+		public virtual bool OnPlayerDamageToEntity(PlayerDamageToEntityEventArgs e)
+		{
+			PlayerDamageToEntity?.Invoke(this, e);
+			return !e.Cancel;
+		}
 	}
 }

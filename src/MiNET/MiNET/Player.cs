@@ -4413,17 +4413,9 @@ namespace MiNET
 
 		public event EventHandler<PlayerDamageToPlayerEventArgs> PlayerDamageToPlayer;
 
-		protected virtual bool OnPlayerDamageToPlayer(PlayerDamageToPlayerEventArgs e)
+		public virtual bool OnPlayerDamageToPlayer(PlayerDamageToPlayerEventArgs e)
 		{
 			PlayerDamageToPlayer?.Invoke(this, e);
-			return !e.Cancel;
-		}
-
-		public event EventHandler<PlayerDamageToEntityEventArgs> PlayerDamageToEntity;
-
-		protected virtual bool OnPlayerDamageToEntity(PlayerDamageToEntityEventArgs e)
-		{
-			PlayerDamageToEntity?.Invoke(this, e);
 			return !e.Cancel;
 		}
 

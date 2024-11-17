@@ -136,9 +136,7 @@ namespace MiNET
 		public virtual void TakeHit(Entity source, Item tool, int damage = 1, DamageCause cause = DamageCause.Unknown)
 		{
 			var player = Entity as Player;
-			if (player != null && player.GameMode != GameMode.Survival) return;
-			if (player.IsInvicible)
-				return;
+			if (player != null && player.GameMode != GameMode.Survival || player.IsInvicible) return;
 
 			if (CooldownTick > 0) return;
 
@@ -275,11 +273,11 @@ namespace MiNET
 			var player = Entity as Player;
 			lock (_killSync)
 			{
+				if (IsDead) return;
 				if (player != null)
 				{
 					if (player.Inventory.GetItemInHand() is ItemTotemOfUndying || player.Inventory.OffHand is ItemTotemOfUndying)
 					{
-						IsDead = false;
 						Health = 2;
 
 						player.RemoveAllEffects();
@@ -307,8 +305,6 @@ namespace MiNET
 						return;
 					}
 				}
-
-				if (IsDead) return;
 				IsDead = true;
 
 				Health = 0;

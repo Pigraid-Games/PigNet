@@ -42,6 +42,7 @@ namespace MiNET.Entities.Projectiles
 		private static readonly ILog Log = LogManager.GetLogger(typeof(Projectile));
 
 		public Player Shooter { get; set; }
+		public Entity LastAttackTarget { get; set; }
 		public int Ttl { get; set; } = 0;
 		public bool DespawnOnImpact { get; set; } = true;
 		public int Damage { get; set; }
@@ -64,7 +65,8 @@ namespace MiNET.Entities.Projectiles
 		{
 			lock (_spawnSync)
 			{
-				if (IsSpawned) throw new Exception("Invalid state. Tried to spawn projectile more than one time.");
+				if (IsSpawned)
+					throw new Exception("Invalid state. Tried to spawn projectile more than one time.");
 
 
 				Level.AddEntity(this);
@@ -94,7 +96,7 @@ namespace MiNET.Entities.Projectiles
 
 		public override void OnTick(Entity[] entities)
 		{
-			//base.OnTick(entities);
+			//base.OnTick();
 
 			if (KnownPosition.Y <= -16
 				|| (Velocity.Length() <= 0 && DespawnOnImpact)
@@ -115,16 +117,34 @@ namespace MiNET.Entities.Projectiles
 				return;
 
 			Entity entityCollided = CheckEntityCollide(KnownPosition, Velocity);
-			if (entityCollided is Player playerCollided)
-			{
-				if (playerCollided == Shooter)
-					return;
-			}
 
 			bool collided = false;
+			bool doDamage = true;
 			Block collidedWithBlock = null;
 			if (entityCollided != null && Damage >= 0)
 			{
+				LastAttackTarget = entityCollided;
+
+				Player player = entityCollided as Player;
+				Entity entity = null;
+
+				if (player != null)
+				{
+					if (!player.OnPlayerDamageToPlayer(new PlayerDamageToPlayerEventArgs(player, Shooter)))
+					{
+						doDamage = false;
+					}
+				}
+				else
+				{
+					entity = entityCollided;
+
+					if (!entity.OnPlayerDamageToEntity(new PlayerDamageToEntityEventArgs(entity, Shooter)) && entity != null)
+					{
+						doDamage = false;
+					}
+				}
+
 				double speed = Math.Sqrt(Velocity.X * Velocity.X + Velocity.Y * Velocity.Y + Velocity.Z * Velocity.Z);
 				double damage = Math.Ceiling(speed * Damage);
 				if (IsCritical)
@@ -142,27 +162,25 @@ namespace MiNET.Entities.Projectiles
 					damage = damage + ((PowerLevel + 1) * 0.25);
 				}
 
-				Player player = entityCollided as Player;
-
-				if (player != null)
+				if (player != null && doDamage)
 				{
 					damage = player.DamageCalculator.CalculatePlayerDamage(this, player, null, damage, DamageCause.Projectile);
 					player.LastAttackTarget = entityCollided;
+					entityCollided.HealthManager.TakeHit(this, (int) damage, DamageCause.Projectile);
+					entityCollided.HealthManager.LastDamageSource = Shooter;
+					OnHitEntity(entityCollided);
 				}
 
-				entityCollided.HealthManager.TakeHit(this, (int) damage, DamageCause.Projectile);
-				entityCollided.HealthManager.LastDamageSource = Shooter;
-				OnHitEntity(entityCollided);
+				if (entity != null && doDamage)
+				{
+					entity.HealthManager.TakeHit(this, (int) damage, DamageCause.Projectile);
+					entity.HealthManager.LastDamageSource = Shooter;
+					OnHitEntity(entity);
+				}
+
 				if (entityCollided is not ExperienceOrb)
 				{ DespawnEntity(); } //todo add collision values
 				return;
-			}
-			else if (entityCollided != null && Damage == -1)
-			{
-				entityCollided.HealthManager.LastDamageSource = Shooter;
-				OnHitEntity(entityCollided);
-				if (entityCollided is not ExperienceOrb)
-				{ DespawnEntity(); } //todo add collision values
 			}
 			else
 			{
@@ -243,13 +261,17 @@ namespace MiNET.Entities.Projectiles
 			var entities = Level.Entities.Values.Concat(Level.GetSpawnedPlayers()).OrderBy(entity => Vector3.Distance(position, entity.KnownPosition.ToVector3()));
 			foreach (Entity entity in entities)
 			{
-				if (entity == this) continue;
-				if (entity is Projectile) continue; // This should actually be handled for some projectiles
-				if (entity is Player player && player.GameMode == GameMode.Spectator) continue;
+				if (entity == this)
+					continue;
+				if (entity is Projectile)
+					continue; // This should actually be handled for some projectiles
+				if (entity is Player player && player.GameMode == GameMode.Spectator)
+					continue;
 
 				if (Intersect(entity.GetBoundingBox() + HitBoxPrecision, ray))
 				{
-					if (ray.tNear > direction.Length()) break;
+					if (ray.tNear > direction.Length())
+						break;
 
 					Vector3 p = ray.x + new Vector3((float) ray.tNear) * ray.d;
 					KnownPosition = new PlayerLocation(p.X, p.Y, p.Z);
@@ -309,7 +331,7 @@ namespace MiNET.Entities.Projectiles
 			{
 				var particle = new CriticalParticle(Level);
 				particle.Position = KnownPosition.ToVector3();
-				particle.Spawn(new[] {Shooter});
+				particle.Spawn(new[] { Shooter });
 			}
 		}
 
