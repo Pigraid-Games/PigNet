@@ -116,6 +116,7 @@ namespace MiNET
 		public Dictionary<string, PlayerPackMapData> PlayerPackMap = new Dictionary<string, PlayerPackMapData>();
 
 		public static Dictionary<string, long> Pings { get; set; } = new();
+		public bool IsInvicible { get; set; } = false;
 
 		public Player(MiNetServer server, IPEndPoint endPoint) : base(EntityType.None, null)
 		{

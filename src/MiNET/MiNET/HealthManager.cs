@@ -137,7 +137,8 @@ namespace MiNET
 		{
 			var player = Entity as Player;
 			if (player != null && player.GameMode != GameMode.Survival) return;
-
+			if (player.IsInvicible)
+				return;
 
 			if (CooldownTick > 0) return;
 
