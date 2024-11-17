@@ -25,6 +25,7 @@ namespace MiNET.Entities.Projectiles
 			DespawnOnImpact = true;
 			BroadcastMovement = true;
 			Metadata = metadata;
+			IsDispawningOnShooterImpact = false;
 		}
 
 		public override void DespawnEntity()

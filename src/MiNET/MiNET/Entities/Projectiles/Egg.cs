@@ -43,6 +43,7 @@ namespace MiNET.Entities.Projectiles
 			HealthManager.IsInvulnerable = true;
 			DespawnOnImpact = true;
 			BroadcastMovement = true;
+			IsDispawningOnShooterImpact = false;
 		}
 
 		public override void DespawnEntity()

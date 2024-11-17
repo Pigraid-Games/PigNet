@@ -26,6 +26,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using log4net;
 using MiNET.Blocks;
 using MiNET.Entities.World;
@@ -49,6 +50,7 @@ namespace MiNET.Entities.Projectiles
 		public int PowerLevel { get; set; } = 0;
 		public float HitBoxPrecision { get; set; } = 0.3f;
 		public Vector3 Force { get; set; } = new Vector3();
+		public bool IsDispawningOnShooterImpact { get; set; } = true;
 
 		public bool BroadcastMovement { get; set; } = false;
 
@@ -117,6 +119,12 @@ namespace MiNET.Entities.Projectiles
 				return;
 
 			Entity entityCollided = CheckEntityCollide(KnownPosition, Velocity);
+
+			if (entityCollided is Player playerCollided)
+			{
+				if (playerCollided == Shooter && !IsDispawningOnShooterImpact)
+					return;
+			}
 
 			bool collided = false;
 			bool doDamage = true;

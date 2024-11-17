@@ -53,6 +53,7 @@ namespace MiNET.Entities.Projectiles
 			HealthManager.IsInvulnerable = true;
 			Ttl = 1200;
 			DespawnOnImpact = false;
+			IsDispawningOnShooterImpact = false;
 		}
 
 		protected override void OnHitBlock(Block blockCollided)
