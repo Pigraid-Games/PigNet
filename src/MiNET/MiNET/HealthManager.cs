@@ -321,7 +321,6 @@ namespace MiNET
 
 
 			Entity.BroadcastEntityEvent();
-			Console.WriteLine(@"Triggering OnPlayerKilled");
 			OnPlayerKilled(new HealthEventArgs(this, LastDamageSource, Entity));
 
 			if (player != null)

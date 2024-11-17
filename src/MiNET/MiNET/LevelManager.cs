@@ -112,6 +112,7 @@ namespace MiNET
 					SendCommandfeedback = Config.GetProperty("GameRule.SendCommandfeedback", true),
 					RandomTickSpeed = Config.GetProperty("GameRule.RandomTickSpeed", 3),
 					RedstoneEnabled = Config.GetProperty("RedstoneEnabled", true),
+					DoShowDeathMessage = Config.GetProperty("GameRule.ShowDeathMessages", true),
 				};
 				level.Initialize();
 

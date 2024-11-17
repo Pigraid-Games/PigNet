@@ -4129,7 +4129,7 @@ namespace MiNET
 		{
 			BroadcastEntityEvent(HealthManager.Health <= 0 ? 3 : 2);
 
-			if (HealthManager.IsDead)
+			if (HealthManager.IsDead && Level.DoShowDeathMessage)
 			{
 				Player player = HealthManager.LastDamageSource as Player;
 				BroadcastDeathMessage(player, HealthManager.LastDamageCause);
