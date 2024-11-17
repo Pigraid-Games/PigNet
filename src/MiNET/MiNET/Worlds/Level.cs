@@ -48,6 +48,7 @@ using MiNET.Utils.Diagnostics;
 using MiNET.Utils.IO;
 using MiNET.Utils.Nbt;
 using MiNET.Utils.Vectors;
+using static MiNET.WeatherManager;
 
 namespace MiNET.Worlds
 {
@@ -104,6 +105,7 @@ namespace MiNET.Worlds
 		public EntityManager EntityManager { get; protected set; }
 		public InventoryManager InventoryManager { get; protected set; }
 		public EntitySpawnManager EntitySpawnManager { get; protected set; }
+		public WeatherManager WeatherManager { get; protected set; }
 
 		public int ViewDistance { get; set; }
 
@@ -115,6 +117,8 @@ namespace MiNET.Worlds
 		public int UnloadInterval { get; set; } = -1;
 
 		public string fog { get; set; } = "";
+		public weatherTypes Weather { get; set; } = weatherTypes.clear;
+		public float rainLevel { get; set; }
 
 		public Level(LevelManager levelManager, string levelId, IWorldProvider worldProvider, EntityManager entityManager, GameMode gameMode = GameMode.Survival, Difficulty difficulty = Difficulty.Normal, int viewDistance = 11)
 		{
@@ -124,6 +128,7 @@ namespace MiNET.Worlds
 			EntityManager = entityManager;
 			InventoryManager = new InventoryManager(this);
 			EntitySpawnManager = new EntitySpawnManager(this);
+			WeatherManager = new WeatherManager(this);
 			LevelId = levelId;
 			GameMode = gameMode;
 			Difficulty = difficulty;
@@ -479,6 +484,8 @@ namespace MiNET.Worlds
 			try
 			{
 				TickTime++;
+
+				WeatherManager.tick(TickTime);
 
 				Player[] players = GetSpawnedPlayers();
 

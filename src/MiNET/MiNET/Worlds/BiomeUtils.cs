@@ -958,6 +958,7 @@ namespace MiNET.Worlds
 					{
 						new NbtFloat("downfall", biome.Downfall),
 						new NbtFloat("temperature", biome.Temperature),
+						new NbtByte("rain", 1), //todo regenerate biomes
 					}
 				);
 			}
