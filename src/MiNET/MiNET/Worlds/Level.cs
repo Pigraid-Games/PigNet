@@ -1429,7 +1429,7 @@ namespace MiNET.Worlds
 				BreakBlock(player, block, blockEntity, inHand, face);
 
 				player.Inventory.DamageItemInHand(ItemDamageReason.BlockBreak, null, block);
-				player.HungerManager.IncreaseExhaustion(0.025f);
+				player.HungerManager.IncreaseExhaustion(0.005f);
 				player.ExperienceManager.AddExperience(block.GetExperiencePoints());
 			}
 		}

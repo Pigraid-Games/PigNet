@@ -742,8 +742,8 @@ namespace MiNET
 				//}
 				case PlayerAction.Jump:
 				{
-					HungerManager.IncreaseExhaustion(IsSprinting ? 0.8f : 0.2f);
-					break;
+						HungerManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
+						break;
 				}
 				case PlayerAction.StartSprint:
 				{
@@ -2416,7 +2416,7 @@ namespace MiNET
 
 				if ((message.InputFlags & AuthInputFlags.StartJumping) != 0)
 				{
-					HungerManager.IncreaseExhaustion(IsSprinting ? 0.8f : 0.2f);
+					HungerManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
 				}
 			}
 
@@ -2948,7 +2948,7 @@ namespace MiNET
 			}
 
 			Inventory.DamageItemInHand(ItemDamageReason.EntityAttack, target, null);
-			HungerManager.IncreaseExhaustion(0.3f);
+			HungerManager.IncreaseExhaustion(0.1f);
 		}
 
 		protected virtual void HandleInventoryMismatchTransaction(InventoryMismatchTransaction transaction)
