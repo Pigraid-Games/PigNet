@@ -25,9 +25,9 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using log4net;
 using MiNET.Blocks;
@@ -65,14 +65,15 @@ namespace MiNET.Worlds
 
 		public SubChunk(bool clearBuffers = true)
 		{
-			_runtimeIds = new List<int> {(int) BlockFactory.GetBlockByName("minecraft:air").GetRuntimeId()};
-				
+			_runtimeIds = new List<int> { (int) BlockFactory.GetBlockByName("minecraft:air").GetRuntimeId() };
+
 			_blocks = ArrayPool<short>.Shared.Rent(4096);
 			_loggedBlocks = ArrayPool<byte>.Shared.Rent(4096);
 			_blocklight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));
 			_skylight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));
 
-			if (clearBuffers) ClearBuffers();
+			if (clearBuffers)
+				ClearBuffers();
 		}
 
 		public void ClearBuffers()
@@ -87,7 +88,7 @@ namespace MiNET.Worlds
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsAllAir()
 		{
-			//if (IsDirty)
+			if (IsDirty)
 			{
 				_isAllAir = AllZeroFast(_blocks);
 			}
@@ -95,46 +96,34 @@ namespace MiNET.Worlds
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe bool AllZeroFast<T>(T[] data) where T : unmanaged
+		public static bool AllZeroFast<T>(T[] data) where T : unmanaged
 		{
-			fixed (T* shorts = data)
-			{
-				byte* bytes = (byte*) shorts;
-				int len = data.Length * sizeof(T);
-				int rem = len % (sizeof(long) * 16);
-				long* b = (long*) bytes;
-				long* e = (long*) (shorts + len - rem);
-
-				while (b < e)
-				{
-					if ((*(b)
-						| *(b + 1)
-						| *(b + 2)
-						| *(b + 3)
-						| *(b + 4)
-						| *(b + 5)
-						| *(b + 6)
-						| *(b + 7)
-						| *(b + 8)
-						| *(b + 9)
-						| *(b + 10)
-						| *(b + 11)
-						| *(b + 12)
-						| *(b + 13)
-						| *(b + 14)
-						| *(b + 15)) != 0)
-						return false;
-					b += 16;
-				}
-
-				for (int i = 0; i < rem; i++)
-				{
-					if (data[len - 1 - i].Equals(default(T)))
-						return false;
-				}
-
+			if (data == null || data.Length == 0)
 				return true;
+
+			int vectorSize = Vector<T>.Count;
+			int i = 0;
+			int length = data.Length;
+
+			while (i <= length - vectorSize * 4)
+			{
+				var v1 = new Vector<T>(data, i);
+				var v2 = new Vector<T>(data, i + vectorSize);
+				var v3 = new Vector<T>(data, i + vectorSize * 2);
+				var v4 = new Vector<T>(data, i + vectorSize * 3);
+
+				if (!Vector.EqualsAll(v1, Vector<T>.Zero) ||
+					!Vector.EqualsAll(v2, Vector<T>.Zero) ||
+					!Vector.EqualsAll(v3, Vector<T>.Zero) ||
+					!Vector.EqualsAll(v4, Vector<T>.Zero))
+				{
+					return false;
+				}
+
+				i += vectorSize * 4;
 			}
+
+			return true;
 		}
 
 		private static int GetIndex(int bx, int by, int bz)
@@ -144,11 +133,13 @@ namespace MiNET.Worlds
 
 		public int GetBlockId(int bx, int by, int bz)
 		{
-			if (_runtimeIds.Count == 0) return 0;
+			if (_runtimeIds.Count == 0)
+				return 0;
 
 			int paletteIndex = _blocks[GetIndex(bx, by, bz)];
 			int runtimeId = _runtimeIds[paletteIndex];
-			if (runtimeId == -1) { runtimeId = BlockFactory.GetBlockById(0).GetRuntimeId(); }
+			if (runtimeId == -1)
+			{ runtimeId = BlockFactory.GetBlockById(0).GetRuntimeId(); }
 			BlockFactory.BlockPalette.TryGetValue(runtimeId, out BlockStateContainer blockState);
 			int bid = blockState.Id;
 			return bid == -1 ? 0 : bid;
@@ -156,11 +147,13 @@ namespace MiNET.Worlds
 
 		public Block GetBlockObject(int bx, int @by, int bz)
 		{
-			if (_runtimeIds.Count == 0) return new Air();
+			if (_runtimeIds.Count == 0)
+				return new Air();
 
 			int index = _blocks[GetIndex(bx, by, bz)];
 			int runtimeId = _runtimeIds[index];
-			if (runtimeId == -1) { runtimeId = BlockFactory.GetBlockById(0).GetRuntimeId(); }
+			if (runtimeId == -1)
+			{ runtimeId = BlockFactory.GetBlockById(0).GetRuntimeId(); }
 			BlockFactory.BlockPalette.TryGetValue(runtimeId, out BlockStateContainer blockState);
 			Block block = BlockFactory.GetBlockById(blockState.Id);
 			block.SetState(blockState.States);
@@ -172,7 +165,8 @@ namespace MiNET.Worlds
 		public void SetBlock(int bx, int by, int bz, Block block)
 		{
 			int runtimeId = block.GetRuntimeId();
-			if (runtimeId < 0) return;
+			if (runtimeId < 0)
+				return;
 
 			SetBlockByRuntimeId(bx, by, bz, runtimeId);
 		}
@@ -202,7 +196,8 @@ namespace MiNET.Worlds
 		public void SetLoggedBlock(int bx, int by, int bz, Block block)
 		{
 			int runtimeId = block.GetRuntimeId();
-			if (runtimeId < 0) return;
+			if (runtimeId < 0)
+				return;
 
 			SetLoggedBlockByRuntimeId(bx, by, bz, runtimeId);
 		}
@@ -259,23 +254,23 @@ namespace MiNET.Worlds
 			var startPos = stream.Position;
 
 			stream.WriteByte(8); // version
-			
+
 			int numberOfStores = 0;
 
 			var runtimeIds = _runtimeIds;
 			var blocks = _blocks;
-			
+
 			if (runtimeIds != null && runtimeIds.Count > 0)
 				numberOfStores++;
-			
+
 			var loggedRuntimeIds = _loggedRuntimeIds;
 			var loggedBlocks = _loggedBlocks;
 
 			if (loggedRuntimeIds != null && loggedRuntimeIds.Count > 0)
 				numberOfStores++;
-			
+
 			stream.WriteByte((byte) numberOfStores); // storage size
-			
+
 			if (WriteStore(stream, blocks, null, false, runtimeIds))
 			{
 				//numberOfStores++;
@@ -308,7 +303,8 @@ namespace MiNET.Worlds
 
 		public static bool WriteStore(MemoryStream stream, short[] blocks, byte[] loggedBlocks, bool forceWrite, List<int> palette)
 		{
-			if (palette.Count == 0) return false;
+			if (palette.Count == 0)
+				return false;
 
 			// log2(number of entries) => bits needed to store them
 			int bitsPerBlock = (int) Math.Ceiling(Math.Log(palette.Count, 2));
@@ -316,7 +312,8 @@ namespace MiNET.Worlds
 			switch (bitsPerBlock)
 			{
 				case 0:
-					if (!forceWrite && palette.Contains(0)) return false;
+					if (!forceWrite && palette.Contains(0))
+						return false;
 					bitsPerBlock = 1;
 					break;
 				case 1:
@@ -412,42 +409,78 @@ namespace MiNET.Worlds
 			return cc;
 		}
 
-		private static readonly ChunkPool<SubChunk> Pool = new ChunkPool<SubChunk>(() => new SubChunk());
-
 		public static SubChunk CreateObject()
 		{
 			return new SubChunk();
-			//return Pool.GetObject();
+			//return GetObject(); would be nice to fix
 		}
 
 		public void PutPool()
 		{
 			Dispose();
-			//Reset();
-			//Pool.PutObject(this);
+			//REMOVEReset();
+			//ReturnObject(this);
 		}
 
 		public void REMOVEReset()
 		{
 			_isAllAir = true;
+			IsDirty = false;
+			Hash = 0;
+			DisableCache = true;
+
 			_runtimeIds.Clear();
-			Array.Clear(_blocks, 0, _blocks.Length);
 			_loggedRuntimeIds.Clear();
-			Array.Clear(_loggedBlocks, 0, _blocks.Length);
+
+			_blocks = ArrayPool<short>.Shared.Rent(4096);
+			_loggedBlocks = ArrayPool<byte>.Shared.Rent(4096);
+			_blocklight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));
+			_skylight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));
+
+			Array.Clear(_blocks, 0, _blocks.Length);
+			Array.Clear(_loggedBlocks, 0, _loggedBlocks.Length);
 			Array.Clear(_blocklight.Data, 0, _blocklight.Data.Length);
 			Array.Fill<byte>(_skylight.Data, 0xff);
-			_cache = null;
-			IsDirty = false;
 		}
 
 		private void Dispose(bool disposing)
 		{
 			if (disposing)
 			{
-				if (_blocks != null) ArrayPool<short>.Shared.Return(_blocks);
-				if (_loggedBlocks != null) ArrayPool<byte>.Shared.Return(_loggedBlocks);
-				if (_blocklight != null) ArrayPool<byte>.Shared.Return(_blocklight.Data);
-				if (_skylight != null) ArrayPool<byte>.Shared.Return(_skylight.Data);
+				if (_blocks != null)
+					ArrayPool<short>.Shared.Return(_blocks);
+				if (_loggedBlocks != null)
+					ArrayPool<byte>.Shared.Return(_loggedBlocks);
+				if (_blocklight != null)
+					ArrayPool<byte>.Shared.Return(_blocklight.Data);
+				if (_skylight != null)
+					ArrayPool<byte>.Shared.Return(_skylight.Data);
+			}
+		}
+
+		public static readonly Queue<SubChunk> Pool = new Queue<SubChunk>();
+
+		private static readonly object poolLock = new object();
+
+		public static SubChunk GetObject()
+		{
+			lock (poolLock)
+			{
+				if (Pool.Count > 0)
+				{
+					var subChunk = Pool.Dequeue();
+					return subChunk;
+				}
+
+				return new SubChunk();
+			}
+		}
+
+		public static void ReturnObject(SubChunk subChunk)
+		{
+			lock (poolLock)
+			{
+				Pool.Enqueue(subChunk);
 			}
 		}
 
@@ -460,41 +493,6 @@ namespace MiNET.Worlds
 		~SubChunk()
 		{
 			Dispose(false);
-		}
-	}
-
-	public class ChunkPool<T>
-	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkPool<T>));
-
-		private ConcurrentQueue<T> _objects;
-
-		private Func<T> _objectGenerator;
-
-		public ChunkPool(Func<T> objectGenerator)
-		{
-			if (objectGenerator == null)
-				throw new ArgumentNullException("objectGenerator");
-			_objects = new ConcurrentQueue<T>();
-			_objectGenerator = objectGenerator;
-		}
-
-		public T GetObject()
-		{
-			if (_objects.IsEmpty)
-				return _objectGenerator();
-
-			T item;
-			if (_objects.TryDequeue(out item))
-				return item;
-			return _objectGenerator();
-		}
-
-		const long MaxPoolSize = 10000000;
-
-		public void PutObject(T item)
-		{
-			//_objects.Enqueue(item);
 		}
 	}
 }
