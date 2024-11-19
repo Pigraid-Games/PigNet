@@ -4336,7 +4336,7 @@ namespace MiNET
 			{
 				Level.RelayBroadcast(this, receivers, mcpePlayerArmorEquipment);
 			}
-			Level.BroadcastSound((BlockCoordinates)KnownPosition, LevelSoundEventType.ArmorEquipGeneric);
+			//Level.BroadcastSound((BlockCoordinates)KnownPosition, LevelSoundEventType.ArmorEquipGeneric);
 		}
 
 		public override void DespawnFromPlayers(Player[] players)
