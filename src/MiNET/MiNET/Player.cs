@@ -1330,33 +1330,23 @@ namespace MiNET
 				}
 			}
 
-			/*string BasePath = Config.GetProperty("LevelDBWorldFolder", "World").Trim();
-			if (File.Exists(BasePath + "/PlayerData/" + ClientUuid + ".json"))
+			bool IsWhitelisted = Config.GetProperty("IsWhitelisted", false);
+			if(IsWhitelisted)
 			{
-				string rDataJson = File.ReadAllText(BasePath + "/PlayerData/" + ClientUuid + ".json");
-				var prDataJson = JsonConvert.DeserializeObject<PlayerData>(rDataJson);
-				if (prDataJson.Banned)
+				String whitelistList = Config.GetProperty("WhitelistedPlayers", "");
+				bool IsAllowed = false;
+				foreach(string whitelistP in whitelistList.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
 				{
-					Disconnect($"You have been banned from this server \n {prDataJson.BanReason}");
+					if(Username == whitelistP)
+					{
+						IsAllowed = true;
+					}
+				}
+				if(!IsAllowed)
+				{
+					Disconnect("You are not whitelisted", true);
 				}
 			}
-			else
-			{
-				PlayerData playerData = new PlayerData();
-				List<string> InventoryData = new List<string>();
-				playerData.Name = Username;
-				playerData.UserID = ClientUuid.ToString();
-				playerData.Banned = false;
-				playerData.BanReason = "";
-				for (int i = 0; i < PlayerInventory.InventorySize; i++)
-				{
-					InventoryData.Add(Inventory.Slots[i].Name);
-				}
-				playerData.Inventory = InventoryData;
-				string pDataJson = JsonConvert.SerializeObject(playerData);
-				File.WriteAllText(BasePath + "/PlayerData/" + ClientUuid + ".json", pDataJson.ToString());
-			}*/
-
 		}
 
 		public void SavePlayerInventory()
