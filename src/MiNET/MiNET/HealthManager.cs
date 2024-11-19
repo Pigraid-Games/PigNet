@@ -206,14 +206,11 @@ namespace MiNET
 			double knockbackForce = Math.Sqrt(dx * dx + dz * dz);
 			float knockbackMultiplier = 0.4F;
 
-			//this.motX /= 2.0D;
-			//this.motY /= 2.0D;
-			//this.motZ /= 2.0D;
 			double motX = 0;
 			motX -= dx / knockbackForce * knockbackMultiplier;
-			double motY = knockbackMultiplier;
+			double motY = knockbackMultiplier * 0.89; // reduced by 11% (vertical)
 			double motZ = 0;
-			motZ -= dz / knockbackForce * knockbackMultiplier;
+			motZ -= (dz / knockbackForce * knockbackMultiplier) * 0.95; // reduced by 5% (horizontal)
 			if (motY > 0.4)
 			{
 				motY = 0.4;
