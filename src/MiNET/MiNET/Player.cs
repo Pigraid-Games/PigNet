@@ -3511,6 +3511,7 @@ namespace MiNET
 			levelSettings.gameVersion = McpeProtocolInfo.GameVersion;
 			levelSettings.hasEduFeaturesEnabled = true;
 			levelSettings.onlySpawnV1Villagers = false;
+			levelSettings.emoteChatMuted = true;
 
 			var startGame = McpeStartGame.CreateObject();
 			startGame.levelSettings = levelSettings;
