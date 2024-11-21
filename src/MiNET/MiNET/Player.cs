@@ -3568,24 +3568,19 @@ namespace MiNET
 
 		private void ForcedSendChunk(PlayerLocation position)
 		{
-			lock (_sendChunkSync)
-			{
-				var chunkPosition = new ChunkCoordinates(position);
-				McpeWrapper chunk = null;
+			var chunkPosition = new ChunkCoordinates(position);
+			var cachedChunk = Level.GetChunk(chunkPosition);
 
-				foreach (ChunkColumn cachedChunk in Level.GetLoadedChunks())
+			if (cachedChunk != null)
+			{
+				var chunk = cachedChunk.GetBatch();
+				lock (_sendChunkSync)
 				{
-					if (cachedChunk.X == chunkPosition.X && cachedChunk.Z == chunkPosition.Z)
+					if (!_chunksUsed.ContainsKey(chunkPosition))
 					{
-						chunk = cachedChunk.GetBatch();
+						_chunksUsed.TryAdd(chunkPosition, chunk);
 					}
 				}
-
-				if (!_chunksUsed.ContainsKey(chunkPosition))
-				{
-					_chunksUsed.Add(chunkPosition, chunk);
-				}
-
 				if (chunk != null)
 				{
 					SendPacket(chunk);
