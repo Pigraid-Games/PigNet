@@ -44,8 +44,8 @@ namespace MiNET.Net.RakNet
 		private readonly IPacketSender _packetSender;
 
 		private long _lastOrderingIndex = -1; // That's the first message with wrapper
-		private AutoResetEvent _packetQueuedWaitEvent = new AutoResetEvent(false);
-		private AutoResetEvent _packetHandledWaitEvent = new AutoResetEvent(false);
+		private readonly SemaphoreSlim _packetProcessingSemaphore = new SemaphoreSlim(0, int.MaxValue);
+
 		private object _eventSync = new object();
 
 		private readonly ConcurrentPriorityQueue<int, Packet> _orderingBufferQueue = new ConcurrentPriorityQueue<int, Packet>();
@@ -114,6 +114,17 @@ namespace MiNET.Net.RakNet
 
 		public RakSession(ConnectionInfo connectionInfo, IPacketSender packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
+			_reliabilityHandlers = new Dictionary<Reliability, Action<Packet>>
+			{
+				{ Reliability.ReliableOrdered, AddToOrderedChannel },
+				{ Reliability.ReliableOrderedWithAckReceipt, AddToOrderedChannel },
+				{ Reliability.UnreliableSequenced, AddToSequencedChannel },
+				{ Reliability.ReliableSequenced, AddToSequencedChannel },
+				{ Reliability.Unreliable, HandlePacket },
+				{ Reliability.UnreliableWithAckReceipt, HandlePacket },
+				{ Reliability.Reliable, HandlePacket },
+				{ Reliability.ReliableWithAckReceipt, HandlePacket }
+			};
 			Log.Debug($"Create session for {endPoint}");
 
 			_packetSender = packetSender;
@@ -126,45 +137,22 @@ namespace MiNET.Net.RakNet
 			ResendThreshold = Config.GetProperty("ResendThreshold", 10);
 
 			_cancellationToken = new CancellationTokenSource();
-			//_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
 
-		/// <summary>
-		///     Main receive entry to this layer. Will receive and handle messages
-		///     on RakNet message level. May come from either UDP or TCP, matters not.
-		/// </summary>
-		/// <param name="message"></param>
+		private readonly Dictionary<Reliability, Action<Packet>> _reliabilityHandlers;
+
 		internal void HandleRakMessage(Packet message)
 		{
-			if (message == null) return;
+			if (message == null)
+				return;
 
-			// This is not completely finished. Ordering and sequence streams (32 unique channels/streams each)
-			// needs to work by their channel index. Right now, it's only one channel per reliability type.
-			// According to Dylan order and sequence streams can run on the same channel, but documentation
-			// says it can not. So I'll go with documentation until proven wrong.
-
-			switch (message.ReliabilityHeader.Reliability)
+			if (_reliabilityHandlers.TryGetValue(message.ReliabilityHeader.Reliability, out var handler))
 			{
-				case Reliability.ReliableOrdered:
-				case Reliability.ReliableOrderedWithAckReceipt:
-					AddToOrderedChannel(message);
-					break;
-				case Reliability.UnreliableSequenced:
-				case Reliability.ReliableSequenced:
-					AddToSequencedChannel(message);
-					break;
-				case Reliability.Unreliable:
-				case Reliability.UnreliableWithAckReceipt:
-				case Reliability.Reliable:
-				case Reliability.ReliableWithAckReceipt:
-					HandlePacket(message);
-					break;
-				case Reliability.Undefined:
-					Log.Error($"Receive packet with undefined reliability");
-					break;
-				default:
-					Log.Warn($"Receive packet with unexpected reliability={message.ReliabilityHeader.Reliability}");
-					break;
+				handler(message);
+			}
+			else
+			{
+				Log.Warn($"Unhandled reliability: {message.ReliabilityHeader.Reliability}");
 			}
 		}
 
@@ -177,102 +165,77 @@ namespace MiNET.Net.RakNet
 		{
 			try
 			{
-				if (_cancellationToken.Token.IsCancellationRequested) return;
+				if (_cancellationToken.Token.IsCancellationRequested)
+					return;
 
-				if (message.ReliabilityHeader.OrderingIndex <= _lastOrderingIndex) return;
+				if (message.ReliabilityHeader.OrderingIndex <= _lastOrderingIndex)
+					return;
 
 				lock (_eventSync)
 				{
-					//Log.Debug($"Received packet {message.Id} with ordering index={message.ReliabilityHeader.OrderingIndex}. Current index={_lastOrderingIndex}");
-
-					//if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex == _lastOrderingIndex + 1)
-					//{
-					//	if (_orderedQueueProcessingThread != null)
-					//	{
-					//		// Remove the thread again? But need to deal with cancellation token, so not entirely easy.
-					//		// Needs refactoring of the processing thread first.
-					//	}
-					//	_lastOrderingIndex = message.ReliabilityHeader.OrderingIndex;
-					//	HandlePacket(message);
-					//	return;
-					//}
-
 					if (_orderedQueueProcessingThread == null)
 					{
-						_orderedQueueProcessingThread = new Thread(ProcessOrderedQueue)
+						_orderedQueueProcessingThread = new Thread(async () => await ProcessOrderedQueueAsync())
 						{
 							IsBackground = true,
 							Name = $"Ordering Thread [{EndPoint}]"
 						};
 						_orderedQueueProcessingThread.Start();
-						if (Log.IsDebugEnabled) Log.Warn($"Started processing thread for {Username}");
+						if (Log.IsDebugEnabled)
+							Log.Debug($"Started processing thread for {Username}");
 					}
 
 					_orderingBufferQueue.Enqueue(message.ReliabilityHeader.OrderingIndex, message);
-					if (message.ReliabilityHeader.OrderingIndex == _lastOrderingIndex + 1)
-					{
-						WaitHandle.SignalAndWait(_packetQueuedWaitEvent, _packetHandledWaitEvent);
-					}
+					
+					_packetProcessingSemaphore.Release();
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				Log.Error($"Error in AddToOrderedChannel for packet {message?.Id}", ex);
 			}
 		}
 
-		private void ProcessOrderedQueue()
+
+		private async Task ProcessOrderedQueueAsync()
 		{
 			try
 			{
 				while (!_cancellationToken.IsCancellationRequested && !ConnectionInfo.IsEmulator)
 				{
-					if (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair))
+					await _packetProcessingSemaphore.WaitAsync(_cancellationToken.Token);
+
+					if (_orderingBufferQueue.TryPeek(out var pair))
 					{
 						if (pair.Key == _lastOrderingIndex + 1)
 						{
-							if (_orderingBufferQueue.TryDequeue(out pair))
+							if (_orderingBufferQueue.TryDequeue(out var dequeuedPair))
 							{
-								//Log.Debug($"Handling packet ordering index={pair.Value.ReliabilityHeader.OrderingIndex}. Current index={_lastOrderingIndex}");
-
-								_lastOrderingIndex = pair.Key;
-								HandlePacket(pair.Value);
-
-								if (_orderingBufferQueue.Count == 0)
-								{
-									WaitHandle.SignalAndWait(_packetHandledWaitEvent, _packetQueuedWaitEvent, 500, true);
-								}
+								_lastOrderingIndex = dequeuedPair.Key;
+								HandlePacket(dequeuedPair.Value);
 							}
 						}
 						else if (pair.Key <= _lastOrderingIndex)
 						{
-							if (Log.IsDebugEnabled) Log.Debug($"{Username} - Resent. Expected {_lastOrderingIndex + 1}, but was {pair.Key}.");
-							if (_orderingBufferQueue.TryDequeue(out pair))
+							if (_orderingBufferQueue.TryDequeue(out var outdatedPair))
 							{
-								pair.Value.PutPool();
+								Log.Debug($"{Username} - Skipping outdated packet with index {outdatedPair.Key}");
+								outdatedPair.Value.PutPool();
 							}
 						}
 						else
 						{
-							if (Log.IsDebugEnabled) Log.Debug($"{Username} - Wrong sequence. Expected {_lastOrderingIndex + 1}, but was {pair.Key}.");
-							WaitHandle.SignalAndWait(_packetHandledWaitEvent, _packetQueuedWaitEvent, 500, true);
-						}
-					}
-					else
-					{
-						if (_orderingBufferQueue.Count == 0)
-						{
-							WaitHandle.SignalAndWait(_packetHandledWaitEvent, _packetQueuedWaitEvent, 500, true);
+							Log.Debug($"{Username} - Packet sequence gap. Expected {_lastOrderingIndex + 1}, but got {pair.Key}");
 						}
 					}
 				}
 			}
-			catch (ObjectDisposedException)
+			catch (OperationCanceledException)
 			{
-				// Ignore. Comes from the reset events being waited on while being disposed. Not a problem.
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				Log.Error($"Exit receive handler task for player", e);
+				Log.Error($"Error in ProcessOrderedQueueAsync for {Username}", ex);
 			}
 		}
 
@@ -286,7 +249,6 @@ namespace MiNET.Net.RakNet
 
 				if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
-					// Standard RakNet online message handlers
 					switch (message)
 					{
 						case ConnectedPing connectedPing:
@@ -446,26 +408,26 @@ namespace MiNET.Net.RakNet
 		// MCPE Login handling
 
 
-		private Queue<Packet> _sendQueueNotConcurrent = new Queue<Packet>();
-		private object _queueSync = new object();
+		private ConcurrentQueue<Packet> _sendQueue = new ConcurrentQueue<Packet>();
 
 		public void SendPacket(Packet packet)
 		{
-			if (packet == null) return;
+			if (packet == null)
+				return;
 
 			if (State == ConnectionState.Unconnected)
 			{
-				if (Log.IsDebugEnabled) Log.Debug($"Ignoring send of packet {packet.GetType().Name} because session is not connected");
+				if (Log.IsDebugEnabled)
+				{
+					Log.Debug($"Ignoring send of packet {packet.GetType().Name} because session is not connected");
+				}
 				packet.PutPool();
 				return;
 			}
 
 			RakOfflineHandler.TraceSend(packet);
-
-			lock (_queueSync)
-			{
-				_sendQueueNotConcurrent.Enqueue(packet);
-			}
+			
+			_sendQueue.Enqueue(packet);
 		}
 
 		private int _tickCounter;
@@ -565,28 +527,20 @@ namespace MiNET.Net.RakNet
 		[SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
 		public async Task SendQueueAsync(int millisecondsWait = 0)
 		{
-			if (_sendQueueNotConcurrent.Count == 0) return;
-
-			// Extremely important that this will not allow more than one thread at a time.
-			// This methods handle ordering and potential encryption, hence order matters.
-			if (!(await _syncHack.WaitAsync(millisecondsWait))) return;
+			if (_sendQueue.IsEmpty)
+				return;
+			
+			if (!await _syncHack.WaitAsync(millisecondsWait))
+				return;
 
 			try
 			{
 				var sendList = new List<Packet>();
-				Queue<Packet> queue = _sendQueueNotConcurrent;
-				int length = queue.Count;
-				for (int i = 0; i < length; i++)
+				
+				while (_sendQueue.TryDequeue(out var packet))
 				{
-					Packet packet;
-					lock (_queueSync)
-					{
-						if (queue.Count == 0) break;
-
-						if (!queue.TryDequeue(out packet)) break;
-					}
-
-					if (packet == null) continue;
+					if (packet == null)
+						continue;
 
 					if (State == ConnectionState.Unconnected)
 					{
@@ -597,23 +551,30 @@ namespace MiNET.Net.RakNet
 					sendList.Add(packet);
 				}
 
-				if (sendList.Count == 0) return;
-
-				List<Packet> prepareSend = CustomMessageHandler.PrepareSend(sendList);
+				if (sendList.Count == 0)
+					return;
+				
+				var prepareSend = CustomMessageHandler.PrepareSend(sendList);
 				var preppedSendList = new List<Packet>();
-				foreach (Packet packet in prepareSend)
+
+				foreach (var packet in prepareSend)
 				{
-					Packet message = packet;
+					var message = packet;
 
-					if (CustomMessageHandler != null) message = CustomMessageHandler.HandleOrderedSend(message);
+					if (CustomMessageHandler != null)
+					{
+						message = CustomMessageHandler.HandleOrderedSend(message);
+					}
 
-					Reliability reliability = message.ReliabilityHeader.Reliability;
-					if (reliability == Reliability.Undefined) reliability = Reliability.Reliable; // Questionable practice
+					var reliability = message.ReliabilityHeader.Reliability;
+					if (reliability == Reliability.Undefined)
+					{
+						reliability = Reliability.Reliable;
+					}
 
 					preppedSendList.Add(message);
-					//await _packetSender.SendPacketAsync(this, message);
 				}
-
+				
 				await _packetSender.SendPacketAsync(this, preppedSendList);
 			}
 			catch (Exception e)
@@ -625,6 +586,7 @@ namespace MiNET.Net.RakNet
 				_syncHack.Release();
 			}
 		}
+
 
 		public void SendDirectPacket(Packet packet)
 		{
@@ -673,34 +635,36 @@ namespace MiNET.Net.RakNet
 				return;
 			}
 
-			SendDirectPacket(DisconnectionNotification.CreateObject());
-
-			SendQueueAsync(500).Wait();
-
-			State = ConnectionState.Unconnected;
-			Evicted = true;
-			CustomMessageHandler = null;
-
-			_cancellationToken.Cancel();
-			_packetQueuedWaitEvent.Set();
-			_packetHandledWaitEvent.Set();
-			_orderingBufferQueue.Clear();
-
-			_packetSender.Close(this);
-
 			try
 			{
+				SendDirectPacket(DisconnectionNotification.CreateObject());
+				SendQueueAsync(500).Wait();
+				
+				State = ConnectionState.Unconnected;
+				Evicted = true;
+				CustomMessageHandler = null;
+				
+				_cancellationToken.Cancel();
+				
+				_packetProcessingSemaphore.Release(); 
+				
+				_orderingBufferQueue.Clear();
+				_packetSender.Close(this);
+				_orderedQueueProcessingThread?.Join(100);
 				_orderedQueueProcessingThread = null;
-				_cancellationToken.Dispose();
-				_packetQueuedWaitEvent.Close();
-				_packetHandledWaitEvent.Close();
-			}
-			catch
-			{
-				// ignored
-			}
 
-			if (Log.IsDebugEnabled) Log.Info($"Closed network session for player {Username}");
+				_cancellationToken.Dispose();
+				_packetProcessingSemaphore.Dispose();
+
+				if (Log.IsDebugEnabled)
+				{
+					Log.Info($"Closed network session for player {Username}");
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Warn($"Error during session closure for {Username}", ex);
+			}
 		}
 	}
 }
