@@ -975,61 +975,80 @@ namespace MiNET.Worlds
 
 		public IEnumerable<McpeWrapper> GenerateChunks(ChunkCoordinates chunkPosition, Dictionary<ChunkCoordinates, McpeWrapper> chunksUsed, double radius, Func<Vector3> getCurrentPositionAction = null)
 		{
+			var newOrders = new Dictionary<ChunkCoordinates, double>();
+
+			double radiusSquared = Math.Pow(radius, 2);
+			int centerX = chunkPosition.X;
+			int centerZ = chunkPosition.Z;
+
+			for (double x = -radius; x <= radius; ++x)
+			{
+				for (double z = -radius; z <= radius; ++z)
+				{
+					var distance = (x * x) + (z * z);
+					if (distance > radiusSquared)
+						continue;
+
+					int chunkX = (int) (x + centerX);
+					int chunkZ = (int) (z + centerZ);
+					var index = new ChunkCoordinates(chunkX, chunkZ);
+					newOrders[index] = distance;
+				}
+			}
+
+			var chunksToRemove = new List<ChunkCoordinates>();
 			lock (chunksUsed)
 			{
-				var newOrders = new Dictionary<ChunkCoordinates, double>();
-
-				double radiusSquared = Math.Pow(radius, 2);
-
-				int centerX = chunkPosition.X;
-				int centerZ = chunkPosition.Z;
-
-				for (double x = -radius; x <= radius; ++x)
-				{
-					for (double z = -radius; z <= radius; ++z)
-					{
-						var distance = (x * x) + (z * z);
-						if (distance > radiusSquared)
-						{
-							continue;
-						}
-						int chunkX = (int) (x + centerX);
-						int chunkZ = (int) (z + centerZ);
-						var index = new ChunkCoordinates(chunkX, chunkZ);
-						newOrders[index] = distance;
-					}
-				}
-
-				foreach (var chunkKey in chunksUsed.Keys.ToArray())
+				foreach (var chunkKey in chunksUsed.Keys)
 				{
 					if (!newOrders.ContainsKey(chunkKey))
 					{
-						chunksUsed.Remove(chunkKey);
+						chunksToRemove.Add(chunkKey);
 					}
 				}
 
-				foreach (var pair in newOrders.OrderBy(pair => pair.Value))
+				foreach (var chunkKey in chunksToRemove)
 				{
-					if (chunksUsed.ContainsKey(pair.Key)) continue;
+					chunksUsed.Remove(chunkKey);
+				}
+			}
 
-					if (WorldProvider == null) continue;
+			foreach (var pair in newOrders.OrderBy(pair => pair.Value))
+			{
+				bool chunkExists;
+				lock (chunksUsed)
+				{
+					chunkExists = chunksUsed.ContainsKey(pair.Key);
+				}
 
-					if (getCurrentPositionAction != null)
+				if (chunkExists)
+					continue;
+
+				if (WorldProvider == null)
+					continue;
+
+				if (getCurrentPositionAction != null)
+				{
+					var currentPos = getCurrentPositionAction();
+					var coords = new ChunkCoordinates(currentPos);
+					if (coords.DistanceTo(pair.Key) > radius)
+						continue;
+				}
+
+				ChunkColumn chunkColumn = GetChunk(pair.Key);
+				McpeWrapper chunk = null;
+
+				if (chunkColumn != null)
+				{
+					chunk = chunkColumn.GetBatch();
+
+					lock (chunksUsed)
 					{
-						var currentPos = getCurrentPositionAction();
-						var coords = new ChunkCoordinates(currentPos);
-						if(coords.DistanceTo(pair.Key) > radius) continue;
-					}
-					ChunkColumn chunkColumn = GetChunk(pair.Key);
-					McpeWrapper chunk = null;
-					if (chunkColumn != null)
-					{
-						chunk = chunkColumn.GetBatch();
 						chunksUsed.Add(pair.Key, chunk);
 					}
-
-					yield return chunk;
 				}
+
+				yield return chunk;
 			}
 		}
 
@@ -1749,26 +1768,28 @@ namespace MiNET.Worlds
 
 		public virtual GameRules GetGameRules()
 		{
-			GameRules rules = new GameRules();
-			rules.Add(new GameRule<bool>(GameRulesEnum.DrowningDamage, DrowningDamage));
-			rules.Add(new GameRule<bool>(GameRulesEnum.CommandblockOutput, CommandblockOutput));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoTiledrops, DoTiledrops));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoMobloot, DoMobloot));
-			rules.Add(new GameRule<bool>(GameRulesEnum.KeepInventory, KeepInventory));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoDaylightcycle, DoDaylightcycle));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoMobspawning, DoMobspawning));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoEntitydrops, DoEntitydrops));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoFiretick, DoFiretick));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoWeathercycle, DoWeathercycle));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Pvp, Pvp));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Falldamage, Falldamage));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Firedamage, Firedamage));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Mobgriefing, Mobgriefing));
-			rules.Add(new GameRule<bool>(GameRulesEnum.ShowCoordinates, ShowCoordinates));
-			rules.Add(new GameRule<bool>(GameRulesEnum.NaturalRegeneration, NaturalRegeneration));
-			rules.Add(new GameRule<bool>(GameRulesEnum.TntExplodes, TntExplodes));
-			rules.Add(new GameRule<bool>(GameRulesEnum.SendCommandfeedback, SendCommandfeedback));
-			rules.Add(new GameRule<bool>(GameRulesEnum.ExperimentalGameplay, true));
+			GameRules rules =
+			[
+				new GameRule<bool>(GameRulesEnum.DrowningDamage, DrowningDamage),
+				new GameRule<bool>(GameRulesEnum.CommandblockOutput, CommandblockOutput),
+				new GameRule<bool>(GameRulesEnum.DoTiledrops, DoTiledrops),
+				new GameRule<bool>(GameRulesEnum.DoMobloot, DoMobloot),
+				new GameRule<bool>(GameRulesEnum.KeepInventory, KeepInventory),
+				new GameRule<bool>(GameRulesEnum.DoDaylightcycle, DoDaylightcycle),
+				new GameRule<bool>(GameRulesEnum.DoMobspawning, DoMobspawning),
+				new GameRule<bool>(GameRulesEnum.DoEntitydrops, DoEntitydrops),
+				new GameRule<bool>(GameRulesEnum.DoFiretick, DoFiretick),
+				new GameRule<bool>(GameRulesEnum.DoWeathercycle, DoWeathercycle),
+				new GameRule<bool>(GameRulesEnum.Pvp, Pvp),
+				new GameRule<bool>(GameRulesEnum.Falldamage, Falldamage),
+				new GameRule<bool>(GameRulesEnum.Firedamage, Firedamage),
+				new GameRule<bool>(GameRulesEnum.Mobgriefing, Mobgriefing),
+				new GameRule<bool>(GameRulesEnum.ShowCoordinates, ShowCoordinates),
+				new GameRule<bool>(GameRulesEnum.NaturalRegeneration, NaturalRegeneration),
+				new GameRule<bool>(GameRulesEnum.TntExplodes, TntExplodes),
+				new GameRule<bool>(GameRulesEnum.SendCommandfeedback, SendCommandfeedback),
+				new GameRule<bool>(GameRulesEnum.ExperimentalGameplay, true),
+			];
 			return rules;
 		}
 

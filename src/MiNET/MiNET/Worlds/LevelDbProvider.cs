@@ -34,6 +34,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -159,9 +160,6 @@ namespace MiNET.Worlds
 
 		public ChunkColumn GetChunk(ChunkCoordinates coordinates, IWorldGenerator generator)
 		{
-			var sw = Stopwatch.StartNew();
-			sw.Stop();
-
 			byte[] index = Combine(BitConverter.GetBytes(coordinates.X), BitConverter.GetBytes(coordinates.Z));
 			if (Dimension == Dimension.Nether)
 			{
@@ -169,11 +167,10 @@ namespace MiNET.Worlds
 			}
 
 			byte[] versionKey = Combine(index, 0x76);
-			sw.Start();
 			byte[] version = Db.Get(versionKey);
-			sw.Stop();
 
 			ChunkColumn chunkColumn = null;
+
 			if (version != null && version.First() >= 7)
 			{
 				chunkColumn = new ChunkColumn
@@ -181,14 +178,12 @@ namespace MiNET.Worlds
 					X = coordinates.X,
 					Z = coordinates.Z
 				};
-
-				byte[] chunkDataKey = Combine(index, new byte[] {0x2f, 0});
+				
+				byte[] chunkDataKey = Combine(index, new byte[] { 0x2f, 0 });
 				for (byte y = 0; y < 16; y++)
 				{
 					chunkDataKey[^1] = y;
-					sw.Start();
 					byte[] sectionBytes = Db.Get(chunkDataKey);
-					sw.Stop();
 
 					if (sectionBytes == null)
 					{
@@ -199,93 +194,79 @@ namespace MiNET.Worlds
 
 					ParseSection(chunkColumn[y], sectionBytes);
 				}
-
-				// Biomes
-				sw.Start();
+				
 				byte[] flatDataBytes = Db.Get(Combine(index, 0x2D));
-				sw.Stop();
 				if (flatDataBytes != null)
 				{
-					Buffer.BlockCopy(flatDataBytes.AsSpan().Slice(0, 512).ToArray(), 0, chunkColumn.height, 0, 512);
-					chunkColumn.biomeId = flatDataBytes.AsSpan().Slice(512, 256).ToArray();
+					Buffer.BlockCopy(flatDataBytes, 0, chunkColumn.height, 0, 512);
+					chunkColumn.biomeId = flatDataBytes.AsSpan(512, 256).ToArray();
 				}
-
-				// Block entities
-				sw.Start();
+				
 				byte[] blockEntityBytes = Db.Get(Combine(index, 0x31));
-				sw.Stop();
-
-				//Log.Debug($"Read chunk from LevelDB {coordinates.X}, {coordinates.Z} in {sw.ElapsedMilliseconds} ms.");
-
 				if (blockEntityBytes != null && version.First() >= 10)
 				{
-					Memory<byte> data = blockEntityBytes.AsMemory();
-					var file = new NbtFile
-					{
-						BigEndian = false,
-						UseVarInt = false
-					};
-					int position = 0;
-					do
-					{
-						position += (int) file.LoadFromStream(new MemoryStreamReader(data.Slice(position)), NbtCompression.None);
-
-						NbtTag blockEntityTag = file.RootTag;
-						int x = blockEntityTag["x"].IntValue;
-						int y = blockEntityTag["y"].IntValue;
-						int z = blockEntityTag["z"].IntValue;
-
-						chunkColumn.SetBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) blockEntityTag);
-
-						if (blockEntityTag["id"].StringValue == "Skull" && blockEntityTag["SkullType"].ByteValue > 0)
-						{
-							var blockObject = chunkColumn.GetBlockObject(x & 0x0f, y, z & 0x0f);
-
-							if (blockObject is SkullBase block) {
-								var newBlock = (SkullBase) BlockFactory.GetBlockById(1219 + blockEntityTag["SkullType"].ByteValue);
-								newBlock.FacingDirection = block.FacingDirection;
-								chunkColumn.SetBlock(x & 0x0f, y, z & 0x0f, newBlock);
-							}
-						}
-					} while (position < data.Length);
-				}
-				else
-				{   //todo find out how to get block entities on chunk format 7
-					//Memory<byte> data = blockEntityBytes.AsMemory();
-					//string jsonString = System.Text.Encoding.UTF8.GetString(data.Span);
-					//LegacyBlockEntities info = JsonConvert.DeserializeObject<LegacyBlockEntities>(jsonString);
-					//if (info != null)
-					//{
-					//Log.Warn(info.IsEmpty);
-					//Log.Warn(info.Length);
-					//}
+					ProcessBlockEntities(chunkColumn, blockEntityBytes);
 				}
 			}
 
 			if (chunkColumn == null)
 			{
-				if (version != null) Log.Error($"Expected other version, but got version={version.First()}");
+				if (version != null)
+				{
+					Log.Error($"Expected other version, but got version={version.First()}");
+				}
 
 				chunkColumn = generator?.GenerateChunkColumn(coordinates);
 				chunkColumn?.RecalcHeight();
 			}
+			
+			if (chunkColumn != null && Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
+			{
+				var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
+				new SkyLightCalculations().RecalcSkyLight(chunkColumn, blockAccess);
+			}
 
 			if (chunkColumn != null)
 			{
-				if (Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
-				{
-					var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
-					new SkyLightCalculations().RecalcSkyLight(chunkColumn, blockAccess);
-					//TODO: Block lights.
-				}
-
 				chunkColumn.IsDirty = false;
-				//chunkColumn.NeedSave = isGenerated;
 			}
 
-			//Log.Debug($"Read chunk {coordinates.X}, {coordinates.Z} in {sw.ElapsedMilliseconds} ms. Was generated: {isGenerated}");
-
 			return chunkColumn;
+		}
+
+		private void ProcessBlockEntities(ChunkColumn chunkColumn, byte[] blockEntityBytes)
+		{
+			var data = blockEntityBytes.AsMemory();
+			var file = new NbtFile { BigEndian = false, UseVarInt = false };
+			int position = 0;
+
+			while (position < data.Length)
+			{
+				position += (int) file.LoadFromStream(new MemoryStreamReader(data.Slice(position)), NbtCompression.None);
+
+				NbtTag blockEntityTag = file.RootTag;
+				int x = blockEntityTag["x"].IntValue;
+				int y = blockEntityTag["y"].IntValue;
+				int z = blockEntityTag["z"].IntValue;
+
+				chunkColumn.SetBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) blockEntityTag);
+
+				if (blockEntityTag["id"].StringValue == "Skull" && blockEntityTag["SkullType"].ByteValue > 0)
+				{
+					HandleSkullBlock(chunkColumn, blockEntityTag, x, y, z);
+				}
+			}
+		}
+
+		private void HandleSkullBlock(ChunkColumn chunkColumn, NbtTag blockEntityTag, int x, int y, int z)
+		{
+			var blockObject = chunkColumn.GetBlockObject(x & 0x0F, y, z & 0x0F);
+			if (blockObject is SkullBase block)
+			{
+				var newBlock = (SkullBase) BlockFactory.GetBlockById(1219 + blockEntityTag["SkullType"].ByteValue);
+				newBlock.FacingDirection = block.FacingDirection;
+				chunkColumn.SetBlock(x & 0x0F, y, z & 0x0F, newBlock);
+			}
 		}
 
 		public class LegacyBlockEntities
@@ -297,89 +278,109 @@ namespace MiNET.Worlds
 		internal void ParseSection(SubChunk section, ReadOnlyMemory<byte> data)
 		{
 			var reader = new MemoryStreamReader(data);
-
+			
 			int version = reader.ReadByte();
-			if (version != 8) throw new Exception("Wrong chunk version");
-
+			if (version != 8)
+				throw new Exception("Wrong chunk version");
+			
 			int storageSize = reader.ReadByte();
 			for (int storage = 0; storage < storageSize; storage++)
 			{
 				bool isNotLoggedStorage = storage == 0;
-
+				
 				byte paletteAndFlag = (byte) reader.ReadByte();
 				bool isRuntime = (paletteAndFlag & 1) != 0;
-				if (isRuntime) throw new Exception("Can't use runtime for persistent storage.");
+				if (isRuntime)
+					throw new Exception("Can't use runtime for persistent storage.");
 				int bitsPerBlock = paletteAndFlag >> 1;
-				int blocksPerWord = (int) Math.Floor(32d / bitsPerBlock);
+				int blocksPerWord = 32 / bitsPerBlock;
 				int wordCount = (int) Math.Ceiling(4096d / blocksPerWord);
-
+				
 				long blockIndex = reader.Position;
 				reader.Position += wordCount * 4;
-
+				
 				int paletteSize = reader.ReadInt32();
 				List<int> palette = isNotLoggedStorage ? section.RuntimeIds : section.LoggedRuntimeIds;
 				palette.Clear();
+
+				var nbtFile = new NbtFile { BigEndian = false, UseVarInt = false };
 				for (int j = 0; j < paletteSize; j++)
 				{
-					var file = new NbtFile
-					{
-						BigEndian = false,
-						UseVarInt = false
-					};
-					file.LoadFromStream(reader, NbtCompression.None);
-					var tag = (NbtCompound) file.RootTag;
-					var blockName = tag["name"].StringValue;
+					nbtFile.LoadFromStream(reader, NbtCompression.None);
+					var tag = (NbtCompound) nbtFile.RootTag;
 
-					if (blockName.Contains("head") || blockName.Contains("skull"))
-					{
-						blockName = "minecraft:skull";
-					}
+					string blockName = tag["name"].StringValue;
+					blockName = NormalizeBlockName(blockName);
 
-					Block block = BlockFactory.GetBlockByName(blockName);
-					if (block != null && block.GetType() != typeof(Block) && !(block is Air))
+					Block block = BlockFactory.GetBlockByName(blockName) ?? new Air();
+					if (block.GetType() != typeof(Block) && !(block is Air))
 					{
-						List<IBlockState> blockState = ReadBlockState(tag);
-						block.SetState(blockState);
-					}
-					else
-					{
-						block = new Air();
+						block.SetState(ReadBlockState(tag));
 					}
 					palette.Add(block.GetRuntimeId());
-					//Log.Error($"dbread raw: {tag["name"].StringValue} / runtime: {block.GetRuntimeId()}");
 				}
-
+				
 				long nextStore = reader.Position;
 				reader.Position = blockIndex;
 
-				int position = 0;
-				for (int wordIdx = 0; wordIdx < wordCount; wordIdx++)
-				{
-					uint word = reader.ReadUInt32();
-					for (int block = 0; block < blocksPerWord; block++)
-					{
-						if (position >= 4096) continue; // padding bytes
-
-						int state = (int) ((word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1));
-						int x = (position >> 8) & 0xF;
-						int y = position & 0xF;
-						int z = (position >> 4) & 0xF;
-						if (state > palette.Count) Log.Error($"Got wrong state={state} from word. bitsPerBlock={bitsPerBlock}, blocksPerWord={blocksPerWord}, Word={word}");
-
-						if (isNotLoggedStorage)
-						{
-							section.SetBlockIndex(x, y, z, (short) state);
-						}
-						else
-						{
-							section.SetLoggedBlockIndex(x, y, z, (byte) state);
-						}
-						position++;
-					}
-				}
+				ProcessBlockData(reader, section, wordCount, blocksPerWord, bitsPerBlock, palette, isNotLoggedStorage);
+				
 				reader.Position = nextStore;
 			}
 		}
+
+		private static string NormalizeBlockName(string blockName)
+		{
+			if (blockName.Contains("head") || blockName.Contains("skull"))
+			{
+				return "minecraft:skull";
+			}
+			return blockName;
+		}
+
+		private static void ProcessBlockData(
+			MemoryStreamReader reader,
+			SubChunk section,
+			int wordCount,
+			int blocksPerWord,
+			int bitsPerBlock,
+			List<int> palette,
+			bool isNotLoggedStorage)
+		{
+			int position = 0;
+			for (int wordIdx = 0; wordIdx < wordCount; wordIdx++)
+			{
+				uint word = reader.ReadUInt32();
+				for (int block = 0; block < blocksPerWord; block++)
+				{
+					if (position >= 4096)
+						break;
+
+					int state = (int) ((word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1));
+					if (state >= palette.Count)
+					{
+						Log.Error($"Invalid state={state}, bitsPerBlock={bitsPerBlock}, blocksPerWord={blocksPerWord}");
+						continue;
+					}
+					
+					int x = (position >> 8) & 0xF;
+					int y = position & 0xF;
+					int z = (position >> 4) & 0xF;
+
+					if (isNotLoggedStorage)
+					{
+						section.SetBlockIndex(x, y, z, (short) state);
+					}
+					else
+					{
+						section.SetLoggedBlockIndex(x, y, z, (byte) state);
+					}
+
+					position++;
+				}
+			}
+		}
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static byte[] Combine(byte[] first, byte[] second)
@@ -558,94 +559,59 @@ namespace MiNET.Worlds
 
 		internal bool WriteStore(MemoryStream stream, short[] blocks, byte[] loggedBlocks, bool forceWrite, List<int> palette)
 		{
-			if (palette.Count == 0) return false;
-
-			// log2(number of entries) => bits needed to store them
-			int bitsPerBlock = (int) Math.Ceiling(Math.Log(palette.Count, 2));
-
-			switch (bitsPerBlock)
+			if (palette.Count == 0)
+				return false;
+			
+			int bitsPerBlock = (int) Math.Ceiling(Math.Log2(palette.Count));
+			if (bitsPerBlock == 0)
 			{
-				case 0:
-					if (!forceWrite && palette.Contains(0)) return false;
-					bitsPerBlock = 1;
-					break;
-				case 1:
-				case 2:
-				case 3:
-				case 4:
-				case 5:
-				case 6:
-					//Paletted1 = 1,   // 32 blocks per word
-					//Paletted2 = 2,   // 16 blocks per word
-					//Paletted3 = 3,   // 10 blocks and 2 bits of padding per word
-					//Paletted4 = 4,   // 8 blocks per word
-					//Paletted5 = 5,   // 6 blocks and 2 bits of padding per word
-					//Paletted6 = 6,   // 5 blocks and 2 bits of padding per word
-					break;
-				case 7:
-				case 8:
-					//Paletted8 = 8,  // 4 blocks per word
-					bitsPerBlock = 8;
-					break;
-				case int i when i > 8:
-					//Paletted16 = 16, // 2 blocks per word
-					bitsPerBlock = 16;
-					break;
-				default:
-					break;
+				if (!forceWrite && palette.Contains(0))
+					return false;
+				bitsPerBlock = 1;
 			}
-
+			else if (bitsPerBlock > 8)
+			{
+				bitsPerBlock = 16;
+			}
+			
 			stream.WriteByte((byte) ((bitsPerBlock << 1) | 0));
 
-			int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock); // Floor to remove padding bits
-			int wordsPerChunk = (int) Math.Ceiling(4096f / blocksPerWord);
-
-			uint[] indexes = new uint[wordsPerChunk];
-
+			int blocksPerWord = 32 / bitsPerBlock;
+			int wordsPerChunk = (4096 + blocksPerWord - 1) / blocksPerWord;
+			
+			Span<uint> indexes = stackalloc uint[wordsPerChunk];
 			int position = 0;
+
 			for (int w = 0; w < wordsPerChunk; w++)
 			{
 				uint word = 0;
 				for (int block = 0; block < blocksPerWord; block++)
 				{
-					if (position >= 4096) continue;
+					if (position >= 4096)
+						break;
 
-					uint state;
-					if (blocks != null)
-					{
-						state = (uint) blocks[position];
-					}
-					else
-					{
-						state = (uint) loggedBlocks[position];
-					}
+					uint state = blocks != null ? (uint) blocks[position] : loggedBlocks[position];
 					word |= state << (bitsPerBlock * block);
-
 					position++;
 				}
 				indexes[w] = word;
 			}
-
-			byte[] ba = new byte[indexes.Length * 4];
-			Buffer.BlockCopy(indexes, 0, ba, 0, indexes.Length * 4);
-
-			stream.Write(ba, 0, ba.Length);
-
-			var count = new byte[4];
-			BinaryPrimitives.WriteInt32LittleEndian(count, palette.Count);
-
-			stream.Write(count);
+			
+			var blockDataBytes = MemoryMarshal.AsBytes(indexes);
+			stream.Write(blockDataBytes);
+			
+			Span<byte> paletteSizeBytes = stackalloc byte[4];
+			BinaryPrimitives.WriteInt32LittleEndian(paletteSizeBytes, palette.Count);
+			stream.Write(paletteSizeBytes);
+			
+			var file = new NbtFile { BigEndian = false, UseVarInt = false };
 			foreach (int runtimeId in palette)
 			{
 				BlockStateContainer blockState = BlockFactory.BlockPalette[runtimeId == -1 ? 0 : runtimeId];
-				var file = new NbtFile
-				{
-					BigEndian = false,
-					UseVarInt = false
-				};
 				file.RootTag = WriteBlockState(blockState);
-				byte[] bytes = file.SaveToBuffer(NbtCompression.None);
-				stream.Write(bytes);
+				
+				byte[] blockStateBytes = file.SaveToBuffer(NbtCompression.None);
+				stream.Write(blockStateBytes);
 			}
 
 			return true;
