@@ -136,7 +136,8 @@ namespace MiNET
 		public virtual void TakeHit(Entity source, Item tool, int damage = 1, DamageCause cause = DamageCause.Unknown)
 		{
 			var player = Entity as Player;
-			if (player != null && player.GameMode != GameMode.Survival || player.IsInvicible) return;
+			if (player != null && player.GameMode != GameMode.Survival) return;
+			if (player != null && player.IsInvicible) return;
 
 			if (CooldownTick > 0) return;
 
