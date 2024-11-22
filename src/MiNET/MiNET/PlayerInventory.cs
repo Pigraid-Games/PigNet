@@ -155,7 +155,11 @@ namespace MiNET
 
 			if (item.ExtraData != null)
 			{
-				item.ExtraData.Get<NbtInt>("Damage").Value = item.Damage;
+				var damageNbt = item.ExtraData.Get<NbtInt>("Damage");
+				if (damageNbt != null)
+				{
+					damageNbt.Value = item.Damage;
+				}
 			}
 
 			return item;
