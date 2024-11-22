@@ -54,7 +54,7 @@ namespace MiNET.Entities.World
 			Gravity = 0.04;
 			Drag = 0.02;
 
-			PickupDelay = 10;
+			PickupDelay = 20;
 			TimeToLive = 6000;
 
 			HealthManager.IsInvulnerable = true;
