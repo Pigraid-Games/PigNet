@@ -55,7 +55,6 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using System.IO.Compression;
-using System.Threading.Tasks;
 
 namespace MiNET
 {
@@ -612,7 +611,11 @@ namespace MiNET
 
 			SetChunkRadius(message.chunkRadius);
 			SendChunkRadiusUpdate();
-			Task.Run(SendChunksForKnownPosition);
+
+			//if (_completedStartSequence)
+			{
+				MiNetServer.FastThreadPool.QueueUserWorkItem(SendChunksForKnownPosition);
+			}
 		}
 
 		public virtual void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
@@ -2200,7 +2203,7 @@ namespace MiNET
 			var chunkPosition = new ChunkCoordinates(KnownPosition);
 			if (_currentChunkPosition != chunkPosition && _currentChunkPosition.DistanceTo(chunkPosition) >= MoveRenderDistance)
 			{
-				Task.Run(SendChunksForKnownPosition);
+				MiNetServer.FastThreadPool.QueueUserWorkItem(SendChunksForKnownPosition);
 			}
 		}
 
@@ -2344,7 +2347,7 @@ namespace MiNET
 				var chunkPosition = new ChunkCoordinates(KnownPosition);
 				if (_currentChunkPosition != chunkPosition && _currentChunkPosition.DistanceTo(chunkPosition) >= MoveRenderDistance)
 				{
-					Task.Run(SendChunksForKnownPosition);
+					MiNetServer.FastThreadPool.QueueUserWorkItem(SendChunksForKnownPosition);
 				}
 			}
 
@@ -3622,85 +3625,67 @@ namespace MiNET
 			SendPacket(pk);
 		}
 
-		private readonly SemaphoreSlim _chunkSyncSemaphore = new(1, 1);
-
-		public async Task ForcedSendChunks(Action postAction = null)
+		public void ForcedSendChunks(Action postAction = null)
 		{
-			await _chunkSyncSemaphore.WaitAsync();
+			Monitor.Enter(_sendChunkSync);
 			try
 			{
-				if (Level == null)
-					return;
-
 				var chunkPosition = new ChunkCoordinates(KnownPosition);
+
 				_currentChunkPosition = chunkPosition;
 
-				// Update chunk publisher
+				if (Level == null) return;
+
 				SendNetworkChunkPublisherUpdate();
-
-				// Generate and send chunks
 				int packetCount = 0;
-				var chunks = Level.GenerateChunks(_currentChunkPosition, _chunksUsed, ChunkRadius);
-				foreach (var chunk in chunks)
+				foreach (McpeWrapper chunk in Level.GenerateChunks(_currentChunkPosition, _chunksUsed, ChunkRadius))
 				{
-					if (chunk != null)
-					{
-						SendPacket(chunk);
-						packetCount++;
-					}
+					if (chunk != null) SendPacket(chunk);
 
-					// Async-friendly delay
-					if (packetCount % 16 == 0)
-					{
-						await Task.Delay(12);
-					}
+					if (++packetCount % 16 == 0) Thread.Sleep(12);
 				}
 			}
 			finally
 			{
-				_chunkSyncSemaphore.Release();
+				Monitor.Exit(_sendChunkSync);
 			}
 
-			// Post-action if provided
-			postAction?.Invoke();
+			if (postAction != null)
+			{
+				postAction();
+			}
 		}
 
-		private async Task SendChunksForKnownPosition()
+		private void SendChunksForKnownPosition()
 		{
-			if (!await _chunkSyncSemaphore.WaitAsync(0))
-				return;
+			if (!Monitor.TryEnter(_sendChunkSync)) return;
 
 			try
 			{
-				if (ChunkRadius <= 0 || Level == null)
-					return;
+				if (ChunkRadius <= 0) return;
+
 
 				var chunkPosition = new ChunkCoordinates(KnownPosition);
+				if (IsSpawned && _currentChunkPosition == chunkPosition) return;
 
-				if (IsSpawned && _currentChunkPosition == chunkPosition)
-					return;
 				if (IsSpawned && _currentChunkPosition.DistanceTo(chunkPosition) < MoveRenderDistance)
+				{
 					return;
+				}
 
 				_currentChunkPosition = chunkPosition;
 
+				int packetCount = 0;
+
+				if (Level == null) return;
+
 				SendNetworkChunkPublisherUpdate();
 
-				int packetCount = 0;
-				var chunks = Level.GenerateChunks(_currentChunkPosition, _chunksUsed, ChunkRadius, () => KnownPosition);
-
-				foreach (var chunk in chunks)
+				foreach (McpeWrapper chunk in Level.GenerateChunks(_currentChunkPosition, _chunksUsed, ChunkRadius, () => KnownPosition))
 				{
-					if (chunk != null)
-					{
-						SendPacket(chunk);
-						packetCount++;
-					}
+					if (chunk != null) SendPacket(chunk);
 
-					if (packetCount % 16 == 0)
-					{
-						await Task.Delay(12);
-					}
+					if (++packetCount % 16 == 0) Thread.Sleep(12);
 
 					if (!IsSpawned && packetCount == 56)
 					{
@@ -3716,7 +3701,7 @@ namespace MiNET
 			}
 			finally
 			{
-				_chunkSyncSemaphore.Release();
+				Monitor.Exit(_sendChunkSync);
 			}
 		}
 
