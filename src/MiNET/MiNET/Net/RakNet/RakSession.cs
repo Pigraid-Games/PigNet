@@ -241,11 +241,18 @@ namespace MiNET.Net.RakNet
 
 		private void HandlePacket(Packet message)
 		{
-			if (message == null) return;
+			if (message == null)
+				return;
 
 			try
 			{
 				RakOfflineHandler.TraceReceive(Log, message);
+				
+				if (State == ConnectionState.Unconnected)
+				{
+					Log.Warn($"Session is unconnected. Ignoring packet {message.Id} for user {Username}.");
+					return;
+				}
 
 				if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
@@ -273,23 +280,30 @@ namespace MiNET.Net.RakNet
 							break;
 						default:
 							Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2} for user: {Username}, IP {EndPoint.Address}");
-							if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
+							if (Log.IsDebugEnabled)
+								Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 							break;
 					}
 				}
 				else
 				{
-					try
+					if (CustomMessageHandler != null)
 					{
-						CustomMessageHandler.HandlePacket(message);
+						try
+						{
+							CustomMessageHandler.HandlePacket(message);
+						}
+						catch (Exception e)
+						{
+							Log.Warn($"Custom message handler error", e);
+						}
 					}
-					catch (Exception e)
+					else
 					{
-						// ignore
-						Log.Warn($"Custom message handler error", e);
+						Log.Warn($"CustomMessageHandler is null. Packet {message.Id} for user {Username} was not handled.");
 					}
 				}
-
+				
 				if (message.Timer.IsRunning)
 				{
 					long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
@@ -305,7 +319,7 @@ namespace MiNET.Net.RakNet
 			}
 			catch (Exception e)
 			{
-				Log.Error("Packet handling", e);
+				Log.Error($"Error handling packet {message?.Id} for user {Username} in session state {State}.", e);
 				throw;
 			}
 			finally
