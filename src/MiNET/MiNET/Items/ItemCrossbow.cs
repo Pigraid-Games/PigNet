@@ -42,7 +42,7 @@ namespace MiNET.Items
 
 				ExtraData.Clear();
 				player.SendPlayerInventory();
-				float force = CalculateForce();
+				float force = 2.5f;
 				if(itemInCrossbow is ItemArrow)
 				{
 					var arrow = new Arrow(player, world, 2, !(force < 1.0));
@@ -107,24 +107,6 @@ namespace MiNET.Items
 			
 			_isLoading = false;
 			_hasReleased = true;
-		}
-
-		private float CalculateForce()
-		{
-			float force = 1250;
-			force = ((force * force) + (force * 2.0f)) / 3.0f;
-
-			if (force < 0.5f)
-			{
-				return 0;
-			}
-
-			if (force > 1.0f)
-			{
-				force = 1.0f;
-			}
-
-			return force;
 		}
 	}
 }
