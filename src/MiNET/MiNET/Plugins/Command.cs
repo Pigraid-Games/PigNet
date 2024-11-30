@@ -23,7 +23,9 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using MiNET.Entities;
 using Newtonsoft.Json;
@@ -203,26 +205,102 @@ namespace MiNET.Plugins
 
 		public Rule[] Rules { get; set; }
 		public string Selector { get; set; }
-
 		public Player[] Players { get; set; }
 		public Entity[] Entities { get; set; }
+		public string StringTarget { get; set; }
+		public SelectorArgument[] SelectorArguments { get; set; }
+		
+		public Target(string input)
+		{
+			if (MatchesSelector(input))
+			{
+				ParseSelectorArguments(input);
+			}
+			else
+			{
+				StringTarget = input;
+			}
+
+			AddDefaultRules();
+		}
+		
+		public void AddDefaultRules()
+		{
+			if (Rules == null || Rules.Length == 0)
+			{
+				Rules = new[]
+				{
+				new Rule { Inverted = false, Name = "type", Value = "player" }
+			};
+			}
+		}
+
+		public void ParseSelectorArguments(string selectorString)
+		{
+			if (!selectorString.Contains("["))
+				return;
+
+			var args = selectorString
+				.Substring(selectorString.IndexOf("[") + 1, selectorString.LastIndexOf("]") - selectorString.IndexOf("[") - 1)
+				.Split(',');
+
+			SelectorArguments = args
+				.Select(arg =>
+				{
+					var parts = arg.Split('=');
+					return new SelectorArgument { Key = parts[0], Value = parts[1] };
+				})
+				.ToArray();
+		}
+		
+		public override string ToString()
+		{
+			var result = new List<string>();
+			
+			if (Players != null && Players.Length > 0)
+			{
+				result.Add(string.Join(", ", Players.Select(p => p.Username)));
+			}
+			else if (!string.IsNullOrEmpty(StringTarget))
+			{
+				result.Add(StringTarget);
+			}
+
+			if (SelectorArguments != null && SelectorArguments.Length > 0)
+			{
+				result.Add(string.Join(", ", SelectorArguments.Select(arg => arg.ToString())));
+			}
+
+			return string.Join(" | ", result.Any() ? result : new[] { "No valid target specified" });
+		}
+
+		
+		public bool MatchesSelector(string selector)
+		{
+			return !string.IsNullOrEmpty(selector) && selector.StartsWith("@");
+		}
+	}
+	
+	public class SelectorArgument
+	{
+		public string Key { get; set; }
+		public string Value { get; set; }
 
 		public override string ToString()
 		{
-			string body = string.Empty;
-
-			if (Players != null)
-			{
-				var names = new List<string>();
-				foreach (var p in Players)
-				{
-					names.Add(p.Username);
-				}
-				body = string.Join(", ", names);
-			}
-
-			return body;
+			return $"{Key}={Value}";
 		}
+	}
+
+
+	public enum SelectorType
+	{
+		AllPlayers,
+		NearestPlayer,
+		RandomPlayer,
+		AllEntities,
+		Executor,
+		Initiator
 	}
 
 	public abstract class SoftEnumBase

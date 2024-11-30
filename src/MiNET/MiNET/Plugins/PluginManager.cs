@@ -1106,7 +1106,7 @@ namespace MiNET.Plugins
 
 		public static Target ParseTarget(string source)
 		{
-			Target target = new Target();
+			Target target = new Target(source);
 			if (!source.StartsWith("@"))
 			{
 				target.Selector = "closestPlayer";
