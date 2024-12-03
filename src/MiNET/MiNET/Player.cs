@@ -2929,14 +2929,6 @@ namespace MiNET
 				target.HealthManager.Ignite(fireAspectLevel * 80);
 			}
 
-			if (target is Player playerT)
-			{
-				if (reducedDamage < damage)
-				{
-					playerT.Inventory.DamageArmor();
-				}
-			}
-
 			Inventory.DamageItemInHand(ItemDamageReason.EntityAttack, target, null);
 			HungerManager.IncreaseExhaustion(0.1f);
 		}

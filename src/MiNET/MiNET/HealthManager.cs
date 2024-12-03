@@ -176,8 +176,8 @@ namespace MiNET
 
 			if (player != null)
 			{
+				player.Inventory.DamageArmor();
 				player.HungerManager.IncreaseExhaustion(0.3f);
-
 				player.SendUpdateAttributes();
 			}
 

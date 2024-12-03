@@ -113,7 +113,7 @@ namespace MiNET
 
 		public virtual void DamageArmor()
 		{
-			if (Player.GameMode != GameMode.Survival) return;
+			if (Player.GameMode != GameMode.Survival || Player.IsInvicible || Player.HealthManager.CooldownTick > 0) return;
 
 			bool armorBroke = false;
 
