@@ -96,7 +96,7 @@ namespace MiNET.Client
 			SendCommand(client, $"/gamerule mobgriefing false");
 			SendCommand(client, $"/gamerule doweathercycle false");
 			SendCommand(client, $"/gamerule showcoordinates true");
-			
+
 			SendCommand(client, $"/gamerule dotiledrops false");
 		}
 		async void ExecuteBlockstates(BedrockTraceHandler caller)
@@ -115,31 +115,41 @@ namespace MiNET.Client
 			var tp = 0;
 			foreach (var block in BlockstateGenerator.Schemas)
 			{
-				if (block.Data > 7 && (block.Id == 107 || block.Id == 183 || block.Id == 184 || block.Id == 185 || block.Id == 186 || block.Id == 187)) { continue; } //disable fence_gate with in_wall_bit. because they have same runtime id?
 				if ((block.Id == BlockstateGenerator.customId && block.Data == BlockstateGenerator.customData && BlockstateGenerator.customMode) || BlockstateGenerator.customMode == false)
 				{
-					SendCommand(client, $"/setblock {x} 49 0 barrier"); //add something below or a lot of thing will fail
+					SendCommand(client, $"/setblock {x} 199 0 barrier"); //add something below or a lot of thing will fail
 					var posX = x;
 					var posZ = 0;
 
-					if (block.Name == "minecraft:redstone_wire" && block.Data > 0) { SendCommand(client, $"/setblock {posX} 50 0 {block.Command}"); } //hack for redstone wire. BDS won't activate signal until placed again
-					if (block.Id == 386 || block.Id == 388 || block.Id == 390 || block.Id == 391 || block.Id == 392 || block.Id == 393 || block.Id == 411 || block.Id == 415) { SendCommand(client, $"/setblock {x} 50 0 water"); } //place water for sea things
-					if (block.Id == 131 && (block.Data == 4 || block.Data == 8)) { SendCommand(client, $"/setblock {posX} 50 -1 barrier"); } //tripwire hook will fall off without bock for support
-					if (block.Id == 131 && (block.Data == 5 || block.Data == 9)) { SendCommand(client, $"/setblock {posX + 1} 50 0 barrier"); } //tripwire hook will fall off without bock for support
-					if (block.Id == 131 && (block.Data == 6 || block.Data == 10)) { SendCommand(client, $"/setblock {posX} 50 1 barrier"); } //tripwire hook will fall off without bock for support
-					if (block.Id == 131 && (block.Data == 7 || block.Data == 11)) { SendCommand(client, $"/setblock {posX - 1} 50 0 barrier"); } //tripwire hook will fall off without bock for support
-					
-					if (block.Id == 26 && (block.Data == 0 || block.Data == 4)) { posZ = posZ + 1; } //offset to get bed first update
-					if (block.Id == 26 && (block.Data == 1 || block.Data == 5)) { posX = posX - 1; } //offset to get bed first update
-					if (block.Id == 26 && (block.Data == 2 || block.Data == 6)) { posZ = posZ - 1; } //offset to get bed first update
-					if (block.Id == 26 && (block.Data == 3 || block.Data == 7)) { posX = posX + 1; } //offset to get bed first update
+					if (block.Name == "minecraft:redstone_wire" && block.Data > 0)
+					{ SendCommand(client, $"/setblock {posX} 200 0 {block.Command}"); } //hack for redstone wire. BDS won't activate signal until placed again
+					if (block.Id == 386 || block.Id == 388 || block.Id == 390 || block.Id == 391 || block.Id == 392 || block.Id == 393 || block.Id == 411 || block.Id == 415)
+					{ SendCommand(client, $"/setblock {x} 200 0 water"); } //place water for sea things
+					if (block.Id == 131 && (block.Data == 4 || block.Data == 8))
+					{ SendCommand(client, $"/setblock {posX} 200 -1 barrier"); } //tripwire hook will fall off without bock for support
+					if (block.Id == 131 && (block.Data == 5 || block.Data == 9))
+					{ SendCommand(client, $"/setblock {posX + 1} 200 0 barrier"); } //tripwire hook will fall off without bock for support
+					if (block.Id == 131 && (block.Data == 6 || block.Data == 10))
+					{ SendCommand(client, $"/setblock {posX} 200 1 barrier"); } //tripwire hook will fall off without bock for support
+					if (block.Id == 131 && (block.Data == 7 || block.Data == 11))
+					{ SendCommand(client, $"/setblock {posX - 1} 200 0 barrier"); } //tripwire hook will fall off without bock for support
+
+					if (block.Id == 26 && (block.Data == 0 || block.Data == 4))
+					{ posZ = posZ + 1; } //offset to get bed first update
+					if (block.Id == 26 && (block.Data == 1 || block.Data == 5))
+					{ posX = posX - 1; } //offset to get bed first update
+					if (block.Id == 26 && (block.Data == 2 || block.Data == 6))
+					{ posZ = posZ - 1; } //offset to get bed first update
+					if (block.Id == 26 && (block.Data == 3 || block.Data == 7))
+					{ posX = posX + 1; } //offset to get bed first update
 
 					await Task.Delay(100);
 					SendCommand(client, $"/setblock {posX} 200 {posZ} {block.Command}");
 					SendCommand(client, $"/setblock {posX} 200 {posZ} {block.Command}");  //TODO find out why sometimes at random time and random block are not placed
 					SendCommand(client, $"/setblock {posX} 200 {posZ} {block.Command}");
 					SendCommand(client, $"/tp TheGrey {x} 210 0");
-					if (!BlockstateGenerator.blockPosition.ContainsKey(x)) { BlockstateGenerator.blockPosition.Add(x, block); }
+					if (!BlockstateGenerator.blockPosition.ContainsKey(x))
+					{ BlockstateGenerator.blockPosition.Add(x, block); }
 					x += 2;
 					tp++;
 					await Task.Delay(100);
@@ -185,8 +195,8 @@ namespace MiNET.Client
 		{
 			foreach (var block in message.layerZeroUpdates)
 			{
-			//	Log.Error($"layer0 {block.BlockRuntimeId} {block.Coordinates.X} {block.Coordinates.Y} {block.Coordinates.Z}");
-				if (BlockstateGenerator.blockPosition.TryGetValue(block.Coordinates.X, out var state) && block.Coordinates.Y == 200 && block.Coordinates.Z == 0 && !BlockstateGenerator.BlockPalette.ContainsKey((int)block.BlockRuntimeId))
+				//	Log.Error($"layer0 {block.BlockRuntimeId} {block.Coordinates.X} {block.Coordinates.Y} {block.Coordinates.Z}");
+				if (BlockstateGenerator.blockPosition.TryGetValue(block.Coordinates.X, out var state) && block.Coordinates.Y == 200 && block.Coordinates.Z == 0 && !BlockstateGenerator.BlockPalette.ContainsKey((int) block.BlockRuntimeId))
 				{
 					Log.Warn($"Got runtimeID for {state.Name} (id: {state.Id} data: {state.Data})");
 					BlockstateGenerator.createContainer(state.Name, block.BlockRuntimeId, state.Id, state.Data, state.States);
