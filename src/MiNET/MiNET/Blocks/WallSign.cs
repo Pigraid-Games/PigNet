@@ -27,6 +27,7 @@ using System.Linq;
 using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Items;
+using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -61,18 +62,31 @@ namespace MiNET.Blocks
 			SetState(container);
 			var signBlockEntity = new SignBlockEntity {Coordinates = Coordinates};
 			world.SetBlockEntity(signBlockEntity);
-
+			OpenSign(player);
 			return false;
 		}
 
 		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 		{
+			if (player.Inventory.GetItemInHand() is ItemSignBase)
+			{
+				return false;
+			}
+			OpenSign(player);
 			return true;
 		}
 
 		public override Item[] GetDrops(Item tool)
 		{
 			return new[] {ItemFactory.GetItem((short) _itemDropId)}; // Drop sign item
+		}
+
+		public void OpenSign(Player player, bool front = true)
+		{
+			var packet = McpeOpenSign.CreateObject();
+			packet.coordinates = Coordinates;
+			packet.front = front;
+			player.SendPacket(packet);
 		}
 	}
 
