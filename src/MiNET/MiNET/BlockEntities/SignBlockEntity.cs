@@ -1,47 +1,17 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/MiNET/blob/master/LICENSE. 
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14 
-// and 15 have been added to cover use of software over a computer network and 
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has 
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is MiNET.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2018 Niclas Olofsson. 
-// All Rights Reserved.
-
-#endregion
-
+﻿using System.Drawing;
 using fNbt;
 
 namespace MiNET.BlockEntities
 {
 	public class SignBlockEntity : BlockEntity
 	{
-		public string Text { get; set; }
-		public string Text1 { get; set; }
-		public string Text2 { get; set; }
-		public string Text3 { get; set; }
-		public string Text4 { get; set; }
+		public SignText FrontText { get; set; } = new();
+		public SignText BackText { get; set; } = new();
+		public bool IsWaxed { get; set; }
+		public long LockedForEditingBy { get; set; }
 
 		public SignBlockEntity() : base("Sign")
 		{
-			Text = string.Empty;
-			Text1 = string.Empty;
-			Text2 = string.Empty;
-			Text3 = string.Empty;
-			Text4 = string.Empty;
 		}
 
 		public override NbtCompound GetCompound()
@@ -49,14 +19,29 @@ namespace MiNET.BlockEntities
 			var compound = new NbtCompound(string.Empty)
 			{
 				new NbtString("id", Id),
-				new NbtString("Text", Text ?? string.Empty),
-				new NbtString("Text1", Text1 ?? string.Empty),
-				new NbtString("Text2", Text2 ?? string.Empty),
-				new NbtString("Text3", Text3 ?? string.Empty),
-				new NbtString("Text4", Text4 ?? string.Empty),
 				new NbtInt("x", Coordinates.X),
 				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z)
+				new NbtInt("z", Coordinates.Z),
+				new NbtCompound("FrontText")
+				{
+					new NbtString("Text", FrontText.Text ?? string.Empty),
+					new NbtString("TextOwner", FrontText.TextOwner ?? string.Empty),
+					new NbtInt("SignTextColor", FrontText.SignTextColor.ToArgb()),
+					new NbtByte("HideGlowOutline", (byte)(FrontText.HideGlowOutline ? 1 : 0)),
+					new NbtByte("IgnoreLighting", (byte)(FrontText.IgnoreLighting ? 1 : 0)),
+					new NbtByte("PersistFormatting", (byte)(FrontText.PersistFormatting ? 1 : 0))
+				},
+				new NbtCompound("BackText")
+				{
+					new NbtString("Text", BackText.Text ?? string.Empty),
+					new NbtString("TextOwner", BackText.TextOwner ?? string.Empty),
+					new NbtInt("SignTextColor", BackText.SignTextColor.ToArgb()),
+					new NbtByte("HideGlowOutline", (byte)(BackText.HideGlowOutline ? 1 : 0)),
+					new NbtByte("IgnoreLighting", (byte)(BackText.IgnoreLighting ? 1 : 0)),
+					new NbtByte("PersistFormatting", (byte)(BackText.PersistFormatting ? 1 : 0))
+				},
+				new NbtByte("IsWaxed", (byte)(IsWaxed ? 1 : 0)),
+				new NbtLong("LockedForEditingBy", LockedForEditingBy)
 			};
 
 			return compound;
@@ -64,17 +49,63 @@ namespace MiNET.BlockEntities
 
 		public override void SetCompound(NbtCompound compound)
 		{
-			Text = GetTextValue(compound, "Text");
-			Text1 = GetTextValue(compound, "Text1");
-			Text2 = GetTextValue(compound, "Text2");
-			Text3 = GetTextValue(compound, "Text3");
-			Text4 = GetTextValue(compound, "Text4");
+			if (compound.TryGet("FrontText", out NbtCompound frontTextCompound))
+			{
+				FrontText = ParseSignText(frontTextCompound);
+			}
+
+			if (compound.TryGet("BackText", out NbtCompound backTextCompound))
+			{
+				BackText = ParseSignText(backTextCompound);
+			}
+
+			IsWaxed = compound.TryGet("IsWaxed", out NbtByte isWaxed) && isWaxed.ByteValue == 1;
+			LockedForEditingBy = compound.TryGet("LockedForEditingBy", out NbtLong locked) ? locked.LongValue : 0;
 		}
 
-		private string GetTextValue(NbtCompound compound, string key)
+		private SignText ParseSignText(NbtCompound compound)
 		{
-			compound.TryGet(key, out NbtString text);
-			return text != null ? (text.StringValue ?? string.Empty) : string.Empty;
+			var signText = new SignText
+			{
+				Text = compound.TryGet("Text", out NbtString text) ? text.StringValue : string.Empty,
+				TextOwner = compound.TryGet("TextOwner", out NbtString owner) ? owner.StringValue : string.Empty,
+				SignTextColor = compound.TryGet("SignTextColor", out NbtInt color) ? Color.FromArgb(color.IntValue) : SignColor.Black,
+				HideGlowOutline = compound.TryGet("HideGlowOutline", out NbtByte hideGlow) && hideGlow.ByteValue == 1,
+				IgnoreLighting = compound.TryGet("IgnoreLighting", out NbtByte ignoreLight) && ignoreLight.ByteValue == 1,
+				PersistFormatting = compound.TryGet("PersistFormatting", out NbtByte persist) && persist.ByteValue == 1
+			};
+
+			return signText;
 		}
+	}
+
+	public class SignText
+	{
+		public bool HideGlowOutline { get; set; }
+		public bool IgnoreLighting { get; set; }
+		public bool PersistFormatting { get; set; } = true;
+		public Color SignTextColor { get; set; } = SignColor.Black;
+		public string Text { get; set; } = string.Empty;
+		public string TextOwner { get; set; } = string.Empty;
+	}
+
+	public static class SignColor
+	{
+		public static Color Black { get; } = Color.FromArgb(0, 0, 0);
+		public static Color White { get; } = Color.FromArgb(240, 240, 240);
+		public static Color Orange { get; } = Color.FromArgb(249, 128, 29);
+		public static Color Magenta { get; } = Color.FromArgb(199, 78, 189);
+		public static Color LightBlue { get; } = Color.FromArgb(58, 179, 218);
+		public static Color Yellow { get; } = Color.FromArgb(254, 216, 61);
+		public static Color Lime { get; } = Color.FromArgb(128, 199, 31);
+		public static Color Pink { get; } = Color.FromArgb(243, 139, 170);
+		public static Color Gray { get; } = Color.FromArgb(71, 79, 82);
+		public static Color LightGray { get; } = Color.FromArgb(157, 157, 151);
+		public static Color Cyan { get; } = Color.FromArgb(22, 156, 156);
+		public static Color Purple { get; } = Color.FromArgb(137, 50, 184);
+		public static Color Blue { get; } = Color.FromArgb(60, 68, 170);
+		public static Color Brown { get; } = Color.FromArgb(131, 84, 50);
+		public static Color Green { get; } = Color.FromArgb(94, 124, 22);
+		public static Color Red { get; } = Color.FromArgb(176, 46, 38);
 	}
 }
