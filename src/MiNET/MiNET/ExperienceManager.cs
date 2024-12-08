@@ -44,23 +44,20 @@ namespace MiNET
 			Experience = GetXpToNextLevel() * currentXp;
 		}
 
-		protected virtual float GetXpToNextLevel()
+		public virtual float GetXpToNextLevel()
 		{
-			float xpToNextLevel = 0;
 			if (ExperienceLevel >= 0 && ExperienceLevel <= 15)
 			{
-				xpToNextLevel = 2 * ExperienceLevel + 7;
+				return 2 * ExperienceLevel + 7;
 			}
 			else if (ExperienceLevel > 15 && ExperienceLevel <= 30)
 			{
-				xpToNextLevel = 5 * ExperienceLevel - 38;
+				return 5 * ExperienceLevel - 28;
 			}
-			else if (ExperienceLevel > 30)
+			else // Level > 30
 			{
-				xpToNextLevel = 9 * ExperienceLevel - 158;
+				return 9 * ExperienceLevel - 158;
 			}
-
-			return xpToNextLevel;
 		}
 
 		protected virtual float CalculateXp()
