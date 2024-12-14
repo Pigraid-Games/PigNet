@@ -90,6 +90,7 @@ namespace MiNET
 		public int SuffocationTicks { get; set; }
 		public int LavaTicks { get; set; }
 		public int CooldownTick { get; set; }
+		public bool CheckCooldown { get; set; } = true;
 		public bool IsOnFire { get; set; }
 		public bool IsInvulnerable { get; set; }
 		public DamageCause LastDamageCause { get; set; }
@@ -139,7 +140,7 @@ namespace MiNET
 			if (player != null && player.GameMode != GameMode.Survival) return;
 			if (player != null && player.IsInvicible) return;
 
-			if (CooldownTick > 0) return;
+			if (CooldownTick > 0 && CheckCooldown) return;
 
 			LastDamageSource = source;
 			LastDamageCause = cause;

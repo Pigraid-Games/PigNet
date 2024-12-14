@@ -91,7 +91,7 @@ namespace MiNET.Plugins.Commands
 			return $"Oped: {body}";
 		}
 
-		[Command(Name = "setblock", Description = "Place a block")]
+		[Command(Name = "", Description = "Place a block")]
 		[Authorize(Permission = 4)]
 		public string SetBlock(Player commander, BlockPos position, BlockTypeEnum tileName, int tileData = 0)
 		{
