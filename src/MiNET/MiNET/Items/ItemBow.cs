@@ -75,37 +75,44 @@ namespace MiNET.Items
 
 		public override void Release(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
+
 			long timeUsed = world.TickTime - _useTime;
-			if (timeUsed < 6) // questionable, but we go with it for now.
+			if (timeUsed < 6)
 			{
-				//player.SendPlayerInventory(); // Need to reset inventory, because we don't know what the client did here
+				// Prevent unintended actions for very short use durations
+				player.SendPlayerInventory();
 				return;
 			}
-			world.BroadcastSound(blockCoordinates, LevelSoundEventType.Bow);
+
+			// Trigger the PlayerShootEvent
+			if (player.OnPlayerShoot(player, this))
+			{
+				player.SendPlayerInventory();
+				return;
+			}
 
 			PlayerInventory inventory = player.Inventory;
 
 			bool isInfinity = this.GetEnchantingLevel(EnchantingType.Infinity) > 0;
-			bool isFlame = this.GetEnchantingLevel(EnchantingType.Flame) > 0;
 			bool haveArrow = false;
 			byte effect = 0;
-			if (!haveArrow)
+
+			// Check for arrows in off-hand
+			Item item = inventory.OffHand;
+			if (item is ItemArrow)
 			{
-				// Try off-hand first
-				Item item = inventory.OffHand;
-				if (item is ItemArrow)
+				haveArrow = true;
+				effect = (byte) item.Metadata;
+				if (!isInfinity && player.GameMode != GameMode.Creative)
 				{
-					haveArrow = true;
-					effect = (byte) item.Metadata;
-					if (!isInfinity && player.GameMode != GameMode.Creative)
-					{
-						item.Count -= 1;
-						item.UniqueId = Environment.TickCount;
-						if (item.Count <= 0) inventory.OffHand = new ItemAir();
-						player.SendPlayerInventory();
-					}
+					item.Count -= 1;
+					item.UniqueId = Environment.TickCount;
+					if (item.Count <= 0)
+						inventory.OffHand = new ItemAir();
 				}
 			}
+
+			// Check for arrows in inventory if none in off-hand
 			if (!haveArrow)
 			{
 				for (byte i = 0; i < inventory.Slots.Count; i++)
@@ -118,34 +125,44 @@ namespace MiNET.Items
 						if (!isInfinity && player.GameMode != GameMode.Creative)
 						{
 							itemStack.Count--;
-							player.Inventory.SetInventorySlot(i, itemStack);
+							inventory.SetInventorySlot(i, itemStack);
 						}
 						break;
 					}
 				}
 			}
 
-			if (!haveArrow) return;
+			if (!haveArrow)
+			{
+				return;
+			}
 
 			float force = CalculateForce(timeUsed);
-			if (force < 0.1D) return;
-
+			if (force < 0.1D)
+			{
+				return;
+			}
+			
 			var arrow = new Arrow(player, world, 2, !(force < 1.0));
 			arrow.PowerLevel = this.GetEnchantingLevel(EnchantingType.Power);
 			arrow.EffectValue = effect;
-			arrow.isFlame = isFlame;
+			arrow.isFlame = this.GetEnchantingLevel(EnchantingType.Flame) > 0;
 			arrow.KnownPosition = (PlayerLocation) player.KnownPosition.Clone();
 			arrow.KnownPosition.Y += 1.62f;
-
 			arrow.Velocity = arrow.KnownPosition.GetHeadDirection().Normalize() * (force * 3);
 			arrow.KnownPosition.Yaw = (float) arrow.Velocity.GetYaw();
 			arrow.KnownPosition.Pitch = (float) arrow.Velocity.GetPitch();
 			arrow.BroadcastMovement = true;
 			arrow.DespawnOnImpact = false;
-
+			
+			world.BroadcastSound(blockCoordinates, LevelSoundEventType.Bow);
 			arrow.SpawnEntity();
-			player.Inventory.DamageItemInHand(ItemDamageReason.ItemUse, player, null);
+			
+			inventory.DamageItemInHand(ItemDamageReason.ItemUse, player, null);
+			
+			player.SendPlayerInventory();
 		}
+
 
 		private float CalculateForce(long timeUsed)
 		{

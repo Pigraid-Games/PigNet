@@ -17,7 +17,18 @@ namespace MiNET.Items
 
 		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
-			if (IsInCooldown(player)) return;
+			if (IsInCooldown(player))
+			{
+				player.SendPlayerInventory();
+				return;
+			}
+
+			// Trigger the PlayerShootEvent
+			if (player.OnPlayerShoot(player, this))
+			{
+				player.SendPlayerInventory();
+				return;
+			}
 
 			StartCooldown(player);
 

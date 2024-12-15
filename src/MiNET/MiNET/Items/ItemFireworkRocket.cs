@@ -48,6 +48,12 @@ namespace MiNET.Items
 
 		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{
+			// Trigger the PlayerShootEvent
+			if (player.OnPlayerShoot(player, this))
+			{
+				player.SendPlayerInventory();
+				return;
+			}
 			Random random = new Random();
 			var rocket = new FireworksRocket(player, world, this, random);
 			rocket.KnownPosition = blockCoordinates;

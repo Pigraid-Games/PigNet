@@ -56,6 +56,7 @@ using MiNET.Worlds;
 using Newtonsoft.Json;
 using System.IO.Compression;
 using System.Net.Sockets;
+using MiNET.Entities.Projectiles;
 
 namespace MiNET
 {
@@ -4448,6 +4449,17 @@ namespace MiNET
 			Log.Debug($"Loading screen: {(message.ScreenType == 1 ? "Opened" : message.ScreenType == 2 ? "Closed" : "Unknown")} {message.ScreenId}");
 		}
 
+		public event EventHandler<PlayerShootEventArgs> PlayerShoot;
+
+		public bool OnPlayerShoot(Player shooter, Item itemBase)
+		{
+			if (PlayerShoot == null)
+				return false;
+
+			var args = new PlayerShootEventArgs(shooter, shooter.Level, itemBase);
+			PlayerShoot.Invoke(this, args);
+			return args.Cancel;
+		}
 	}
 
 	public class PlayerEventArgs : EventArgs
@@ -4471,6 +4483,18 @@ namespace MiNET
 			Player = player;
 			Damager = damager;
 			Level = player?.Level;
+		}
+	}
+
+	public class PlayerShootEventArgs : LevelCancelEventArgs
+	{
+		public Player Shooter { get; }
+		public Item ItemBase { get; }
+
+		public PlayerShootEventArgs(Player shooter, Level level, Item itemBase) : base(shooter, level)
+		{
+			ItemBase = itemBase;
+			Shooter = shooter;
 		}
 	}
 

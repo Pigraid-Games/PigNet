@@ -1,7 +1,6 @@
 ﻿using System;
 using MiNET.Entities.World;
 using MiNET.Particles;
-using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
 namespace MiNET.Entities.Projectiles

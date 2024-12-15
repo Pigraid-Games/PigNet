@@ -16,6 +16,12 @@ namespace MiNET.Items
 
 		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
+			// Trigger the PlayerShootEvent
+			if (player.OnPlayerShoot(player, this))
+			{
+				player.SendPlayerInventory();
+				return;
+			}
 			float force = 1.5f;
 
 			var splashPotion = new SplashPotion(player, world, Metadata);
