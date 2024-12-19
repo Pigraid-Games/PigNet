@@ -172,8 +172,7 @@ namespace MiNET
 			if (item == null || item.Count <= 0) item = new ItemAir();
 
 			UpdateInventorySlot(slot, item, forceReplace);
-
-			SendSetSlot(slot);
+			Player.SendPlayerInventory();
 		}
 
 		public virtual void UpdateInventorySlot(int slot, Item item, bool forceReplace = false)
@@ -280,37 +279,6 @@ namespace MiNET
 
 		public bool AddItem(Item item, bool update)
 		{
-		/*	for (int si = 0; si < Slots.Count; si++)
-			{
-				Item existingItem = Slots[si];
-
-				if (item.Id == existingItem.Id && item.Metadata == existingItem.Metadata)
-				{
-					int remainingCount = 64 - existingItem.Count;
-
-					if (remainingCount > 0)
-					{
-						int itemsToAdd = Math.Min(remainingCount, item.Count);
-						Slots[si].Count += (byte) itemsToAdd;
-						item.Count -= (byte) itemsToAdd;
-						if (update) SendSetSlot(si);
-						if (item.Count == 0) return true;
-					}
-				}
-			}
-
-			for (int si = 0; si < Slots.Count; si++)
-			{
-				Item existingItem = Slots[si];
-
-				if (existingItem is ItemAir || existingItem.Id == 0 || existingItem.Id == -1)
-				{
-					Slots[si] = item;
-					if (update) SendSetSlot(si);
-					return true;
-				}
-			}*/
-
 			return SetFirstEmptySlot(item, update);
 		}
 

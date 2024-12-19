@@ -6851,8 +6851,10 @@ namespace MiNET.Net
 	public partial class McpePlaySound : Packet<McpePlaySound>
 	{
 
-		public string name; // = null;
-		public BlockCoordinates coordinates; // = null;
+		public string soundName; // = null;
+		public float x; // = null;
+		public float y; // = null;
+		public float z; // = null;
 		public float volume; // = null;
 		public float pitch; // = null;
 
@@ -6868,8 +6870,8 @@ namespace MiNET.Net
 
 			BeforeEncode();
 
-			Write(name);
-			Write(coordinates);
+			Write(soundName);
+			Write(new BlockCoordinates((int)x * 8, (int)y * 8, (int)z * 8));
 			Write(volume);
 			Write(pitch);
 
@@ -6885,8 +6887,11 @@ namespace MiNET.Net
 
 			BeforeDecode();
 
-			name = ReadString();
-			coordinates = ReadBlockCoordinates();
+			soundName = ReadString();
+			var blockCoordinates = ReadBlockCoordinates();
+			x = blockCoordinates.X / 8;
+			y = blockCoordinates.Y / 8;
+			z = blockCoordinates.Z / 8;
 			volume = ReadFloat();
 			pitch = ReadFloat();
 
@@ -6900,8 +6905,10 @@ namespace MiNET.Net
 		{
 			base.ResetPacket();
 
-			name=default(string);
-			coordinates=default(BlockCoordinates);
+			soundName=default(string);
+			x =default(float);
+			y =default(float);
+			z =default(float);
 			volume=default(float);
 			pitch=default(float);
 		}

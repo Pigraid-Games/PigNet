@@ -1,4 +1,4 @@
-#region LICENSE
+﻿#region LICENSE
 
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
@@ -36,5 +36,6 @@ namespace MiNET
 		void SendDirectPacket(Packet packet);
 		IPEndPoint GetClientEndPoint();
 		long GetNetworkNetworkIdentifier();
+		long GetPing();
 	}
 }

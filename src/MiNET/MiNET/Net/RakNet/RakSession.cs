@@ -34,6 +34,7 @@ using System.Threading.Tasks;
 using log4net;
 using MiNET.Utils;
 using MiNET.Utils.Collections;
+using MiNET.Utils.IO;
 
 namespace MiNET.Net.RakNet
 {
@@ -50,6 +51,7 @@ namespace MiNET.Net.RakNet
 
 		private readonly ConcurrentPriorityQueue<int, Packet> _orderingBufferQueue = new ConcurrentPriorityQueue<int, Packet>();
 		private CancellationTokenSource _cancellationToken;
+		private HighPrecisionTimer _tickerHighPrecisionTimer;
 		private Thread _orderedQueueProcessingThread;
 
 
@@ -111,7 +113,6 @@ namespace MiNET.Net.RakNet
 		public ConcurrentQueue<int> OutgoingAckQueue { get; } = new ConcurrentQueue<int>();
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
-
 		public RakSession(ConnectionInfo connectionInfo, IPacketSender packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			Log.Debug($"Create session for {endPoint}");
@@ -126,7 +127,52 @@ namespace MiNET.Net.RakNet
 			ResendThreshold = Config.GetProperty("ResendThreshold", 10);
 
 			_cancellationToken = new CancellationTokenSource();
-			//_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
+			StartPingTask();
+		}
+
+		/// <summary>
+		/// Starts a repeating task to send ConnectedPing packets every 5 seconds.
+		/// </summary>
+		private void StartPingTask()
+		{
+			Task.Run(async () =>
+			{
+				try
+				{
+					while (!_cancellationToken.Token.IsCancellationRequested)
+					{
+						SendPing(); // Send the ping
+						await Task.Delay(5000, _cancellationToken.Token); // Wait 5 seconds
+					}
+				}
+				catch (TaskCanceledException)
+				{
+					Log.Debug("Ping task canceled.");
+				}
+				catch (Exception ex)
+				{
+					Log.Error("Error in ping task", ex);
+				}
+			}, _cancellationToken.Token);
+		}
+
+		/// <summary>
+		/// Sends a ConnectedPing packet to the client.
+		/// </summary>
+		private void SendPing()
+		{
+			try
+			{
+				var connectedPing = ConnectedPing.CreateObject();
+				connectedPing.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+
+				Log.Debug($"Sending ConnectedPing with time={connectedPing.sendpingtime}");
+				SendPacket(connectedPing);
+			}
+			catch (Exception ex)
+			{
+				Log.Warn("Failed to send ConnectedPing", ex);
+			}
 		}
 
 		/// <summary>
@@ -154,7 +200,11 @@ namespace MiNET.Net.RakNet
 					AddToSequencedChannel(message);
 					break;
 				case Reliability.Unreliable:
+					HandlePacket(message);
+					break;
 				case Reliability.UnreliableWithAckReceipt:
+					HandlePacket(message);
+					break;
 				case Reliability.Reliable:
 				case Reliability.ReliableWithAckReceipt:
 					HandlePacket(message);
@@ -366,27 +416,26 @@ namespace MiNET.Net.RakNet
 			}
 		}
 
+		private long _lastPingMeasure { get; set; } = 1;
+
+		public long GetPing() {  return _lastPingMeasure; }
+
 		private void HandleConnectedPong(ConnectedPong connectedPong)
 		{
-			// Ignore
+			var currentTime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			if(currentTime < connectedPong.sendpingtime)
+			{
+				Log.Warn($"Received invalid pong: timestamp is in the future by {connectedPong.sendpingtime - currentTime} ms");
+				return;
+			}
+			_lastPingMeasure = (currentTime - connectedPong.sendpingtime) - 20;
 		}
 
 		protected virtual void HandleConnectedPing(ConnectedPing message)
 		{
 			var packet = ConnectedPong.CreateObject();
 			packet.sendpingtime = message.sendpingtime;
-			packet.sendpongtime = Stopwatch.GetTimestamp() / (Stopwatch.Frequency / 1000);
-
-			Ping = packet.sendpongtime - packet.sendpingtime;
-
-			if (!string.IsNullOrEmpty(Username))
-			{
-				lock (Player.Pings)
-				{
-					Player.Pings[Username] = Ping;
-				}
-			}
-
+			packet.sendpongtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 			SendPacket(packet);
 		}
 
@@ -447,6 +496,7 @@ namespace MiNET.Net.RakNet
 
 		public virtual void Disconnect(string reason, bool sendDisconnect = true)
 		{
+			_cancellationToken.Cancel();
 			CustomMessageHandler?.Disconnect("RakSession: " + reason, sendDisconnect);
 			Close();
 		}

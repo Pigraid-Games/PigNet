@@ -65,8 +65,10 @@ namespace MiNET
 						float distance = Vector3.Distance(player.KnownPosition, lightning.KnownPosition);
 
 						McpePlaySound sound = McpePlaySound.CreateObject();
-						sound.name = "ambient.weather.lightning.impact";
-						sound.coordinates = (BlockCoordinates) lightning.KnownPosition / 8;
+						sound.soundName = "ambient.weather.lightning.impact";
+						sound.x = lightning.KnownPosition.X;
+						sound.y = lightning.KnownPosition.Y;
+						sound.z = lightning.KnownPosition.Z;
 						sound.volume = Math.Clamp(1.0f - (distance / maxDistance), 0.0f, 1.0f);
 						sound.pitch = 1;
 						player.SendPacket(sound);
