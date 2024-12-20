@@ -1,646 +1,777 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/MiNET/blob/master/LICENSE. 
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14 
-// and 15 have been added to cover use of software over a computer network and 
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has 
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is MiNET.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2018 Niclas Olofsson. 
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using log4net;
 using MiNET.Blocks;
 using MiNET.Net.Items;
 using MiNET.Utils;
-using Newtonsoft.Json;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public interface ICustomItemFactory
 {
-	public interface ICustomItemFactory
+	Item GetItem(short id, short metadata, int count);
+}
+
+public interface ICustomBlockItemFactory
+{
+	ItemBlock GetBlockItem(Block block, short metadata, int count);
+}
+
+public class ItemFactory
+{
+	private static readonly ILog Log = LogManager.GetLogger(typeof(ItemFactory));
+
+	public static ICustomItemFactory CustomItemFactory { get; set; }
+	public static ICustomBlockItemFactory CustomBlockItemFactory { get; set; }
+
+	public static Dictionary<string, short> NameToId { get; private set; }
+	public static Itemstates Itemstates { get; internal set; }
+
+	public static ItemTranslator Translator { get; }
+
+	static ItemFactory()
 	{
-		Item GetItem(short id, short metadata, int count);
+		NameToId = BuildNameToId();
+
+		Itemstates = ResourceUtil.ReadResource<Itemstates>("itemstates.json", typeof(Item));
+		Translator = new ItemTranslator(Itemstates);
 	}
 
-	public interface ICustomBlockItemFactory
+	private static Dictionary<string, short> BuildNameToId()
 	{
-		ItemBlock GetBlockItem(Block block, short metadata, int count);
-	}
+		var nameToId = new Dictionary<string, short>();
 
-	public class ItemFactory
-	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemFactory));
-
-		public static ICustomItemFactory CustomItemFactory { get; set; }
-		public static ICustomBlockItemFactory CustomBlockItemFactory { get; set; }
-
-		public static Dictionary<string, short> NameToId { get; private set; }
-		public static Itemstates Itemstates { get; internal set; } = new Itemstates();
-		
-		public static ItemTranslator Translator { get; }
-		static ItemFactory()
-		{
-			NameToId = BuildNameToId();
-
-			Itemstates = ResourceUtil.ReadResource<Itemstates>("itemstates.json", typeof(Item));
-			Translator = new ItemTranslator(Itemstates);
-		}
-
-		private static Dictionary<string, short> BuildNameToId()
-		{
-			//TODO: Refactor to use the Item.Name in hashed set instead.
-
-			var nameToId = new Dictionary<string, short>();
-
-			for (short idx = -600; idx < 1100; idx++)
+		for (short idx = -600; idx < 1100; idx++)
+			try
 			{
 				Item item = GetItem(idx);
+				if (item == null) continue;
+
 				string name = item.GetType().Name.ToLowerInvariant();
 
-				if (name.Equals("item"))
+				switch (name)
 				{
-					//if (Log.IsDebugEnabled)
-					//	Log.Debug($"Missing implementation for item ID={idx}");
-					continue;
-				}
-
-				if (name.Equals("itemblock"))
-				{
-					ItemBlock itemBlock = item as ItemBlock;
-
-					if (itemBlock != null)
-					{
-						Block block = itemBlock.Block;
-						name = block?.GetType().Name.ToLowerInvariant();
-
-						if (name == null || name.Equals("block"))
+					case "item": continue;
+					case "itemblock":
+						if (item is ItemBlock itemBlock)
 						{
-							continue;
+							Block block = itemBlock.Block;
+							name = block?.GetType().Name.ToLowerInvariant();
+							if (string.IsNullOrEmpty(name) || name == "block") continue;
 						}
-					}
-				}
-				else
-				{
-					name = name.Substring(4);
+						break;
+					default:
+						if (name.StartsWith("item"))
+							name = name[4..];
+						break;
 				}
 
-				try
-				{
-					nameToId.Remove(name); // This is in case a block was added that have item that should be used.
-					nameToId.Add(name, idx);
+				nameToId.TryAdd(name, idx);
 
-					if (!string.IsNullOrWhiteSpace(item?.Name))
-					{
-						if (!nameToId.TryAdd(item.Name, idx))
-						{
-							
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Log.Error($"Tried to add duplicate item for {name} {idx}", e);
-				}
+				if (string.IsNullOrWhiteSpace(item.Name)) continue;
+				string itemName = item.Name.ToLowerInvariant();
+				nameToId.TryAdd(itemName, idx);
 			}
-
-			return nameToId;
-		}
-
-		public static short GetItemIdByName(string itemName)
-		{
-			itemName = itemName.ToLowerInvariant().Replace("_", "").Replace("minecraft:", "");
-
-			if (NameToId.ContainsKey(itemName))
+			catch (Exception ex)
 			{
-				return NameToId[itemName];
+				Log.Error($"Failed to process item ID {idx}: {ex.Message}", ex);
 			}
+		return nameToId;
+	}
 
-			return (short) BlockFactory.GetBlockIdByName(itemName);
-		}
+	public static short GetItemIdByName(string itemName)
+	{
+		itemName = itemName.ToLowerInvariant().Replace("_", "").Replace("minecraft:", "");
+		if (NameToId.TryGetValue(itemName, out short name)) return name;
+		return (short) BlockFactory.GetBlockIdByName(itemName);
+	}
 
-		public static Item GetItem(string name, short metadata = 0, int count = 1)
-		{
-			return GetItem(GetItemIdByName(name), metadata, count);
-		}
+	public static Item GetItem(string name, short metadata = 0, int count = 1)
+	{
+		return GetItem(GetItemIdByName(name), metadata, count);
+	}
 
-		public static Item GetItem(short id, short metadata = 0, int count = 1)
+	private static readonly Dictionary<short, Func<short, int, Item>> ItemFactories = new()
+	{
+		{ 0, (_, _) => new ItemAir() },
+		{ 256, (_, _) => new ItemIronShovel() },
+		{ 257, (_, _) => new ItemIronPickaxe() },
+		{ 258, (_, _) => new ItemIronAxe() },
+		{ 259, (_, _) => new ItemFlintAndSteel() },
+		{ 260, (_, _) => new ItemApple() },
+		{ 261, (_, _) => new ItemBow() },
+		{ 262, (_, _) => new ItemArrow() },
+		{ 263, (_, _) => new ItemCoal() },
+		{ 264, (_, _) => new ItemDiamond() },
+		{ 265, (_, _) => new ItemIronIngot() },
+		{ 266, (_, _) => new ItemGoldIngot() },
+		{ 267, (_, _) => new ItemIronSword() },
+		{ 268, (_, _) => new ItemWoodenSword() },
+		{ 269, (_, _) => new ItemWoodenShovel() },
+		{ 270, (_, _) => new ItemWoodenPickaxe() },
+		{ 271, (_, _) => new ItemWoodenAxe() },
+		{ 272, (_, _) => new ItemStoneSword() },
+		{ 273, (_, _) => new ItemStoneShovel() },
+		{ 274, (_, _) => new ItemStonePickaxe() },
+		{ 275, (_, _) => new ItemStoneAxe() },
+		{ 276, (_, _) => new ItemDiamondSword() },
+		{ 277, (_, _) => new ItemDiamondShovel() },
+		{ 278, (_, _) => new ItemDiamondPickaxe() },
+		{ 279, (_, _) => new ItemDiamondAxe() },
+		{ 280, (_, _) => new ItemStick() },
+		{ 281, (_, _) => new ItemBowl() },
+		{ 282, (_, _) => new ItemMushroomStew() },
+		{ 283, (_, _) => new ItemGoldenSword() },
+		{ 284, (_, _) => new ItemGoldenShovel() },
+		{ 285, (_, _) => new ItemGoldenPickaxe() },
+		{ 286, (_, _) => new ItemGoldenAxe() },
+		{ 287, (_, _) => new ItemString() },
+		{ 288, (_, _) => new ItemFeather() },
+		{ 289, (_, _) => new ItemGunpowder() },
+		{ 290, (_, _) => new ItemWoodenHoe() },
+		{ 291, (_, _) => new ItemStoneHoe() },
+		{ 292, (_, _) => new ItemIronHoe() },
+		{ 293, (_, _) => new ItemDiamondHoe() },
+		{ 294, (_, _) => new ItemGoldenHoe() },
+		{ 295, (_, _) => new ItemWheatSeeds() },
+		{ 296, (_, _) => new ItemWheat() },
+		{ 297, (_, _) => new ItemBread() },
+		{ 298, (_, _) => new ItemLeatherHelmet() },
+		{ 299, (_, _) => new ItemLeatherChestplate() },
+		{ 300, (_, _) => new ItemLeatherLeggings() },
+		{ 301, (_, _) => new ItemLeatherBoots() },
+		{ 302, (_, _) => new ItemChainmailHelmet() },
+		{ 303, (_, _) => new ItemChainmailChestplate() },
+		{ 304, (_, _) => new ItemChainmailLeggings() },
+		{ 305, (_, _) => new ItemChainmailBoots() },
+		{ 306, (_, _) => new ItemIronHelmet() },
+		{ 307, (_, _) => new ItemIronChestplate() },
+		{ 308, (_, _) => new ItemIronLeggings() },
+		{ 309, (_, _) => new ItemIronBoots() },
+		{ 310, (_, _) => new ItemDiamondHelmet() },
+		{ 311, (_, _) => new ItemDiamondChestplate() },
+		{ 312, (_, _) => new ItemDiamondLeggings() },
+		{ 313, (_, _) => new ItemDiamondBoots() },
+		{ 314, (_, _) => new ItemGoldenHelmet() },
+		{ 315, (_, _) => new ItemGoldenChestplate() },
+		{ 316, (_, _) => new ItemGoldenLeggings() },
+		{ 317, (_, _) => new ItemGoldenBoots() },
+		{ 318, (_, _) => new ItemFlint() },
+		{ 319, (_, _) => new ItemPorkchop() },
+		{ 320, (_, _) => new ItemCookedPorkchop() },
+		{ 321, (_, _) => new ItemPainting() },
+		{ 322, (_, _) => new ItemGoldenApple() },
+		{ 323, (_, _) => new ItemSign() },
+		{ 324, (_, _) => new ItemWoodenDoor() },
+		{ 325, (metadata, _) => new ItemBucket(metadata) },
+		{ 328, (_, _) => new ItemMinecart() },
+		{ 329, (_, _) => new ItemSaddle() },
+		{ 330, (_, _) => new ItemIronDoor() },
+		{ 331, (_, _) => new ItemRedstone() },
+		{ 332, (_, _) => new ItemSnowball() },
+		{ 333, (metadata, _) => new ItemBoat(metadata) },
+		{ 334, (_, _) => new ItemLeather() },
+		{ 335, (_, _) => new ItemKelp() },
+		{ 336, (_, _) => new ItemBrick() },
+		{ 337, (_, _) => new ItemClayBall() },
+		{ 338, (_, _) => new ItemReeds() },
+		{ 339, (_, _) => new ItemPaper() },
+		{ 340, (_, _) => new ItemBook() },
+		{ 341, (_, _) => new ItemSlimeBall() },
+		{ 342, (_, _) => new ItemChestMinecart() },
+		{ 344, (_, _) => new ItemEgg() },
+		{ 345, (_, _) => new ItemCompass() },
+		{ 346, (_, _) => new ItemFishingRod() },
+		{ 347, (_, _) => new ItemClock() },
+		{ 348, (_, _) => new ItemGlowstoneDust() },
+		{ 349, (_, _) => new ItemCod() },
+		{ 350, (_, _) => new ItemCookedCod() },
+		{ 351, (_, _) => new ItemDye() },
+		{ 352, (_, _) => new ItemBone() },
+		{ 353, (_, _) => new ItemSugar() },
+		{ 354, (_, _) => new ItemCake() },
+		{ 355, (_, _) => new ItemBed() },
+		{ 356, (_, _) => new ItemRepeater() },
+		{ 357, (_, _) => new ItemCookie() },
+		{ 358, (_, _) => new ItemMap() },
+		{ 359, (_, _) => new ItemShears() },
+		{ 360, (_, _) => new ItemMelon() },
+		{ 361, (_, _) => new ItemPumpkinSeeds() },
+		{ 362, (_, _) => new ItemMelonSeeds() },
+		{ 363, (_, _) => new ItemBeef() },
+		{ 364, (_, _) => new ItemCookedBeef() },
+		{ 365, (_, _) => new ItemChicken() },
+		{ 366, (_, _) => new ItemCookedChicken() },
+		{ 367, (_, _) => new ItemRottenFlesh() },
+		{ 368, (_, _) => new ItemEnderPearl() },
+		{ 369, (_, _) => new ItemBlazeRod() },
+		{ 370, (_, _) => new ItemGhastTear() },
+		{ 371, (_, _) => new ItemGoldNugget() },
+		{ 372, (_, _) => new ItemNetherWart() },
+		{ 373, (metadata, _) => new ItemPotion(metadata) },
+		{ 374, (_, _) => new ItemGlassBottle() },
+		{ 375, (_, _) => new ItemSpiderEye() },
+		{ 376, (_, _) => new ItemFermentedSpiderEye() },
+		{ 377, (_, _) => new ItemBlazePowder() },
+		{ 378, (_, _) => new ItemMagmaCream() },
+		{ 379, (_, _) => new ItemBrewingStand() },
+		{ 380, (_, _) => new ItemCauldron() },
+		{ 381, (_, _) => new ItemEnderEye() },
+		{ 382, (_, _) => new ItemGlisteningMelonSlice() },
+		{ 383, (metadata, _) => new ItemSpawnEgg(metadata) },
+		{ 389, (_, _) => new ItemFrame() },
+		{ 384, (_, _) => new ItemExperienceBottle() },
+		{ 385, (_, _) => new ItemFireCharge() },
+		{ 386, (_, _) => new ItemWritableBook() },
+		{ 387, (_, _) => new ItemWrittenBook() },
+		{ 388, (_, _) => new ItemEmerald() },
+		{ 390, (_, _) => new ItemFlowerPot() },
+		{ 391, (_, _) => new ItemCarrot() },
+		{ 392, (_, _) => new ItemPotato() },
+		{ 393, (_, _) => new ItemBakedPotato() },
+		{ 394, (_, _) => new ItemPoisonousPotato() },
+		{ 395, (_, _) => new ItemEmptyMap() },
+		{ 396, (_, _) => new ItemGoldenCarrot() },
+		{ 397, (metadata, _) => new ItemSkull(metadata) },
+		{ 399, (_, _) => new ItemNetherstar() },
+		{ 400, (_, _) => new ItemPumpkinPie() },
+		{ 401, (_, _) => new ItemFireworkRocket() },
+		{ 402, (_, _) => new ItemFireworkStar() },
+		{ 403, (_, _) => new ItemEnchantedBook() },
+		{ 404, (_, _) => new ItemComparator() },
+		{ 405, (_, _) => new ItemNetherbrick() },
+		{ 406, (_, _) => new ItemQuartz() },
+		{ 407, (_, _) => new ItemTntMinecart() },
+		{ 408, (_, _) => new ItemHopperMinecart() },
+		{ 409, (_, _) => new ItemPrismarineShard() },
+		{ 410, (_, _) => new ItemHopper() },
+		{ 411, (_, _) => new ItemRabbit() },
+		{ 412, (_, _) => new ItemCookedRabbit() },
+		{ 413, (_, _) => new ItemRabbitStew() },
+		{ 414, (_, _) => new ItemRabbitFoot() },
+		{ 415, (_, _) => new ItemRabbitHide() },
+		{ 416, (_, _) => new ItemLeatherHorseArmor() },
+		{ 417, (_, _) => new ItemIronHorseArmor() },
+		{ 418, (_, _) => new ItemGoldenHorseArmor() },
+		{ 419, (_, _) => new ItemDiamondHorseArmor() },
+		{ 420, (_, _) => new ItemLead() },
+		{ 421, (_, _) => new ItemNameTag() },
+		{ 422, (_, _) => new ItemPrismarineCrystals() },
+		{ 423, (_, _) => new ItemMuttonRaw() },
+		{ 424, (_, _) => new ItemMuttonCooked() },
+		{ 425, (_, _) => new ItemArmorStand() },
+		{ 426, (_, _) => new ItemEndCrystal() },
+		{ 427, (_, _) => new ItemSpruceDoor() },
+		{ 428, (_, _) => new ItemBirchDoor() },
+		{ 429, (_, _) => new ItemJungleDoor() },
+		{ 430, (_, _) => new ItemAcaciaDoor() },
+		{ 431, (_, _) => new ItemDarkOakDoor() },
+		{ 432, (_, _) => new ItemChorusFruit() },
+		{ 433, (_, _) => new ItemPoppedChorusFruit() },
+		{ 434, (_, _) => new ItemBannerPattern() },
+		{ 435, (_, _) => new ItemChickenSpawnEgg() },
+		{ 437, (_, _) => new ItemDragonBreath() },
+		{ 438, (_, _) => new ItemSplashPotion() },
+		{ 441, (_, _) => new ItemLingeringPotion() },
+		{ 442, (_, _) => new ItemSparkler() },
+		{ 443, (_, _) => new ItemCommandBlockMinecart() },
+		{ 444, (_, _) => new ItemElytra() },
+		{ 445, (_, _) => new ItemShulkerShell() },
+		{ 446, (_, _) => new ItemBanner() },
+		{ 447, (_, _) => new ItemMedicine() },
+		{ 448, (_, _) => new ItemBalloon() },
+		{ 449, (_, _) => new ItemRapidFertilizer() },
+		{ 450, (_, _) => new ItemTotemOfUndying() },
+		{ 451, (_, _) => new ItemBleach() },
+		{ 452, (_, _) => new ItemIronNugget() },
+		{ 453, (_, _) => new ItemIceBomb() },
+		{ 455, (_, _) => new ItemTrident() },
+		{ 457, (_, _) => new ItemBeetroot() },
+		{ 458, (_, _) => new ItemBeetrootSeeds() },
+		{ 459, (_, _) => new ItemBeetrootSoup() },
+		{ 460, (_, _) => new ItemSalmon() },
+		{ 461, (_, _) => new ItemTropicalFish() },
+		{ 462, (_, _) => new ItemPufferFish() },
+		{ 463, (_, _) => new ItemCookedSalmon() },
+		{ 464, (_, _) => new ItemDriedKelp() },
+		{ 465, (_, _) => new ItemNautilusShell() },
+		{ 466, (_, _) => new ItemEnchantedApple() },
+		{ 467, (_, _) => new ItemHeartOfTheSea() },
+		{ 468, (_, _) => new ItemTurtleShellPiece() },
+		{ 469, (_, _) => new ItemTurtleHelmet() },
+		{ 470, (_, _) => new ItemPhantomMembrane() },
+		{ 471, (_, _) => new ItemCrossbow() },
+		{ 472, (_, _) => new ItemSpruceSign() },
+		{ 473, (_, _) => new ItemBirchSign() },
+		{ 474, (_, _) => new ItemJungleSign() },
+		{ 475, (_, _) => new ItemAcaciaSign() },
+		{ 476, (_, _) => new ItemDarkoakSign() },
+		{ 477, (_, _) => new ItemSweetBerries() },
+		{ 498, (metadata, _) => new ItemCamera(metadata) },
+		{ 499, (_, _) => new ItemCompound() },
+		{ 500, (_, _) => new ItemMusicDisc13() },
+		{ 501, (_, _) => new ItemMusicDiscCat() },
+		{ 502, (_, _) => new ItemMusicDiscBlocks() },
+		{ 503, (_, _) => new ItemMusicDiscChirp() },
+		{ 504, (_, _) => new ItemMusicDiscFar() },
+		{ 505, (_, _) => new ItemMusicDiscMall() },
+		{ 506, (_, _) => new ItemMusicDiscMellohi() },
+		{ 507, (_, _) => new ItemMusicDiscStal() },
+		{ 508, (_, _) => new ItemMusicDiscStrad() },
+		{ 509, (_, _) => new ItemMusicDiscWard() },
+		{ 510, (_, _) => new ItemMusicDisc11() },
+		{ 511, (_, _) => new ItemMusicDiscWait() },
+		{ 513, (_, _) => new ItemShield() },
+		{ 720, (_, _) => new ItemCampfire() },
+		{ 734, (_, _) => new ItemSuspiciousStew() },
+		{ 736, (_, _) => new ItemHoneycomb() },
+		{ 737, (_, _) => new ItemHoneyBottle() },
+		{ 741, (_, _) => new ItemLodestoneCompass() },
+		{ 742, (_, _) => new ItemNetheriteIngot() },
+		{ 743, (_, _) => new ItemNetheriteSword() },
+		{ 744, (_, _) => new ItemNetheriteShovel() },
+		{ 745, (_, _) => new ItemNetheritePickaxe() },
+		{ 746, (_, _) => new ItemNetheriteAxe() },
+		{ 747, (_, _) => new ItemNetheriteHoe() },
+		{ 748, (_, _) => new ItemNetheriteHelmet() },
+		{ 749, (_, _) => new ItemNetheriteChestplate() },
+		{ 750, (_, _) => new ItemNetheriteLeggings() },
+		{ 751, (_, _) => new ItemNetheriteBoots() },
+		{ 752, (_, _) => new ItemNetheriteScrap() },
+		{ 758, (_, _) => new ItemChain() },
+		{ 759, (_, _) => new ItemMusicDiscPigstep() },
+		{ 760, (_, _) => new ItemNetherSprouts() },
+		{ 801, (_, _) => new ItemSoulCampfire() },
+		{ 436, (_, _) => new ItemCowSpawnEgg() },
+		{ 439, (_, _) => new ItemWolfSpawnEgg() },
+		{ 440, (_, _) => new ItemMooshroomSpawnEgg() },
+		{ 456, (_, _) => new ItemBlazeSpawnEgg() },
+		{ 478, (_, _) => new ItemParrotSpawnEgg() },
+		{ 479, (_, _) => new ItemTropicalFishSpawnEgg() },
+		{ 480, (_, _) => new ItemCodSpawnEgg() },
+		{ 481, (_, _) => new ItemPufferfishSpawnEgg() },
+		{ 482, (_, _) => new ItemSalmonSpawnEgg() },
+		{ 483, (_, _) => new ItemDrownedSpawnEgg() },
+		{ 484, (_, _) => new ItemDolphinSpawnEgg() },
+		{ 485, (_, _) => new ItemTurtleSpawnEgg() },
+		{ 486, (_, _) => new ItemPhantomSpawnEgg() },
+		{ 487, (_, _) => new ItemAgentSpawnEgg() },
+		{ 488, (_, _) => new ItemCatSpawnEgg() },
+		{ 489, (_, _) => new ItemPandaSpawnEgg() },
+		{ 490, (_, _) => new ItemFoxSpawnEgg() },
+		{ 491, (_, _) => new ItemPillagerSpawnEgg() },
+		{ 492, (_, _) => new ItemWanderingTraderSpawnEgg() },
+		{ 493, (_, _) => new ItemRavagerSpawnEgg() },
+		{ 494, (_, _) => new ItemBeeSpawnEgg() },
+		{ 495, (_, _) => new ItemStriderSpawnEgg() },
+		{ 496, (_, _) => new ItemHoglinSpawnEgg() },
+		{ 497, (_, _) => new ItemPiglinSpawnEgg() },
+		{ 398, (_, _) => new ItemCarrotOnAStick() },
+		{ 518, (_, _) => new ItemNetherStar() },
+		{ 527, (_, _) => new ItemHopper() },
+		{ 544, (_, _) => new ItemMusicDisc11() },
+		{ 550, (_, _) => new ItemMutton() },
+		{ 551, (_, _) => new ItemCookedMutton() },
+		{ 567, (_, _) => new ItemBanner() },
+		{ 572, (_, _) => new ItemScute() },
+		{ 580, (_, _) => new ItemDarkOakSign() },
+		{ 581, (_, _) => new ItemFlowerBannerPattern() },
+		{ 582, (_, _) => new ItemCreeperBannerPattern() },
+		{ 583, (_, _) => new ItemSkullBannerPattern() },
+		{ 584, (_, _) => new ItemMojangBannerPattern() },
+		{ 585, (_, _) => new ItemFieldMasonedBannerPattern() },
+		{ 586, (_, _) => new ItemBordureIndentedBannerPattern() },
+		{ 587, (_, _) => new ItemPiglinBannerPattern() },
+		{ 621, (_, _) => new ItemGlowFrame() },
+		{ 622, (_, _) => new ItemGoatHorn() },
+		{ 623, (_, _) => new ItemAmethystShard() },
+		{ 624, (_, _) => new ItemSpyglass() },
+		{ 630, (_, _) => new ItemGlowBerries() },
+		{ 778, (_, _) => new ItemRecoveryCompass() },
+		{ 779, (_, _) => new ItemEchoShard() },
+		{ 780, (_, _) => new ItemBundle() },
+		{ 1046, (_, _) => new ItemWindCharge() },
+		{ 1047, (_, _) => new ItemMace() },
+		{ 1048, (_, _) => new ItemOminousBottle() },
+		{ 1049, (_, _) => new ItemOminousTrialKey() }
+	};
+
+	public static Item GetItem(short id, short metadata = 0, int count = 1)
+	{
+		try
 		{
 			Item item = null;
 
 			if (CustomItemFactory != null)
-			{
 				item = CustomItemFactory.GetItem(id, metadata, count);
-			}
 
-			if (item != null) return item;
-
-			if (id == 0) item = new ItemAir();
-			else if (id == 256) item = new ItemIronShovel();
-			else if (id == 257) item = new ItemIronPickaxe();
-			else if (id == 258) item = new ItemIronAxe();
-			else if (id == 259) item = new ItemFlintAndSteel();
-			else if (id == 260) item = new ItemApple();
-			else if (id == 261) item = new ItemBow();
-			else if (id == 262) item = new ItemArrow();
-			else if (id == 263) item = new ItemCoal();
-			else if (id == 264) item = new ItemDiamond();
-			else if (id == 265) item = new ItemIronIngot();
-			else if (id == 266) item = new ItemGoldIngot();
-			else if (id == 267) item = new ItemIronSword();
-			else if (id == 268) item = new ItemWoodenSword();
-			else if (id == 269) item = new ItemWoodenShovel();
-			else if (id == 270) item = new ItemWoodenPickaxe();
-			else if (id == 271) item = new ItemWoodenAxe();
-			else if (id == 272) item = new ItemStoneSword();
-			else if (id == 273) item = new ItemStoneShovel();
-			else if (id == 274) item = new ItemStonePickaxe();
-			else if (id == 275) item = new ItemStoneAxe();
-			else if (id == 276) item = new ItemDiamondSword();
-			else if (id == 277) item = new ItemDiamondShovel();
-			else if (id == 278) item = new ItemDiamondPickaxe();
-			else if (id == 279) item = new ItemDiamondAxe();
-			else if (id == 280) item = new ItemStick();
-			else if (id == 281) item = new ItemBowl();
-			else if (id == 282) item = new ItemMushroomStew();
-			else if (id == 283) item = new ItemGoldenSword();
-			else if (id == 284) item = new ItemGoldenShovel();
-			else if (id == 285) item = new ItemGoldenPickaxe();
-			else if (id == 286) item = new ItemGoldenAxe();
-			else if (id == 287) item = new ItemString();
-			else if (id == 288) item = new ItemFeather();
-			else if (id == 289) item = new ItemGunpowder();
-			else if (id == 290) item = new ItemWoodenHoe();
-			else if (id == 291) item = new ItemStoneHoe();
-			else if (id == 292) item = new ItemIronHoe();
-			else if (id == 293) item = new ItemDiamondHoe();
-			else if (id == 294) item = new ItemGoldenHoe();
-			else if (id == 295) item = new ItemWheatSeeds();
-			else if (id == 296) item = new ItemWheat();
-			else if (id == 297) item = new ItemBread();
-			else if (id == 298) item = new ItemLeatherHelmet();
-			else if (id == 299) item = new ItemLeatherChestplate();
-			else if (id == 300) item = new ItemLeatherLeggings();
-			else if (id == 301) item = new ItemLeatherBoots();
-			else if (id == 302) item = new ItemChainmailHelmet();
-			else if (id == 303) item = new ItemChainmailChestplate();
-			else if (id == 304) item = new ItemChainmailLeggings();
-			else if (id == 305) item = new ItemChainmailBoots();
-			else if (id == 309) item = new ItemIronBoots();
-			else if (id == 308) item = new ItemIronLeggings();
-			else if (id == 307) item = new ItemIronChestplate();
-			else if (id == 306) item = new ItemIronHelmet();
-			else if (id == 310) item = new ItemDiamondHelmet();
-			else if (id == 311) item = new ItemDiamondChestplate();
-			else if (id == 312) item = new ItemDiamondLeggings();
-			else if (id == 313) item = new ItemDiamondBoots();
-			else if (id == 314) item = new ItemGoldenHelmet();
-			else if (id == 315) item = new ItemGoldenChestplate();
-			else if (id == 316) item = new ItemGoldenLeggings();
-			else if (id == 317) item = new ItemGoldenBoots();
-			else if (id == 318) item = new ItemFlint();
-			else if (id == 319) item = new ItemPorkchop();
-			else if (id == 320) item = new ItemCookedPorkchop();
-			else if (id == 321) item = new ItemPainting();
-			else if (id == 322) item = new ItemGoldenApple();
-			else if (id == 323) item = new ItemSign();
-			else if (id == 324) item = new ItemWoodenDoor();
-			else if (id == 325) item = new ItemBucket(metadata);
-			else if (id == 328) item = new ItemMinecart();
-			else if (id == 329) item = new ItemSaddle();
-			else if (id == 330) item = new ItemIronDoor();
-			else if (id == 331) item = new ItemRedstone();
-			else if (id == 332) item = new ItemSnowball();
-			else if (id == 333) item = new ItemBoat(metadata);
-			else if (id == 334) item = new ItemLeather();
-			else if (id == 335) item = new ItemKelp();
-			else if (id == 336) item = new ItemBrick();
-			else if (id == 337) item = new ItemClayBall();
-			else if (id == 338) item = new ItemReeds();
-			else if (id == 339) item = new ItemPaper();
-			else if (id == 340) item = new ItemBook();
-			else if (id == 341) item = new ItemSlimeBall();
-			else if (id == 342) item = new ItemChestMinecart();
-			else if (id == 344) item = new ItemEgg();
-			else if (id == 345) item = new ItemCompass();
-			else if (id == 346) item = new ItemFishingRod();
-			else if (id == 347) item = new ItemClock();
-			else if (id == 348) item = new ItemGlowstoneDust();
-			else if (id == 349) item = new ItemCod();
-			else if (id == 350) item = new ItemCookedCod();
-			else if (id == 351) item = new ItemDye();
-			else if (id == 352) item = new ItemBone();
-			else if (id == 353) item = new ItemSugar();
-			else if (id == 354) item = new ItemCake();
-			else if (id == 355) item = new ItemBed();
-			else if (id == 356) item = new ItemRepeater();
-			else if (id == 357) item = new ItemCookie();
-			else if (id == 358) item = new ItemMap();
-			else if (id == 359) item = new ItemShears();
-			else if (id == 360) item = new ItemMelon();
-			else if (id == 361) item = new ItemPumpkinSeeds();
-			else if (id == 362) item = new ItemMelonSeeds();
-			else if (id == 363) item = new ItemBeef();
-			else if (id == 364) item = new ItemCookedBeef();
-			else if (id == 365) item = new ItemChicken();
-			else if (id == 366) item = new ItemCookedChicken();
-			else if (id == 367) item = new ItemRottenFlesh();
-			else if (id == 368) item = new ItemEnderPearl();
-			else if (id == 369) item = new ItemBlazeRod();
-			else if (id == 370) item = new ItemGhastTear();
-			else if (id == 371) item = new ItemGoldNugget();
-			else if (id == 372) item = new ItemNetherWart();
-			else if (id == 373) item = new ItemPotion(metadata);
-			else if (id == 374) item = new ItemGlassBottle();
-			else if (id == 375) item = new ItemSpiderEye();
-			else if (id == 376) item = new ItemFermentedSpiderEye();
-			else if (id == 377) item = new ItemBlazePowder();
-			else if (id == 378) item = new ItemMagmaCream();
-			else if (id == 379) item = new ItemBrewingStand();
-			else if (id == 380) item = new ItemCauldron();
-			else if (id == 381) item = new ItemEnderEye();
-			else if (id == 382) item = new ItemGlisteningMelonSlice();
-			else if (id == 383) item = new ItemSpawnEgg(metadata);
-			else if (id == 389) item = new ItemFrame();
-			else if (id == 384) item = new ItemExperienceBottle();
-			else if (id == 385) item = new ItemFireCharge();
-			else if (id == 386) item = new ItemWritableBook();
-			else if (id == 387) item = new ItemWrittenBook();
-			else if (id == 388) item = new ItemEmerald();
-			else if (id == 390) item = new ItemFlowerPot();
-			else if (id == 391) item = new ItemCarrot();
-			else if (id == 392) item = new ItemPotato();
-			else if (id == 393) item = new ItemBakedPotato();
-			else if (id == 394) item = new ItemPoisonousPotato();
-			else if (id == 395) item = new ItemEmptyMap();
-			else if (id == 396) item = new ItemGoldenCarrot();
-			else if (id == 397) item = new ItemSkull(metadata);
-			else if (id == 398) item = new ItemCarrotonastick();
-			else if (id == 399) item = new ItemNetherstar();
-			else if (id == 400) item = new ItemPumpkinPie();
-			else if (id == 401) item = new ItemFireworkRocket();
-			else if (id == 402) item = new ItemFireworkStar();
-			else if (id == 403) item = new ItemEnchantedBook();
-			else if (id == 404) item = new ItemComparator();
-			else if (id == 405) item = new ItemNetherbrick();
-			else if (id == 406) item = new ItemQuartz();
-			else if (id == 407) item = new ItemTntMinecart();
-			else if (id == 408) item = new ItemHopperMinecart();
-			else if (id == 409) item = new ItemPrismarineShard();
-			else if (id == 410) item = new ItemHopper();
-			else if (id == 411) item = new ItemRabbit();
-			else if (id == 412) item = new ItemCookedRabbit();
-			else if (id == 413) item = new ItemRabbitStew();
-			else if (id == 414) item = new ItemRabbitFoot();
-			else if (id == 415) item = new ItemRabbitHide();
-			else if (id == 416) item = new ItemLeatherHorseArmor();
-			else if (id == 417) item = new ItemIronHorseArmor();
-			else if (id == 418) item = new ItemGoldenHorseArmor();
-			else if (id == 419) item = new ItemDiamondHorseArmor();
-			else if (id == 420) item = new ItemLead();
-			else if (id == 421) item = new ItemNameTag();
-			else if (id == 422) item = new ItemPrismarineCrystals();
-			else if (id == 423) item = new ItemMuttonRaw();
-			else if (id == 424) item = new ItemMuttonCooked();
-			else if (id == 425) item = new ItemArmorStand();
-			else if (id == 426) item = new ItemEndCrystal();
-			else if (id == 427) item = new ItemSpruceDoor();
-			else if (id == 428) item = new ItemBirchDoor();
-			else if (id == 429) item = new ItemJungleDoor();
-			else if (id == 430) item = new ItemAcaciaDoor();
-			else if (id == 431) item = new ItemDarkOakDoor();
-			else if (id == 432) item = new ItemChorusFruit();
-			else if (id == 433) item = new ItemPoppedChorusFruit();
-			else if (id == 434) item = new ItemBannerPattern();
-			else if (id == 437) item = new ItemDragonBreath();
-			else if (id == 438) item = new ItemSplashPotion();
-			else if (id == 441) item = new ItemLingeringPotion();
-			else if (id == 442) item = new ItemSparkler();
-			else if (id == 443) item = new ItemCommandBlockMinecart();
-			else if (id == 444) item = new ItemElytra();
-			else if (id == 445) item = new ItemShulkerShell();
-			else if (id == 446) item = new ItemBanner();
-			else if (id == 447) item = new ItemMedicine();
-			else if (id == 448) item = new ItemBalloon();
-			else if (id == 449) item = new ItemRapidFertilizer();
-			else if (id == 450) item = new ItemTotemOfUndying();
-			else if (id == 451) item = new ItemBleach();
-			else if (id == 452) item = new ItemIronNugget();
-			else if (id == 453) item = new ItemIceBomb();
-			else if (id == 455) item = new ItemTrident();
-			else if (id == 457) item = new ItemBeetroot();
-			else if (id == 458) item = new ItemBeetrootSeeds();
-			else if (id == 459) item = new ItemBeetrootSoup();
-			else if (id == 460) item = new ItemSalmon();
-			else if (id == 461) item = new ItemTropicalFish();
-			else if (id == 462) item = new ItemPufferfish();
-			else if (id == 463) item = new ItemCookedSalmon();
-			else if (id == 464) item = new ItemDriedKelp();
-			else if (id == 465) item = new ItemNautilusShell();
-			else if (id == 466) item = new ItemEnchantedApple();
-			else if (id == 467) item = new ItemHeartOfTheSea();
-			else if (id == 468) item = new ItemTurtleShellPiece();
-			else if (id == 469) item = new ItemTurtleHelmet();
-			else if (id == 470) item = new ItemPhantomMembrane();
-			else if (id == 471) item = new ItemCrossbow();
-			else if (id == 472) item = new ItemSpruceSign();
-			else if (id == 473) item = new ItemBirchSign();
-			else if (id == 474) item = new ItemJungleSign();
-			else if (id == 475) item = new ItemAcaciaSign();
-			else if (id == 476) item = new ItemDarkoakSign();
-			else if (id == 477) item = new ItemSweetBerries();
-			else if (id == 498) item = new ItemCamera(metadata);
-			else if (id == 499) item = new ItemCompound();
-			
-			else if (id == 500) item = new ItemMusicDisc13();
-			else if (id == 501) item = new ItemMusicDiscCat();
-			else if (id == 502) item = new ItemMusicDiscBlocks();
-			else if (id == 503) item = new ItemMusicDiscChirp();
-			else if (id == 504) item = new ItemMusicDiscFar();
-			else if (id == 505) item = new ItemMusicDiscMall();
-			else if (id == 506) item = new ItemMusicDiscMellohi();
-			else if (id == 507) item = new ItemMusicDiscStal();
-			else if (id == 508) item = new ItemMusicDiscStrad();
-			else if (id == 509) item = new ItemMusicDiscWard();
-			else if (id == 510) item = new ItemMusicDisc11();
-			else if (id == 511) item = new ItemMusicDiscWait();
-			
-			else if (id == 513) item = new ItemShield();
-			else if (id == 720) item = new ItemCampfire();
-			else if (id == 734) item = new ItemSuspiciousStew();
-			else if (id == 736) item = new ItemHoneycomb();
-			else if (id == 737) item = new ItemHoneyBottle();
-			else if (id == 741) item = new ItemLodestoneCompass();
-			else if (id == 742) item = new ItemNetheriteIngot();
-			else if (id == 743) item = new ItemNetheriteSword();
-			else if (id == 744) item = new ItemNetheriteShovel();
-			else if (id == 745) item = new ItemNetheritePickaxe();
-			else if (id == 746) item = new ItemNetheriteAxe();
-			else if (id == 747) item = new ItemNetheriteHoe();
-			else if (id == 748) item = new ItemNetheriteHelmet();
-			else if (id == 749) item = new ItemNetheriteChestplate();
-			else if (id == 750) item = new ItemNetheriteLeggings();
-			else if (id == 751) item = new ItemNetheriteBoots();
-			else if (id == 752) item = new ItemNetheriteScrap();
-			else if (id == 758) item = new ItemChain();
-			else if (id == 759) item = new ItemMusicDiscPigstep();
-			else if (id == 760) item = new ItemNetherSprouts();
-			else if (id == 801) item = new ItemSoulCampfire();
-
-			else if (id == 436) item = new ItemCowSpawnEgg();
-            else if (id == 439) item = new ItemWolfSpawnEgg();
-            else if (id == 440) item = new ItemMooshroomSpawnEgg();
-            else if (id == 456) item = new ItemBlazeSpawnEgg();
-            else if (id == 478) item = new ItemParrotSpawnEgg();
-            else if (id == 479) item = new ItemTropicalFishSpawnEgg();
-            else if (id == 480) item = new ItemCodSpawnEgg();
-            else if (id == 481) item = new ItemPufferfishSpawnEgg();
-            else if (id == 482) item = new ItemSalmonSpawnEgg();
-            else if (id == 483) item = new ItemDrownedSpawnEgg();
-            else if (id == 484) item = new ItemDolphinSpawnEgg();
-            else if (id == 485) item = new ItemTurtleSpawnEgg();
-            else if (id == 486) item = new ItemPhantomSpawnEgg();
-            else if (id == 487) item = new ItemAgentSpawnEgg();
-            else if (id == 488) item = new ItemCatSpawnEgg();
-            else if (id == 489) item = new ItemPandaSpawnEgg();
-            else if (id == 490) item = new ItemFoxSpawnEgg();
-            else if (id == 491) item = new ItemPillagerSpawnEgg();
-            else if (id == 492) item = new ItemWanderingTraderSpawnEgg();
-            else if (id == 493) item = new ItemRavagerSpawnEgg();
-            else if (id == 494) item = new ItemBeeSpawnEgg();
-            else if (id == 495) item = new ItemStriderSpawnEgg();
-            else if (id == 496) item = new ItemHoglinSpawnEgg();
-            else if (id == 497) item = new ItemPiglinSpawnEgg();
-            else if (id == 517) item = new ItemCarrotOnAStick();
-            else if (id == 518) item = new ItemNetherStar();
-            else if (id == 527) item = new ItemHopper();
-            else if (id == 544) item = new ItemMusicDisc11();
-            else if (id == 550) item = new ItemMutton();
-            else if (id == 551) item = new ItemCookedMutton();
-            else if (id == 567) item = new ItemBanner();
-            else if (id == 572) item = new ItemScute();
-            else if (id == 580) item = new ItemDarkOakSign();
-            else if (id == 581) item = new ItemFlowerBannerPattern();
-            else if (id == 582) item = new ItemCreeperBannerPattern();
-            else if (id == 583) item = new ItemSkullBannerPattern();
-            else if (id == 584) item = new ItemMojangBannerPattern();
-            else if (id == 585) item = new ItemFieldMasonedBannerPattern();
-            else if (id == 586) item = new ItemBordureIndentedBannerPattern();
-            else if (id == 587) item = new ItemPiglinBannerPattern();
-            else if (id == 621) item = new ItemGlowFrame();
-            else if (id == 622) item = new ItemGoatHorn();
-            else if (id == 623) item = new ItemAmethystShard();
-            else if (id == 624) item = new ItemSpyglass();
-            else if (id == 630) item = new ItemGlowBerries();
-			else if (id == 1046) item = new ItemWindCharge();
-			else if (id == 1047) item = new ItemMace();
-			
-			else if (id <= 255)
+			item = item switch
 			{
-				int blockId = id;
-				if (blockId < 0) blockId = (short) (Math.Abs(id) + 255); // hehe
-				Block block = BlockFactory.GetBlockById(blockId);
-				var runtimeId = BlockFactory.GetRuntimeId(blockId, (byte) metadata);
+				null when ItemFactories.TryGetValue(id, out Func<short, int, Item> factory) => factory(metadata, count),
+				null when id <= 255 => CreateBlockItem(id, metadata, count),
+				_ => item
+			};
 
-				var blockState = BlockFactory.BlockPalette[(int) runtimeId];
-				block.SetState(blockState);
-
-				if (CustomBlockItemFactory == null)
-				{
-					item = new ItemBlock(block, metadata);
-				}
-				else
-				{
-					item = CustomBlockItemFactory.GetBlockItem(block, metadata, count);
-				}
+			if (item == null)
+			{
+				Log.Warn($"No item found for ID {id}");
+				return null;
 			}
-			else item = new Item(id, metadata, count);
 
-			// This might now be a good idea if the constructor changes these
-			// properties for custom items.
 			item.Metadata = metadata;
-			item.Count = (byte) count;
+			item.Count = (byte)count;
 
-			if (!string.IsNullOrWhiteSpace(item.Name))
-			{
-				var result = Itemstates.FirstOrDefault(x => x.Name.Equals(item.Name, StringComparison.InvariantCultureIgnoreCase));
-
-				if (result != null)
-				{
-					item.NetworkId = result.Id;
-				}
-			}
+			if (string.IsNullOrWhiteSpace(item.Name)) return item;
+			Itemstate result = Itemstates?.FirstOrDefault(x => x.Name.Equals(item.Name, StringComparison.InvariantCultureIgnoreCase));
+			if (result != null)
+				item.NetworkId = result.Id;
 
 			return item;
 		}
+		catch (Exception ex)
+		{
+			Log.Error($"Error while getting item for ID {id} with metadata {metadata}: {ex.Message}", ex);
+			return null;
+		}
 	}
 
-	public class ItemMushroomStew : Item { public ItemMushroomStew() : base("minecraft:mushroom_stew", 282) {} }
-	public class ItemMusicDiscWard : Item { public ItemMusicDiscWard() : base("minecraft:music_disc_ward", 509) {} }
-	public class ItemEnchantedApple : Item { public ItemEnchantedApple() : base("minecraft:enchanted_golden_apple", 466) {} }
-	public class ItemTropicalFish : Item { public ItemTropicalFish() : base("minecraft:tropical_fish", 461) {} }
-	public class ItemPufferfish : Item { public ItemPufferfish() : base("minecraft:pufferfish", 462) {} }
-	public class ItemCookedCod : Item { public ItemCookedCod() : base("minecraft:cooked_cod", 350) {} }
-	public class ItemCookedSalmon : Item { public ItemCookedSalmon() : base("minecraft:cooked_salmon", 463) {} }
-	public class ItemSparkler : Item { public ItemSparkler() : base("minecraft:sparkler", 442) {} }
-	public class ItemDriedKelp : Item { public ItemDriedKelp() : base("minecraft:dried_kelp", 464) {} }
-	public class ItemNautilusShell : Item { public ItemNautilusShell() : base("minecraft:nautilus_shell", 465) {} }
-	public class ItemComparator : Item { public ItemComparator() : base("minecraft:comparator", 404) {} }
-	public class ItemRottenFlesh : Item { public ItemRottenFlesh() : base("minecraft:rotten_flesh", 367) {} }
-	public class ItemRabbitFoot : Item { public ItemRabbitFoot() : base("minecraft:rabbit_foot", 414) {} }
-	public class ItemLingeringPotion : Item { public ItemLingeringPotion() : base("minecraft:lingering_potion", 441) {} }
-	public class ItemCampfire : Item { public ItemCampfire() : base("minecraft:campfire", 720) {} }
-	public class ItemMusicDiscFar : Item { public ItemMusicDiscFar() : base("minecraft:music_disc_far", 504) {} }
-	public class ItemSpiderEye : Item { public ItemSpiderEye() : base("minecraft:spider_eye", 375) {} }
-	public class ItemPoisonousPotato : Item { public ItemPoisonousPotato() : base("minecraft:poisonous_potato", 394) {} }
-	public class ItemBeetrootSoup : Item { public ItemBeetrootSoup() : base("minecraft:beetroot_soup", 459) {} }
-	public class ItemSweetBerries : Item { public ItemSweetBerries() : base("minecraft:sweet_berries", 477) {} }
-	public class ItemCookedRabbit : FoodItem { public ItemCookedRabbit() : base("minecraft:cooked_rabbit", 412, 0, 6, 7) {} }
-	public class ItemRabbitStew : Item { public ItemRabbitStew() : base("minecraft:rabbit_stew", 413) {} }
-	public class ItemPumpkinSeeds : Item { public ItemPumpkinSeeds() : base("minecraft:pumpkin_seeds", 361) {} }
-	public class ItemCommandBlockMinecart : Item { public ItemCommandBlockMinecart() : base("minecraft:command_block_minecart", 443) {} }
-	public class ItemMelonSeeds : Item { public ItemMelonSeeds() : base("minecraft:melon_seeds", 362) {} }
-	public class ItemNetherWart : Item { public ItemNetherWart() : base("minecraft:nether_wart", 372) {} }
-	public class ItemMusicDiscStrad : Item { public ItemMusicDiscStrad() : base("minecraft:music_disc_strad", 508) {} }
-	public class ItemBowl : Item { public ItemBowl() : base("minecraft:bowl", 281) {} }
-	public class ItemString : Item { public ItemString() : base("minecraft:string", 287) {} }
-	public class ItemFeather : Item { public ItemFeather() : base("minecraft:feather", 288) {} }
-	public class ItemGunpowder : Item { public ItemGunpowder() : base("minecraft:gunpowder", 289) {} }
-	public class ItemMusicDiscMellohi : Item { public ItemMusicDiscMellohi() : base("minecraft:music_disc_mellohi", 506) {} }
-	public class ItemEnderEye : Item { public ItemEnderEye() : base("minecraft:ender_eye", 381) {} }
-	public class ItemShield : Item { public ItemShield() : base("minecraft:shield", 513) {} }
-	public class ItemFlint : Item { public ItemFlint() : base("minecraft:flint", 318) {} }
-	public class ItemHeartOfTheSea : Item { public ItemHeartOfTheSea() : base("minecraft:heart_of_the_sea", 467) {} }
-	public class ItemMinecart : Item { public ItemMinecart() : base("minecraft:minecart", 328) {} }
-	public class ItemWrittenBook : Item { public ItemWrittenBook() : base("minecraft:written_book", 387) {} }
-	public class ItemLeather : Item { public ItemLeather() : base("minecraft:leather", 334) {} }
-	public class ItemBrick : Item { public ItemBrick() : base("minecraft:brick", 336) {} }
-	public class ItemCarrotonastick : Item { public ItemCarrotonastick() : base("minecraft:carrot_on_a_stick", 398) {} }
-	public class ItemReeds : Item { public ItemReeds() : base("minecraft:item.reeds", 338) {} }
-	public class ItemPaper : Item { public ItemPaper() : base("minecraft:paper", 339) {} }
-	public class ItemTrident : Item { public ItemTrident() : base("minecraft:trident", 455) {} }
-	public class ItemSlimeBall : Item { public ItemSlimeBall() : base("minecraft:slime_ball", 341) {} }
-	public class ItemChestMinecart : Item { public ItemChestMinecart() : base("minecraft:chest_minecart", 342) {} }
-	public class ItemFishingRod : Item { public ItemFishingRod() : base("minecraft:fishing_rod", 346) {} }
-	public class ItemClock : Item { public ItemClock() : base("minecraft:clock", 347) {} }
-	public class ItemGlowstoneDust : Item { public ItemGlowstoneDust() : base("minecraft:glowstone_dust", 348) {} }
-	public class ItemNameTag : Item { public ItemNameTag() : base("minecraft:name_tag", 421) {} }
-	public class ItemCake : Item { public ItemCake() : base("minecraft:cake", 354) {} }
-	public class ItemRepeater : Item { public ItemRepeater() : base("minecraft:repeater", 356) {} }
-	public class ItemGhastTear : Item { public ItemGhastTear() : base("minecraft:ghast_tear", 370) {} }
-	public class ItemGlassBottle : Item { public ItemGlassBottle() : base("minecraft:glass_bottle", 374) {} }
-	public class ItemFermentedSpiderEye : Item { public ItemFermentedSpiderEye() : base("minecraft:fermented_spider_eye", 376) {} }
-	public class ItemMagmaCream : Item { public ItemMagmaCream() : base("minecraft:magma_cream", 378) {} }
-	public class ItemBrewingStand : Item { public ItemBrewingStand() : base("minecraft:brewing_stand", 379) {} }
-	public class ItemRapidFertilizer : Item { public ItemRapidFertilizer() : base("minecraft:rapid_fertilizer", 449) {} } // what is this?
-	public class ItemGlisteningMelonSlice : Item { public ItemGlisteningMelonSlice() : base("minecraft:glistering_melon_slice", 382) {} }
-	public class ItemFireCharge : Item { public ItemFireCharge() : base("minecraft:fire_charge", 385) {} }
-	public class ItemWritableBook : Item { public ItemWritableBook() : base("minecraft:writable_book", 386) {} }
-	public class ItemEmerald : Item { public ItemEmerald() : base("minecraft:emerald", 388) {} }
-	public class ItemMusicDiscPigstep : Item { public ItemMusicDiscPigstep() : base("minecraft:music_disc_pigstep", 759) {} }
-	public class ItemFlowerPot : Item { public ItemFlowerPot() : base("minecraft:flower_pot", 390) {} }
-	public class ItemNetherstar : Item { public ItemNetherstar() : base("minecraft:nether_star", 399) {} }
-	public class ItemHopperMinecart : Item { public ItemHopperMinecart() : base("minecraft:hopper_minecart", 408) {} }
-	public class ItemFireworkStar : Item { public ItemFireworkStar() : base("minecraft:firework_star", 402) {} }
-	public class ItemNetherbrick : Item { public ItemNetherbrick() : base("minecraft:netherbrick", 405) {} }
-	public class ItemQuartz : Item { public ItemQuartz() : base("minecraft:quartz", 406) {} }
-	public class ItemTntMinecart : Item { public ItemTntMinecart() : base("minecraft:tnt_minecart", 407) {} }
-	public class ItemHopper : Item { public ItemHopper() : base("minecraft:hopper", 410) {} }
-	public class ItemDragonBreath : Item { public ItemDragonBreath() : base("minecraft:dragon_breath", 437) {} }
-	public class ItemRabbitHide : Item { public ItemRabbitHide() : base("minecraft:rabbit_hide", 415) {} }
-	public class ItemMusicDisc13 : Item { public ItemMusicDisc13() : base("minecraft:music_disc_13", 500) {} }
-	public class ItemMusicDiscCat : Item { public ItemMusicDiscCat() : base("minecraft:music_disc_cat", 501) {} }
-	public class ItemMusicDiscBlocks : Item { public ItemMusicDiscBlocks() : base("minecraft:music_disc_blocks", 502) {} }
-	public class ItemMusicDiscChirp : Item { public ItemMusicDiscChirp() : base("minecraft:music_disc_chirp", 503) {} }
-	public class ItemMusicDiscMall : Item { public ItemMusicDiscMall() : base("minecraft:music_disc_mall", 505) {} }
-	public class ItemMusicDiscStal : Item { public ItemMusicDiscStal() : base("minecraft:music_disc_stal", 507) {} }
-	public class ItemMusicDisc11 : Item { public ItemMusicDisc11() : base("minecraft:music_disc_11", 510) {} }
-	public class ItemMusicDiscWait : Item { public ItemMusicDiscWait() : base("minecraft:music_disc_wait", 511) {} }
-	public class ItemLead : Item { public ItemLead() : base("minecraft:lead", 420) {} }
-	public class ItemPrismarineCrystals : Item { public ItemPrismarineCrystals() : base("minecraft:prismarine_crystals", 422) {} }
-	public class ItemArmorStand : Item { public ItemArmorStand() : base("minecraft:armor_stand", 425) {} }
-	public class ItemPhantomMembrane : Item { public ItemPhantomMembrane() : base("minecraft:phantom_membrane", 470) {} }
-	public class ItemSuspiciousStew : Item { public ItemSuspiciousStew() : base("minecraft:suspicious_stew", 734) {} }
-	public class ItemPoppedChorusFruit : Item { public ItemPoppedChorusFruit() : base("minecraft:popped_chorus_fruit", 433) {} }
-	public class ItemPrismarineShard : Item { public ItemPrismarineShard() : base("minecraft:prismarine_shard", 409) {} }
-	public class ItemShulkerShell : Item { public ItemShulkerShell() : base("minecraft:shulker_shell", 445) {} }
-	public class ItemTotemOfUndying : Item { public ItemTotemOfUndying() : base("minecraft:totem_of_undying", 450) {} }
-	public class ItemTurtleShellPiece : Item { public ItemTurtleShellPiece() : base("minecraft:scute", 468) {} }
-	public class ItemBalloon : Item { public ItemBalloon() : base("minecraft:balloon", 448) {} }
-	public class ItemBannerPattern : Item { public ItemBannerPattern() : base("minecraft:banner_pattern", 434) {} }
-	public class ItemHoneycomb : Item { public ItemHoneycomb() : base("minecraft:honeycomb", 736) {} }
-	public class ItemHoneyBottle : Item { public ItemHoneyBottle() : base("minecraft:honey_bottle", 737) {} }
-	public class ItemCompound : Item { public ItemCompound() : base("minecraft:compound", 499) {} }
-	public class ItemIceBomb : Item { public ItemIceBomb() : base("minecraft:ice_bomb", 453) {} }
-	public class ItemBleach : Item { public ItemBleach() : base("minecraft:bleach", 451) {} } // A Trump item?
-	public class ItemMedicine : Item { public ItemMedicine() : base("minecraft:medicine", 447) {} } // Corona?
-	public class ItemLodestoneCompass : Item { public ItemLodestoneCompass() : base("minecraft:lodestone_compass", 741) {} }
-	public class ItemNetheriteIngot : Item { public ItemNetheriteIngot() : base("minecraft:netherite_ingot", 742) {} }
-	public class ItemNetheriteScrap : Item { public ItemNetheriteScrap() : base("minecraft:netherite_scrap", 752) {} }
-	public class ItemChain : Item { public ItemChain() : base("minecraft:chain", 758) {} }
-	public class ItemNetherSprouts : Item { public ItemNetherSprouts() : base("minecraft:nether_sprouts", 760) {} }
-	public class ItemSoulCampfire : Item { public ItemSoulCampfire() : base("minecraft:soul_campfire", 801) {} }
-	public class ItemEndCrystal : Item { public ItemEndCrystal() : base("minecraft:end_crystal", 426) {} }
-	public class ItemMace : ItemSword { public ItemMace() : base("minecraft:mace", 1047) {} }
-	public class ItemGlowBerries : Item { public ItemGlowBerries() : base(630) {} }
-	public class ItemPandaSpawnEgg : Item { public ItemPandaSpawnEgg() : base(489) {} }
-	public class ItemParrotSpawnEgg : Item { public ItemParrotSpawnEgg() : base(478) {} }
-	public class ItemDrownedSpawnEgg : Item { public ItemDrownedSpawnEgg() : base(483) {} }
-	public class ItemSalmonSpawnEgg : Item { public ItemSalmonSpawnEgg() : base(482) {} }
-	public class ItemPufferfishSpawnEgg : Item { public ItemPufferfishSpawnEgg() : base(481) {} }
-	public class ItemSpyglass : Item { public ItemSpyglass() : base(624) {} }
-	public class ItemBlazeSpawnEgg : Item { public ItemBlazeSpawnEgg() : base(456) {} }
-	public class ItemStriderSpawnEgg : Item { public ItemStriderSpawnEgg() : base(495) {} }
-	public class ItemCowSpawnEgg : Item { public ItemCowSpawnEgg() : base(436) {} }
-	public class ItemPillagerSpawnEgg : Item { public ItemPillagerSpawnEgg() : base(491) {} }
-	public class ItemBeeSpawnEgg : Item { public ItemBeeSpawnEgg() : base(494) {} }
-	public class ItemAgentSpawnEgg : Item { public ItemAgentSpawnEgg() : base(487) {} }
-	public class ItemTurtleSpawnEgg : Item { public ItemTurtleSpawnEgg() : base(485) {} }
-	public class ItemHoglinSpawnEgg : Item { public ItemHoglinSpawnEgg() : base(496) {} }
-	public class ItemGlowFrame : Item { public ItemGlowFrame() : base(621) {} }
-	public class ItemTropicalFishSpawnEgg : Item { public ItemTropicalFishSpawnEgg() : base(479) {} }
-	public class ItemFoxSpawnEgg : Item { public ItemFoxSpawnEgg() : base(490) {} }
-	public class ItemChickenSpawnEgg : Item { public ItemChickenSpawnEgg() : base(435) {} }
-	public class ItemWanderingTraderSpawnEgg : Item { public ItemWanderingTraderSpawnEgg() : base(492) {} }
-	public class ItemPiglinBannerPattern : Item { public ItemPiglinBannerPattern() : base(587) {} }
-	public class ItemPiglinSpawnEgg : Item { public ItemPiglinSpawnEgg() : base(497) {} }
-	public class ItemMojangBannerPattern : Item { public ItemMojangBannerPattern() : base(584) {} }
-	public class ItemSkullBannerPattern : Item { public ItemSkullBannerPattern() : base(583) {} }
-	public class ItemMooshroomSpawnEgg : Item { public ItemMooshroomSpawnEgg() : base(440) {} }
-	public class ItemCookedMutton : Item { public ItemCookedMutton() : base(551) {} }
-	public class ItemGoatHorn : Item { public ItemGoatHorn() : base(622) {} }
-	public class ItemCodSpawnEgg : Item { public ItemCodSpawnEgg() : base(480) {} }
-	public class ItemRavagerSpawnEgg : Item { public ItemRavagerSpawnEgg() : base(493) {} }
-	public class ItemDarkOakSign : Item { public ItemDarkOakSign() : base(580) {} }
-	public class ItemCarrotOnAStick : Item { public ItemCarrotOnAStick() : base(517) {} }
-	public class ItemNetherStar : Item { public ItemNetherStar() : base(518) {} }
-	public class ItemMutton : Item { public ItemMutton() : base(550) {} }
-	public class ItemBordureIndentedBannerPattern : Item { public ItemBordureIndentedBannerPattern() : base(586) {} }
-	public class ItemScute : Item { public ItemScute() : base(572) {} }
-	public class ItemFlowerBannerPattern : Item { public ItemFlowerBannerPattern() : base(581) {} }
-	public class ItemCreeperBannerPattern : Item { public ItemCreeperBannerPattern() : base(582) {} }
-	public class ItemFieldMasonedBannerPattern : Item { public ItemFieldMasonedBannerPattern() : base(585) {} }
-	public class ItemAmethystShard : Item { public ItemAmethystShard() : base(623) {} }
-	public class ItemPhantomSpawnEgg : Item { public ItemPhantomSpawnEgg() : base(486) {} }
-	public class ItemWolfSpawnEgg : Item { public ItemWolfSpawnEgg() : base(439) {} }
-	public class ItemCatSpawnEgg : Item { public ItemCatSpawnEgg() : base(488) {} }
-	public class ItemDolphinSpawnEgg : Item { public ItemDolphinSpawnEgg() : base(484) {} }
+	private static ItemBlock CreateBlockItem(short id, short metadata, int count)
+	{
+		// Adjust negative IDs to a valid range.
+		int blockId = id < 0 ? (short)(Math.Abs(id) + 255) : id;
+
+		// Retrieve the block instance.
+		Block block = BlockFactory.GetBlockById(blockId);
+		if (block == null)
+		{
+			Log.Warn($"Block ID {blockId} is invalid. Returning null.");
+			return null;
+		}
+
+		// Retrieve the runtime ID.
+		uint runtimeId = BlockFactory.GetRuntimeId(blockId, (byte)metadata);
+		if (!BlockFactory.BlockPalette.TryGetValue((int)runtimeId, out BlockStateContainer blockState))
+		{
+			Log.Warn($"Runtime ID {runtimeId} for Block ID {blockId} with metadata {metadata} not found in BlockPalette. Using default block state.");
+			return CustomBlockItemFactory != null
+				? CustomBlockItemFactory.GetBlockItem(block, metadata, count)
+				: new ItemBlock(block, metadata);
+		}
+
+		// Apply the block state.
+		block.SetState(blockState);
+
+		// Return the created block item.
+		return CustomBlockItemFactory != null
+			? CustomBlockItemFactory.GetBlockItem(block, metadata, count)
+			: new ItemBlock(block, metadata);
+	}
+
 }
+
+public class ItemMushroomStew() : Item("minecraft:mushroom_stew", 282);
+
+public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward", 509);
+
+public class ItemEnchantedApple() : Item("minecraft:enchanted_golden_apple", 466);
+
+public class ItemTropicalFish() : Item("minecraft:tropical_fish", 461);
+
+public class ItemPufferFish() : Item("minecraft:pufferfish", 462);
+
+public class ItemCookedCod() : Item("minecraft:cooked_cod", 350);
+
+public class ItemCookedSalmon() : Item("minecraft:cooked_salmon", 463);
+
+public class ItemSparkler() : Item("minecraft:sparkler", 442);
+
+public class ItemDriedKelp() : Item("minecraft:dried_kelp", 464);
+
+public class ItemNautilusShell() : Item("minecraft:nautilus_shell", 465);
+
+public class ItemComparator() : Item("minecraft:comparator", 404);
+
+public class ItemRottenFlesh() : Item("minecraft:rotten_flesh", 367);
+
+public class ItemRabbitFoot() : Item("minecraft:rabbit_foot", 414);
+
+public class ItemLingeringPotion() : Item("minecraft:lingering_potion", 441);
+
+public class ItemCampfire() : Item("minecraft:campfire", 720);
+
+public class ItemMusicDiscFar() : Item("minecraft:music_disc_far", 504);
+
+public class ItemSpiderEye() : Item("minecraft:spider_eye", 375);
+
+public class ItemPoisonousPotato() : Item("minecraft:poisonous_potato", 394);
+
+public class ItemBeetrootSoup() : Item("minecraft:beetroot_soup", 459);
+
+public class ItemSweetBerries() : Item("minecraft:sweet_berries", 477);
+
+public class ItemCookedRabbit() : FoodItem("minecraft:cooked_rabbit", 412, 0, 6, 7);
+
+public class ItemRabbitStew() : Item("minecraft:rabbit_stew", 413);
+
+public class ItemPumpkinSeeds() : Item("minecraft:pumpkin_seeds", 361);
+
+public class ItemCommandBlockMinecart() : Item("minecraft:command_block_minecart", 443);
+
+public class ItemMelonSeeds() : Item("minecraft:melon_seeds", 362);
+
+public class ItemNetherWart() : Item("minecraft:nether_wart", 372);
+
+public class ItemMusicDiscStrad() : Item("minecraft:music_disc_strad", 508);
+
+public class ItemBowl() : Item("minecraft:bowl", 281);
+
+public class ItemString() : Item("minecraft:string", 287);
+
+public class ItemFeather() : Item("minecraft:feather", 288);
+
+public class ItemGunpowder() : Item("minecraft:gunpowder", 289);
+
+public class ItemMusicDiscMellohi() : Item("minecraft:music_disc_mellohi", 506);
+
+public class ItemEnderEye() : Item("minecraft:ender_eye", 381);
+
+public class ItemShield() : Item("minecraft:shield", 513);
+
+public class ItemFlint() : Item("minecraft:flint", 318);
+
+public class ItemHeartOfTheSea() : Item("minecraft:heart_of_the_sea", 467);
+
+public class ItemMinecart() : Item("minecraft:minecart", 328);
+
+public class ItemWrittenBook() : Item("minecraft:written_book", 387);
+
+public class ItemLeather() : Item("minecraft:leather", 334);
+
+public class ItemBrick() : Item("minecraft:brick", 336);
+
+public class ItemCarrotOnAStick() : Item("minecraft:carrot_on_a_stick", 398);
+
+public class ItemReeds() : Item("minecraft:item.reeds", 338);
+
+public class ItemPaper() : Item("minecraft:paper", 339);
+
+public class ItemTrident() : Item("minecraft:trident", 455);
+
+public class ItemSlimeBall() : Item("minecraft:slime_ball", 341);
+
+public class ItemChestMinecart() : Item("minecraft:chest_minecart", 342);
+
+public class ItemFishingRod() : Item("minecraft:fishing_rod", 346);
+
+public class ItemClock() : Item("minecraft:clock", 347);
+	
+public class ItemGlowstoneDust() : Item("minecraft:glowstone_dust", 348);
+
+public class ItemNameTag() : Item("minecraft:name_tag", 421);
+
+public class ItemCake() : Item("minecraft:cake", 354);
+
+public class ItemRepeater() : Item("minecraft:repeater", 356);
+
+public class ItemGhastTear() : Item("minecraft:ghast_tear", 370);
+
+public class ItemGlassBottle() : Item("minecraft:glass_bottle", 374);
+
+public class ItemFermentedSpiderEye() : Item("minecraft:fermented_spider_eye", 376);
+
+public class ItemMagmaCream() : Item("minecraft:magma_cream", 378);
+
+public class ItemBrewingStand() : Item("minecraft:brewing_stand", 379);
+
+public class ItemRapidFertilizer() : Item("minecraft:rapid_fertilizer", 449); // what is this?
+
+public class ItemGlisteningMelonSlice() : Item("minecraft:glistering_melon_slice", 382);
+
+public class ItemFireCharge() : Item("minecraft:fire_charge", 385);
+
+public class ItemWritableBook() : Item("minecraft:writable_book", 386);
+
+public class ItemEmerald() : Item("minecraft:emerald", 388);
+
+public class ItemMusicDiscPigstep() : Item("minecraft:music_disc_pigstep", 759);
+
+public class ItemFlowerPot() : Item("minecraft:flower_pot", 390);
+
+public class ItemNetherstar() : Item("minecraft:nether_star", 399);
+
+public class ItemHopperMinecart() : Item("minecraft:hopper_minecart", 408);
+
+public class ItemFireworkStar() : Item("minecraft:firework_star", 402);
+
+public class ItemNetherbrick() : Item("minecraft:netherbrick", 405);
+
+public class ItemQuartz() : Item("minecraft:quartz", 406);
+
+public class ItemTntMinecart() : Item("minecraft:tnt_minecart", 407);
+
+public class ItemHopper() : Item("minecraft:hopper", 410);
+
+public class ItemDragonBreath() : Item("minecraft:dragon_breath", 437);
+
+public class ItemRabbitHide() : Item("minecraft:rabbit_hide", 415);
+
+public class ItemMusicDisc13() : Item("minecraft:music_disc_13", 500);
+
+public class ItemMusicDiscCat() : Item("minecraft:music_disc_cat", 501);
+
+public class ItemMusicDiscBlocks() : Item("minecraft:music_disc_blocks", 502);
+
+public class ItemMusicDiscChirp() : Item("minecraft:music_disc_chirp", 503);
+
+public class ItemMusicDiscMall() : Item("minecraft:music_disc_mall", 505);
+
+public class ItemMusicDiscStal() : Item("minecraft:music_disc_stal", 507);
+
+public class ItemMusicDisc11() : Item("minecraft:music_disc_11", 510);
+
+public class ItemMusicDiscWait() : Item("minecraft:music_disc_wait", 511);
+
+public class ItemLead() : Item("minecraft:lead", 420);
+
+public class ItemPrismarineCrystals() : Item("minecraft:prismarine_crystals", 422);
+
+public class ItemArmorStand() : Item("minecraft:armor_stand", 425);
+
+public class ItemPhantomMembrane() : Item("minecraft:phantom_membrane", 470);
+
+public class ItemSuspiciousStew() : Item("minecraft:suspicious_stew", 734);
+
+public class ItemPoppedChorusFruit() : Item("minecraft:popped_chorus_fruit", 433);
+
+public class ItemPrismarineShard() : Item("minecraft:prismarine_shard", 409);
+
+public class ItemShulkerShell() : Item("minecraft:shulker_shell", 445);
+
+public class ItemTotemOfUndying() : Item("minecraft:totem_of_undying", 450);
+
+public class ItemTurtleShellPiece() : Item("minecraft:scute", 468);
+
+public class ItemBalloon() : Item("minecraft:balloon", 448);
+
+public class ItemBannerPattern() : Item("minecraft:banner_pattern", 434);
+
+public class ItemHoneycomb() : Item("minecraft:honeycomb", 736);
+
+public class ItemHoneyBottle() : Item("minecraft:honey_bottle", 737);
+
+public class ItemCompound() : Item("minecraft:compound", 499);
+
+public class ItemIceBomb() : Item("minecraft:ice_bomb", 453);
+
+public class ItemBleach() : Item("minecraft:bleach", 451);
+
+public class ItemMedicine() : Item("minecraft:medicine", 447);
+
+public class ItemLodestoneCompass() : Item("minecraft:lodestone_compass", 741);
+
+public class ItemNetheriteIngot() : Item("minecraft:netherite_ingot", 742);
+
+public class ItemNetheriteScrap() : Item("minecraft:netherite_scrap", 752);
+
+public class ItemChain() : Item("minecraft:chain", 758);
+
+public class ItemNetherSprouts() : Item("minecraft:nether_sprouts", 760);
+
+public class ItemSoulCampfire() : Item("minecraft:soul_campfire", 801);
+
+public class ItemEndCrystal() : Item("minecraft:end_crystal", 426);
+
+public class ItemMace() : ItemSword("minecraft:mace", 1047);
+
+public class ItemGlowBerries() : Item("minecraft:glow_berries", 630);
+
+public class ItemPandaSpawnEgg() : Item("minecraft:panda_spawn_egg", 489);
+
+public class ItemParrotSpawnEgg() : Item("minecraft:parrot_spawn_egg", 478);
+
+public class ItemDrownedSpawnEgg() : Item("minecraft:drowned_spawn_egg", 483);
+
+public class ItemSalmonSpawnEgg() : Item("minecraft:salmon_spawn_egg", 482);
+
+public class ItemPufferfishSpawnEgg() : Item("minecraft:pufferfish_spawn_egg", 481);
+
+public class ItemSpyglass() : Item("minecraft:spyglass", 624);
+
+public class ItemBlazeSpawnEgg() : Item("minecraft:blaze_spawn_egg", 456);
+
+public class ItemStriderSpawnEgg() : Item("minecraft:strider_spawn_egg", 495);
+
+public class ItemCowSpawnEgg() : Item("minecraft:cow_spawn_egg", 436);
+
+public class ItemPillagerSpawnEgg() : Item("minecraft:pillager_spawn_egg", 491);
+
+public class ItemBeeSpawnEgg() : Item("minecraft:bee_spawn_egg", 494);
+
+public class ItemAgentSpawnEgg() : Item(487); // ???
+
+public class ItemTurtleSpawnEgg() : Item("minecraft:turtle_spawn_egg", 485);
+
+public class ItemHoglinSpawnEgg() : Item("minecraft:hoglin_spawn_egg", 496);
+
+public class ItemGlowFrame() : Item("minecraft:glow_frame", 621);
+
+public class ItemTropicalFishSpawnEgg() : Item("minecraft:tropical_spawn_egg", 479);
+
+public class ItemFoxSpawnEgg() : Item("minecraft:fox_spawn_egg", 490);
+
+public class ItemChickenSpawnEgg() : Item("minecraft:chicken_spawn_egg", 435);
+
+public class ItemWanderingTraderSpawnEgg() : Item("minecraft:wandering_trader_spawn_egg", 492);
+
+public class ItemPiglinBannerPattern() : Item("minecraft:piglin_banner_pattern", 587);
+
+public class ItemPiglinSpawnEgg() : Item("minecraft:piglin_spawn_egg", 497);
+
+public class ItemMojangBannerPattern() : Item("minecraft:mojang_banner_pattern", 584);
+
+public class ItemSkullBannerPattern() : Item("minecraft:skull_banner_pattern", 583);
+
+public class ItemMooshroomSpawnEgg() : Item("minecraft:mooshroom_spawn_egg", 440);
+
+public class ItemCookedMutton() : Item("minecraft:cooked_mutton", 551);
+
+public class ItemCodSpawnEgg() : Item("minecraft:cod_spawn_egg", 480);
+
+public class ItemRavagerSpawnEgg() : Item("minecraft:ravager_spawn_egg", 493);
+
+public class ItemDarkOakSign() : Item("minecraft:dark_oak_sign", 580);
+
+public class ItemNetherStar() : Item("minecraft:nether_start", 518);
+
+public class ItemMutton() : Item("minecraft:mutton", 550);
+
+public class ItemBordureIndentedBannerPattern() : Item("minecraft:bordure_intented_banner_pattern", 586);
+
+public class ItemScute() : Item("minecraft:scute", 572);
+
+public class ItemFlowerBannerPattern() : Item("minecraft:flower_banner_pattern", 581);
+
+public class ItemCreeperBannerPattern() : Item("minecraft:creeper_banner_pattern", 582);
+
+public class ItemFieldMasonedBannerPattern() : Item("minecraft:field_masoned_banner_pattern", 585);
+
+public class ItemAmethystShard() : Item("minecaft:amethyst_shard", 623);
+
+public class ItemPhantomSpawnEgg() : Item("minecraft:phantom_spawn_egg", 486);
+
+public class ItemWolfSpawnEgg() : Item("minecraft:wolf_spawn_egg", 439);
+
+public class ItemCatSpawnEgg() : Item("minecraft:cat_spawn_egg", 488);
+
+public class ItemDolphinSpawnEgg() : Item("minecraft:dolphin_spawn_egg", 484);
+
+public class ItemRecoveryCompass() : Item("minecraft:recovery_compass", 778);
+
+public class ItemBundle() : Item("minecraft:bundle", 780);
+
+public class ItemOminousBottle() : Item("minecraft:ominous_bottle", 1048);
+
+public class ItemOminousTrialKey() : Item("minecraft:ominous_trial_key", 1049);
+
+public class ItemEchoShard() : Item("minecraft:echo_shard", 779);
