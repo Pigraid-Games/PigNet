@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using log4net;
 using MiNET.Blocks;
+using MiNET.Items.Armor;
+using MiNET.Items.Food;
+using MiNET.Items.Tools;
+using MiNET.Items.Weapons;
 using MiNET.Net.Items;
 using MiNET.Utils;
 
@@ -258,8 +262,8 @@ public class ItemFactory
 		{ 420, (_, _) => new ItemLead() },
 		{ 421, (_, _) => new ItemNameTag() },
 		{ 422, (_, _) => new ItemPrismarineCrystals() },
-		{ 423, (_, _) => new ItemMuttonRaw() },
-		{ 424, (_, _) => new ItemMuttonCooked() },
+		{ 423, (_, _) => new ItemMutton() },
+		{ 424, (_, _) => new ItemCookedMutton() },
 		{ 425, (_, _) => new ItemArmorStand() },
 		{ 426, (_, _) => new ItemEndCrystal() },
 		{ 427, (_, _) => new ItemSpruceDoor() },
@@ -371,8 +375,6 @@ public class ItemFactory
 		{ 518, (_, _) => new ItemNetherStar() },
 		{ 527, (_, _) => new ItemHopper() },
 		{ 544, (_, _) => new ItemMusicDisc11() },
-		{ 550, (_, _) => new ItemMutton() },
-		{ 551, (_, _) => new ItemCookedMutton() },
 		{ 567, (_, _) => new ItemBanner() },
 		{ 572, (_, _) => new ItemScute() },
 		{ 580, (_, _) => new ItemDarkOakSign() },
@@ -470,19 +472,13 @@ public class ItemFactory
 
 }
 
-public class ItemMushroomStew() : Item("minecraft:mushroom_stew", 282);
-
 public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward", 509);
-
-public class ItemEnchantedApple() : Item("minecraft:enchanted_golden_apple", 466);
 
 public class ItemTropicalFish() : Item("minecraft:tropical_fish", 461);
 
 public class ItemPufferFish() : Item("minecraft:pufferfish", 462);
 
-public class ItemCookedCod() : Item("minecraft:cooked_cod", 350);
-
-public class ItemCookedSalmon() : Item("minecraft:cooked_salmon", 463);
+public class ItemCookedCod() : Item("minecraft:cooked_cod", 350); // couldn't find
 
 public class ItemSparkler() : Item("minecraft:sparkler", 442);
 
@@ -491,8 +487,6 @@ public class ItemDriedKelp() : Item("minecraft:dried_kelp", 464);
 public class ItemNautilusShell() : Item("minecraft:nautilus_shell", 465);
 
 public class ItemComparator() : Item("minecraft:comparator", 404);
-
-public class ItemRottenFlesh() : Item("minecraft:rotten_flesh", 367);
 
 public class ItemRabbitFoot() : Item("minecraft:rabbit_foot", 414);
 
@@ -503,16 +497,6 @@ public class ItemCampfire() : Item("minecraft:campfire", 720);
 public class ItemMusicDiscFar() : Item("minecraft:music_disc_far", 504);
 
 public class ItemSpiderEye() : Item("minecraft:spider_eye", 375);
-
-public class ItemPoisonousPotato() : Item("minecraft:poisonous_potato", 394);
-
-public class ItemBeetrootSoup() : Item("minecraft:beetroot_soup", 459);
-
-public class ItemSweetBerries() : Item("minecraft:sweet_berries", 477);
-
-public class ItemCookedRabbit() : FoodItem("minecraft:cooked_rabbit", 412, 0, 6, 7);
-
-public class ItemRabbitStew() : Item("minecraft:rabbit_stew", 413);
 
 public class ItemPumpkinSeeds() : Item("minecraft:pumpkin_seeds", 361);
 
@@ -684,8 +668,6 @@ public class ItemEndCrystal() : Item("minecraft:end_crystal", 426);
 
 public class ItemMace() : ItemSword("minecraft:mace", 1047);
 
-public class ItemGlowBerries() : Item("minecraft:glow_berries", 630);
-
 public class ItemPandaSpawnEgg() : Item("minecraft:panda_spawn_egg", 489);
 
 public class ItemParrotSpawnEgg() : Item("minecraft:parrot_spawn_egg", 478);
@@ -734,8 +716,6 @@ public class ItemSkullBannerPattern() : Item("minecraft:skull_banner_pattern", 5
 
 public class ItemMooshroomSpawnEgg() : Item("minecraft:mooshroom_spawn_egg", 440);
 
-public class ItemCookedMutton() : Item("minecraft:cooked_mutton", 551);
-
 public class ItemCodSpawnEgg() : Item("minecraft:cod_spawn_egg", 480);
 
 public class ItemRavagerSpawnEgg() : Item("minecraft:ravager_spawn_egg", 493);
@@ -743,8 +723,6 @@ public class ItemRavagerSpawnEgg() : Item("minecraft:ravager_spawn_egg", 493);
 public class ItemDarkOakSign() : Item("minecraft:dark_oak_sign", 580);
 
 public class ItemNetherStar() : Item("minecraft:nether_start", 518);
-
-public class ItemMutton() : Item("minecraft:mutton", 550);
 
 public class ItemBordureIndentedBannerPattern() : Item("minecraft:bordure_intented_banner_pattern", 586);
 

@@ -32,19 +32,20 @@ namespace MiNET.Items
 
 			StartCooldown(player);
 
-			float force = 1.5f;
+			const float Force = 1.5f;
 
 			var windCharge = new WindCharge(player, world)
 			{
 				KnownPosition = (PlayerLocation) player.KnownPosition.Clone(),
-				Velocity = player.KnownPosition.GetDirection().Normalize() * force
+				Velocity = player.KnownPosition.GetDirection().Normalize() * Force
 			};
 			windCharge.KnownPosition.Y += 1.62f;
 			windCharge.SpawnEntity();
 
 			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
-			var itemInHand = player.Inventory.GetItemInHand();
+			Item itemInHand = player.Inventory.GetItemInHand();
 			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);
 		}
 
 		private static bool IsInCooldown(Player player) => Cooldowns.ContainsKey(player);

@@ -30,6 +30,7 @@ using MiNET.Sounds;
 using MiNET.Entities;
 using System;
 using MiNET.Items;
+using MiNET.Items.Tools;
 
 namespace MiNET.Blocks
 {

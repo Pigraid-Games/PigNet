@@ -25,6 +25,7 @@
 
 using System.Numerics;
 using MiNET.Items;
+using MiNET.Items.Tools;
 using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;

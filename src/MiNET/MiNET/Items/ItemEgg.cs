@@ -27,34 +27,36 @@ using MiNET.Entities.Projectiles;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemEgg : Item
 {
-	public class ItemEgg : Item
+	public ItemEgg() : base("minecraft:egg", 344)
 	{
-		public ItemEgg() : base("minecraft:egg", 344)
+		MaxStackSize = 16;
+	}
+
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+
+		// Trigger the PlayerShootEvent
+		if (player.OnPlayerShoot(player, this))
 		{
-			MaxStackSize = 16;
+			player.SendPlayerInventory();
+			return;
 		}
+		const float Force = 1.5f;
 
-		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+		var egg = new Egg(player, world)
 		{
-
-			// Trigger the PlayerShootEvent
-			if (player.OnPlayerShoot(player, this))
-			{
-				player.SendPlayerInventory();
-				return;
-			}
-			float force = 1.5f;
-
-			var egg = new Egg(player, world);
-			egg.KnownPosition = (PlayerLocation) player.KnownPosition.Clone();
-			egg.KnownPosition.Y += 1.62f;
-			egg.Velocity = egg.KnownPosition.GetDirection().Normalize() * (force);
-			egg.SpawnEntity();
-			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
-			var itemInHand = player.Inventory.GetItemInHand();
-			itemInHand.Count--;
-		}
+			KnownPosition = (PlayerLocation) player.KnownPosition.Clone()
+		};
+		egg.KnownPosition.Y += 1.62f;
+		egg.Velocity = egg.KnownPosition.GetDirection().Normalize() * (Force);
+		egg.SpawnEntity();
+		world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
+		Item itemInHand = player.Inventory.GetItemInHand();
+		itemInHand.Count--;
+		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);
 	}
 }

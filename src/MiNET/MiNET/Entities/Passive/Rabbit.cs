@@ -25,6 +25,7 @@
 
 using MiNET.Entities.Behaviors;
 using MiNET.Items;
+using MiNET.Items.Food;
 using MiNET.Worlds;
 
 namespace MiNET.Entities.Passive

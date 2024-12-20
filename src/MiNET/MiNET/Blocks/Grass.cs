@@ -29,7 +29,7 @@ using System.Linq;
 using System.Numerics;
 using log4net;
 using MiNET.Items;
-using MiNET.Utils;
+using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -47,19 +47,17 @@ namespace MiNET.Blocks
 
 		public override bool IsBestTool(Item item)
 		{
-			return item is ItemShovel ? true : false;
+			return item is ItemShovel;
 		}
 
 		public override void DoPhysics(Level level)
 		{
 			if (level.GameMode == GameMode.Creative) return;
 
-			if (level.GetSubtractedLight(Coordinates.BlockUp()) < 4)
-			{
-				Block dirt = BlockFactory.GetBlockById(3);
-				dirt.Coordinates = Coordinates;
-				level.SetBlock(dirt, true, false, false);
-			}
+			if (level.GetSubtractedLight(Coordinates.BlockUp()) >= 4) return;
+			Block dirt = BlockFactory.GetBlockById(3);
+			dirt.Coordinates = Coordinates;
+			level.SetBlock(dirt, true, false, false);
 		}
 
 		public override void OnTick(Level level, bool isRandom)
@@ -67,184 +65,165 @@ namespace MiNET.Blocks
 			if (level.GameMode == GameMode.Creative) return;
 			if (!isRandom) return;
 
-			var lightLevel = level.GetSubtractedLight(Coordinates.BlockUp());
-			if (lightLevel < 4 /* && check opacity */)
+			int lightLevel = level.GetSubtractedLight(Coordinates.BlockUp());
+			switch (lightLevel)
 			{
-				Block dirt = BlockFactory.GetBlockById(3);
-				dirt.Coordinates = Coordinates;
-				level.SetBlock(dirt, true, false, false);
-			}
-			else
-			{
-				if (lightLevel >= 9)
+				/* && check opacity */
+				case < 4:
 				{
-					Random random = new Random();
+					Block dirt = BlockFactory.GetBlockById(3);
+					dirt.Coordinates = Coordinates;
+					level.SetBlock(dirt, true, false, false);
+					break;
+				}
+				case >= 9:
+				{
+					var random = new Random();
 					for (int i = 0; i < 4; i++)
 					{
-						var coordinates = Coordinates + new BlockCoordinates(random.Next(3) - 1, random.Next(5) - 3, random.Next(3) - 1);
-						if (level.GetBlock(coordinates) is Dirt next && next.DirtType == "normal")
-						{
-							Block nextUp = level.GetBlock(coordinates.BlockUp());
-							if (nextUp.IsTransparent && (nextUp.BlockLight >= 4 || nextUp.SkyLight >= 4))
-							{
-								level.SetBlock(new Grass {Coordinates = coordinates});
-							}
-						}
+						BlockCoordinates coordinates = Coordinates + new BlockCoordinates(random.Next(3) - 1, random.Next(5) - 3, random.Next(3) - 1);
+						if (level.GetBlock(coordinates) is not Dirt next || next.DirtType != "normal") continue;
+						Block nextUp = level.GetBlock(coordinates.BlockUp());
+						if (nextUp.IsTransparent && (nextUp.BlockLight >= 4 || nextUp.SkyLight >= 4)) level.SetBlock(new Grass {Coordinates = coordinates});
 					}
+					break;
 				}
 			}
 		}
 
 		public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			if (itemInHand is ItemDye && itemInHand.Metadata == 15)
+			Item itemInHand = player.Inventory.GetItemInHand();
+			if (itemInHand is not ItemDye || itemInHand.Metadata != 15) return false; // not handled
+			// If bone meal is used on a grass block, 0–8(double) tall grass, 8–24 grass and 0–8 flowers form on the
+			// targeted block and on randomly-selected adjacent grass blocks up to 7 blocks away (taxicab distance).
+			// The flowers that appear are dependent on the biome, meaning that in order to obtain specific flowers,
+			// the player must travel to biomes where the flowers are found naturally. See Flower § Flower biomes
+			// for more information.
+			//TODO: Grow grass and flowers randomly
+
+			int grassPlanted = 0;
+			int flowersPlanted = 0;
+
+			var rnd = new Random();
+			for (int i = 0; i < 128; i++)
 			{
-				// If bone meal is used on a grass block, 0–8(double) tall grass, 8–24 grass and 0–8 flowers form on the
-				// targeted block and on randomly-selected adjacent grass blocks up to 7 blocks away (taxicab distance).
-				// The flowers that appear are dependent on the biome, meaning that in order to obtain specific flowers,
-				// the player must travel to biomes where the flowers are found naturally. See Flower § Flower biomes
-				// for more information.
-				//TODO: Grow grass and flowers randomly
-				var random = new RandomWeighted<int>(new List<RandomRange<int>>()
+				BlockCoordinates coord = blockCoordinates;
+				bool shouldContinue = false;
+				for (int j = 0; j < i / 16; j++)
 				{
-					new RandomRange<int>(0, 216),
-					new RandomRange<int>(1, 24),
-					new RandomRange<int>(2, 8),
-					new RandomRange<int>(3, 8),
-				});
+					coord += new BlockCoordinates(rnd.Next(3) - 1, (rnd.Next(3) - 1) * (rnd.Next(3) / 2), rnd.Next(3) - 1);
+					if (level.GetBlock(coord).IsSolid) continue;
+					shouldContinue = true;
+					break;
+				}
+				if (shouldContinue) continue;
 
-				int grassPlanted = 0;
-				int flowersPlanted = 0;
+				if (!(level.GetBlock(coord) is Grass)) continue;
+				coord += BlockCoordinates.Up;
+				Block growthBlock = level.GetBlock(coord);
 
-				var rnd = new Random();
-				for (int i = 0; i < 128; i++)
+				switch (growthBlock)
 				{
-					BlockCoordinates coord = blockCoordinates;
-					bool shouldContinue = false;
-					for (int j = 0; j < i / 16; j++)
+					case Tallgrass when grassPlanted >= 24:
+						continue;
+					case Tallgrass tallGrass:
 					{
-						coord += new BlockCoordinates(rnd.Next(3) - 1, (rnd.Next(3) - 1) * (rnd.Next(3) / 2), rnd.Next(3) - 1);
-						if (!level.GetBlock(coord).IsSolid)
-						{
-							shouldContinue = true;
-							break;
-						}
-					}
-					if (shouldContinue) continue;
-
-					if (!(level.GetBlock(coord) is Grass)) continue;
-					coord += BlockCoordinates.Up;
-					Block growthBlock = level.GetBlock(coord);
-
-					if (growthBlock is Tallgrass tallGrass)
-					{
-						if (grassPlanted >= 24) continue;
-
 						if (tallGrass.TallGrassType == "default" || tallGrass.TallGrassType == "tall")
 						{
 							if (rnd.Next(10) == 0)
 							{
-								var block = new DoublePlant();
-								block.DoublePlantType = "grass";
-								block.Coordinates = coord;
+								var block = new DoublePlant
+								{
+									DoublePlantType = "grass",
+									Coordinates = coord
+								};
 								level.SetBlock(block);
 								grassPlanted++;
 							}
 						}
-					} else if (growthBlock is Air)
+						break;
+					}
+					case Air when rnd.Next(8) == 0:
 					{
-						if (rnd.Next(8) == 0)
-						{
-							if(flowersPlanted >= 8) continue;
+						if(flowersPlanted >= 8) continue;
 
-							Block block = null;
-							int biomeId = level.GetBiomeId(coord);
-							switch (biomeId)
-							{ 
-								// [StateEnum(
-								// "tulip_pink",
-								// "houstonia",
-								// "lily_of_the_valley",
-								// "tulip_white",
-								// "allium",
-								// "tulip_red",
-								// "poppy",
-								// "cornflower",
-								// "tulip_orange",
-								// "oxeye",
-								// "orchid")]
-								case 1: // plains
-								{
-									if (rnd.Next(2) == 0)
-									{
-										var flower = new RedFlower();
-										flower.FlowerType = "poppy";
-										block = flower;
-									}
-									else
-									{
-										var flower = new YellowFlower();
-										block = flower;
-									}
-									break;
-								}
-								default:
-									break;
-							}
-							if(block != null)
+						Block block = null;
+						int biomeId = level.GetBiomeId(coord);
+						switch (biomeId)
+						{ 
+							// [StateEnum(
+							// "tulip_pink",
+							// "houstonia",
+							// "lily_of_the_valley",
+							// "tulip_white",
+							// "allium",
+							// "tulip_red",
+							// "poppy",
+							// "cornflower",
+							// "tulip_orange",
+							// "oxeye",
+							// "orchid")]
+							case 1: // plains
 							{
-								block.Coordinates = coord;
-								level.SetBlock(block);
+								if (rnd.Next(2) == 0)
+								{
+									var flower = new RedFlower
+									{
+										FlowerType = "poppy"
+									};
+									block = flower;
+								}
+								else
+								{
+									var flower = new YellowFlower();
+									block = flower;
+								}
+								break;
 							}
-
-							flowersPlanted++;
 						}
-						else
+						if(block != null)
 						{
-							if(grassPlanted >= 24) continue;
-
-							var block = new Tallgrass();
-							block.TallGrassType = rnd.Next(10) != 0 ? "tall" : "fern";
 							block.Coordinates = coord;
 							level.SetBlock(block);
-							grassPlanted++;
 						}
+
+						flowersPlanted++;
+						break;
+					}
+					case Air when grassPlanted >= 24:
+						continue;
+					case Air:
+					{
+						var block = new Tallgrass();
+						block.TallGrassType = rnd.Next(10) != 0 ? "tall" : "fern";
+						block.Coordinates = coord;
+						level.SetBlock(block);
+						grassPlanted++;
+						break;
 					}
 				}
-
-				return true;
 			}
 
-			return false; // not handled
-		}
+			return true;
 
-		private void DoSpawn()
-		{
 		}
 
 		public override Item[] GetDrops(Item tool)
 		{
-			return new[] {new ItemBlock(new Dirt(), 0) {Count = 1}}; //Drop dirt block
+			return [new ItemBlock(new Dirt()) {Count = 1}]; //Drop dirt block
 		}
 	}
 
-	public class RandomWeighted<T>
+	public class RandomWeighted<T>(List<RandomRange<T>> items)
 	{
-		private readonly List<RandomRange<T>> _items;
-		private Random _random;
-
-		public RandomWeighted(List<RandomRange<T>> items)
-		{
-			_items = items;
-			_random = new Random();
-		}
+		private readonly Random _random = new();
 
 		public T Next()
 		{
-			int targetWeight = _random.Next(_items.Sum(i => i.Weight) + 1);
+			int targetWeight = _random.Next(items.Sum(i => i.Weight) + 1);
 			int currentWeight = 0;
-			foreach (RandomRange<T> range in _items)
+			foreach (RandomRange<T> range in items)
 			{
 				currentWeight += range.Weight;
 
@@ -255,15 +234,9 @@ namespace MiNET.Blocks
 		}
 	}
 
-	public class RandomRange<T>
+	public class RandomRange<T>(T item, int weight)
 	{
-		public T Item { get; }
-		public int Weight { get; }
-
-		public RandomRange(T item, int weight)
-		{
-			Item = item;
-			Weight = weight;
-		}
+		public T Item { get; } = item;
+		public int Weight { get; } = weight;
 	}
 }

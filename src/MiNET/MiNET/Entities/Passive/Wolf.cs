@@ -28,6 +28,7 @@ using System.Numerics;
 using log4net;
 using MiNET.Entities.Behaviors;
 using MiNET.Items;
+using MiNET.Items.Food;
 using MiNET.Particles;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
@@ -90,7 +91,7 @@ namespace MiNET.Entities.Passive
 							IsSitting = !IsSitting;
 						}
 					}
-					else if (item is ItemChicken or ItemCookedChicken or ItemBeef or ItemCookedBeef or ItemPorkchop or ItemCookedPorkchop or ItemMuttonRaw or ItemCookedMutton)
+					else if (item is ItemChicken or ItemCookedChicken or ItemBeef or ItemCookedBeef or ItemPorkchop or ItemCookedPorkchop or ItemMutton or ItemCookedMutton)
 					{
 
 					}
@@ -106,7 +107,7 @@ namespace MiNET.Entities.Passive
 					particle.Position = KnownPosition + new Vector3(0, (float) (Height + 0.85d), 0);
 					particle.Spawn();
 				}
-				if (item is ItemChicken or ItemCookedChicken or ItemBeef or ItemCookedBeef or ItemPorkchop or ItemCookedPorkchop or ItemMuttonRaw or ItemCookedMutton )
+				if (item is ItemChicken or ItemCookedChicken or ItemBeef or ItemCookedBeef or ItemPorkchop or ItemCookedPorkchop or ItemMutton or ItemCookedMutton )
 				{
 					item.Count--;
 					if (!IsBaby)

@@ -2,34 +2,36 @@
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemExperienceBottle : Item
 {
-	public class ItemExperienceBottle : Item
+	public ItemExperienceBottle() : base("minecraft:experience_bottle", 384)
 	{
-		public ItemExperienceBottle() : base("minecraft:experience_bottle", 384)
+		MaxStackSize = 64;
+	}
+
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		// Trigger the PlayerShootEvent
+		if (player.OnPlayerShoot(player, this))
 		{
-			MaxStackSize = 64;
+			player.SendPlayerInventory();
+			return;
 		}
 
-		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+		const float Force = 1.5f;
+
+		var experienceBottle = new ExperienceBottle(player, world)
 		{
-			// Trigger the PlayerShootEvent
-			if (player.OnPlayerShoot(player, this))
-			{
-				player.SendPlayerInventory();
-				return;
-			}
-
-			float force = 1.5f;
-
-			var experienceBottle = new ExperienceBottle(player, world);
-			experienceBottle.KnownPosition = (PlayerLocation) player.KnownPosition.Clone();
-			experienceBottle.KnownPosition.Y += 1.62f;
-			experienceBottle.Velocity = experienceBottle.KnownPosition.GetDirection().Normalize() * force;
-			experienceBottle.SpawnEntity();
-			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
-			var itemInHand = player.Inventory.GetItemInHand();
-			itemInHand.Count--;
-		}
+			KnownPosition = (PlayerLocation) player.KnownPosition.Clone()
+		};
+		experienceBottle.KnownPosition.Y += 1.62f;
+		experienceBottle.Velocity = experienceBottle.KnownPosition.GetDirection().Normalize() * Force;
+		experienceBottle.SpawnEntity();
+		world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
+		Item itemInHand = player.Inventory.GetItemInHand();
+		itemInHand.Count--;
+		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);
 	}
 }

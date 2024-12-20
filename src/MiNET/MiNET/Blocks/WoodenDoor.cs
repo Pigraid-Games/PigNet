@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Items;
+using MiNET.Items.Tools;
 
 namespace MiNET.Blocks
 {

@@ -29,6 +29,7 @@ using fNbt;
 using log4net;
 using MiNET.Entities.Behaviors;
 using MiNET.Items;
+using MiNET.Items.Food;
 using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;

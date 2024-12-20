@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Effects;
+using MiNET.Items.Food;
 
 namespace MiNET.Items
 {
@@ -33,7 +34,7 @@ namespace MiNET.Items
 		{
 		}
 
-		public override void Consume(Player player)
+		protected override void Consume(Player player)
 		{
 			base.Consume(player);
 			player.SetEffect(new Absorption() {Duration = 2400});

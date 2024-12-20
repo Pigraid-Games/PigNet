@@ -26,6 +26,7 @@
 using System.Numerics;
 using MiNET.Entities;
 using MiNET.Items;
+using MiNET.Items.Tools;
 using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;

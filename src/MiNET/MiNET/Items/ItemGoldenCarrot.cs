@@ -23,6 +23,8 @@
 
 #endregion
 
+using MiNET.Items.Food;
+
 namespace MiNET.Items
 {
 	public class ItemGoldenCarrot : FoodItem

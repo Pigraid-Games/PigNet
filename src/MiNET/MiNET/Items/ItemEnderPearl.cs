@@ -43,8 +43,9 @@ namespace MiNET.Items
 			enderPearl.SpawnEntity();
 			
 			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
-			var itemInHand = player.Inventory.GetItemInHand();
+			Item itemInHand = player.Inventory.GetItemInHand();
 			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);
 		}
 
 		private static bool IsInCooldown(Player player) => Cooldowns.ContainsKey(player);
