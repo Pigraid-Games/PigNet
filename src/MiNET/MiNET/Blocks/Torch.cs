@@ -27,61 +27,31 @@ using System.Numerics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Torch : Block
 {
-	public partial class Torch : Block
+	public Torch() : base(50)
 	{
-		public Torch() : base(50)
+		IsTransparent = true;
+		IsSolid = false;
+		LightLevel = 14;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		if (face == BlockFace.Down) return true;
+
+		TorchFacingDirection = face switch
 		{
-			IsTransparent = true;
-			IsSolid = false;
-			LightLevel = 14;
-		}
+			BlockFace.Up => "top",
+			BlockFace.North => "south",
+			BlockFace.South => "north",
+			BlockFace.West => "east",
+			BlockFace.East => "west",
+			_ => TorchFacingDirection
+		};
 
-		//protected override bool CanPlace(Level world, BlockCoordinates blockCoordinates, BlockFace face)
-		//{
-		//	Block block = world.GetBlockId(blockCoordinates);
-		//	if (block is Farmland
-		//	    || block is Ice
-		//		/*|| block is Glowstone || block is Leaves  */
-		//	    || block is Tnt
-		//	    || block is BlockStairs
-		//	    || block is StoneSlab
-		//	    || block is WoodSlab) return false;
-		//	Log.Debug("2");
-
-		//	//TODO: More checks here, but PE blocks it pretty good right now
-		//	if (block is Glass && face == BlockFace.Up) return true;
-
-		//	Log.Debug($"3 {block.Id} {!block.IsTransparent}");
-
-		//	return !block.IsTransparent;
-		//}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			if (face == BlockFace.Down) return true;
-
-			switch (face)
-			{
-				case BlockFace.Up:
-					TorchFacingDirection = "top";
-					break;
-				case BlockFace.North:
-					TorchFacingDirection = "south";
-					break;
-				case BlockFace.South:
-					TorchFacingDirection = "north";
-					break;
-				case BlockFace.West:
-					TorchFacingDirection = "east";
-					break;
-				case BlockFace.East:
-					TorchFacingDirection = "west";
-					break;
-			}
-
-			return false;
-		}
+		return false;
 	}
 }

@@ -25,4 +25,4 @@
 
 namespace MiNET.Items.Weapons;
 
-public class ItemArrow() : Item("minecraft:arrow", 262);
+public class ItemArrow(short metadata = 0) : Item("minecraft:arrow", 262, metadata);

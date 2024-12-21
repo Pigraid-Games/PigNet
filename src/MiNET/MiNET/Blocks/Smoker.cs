@@ -27,18 +27,13 @@ using System.Numerics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
-{
-	public partial class Smoker : Block
-	{
-		public Smoker() : base(453)
-		{
-		}
+namespace MiNET.Blocks;
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = player.GetCardinalDirection();
-			return false;
-		}
+public partial class Smoker() : Block(453) 
+{
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetCardinalDirection();
+		return false;
 	}
 }

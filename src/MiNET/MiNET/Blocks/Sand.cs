@@ -27,58 +27,54 @@ using System.Numerics;
 using log4net;
 using MiNET.Entities.World;
 using MiNET.Items;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Sand : Block
 {
-	public partial class Sand : Block
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Sand));
+
+	private const int TickRate = 1;
+
+	public Sand() : base(12)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Sand));
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
+	}
 
-		private int _tickRate = 1;
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		world.ScheduleBlockTick(this, TickRate);
+		return false;
+	}
 
-		public Sand() : base(12)
-		{
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
-		}
+	public override void BlockUpdate(Level world, BlockCoordinates blockCoordinates)
+	{
+		world.ScheduleBlockTick(this, TickRate);
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			world.ScheduleBlockTick(this, _tickRate);
-			return false;
-		}
+	public override void DoPhysics(Level level)
+	{
+		level.ScheduleBlockTick(this, TickRate);
+	}
 
-		public override void BlockUpdate(Level world, BlockCoordinates blockCoordinates)
-		{
-			world.ScheduleBlockTick(this, _tickRate);
-		}
+	public override void OnTick(Level level, bool isRandom)
+	{
+		if (isRandom) return;
 
-		public override void DoPhysics(Level level)
-		{
-			level.ScheduleBlockTick(this, _tickRate);
-		}
+		if (level.GetBlock(Coordinates + Level.Down).IsSolid) return;
+		level.SetAir(Coordinates);
 
-		public override void OnTick(Level level, bool isRandom)
-		{
-			if (isRandom) return;
+		BoundingBox bbox = GetBoundingBox();
+		Vector3 d = (bbox.Max - bbox.Min) / 2;
 
-			if (!level.GetBlock(Coordinates + Level.Down).IsSolid)
-			{
-				level.SetAir(Coordinates);
+		new FallingBlock(level, GetRuntimeId()) {KnownPosition = new PlayerLocation(Coordinates.X + d.X, Coordinates.Y - 0.03f, Coordinates.Z + d.Z)}.SpawnEntity();
+	}
 
-				var bbox = GetBoundingBox();
-				var d = (bbox.Max - bbox.Min) / 2;
-
-				new FallingBlock(level, GetRuntimeId()) {KnownPosition = new PlayerLocation(Coordinates.X + d.X, Coordinates.Y - 0.03f, Coordinates.Z + d.Z)}.SpawnEntity();
-			}
-		}
-
-		public override Item GetSmelt()
-		{
-			return ItemFactory.GetItem(20, 0);
-		}
+	public override Item GetSmelt()
+	{
+		return ItemFactory.GetItem(20, 0);
 	}
 }

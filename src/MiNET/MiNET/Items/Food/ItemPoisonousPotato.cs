@@ -30,6 +30,7 @@ public class ItemPoisonousPotato() : FoodItem("minecraft:poisonous_potato", 394,
 {
 	protected override void Consume(Player player)
 	{
+		base.Consume(player);
 		var random = new Random();
 		int chance = random.Next(100);
 		if (chance >= 60) return;

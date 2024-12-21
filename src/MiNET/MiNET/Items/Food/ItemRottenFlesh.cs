@@ -30,6 +30,7 @@ public class ItemRottenFlesh() : FoodItem("minecraft:rotten_flesh", 367, 0, 4, 0
 {
 	protected override void Consume(Player player)
 	{
+		base.Consume(player);
 		var random = new Random();
 		int chance = random.Next(100);
 		if (chance >= 80) return;

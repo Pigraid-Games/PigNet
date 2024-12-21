@@ -96,8 +96,41 @@ public class ItemFactory
 		return GetItem(GetItemIdByName(name), metadata, count);
 	}
 
+	public static void RegisterItem(short id, Item item)
+	{
+		ItemFactories.TryAdd(id, (_, _) => item);
+	}
+
+	public static void UnregisterItem(short id)
+	{
+		ItemFactories.Remove(id);
+	}
+
+	public static void UnregisterITem(Item item)
+	{
+		short result = GetItemIdByName(item.Name);
+		UnregisterItem(result);
+	}
+
 	private static readonly Dictionary<short, Func<short, int, Item>> ItemFactories = new()
 	{
+		{ -428, (_, _) => new ItemBlackCandle() },
+		{ -427, (_, _) => new ItemRedCandle() },
+		{ -426, (_, _) => new ItemGreenCandle() },
+		{ -425, (_, _) => new ItemBrownCandle() },
+		{ -424, (_, _) => new ItemBlueCandle() },
+		{ -423, (_, _) => new ItemPurpleCandle() },
+		{ -422, (_, _) => new ItemCyanCandle() },
+		{ -421, (_, _) => new ItemLightGrayCandle() },
+		{ -420, (_, _) => new ItemGrayCandle() },
+		{ -419, (_, _) => new ItemPinkCandle() },
+		{ -418, (_, _) => new ItemLimeCandle() },
+		{ -417, (_, _) => new ItemYellowCandle() },
+		{ -416, (_, _) => new ItemLightBlueCandle() },
+		{ -415, (_, _) => new ItemMagentaCandle() },
+		{ -414, (_, _) => new ItemOrangeCandle() },
+		{ -413, (_, _) => new ItemWhiteCandle() },
+		{ -412, (_, _) => new ItemCandle() },
 		{ 0, (_, _) => new ItemAir() },
 		{ 256, (_, _) => new ItemIronShovel() },
 		{ 257, (_, _) => new ItemIronPickaxe() },
@@ -347,32 +380,7 @@ public class ItemFactory
 		{ 759, (_, _) => new ItemMusicDiscPigstep() },
 		{ 760, (_, _) => new ItemNetherSprouts() },
 		{ 801, (_, _) => new ItemSoulCampfire() },
-		{ 436, (_, _) => new ItemCowSpawnEgg() },
-		{ 439, (_, _) => new ItemWolfSpawnEgg() },
-		{ 440, (_, _) => new ItemMooshroomSpawnEgg() },
-		{ 456, (_, _) => new ItemBlazeSpawnEgg() },
-		{ 478, (_, _) => new ItemParrotSpawnEgg() },
-		{ 479, (_, _) => new ItemTropicalFishSpawnEgg() },
-		{ 480, (_, _) => new ItemCodSpawnEgg() },
-		{ 481, (_, _) => new ItemPufferfishSpawnEgg() },
-		{ 482, (_, _) => new ItemSalmonSpawnEgg() },
-		{ 483, (_, _) => new ItemDrownedSpawnEgg() },
-		{ 484, (_, _) => new ItemDolphinSpawnEgg() },
-		{ 485, (_, _) => new ItemTurtleSpawnEgg() },
-		{ 486, (_, _) => new ItemPhantomSpawnEgg() },
-		{ 487, (_, _) => new ItemAgentSpawnEgg() },
-		{ 488, (_, _) => new ItemCatSpawnEgg() },
-		{ 489, (_, _) => new ItemPandaSpawnEgg() },
-		{ 490, (_, _) => new ItemFoxSpawnEgg() },
-		{ 491, (_, _) => new ItemPillagerSpawnEgg() },
-		{ 492, (_, _) => new ItemWanderingTraderSpawnEgg() },
-		{ 493, (_, _) => new ItemRavagerSpawnEgg() },
-		{ 494, (_, _) => new ItemBeeSpawnEgg() },
-		{ 495, (_, _) => new ItemStriderSpawnEgg() },
-		{ 496, (_, _) => new ItemHoglinSpawnEgg() },
-		{ 497, (_, _) => new ItemPiglinSpawnEgg() },
 		{ 398, (_, _) => new ItemCarrotOnAStick() },
-		{ 518, (_, _) => new ItemNetherStar() },
 		{ 527, (_, _) => new ItemHopper() },
 		{ 544, (_, _) => new ItemMusicDisc11() },
 		{ 567, (_, _) => new ItemBanner() },
@@ -386,17 +394,36 @@ public class ItemFactory
 		{ 586, (_, _) => new ItemBordureIndentedBannerPattern() },
 		{ 587, (_, _) => new ItemPiglinBannerPattern() },
 		{ 621, (_, _) => new ItemGlowFrame() },
-		{ 622, (_, _) => new ItemGoatHorn() },
+		{ 757, (_, _) => new ItemWarpedFungusOnAStick() },
+		{ 761, (_, _) => new ItemGoatHorn() },
 		{ 623, (_, _) => new ItemAmethystShard() },
 		{ 624, (_, _) => new ItemSpyglass() },
 		{ 630, (_, _) => new ItemGlowBerries() },
 		{ 778, (_, _) => new ItemRecoveryCompass() },
 		{ 779, (_, _) => new ItemEchoShard() },
 		{ 780, (_, _) => new ItemBundle() },
+		{ 781, (_, _) => new ItemWhiteBundle() },
+		{ 782, (_, _) => new ItemOrangeBundle() },
+		{ 783, (_, _) => new ItemMagentaBundle() },
+		{ 784, (_, _) => new ItemLightBlueBundle() },
+		{ 785, (_, _) => new ItemYellowBundle() },
+		{ 786, (_, _) => new ItemLimeBundle() },
+		{ 787, (_, _) => new ItemPinkBundle() },
+		{ 788, (_, _) => new ItemGrayBundle() },
+		{ 789, (_, _) => new ItemLightGrayBundle() },
+		{ 790, (_, _) => new ItemCyanBundle() },
+		{ 791, (_, _) => new ItemPurpleBundle() },
+		{ 792, (_, _) => new ItemBlueBundle() },
+		{ 793, (_, _) => new ItemBrownBundle() },
+		{ 794, (_, _) => new ItemGreenBundle() },
+		{ 795, (_, _) => new ItemRedBundle() },
+		{ 796, (_, _) => new ItemBlackBundle() },
 		{ 1046, (_, _) => new ItemWindCharge() },
 		{ 1047, (_, _) => new ItemMace() },
 		{ 1048, (_, _) => new ItemOminousBottle() },
-		{ 1049, (_, _) => new ItemOminousTrialKey() }
+		{ 1049, (_, _) => new ItemOminousTrialKey() },
+		{ 1050, (_, _) => new ItemWolfArmor() },
+		{ 1051, (_, _) => new ItemBrush() }
 	};
 
 	public static Item GetItem(short id, short metadata = 0, int count = 1)
@@ -440,10 +467,8 @@ public class ItemFactory
 
 	private static ItemBlock CreateBlockItem(short id, short metadata, int count)
 	{
-		// Adjust negative IDs to a valid range.
 		int blockId = id < 0 ? (short)(Math.Abs(id) + 255) : id;
 
-		// Retrieve the block instance.
 		Block block = BlockFactory.GetBlockById(blockId);
 		if (block == null)
 		{
@@ -451,7 +476,6 @@ public class ItemFactory
 			return null;
 		}
 
-		// Retrieve the runtime ID.
 		uint runtimeId = BlockFactory.GetRuntimeId(blockId, (byte)metadata);
 		if (!BlockFactory.BlockPalette.TryGetValue((int)runtimeId, out BlockStateContainer blockState))
 		{
@@ -461,15 +485,12 @@ public class ItemFactory
 				: new ItemBlock(block, metadata);
 		}
 
-		// Apply the block state.
 		block.SetState(blockState);
 
-		// Return the created block item.
 		return CustomBlockItemFactory != null
 			? CustomBlockItemFactory.GetBlockItem(block, metadata, count)
 			: new ItemBlock(block, metadata);
 	}
-
 }
 
 public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward", 509);
@@ -490,7 +511,7 @@ public class ItemComparator() : Item("minecraft:comparator", 404);
 
 public class ItemRabbitFoot() : Item("minecraft:rabbit_foot", 414);
 
-public class ItemLingeringPotion() : Item("minecraft:lingering_potion", 441);
+public class ItemLingeringPotion(short metadata = 0) : Item("minecraft:lingering_potion", 441, metadata: metadata);
 
 public class ItemCampfire() : Item("minecraft:campfire", 720);
 
@@ -668,61 +689,19 @@ public class ItemEndCrystal() : Item("minecraft:end_crystal", 426);
 
 public class ItemMace() : ItemSword("minecraft:mace", 1047);
 
-public class ItemPandaSpawnEgg() : Item("minecraft:panda_spawn_egg", 489);
-
-public class ItemParrotSpawnEgg() : Item("minecraft:parrot_spawn_egg", 478);
-
-public class ItemDrownedSpawnEgg() : Item("minecraft:drowned_spawn_egg", 483);
-
-public class ItemSalmonSpawnEgg() : Item("minecraft:salmon_spawn_egg", 482);
-
-public class ItemPufferfishSpawnEgg() : Item("minecraft:pufferfish_spawn_egg", 481);
-
 public class ItemSpyglass() : Item("minecraft:spyglass", 624);
-
-public class ItemBlazeSpawnEgg() : Item("minecraft:blaze_spawn_egg", 456);
-
-public class ItemStriderSpawnEgg() : Item("minecraft:strider_spawn_egg", 495);
-
-public class ItemCowSpawnEgg() : Item("minecraft:cow_spawn_egg", 436);
-
-public class ItemPillagerSpawnEgg() : Item("minecraft:pillager_spawn_egg", 491);
-
-public class ItemBeeSpawnEgg() : Item("minecraft:bee_spawn_egg", 494);
-
-public class ItemAgentSpawnEgg() : Item(487); // ???
-
-public class ItemTurtleSpawnEgg() : Item("minecraft:turtle_spawn_egg", 485);
-
-public class ItemHoglinSpawnEgg() : Item("minecraft:hoglin_spawn_egg", 496);
 
 public class ItemGlowFrame() : Item("minecraft:glow_frame", 621);
 
-public class ItemTropicalFishSpawnEgg() : Item("minecraft:tropical_spawn_egg", 479);
-
-public class ItemFoxSpawnEgg() : Item("minecraft:fox_spawn_egg", 490);
-
 public class ItemChickenSpawnEgg() : Item("minecraft:chicken_spawn_egg", 435);
 
-public class ItemWanderingTraderSpawnEgg() : Item("minecraft:wandering_trader_spawn_egg", 492);
-
 public class ItemPiglinBannerPattern() : Item("minecraft:piglin_banner_pattern", 587);
-
-public class ItemPiglinSpawnEgg() : Item("minecraft:piglin_spawn_egg", 497);
 
 public class ItemMojangBannerPattern() : Item("minecraft:mojang_banner_pattern", 584);
 
 public class ItemSkullBannerPattern() : Item("minecraft:skull_banner_pattern", 583);
 
-public class ItemMooshroomSpawnEgg() : Item("minecraft:mooshroom_spawn_egg", 440);
-
-public class ItemCodSpawnEgg() : Item("minecraft:cod_spawn_egg", 480);
-
-public class ItemRavagerSpawnEgg() : Item("minecraft:ravager_spawn_egg", 493);
-
 public class ItemDarkOakSign() : Item("minecraft:dark_oak_sign", 580);
-
-public class ItemNetherStar() : Item("minecraft:nether_start", 518);
 
 public class ItemBordureIndentedBannerPattern() : Item("minecraft:bordure_intented_banner_pattern", 586);
 
@@ -736,20 +715,16 @@ public class ItemFieldMasonedBannerPattern() : Item("minecraft:field_masoned_ban
 
 public class ItemAmethystShard() : Item("minecaft:amethyst_shard", 623);
 
-public class ItemPhantomSpawnEgg() : Item("minecraft:phantom_spawn_egg", 486);
-
-public class ItemWolfSpawnEgg() : Item("minecraft:wolf_spawn_egg", 439);
-
-public class ItemCatSpawnEgg() : Item("minecraft:cat_spawn_egg", 488);
-
-public class ItemDolphinSpawnEgg() : Item("minecraft:dolphin_spawn_egg", 484);
+public class ItemWarpedFungusOnAStick() : Item("minecraft:warped_fungus_on_a_stick", 757);
 
 public class ItemRecoveryCompass() : Item("minecraft:recovery_compass", 778);
 
-public class ItemBundle() : Item("minecraft:bundle", 780);
+public class ItemEchoShard() : Item("minecraft:echo_shard", 779);
 
-public class ItemOminousBottle() : Item("minecraft:ominous_bottle", 1048);
+public class ItemOminousBottle(short metadata = 0) : Item("minecraft:ominous_bottle", 1048, metadata: metadata);
 
 public class ItemOminousTrialKey() : Item("minecraft:ominous_trial_key", 1049);
 
-public class ItemEchoShard() : Item("minecraft:echo_shard", 779);
+public class ItemWolfArmor() : Item("minecraft:wolf_armor", 1050);
+
+public class ItemBrush() : Item("minecraft:brush", 1051);

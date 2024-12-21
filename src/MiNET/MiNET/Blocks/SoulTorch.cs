@@ -21,6 +21,35 @@
 // All Rights Reserved.
 #endregion
 
-namespace MiNET.Items.Food;
+using System.Numerics;
+using MiNET.Utils.Vectors;
+using MiNET.Worlds;
 
-public class ItemCookedRabbit() : FoodItem("minecraft:cooked_rabbit", 412, 0, 5, 6);
+namespace MiNET.Blocks;
+
+public partial class SoulTorch : Block
+{
+	public SoulTorch() : base(-268)
+	{
+		IsTransparent = true;
+		IsSolid = false;
+		LightLevel = 14;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		if (face == BlockFace.Down) return true;
+
+		TorchFacingDirection = face switch
+		{
+			BlockFace.Up => "top",
+			BlockFace.North => "south",
+			BlockFace.South => "north",
+			BlockFace.West => "east",
+			BlockFace.East => "west",
+			_ => TorchFacingDirection
+		};
+
+		return false;
+	}
+}

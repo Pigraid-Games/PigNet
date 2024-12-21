@@ -23,33 +23,36 @@
 
 #endregion
 
+using System;
 using System.Drawing;
 using log4net;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class Regeneration : Effect
 {
-	public class Regeneration : Effect
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Regeneration));
+
+	public Regeneration() : base(EffectType.Regeneration)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Regeneration));
+		ParticleColor = Color.FromArgb(0xcd, 0x5c, 0xab);
+	}
 
-		public Regeneration() : base(EffectType.Regeneration)
+
+	public override void OnTick(Player player)
+	{
+		const int BaseIntervalTicks = 50;
+
+		try
 		{
-			ParticleColor = Color.FromArgb(0xcd, 0x5c, 0xab);
+			int ticksPerRegen = BaseIntervalTicks / Level;
+			if (Duration % ticksPerRegen == 0) player.HealthManager.Regen();
+		}
+		catch (Exception e)
+		{
+			Log.Warn(e);
 		}
 
-
-		public override void OnTick(Player player)
-		{
-			const int baseIntervalTicks = 50;
-			
-			int ticksPerRegen = baseIntervalTicks / Level;
-			
-			if (Duration % ticksPerRegen == 0)
-			{
-				player.HealthManager.Regen(1);
-			}
-
-			base.OnTick(player);
-		}
+		base.OnTick(player);
 	}
 }

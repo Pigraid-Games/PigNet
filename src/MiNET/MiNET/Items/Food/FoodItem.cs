@@ -23,6 +23,7 @@
 
 #endregion
 
+using System;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -31,8 +32,8 @@ namespace MiNET.Items.Food;
 public abstract class FoodItem(string name, short id, short metadata, int foodPoints, double saturationRestore)
 	: Item(name, id, metadata)
 {
-	private int FoodPoints { get; set; } = foodPoints;
-	private double SaturationRestore { get; set; } = saturationRestore;
+	private int FoodPoints { get; } = foodPoints;
+	private double SaturationRestore { get; } = saturationRestore;
 
 	private bool _isUsing;
 

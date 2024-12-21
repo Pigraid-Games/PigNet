@@ -9,8 +9,9 @@ namespace MiNET.Items
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemSplashPotion));
 
-		public ItemSplashPotion() : base("minecraft:splash_potion", 438)
+		public ItemSplashPotion(short metadata = 0) : base("minecraft:splash_potion", 438)
 		{
+			Metadata = metadata;
 			MaxStackSize = 64;
 		}
 

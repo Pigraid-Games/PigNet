@@ -21,21 +21,75 @@
 // All Rights Reserved.
 #endregion
 
+using System;
+using System.Collections.Generic;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
 namespace MiNET.Items;
 
-public class ItemGoatHorn : Item
+public sealed class ItemGoatHorn : Item
 {
-
-	public ItemGoatHorn() : base("minecraft:goat_horn", 761)
+	private static readonly Dictionary<Player, DateTime> CooldownTracker = new();
+	
+	public enum GoatHornType
 	{
+		Ponder,
+		Sing,
+		Seek,
+		Feel,
+		Admire,
+		Call,
+		Yearn,
+		Dream
+	}
+
+	public ItemGoatHorn(GoatHornType goatHornType = GoatHornType.Ponder) : base("minecraft:goat_horn", 761)
+	{
+		Metadata = (short)goatHornType;
 		MaxStackSize = 1;
 	}
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
-		
+		if (CooldownTracker.TryGetValue(player, out DateTime lastUsed))
+		{
+			TimeSpan timeSinceLastUse = DateTime.UtcNow - lastUsed;
+			if (timeSinceLastUse.TotalSeconds < 7) return;
+		}
+
+		CooldownTracker[player] = DateTime.UtcNow;
+
+		LevelSoundEventType levelSoundEventType;
+		switch ((GoatHornType)Metadata)
+		{
+			case GoatHornType.Ponder:
+				levelSoundEventType = LevelSoundEventType.HornCall0;
+				break;
+			case GoatHornType.Sing:
+				levelSoundEventType = LevelSoundEventType.HornCall1;
+				break;
+			case GoatHornType.Seek:
+				levelSoundEventType = LevelSoundEventType.HornCall2;
+				break;
+			case GoatHornType.Feel:
+				levelSoundEventType = LevelSoundEventType.HornCall3;
+				break;
+			case GoatHornType.Admire:
+				levelSoundEventType = LevelSoundEventType.HornCall4;
+				break;
+			case GoatHornType.Call:
+				levelSoundEventType = LevelSoundEventType.HornCall5;
+				break;
+			case GoatHornType.Yearn:
+				levelSoundEventType = LevelSoundEventType.HornCall6;
+				break;
+			case GoatHornType.Dream:
+				levelSoundEventType = LevelSoundEventType.HornCall7;
+				break;
+			default:
+				return;
+		}
+		player.Level.BroadcastSound(player.KnownPosition.ToVector3(), levelSoundEventType);
 	}
 }

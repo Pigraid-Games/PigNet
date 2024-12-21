@@ -33,6 +33,7 @@ public class ItemRabbitStew : FoodItem
 	
 	protected override void Consume(Player player)
 	{
+		base.Consume(player);
 		var bowl = new ItemBowl();
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, bowl, true);
 	}

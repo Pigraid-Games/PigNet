@@ -8282,7 +8282,7 @@ namespace MiNET.Blocks
         } // method
     } // class
 
-    public partial class Smoker : Block // 453 typeof=Smoker
+    public partial class Smoker // 453 typeof=Smoker
     {
 		public override string Name => "minecraft:smoker";
 		[StateRange(0, 3)] public int Direction { get; set; } = 0;
@@ -9543,6 +9543,35 @@ namespace MiNET.Blocks
             return record;
         } // method
     } // class
+
+	public partial class SoulTorch //-268 typeof=SoulTorch
+	{
+		public override string Name => "minecraft:soul_torch";
+
+		[StateEnum("west", "east", "north", "south", "top", "unknown")]
+		public string TorchFacingDirection { get; set; } = "";
+
+		public override void SetState(List<IBlockState> states)
+		{
+			foreach (var state in states)
+			{
+				switch (state)
+				{
+					case BlockStateString s when s.Name == "torch_facing_direction":
+						TorchFacingDirection = s.Value;
+						break;
+				} // switch
+			} // foreach
+		} // method
+
+		public override BlockStateContainer GetState()
+		{
+			var record = new BlockStateContainer();
+			record.Name = "minecraft:soul_torch";
+			record.Id = -268;
+			return record;
+		} // method
+	} // class
 
     public partial class Torch  // 50 typeof=Torch
     {
