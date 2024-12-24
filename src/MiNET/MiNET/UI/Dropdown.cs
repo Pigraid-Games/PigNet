@@ -26,16 +26,15 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace MiNET.UI
-{
-	public class Dropdown : CustomElement
-	{
-		public Dropdown()
-		{
-			Type = "dropdown";
-		}
+namespace MiNET.UI;
 
-		[JsonProperty("default")] public int Value { get; set; }
-		public List<string> Options { get; set; } = new List<string>();
+public class Dropdown : CustomElement
+{
+	public Dropdown()
+	{
+		Type = "dropdown";
 	}
+
+	[JsonProperty("default")] public int Value { get; set; }
+	public List<string> Options { get; set; } = new List<string>();
 }

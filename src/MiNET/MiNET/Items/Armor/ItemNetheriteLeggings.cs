@@ -23,6 +23,11 @@
 
 #endregion
 
+using System;
+using MiNET.Sounds;
+using MiNET.Utils.Vectors;
+using MiNET.Worlds;
+
 namespace MiNET.Items.Armor;
 
 public class ItemNetheriteLeggings : ArmorLeggingsBase
@@ -30,5 +35,18 @@ public class ItemNetheriteLeggings : ArmorLeggingsBase
 	public ItemNetheriteLeggings() : base("minecraft:netherite_leggings", 750)
 	{
 		ItemMaterial = ItemMaterial.Netherite;
+	}
+	
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+		player.Inventory.SetInventorySlot(slot, player.Inventory.Leggings);
+
+		UniqueId = Environment.TickCount;
+		player.Inventory.Leggings = this;
+		player.SendArmorForPlayer();
+
+		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		sound.SpawnToPlayers([player]);
 	}
 }

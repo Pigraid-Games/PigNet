@@ -25,19 +25,18 @@
 
 using Newtonsoft.Json;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public class Slider : CustomElement
 {
-	public class Slider : CustomElement
+	public Slider()
 	{
-		public Slider()
-		{
-			Type = "slider";
-		}
-
-		public float Min { get; set; }
-		public float Max { get; set; }
-		public float Step { get; set; }
-
-		[JsonProperty("default")] public float Value { get; set; }
+		Type = "slider";
 	}
+
+	public float Min { get; set; }
+	public float Max { get; set; }
+	public float Step { get; set; }
+
+	[JsonProperty("default")] public float Value { get; set; }
 }

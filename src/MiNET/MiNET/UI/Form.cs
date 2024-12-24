@@ -27,29 +27,28 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public abstract class Form
 {
-	public abstract class Form
+	public uint Id { get; set; } = (uint) new Random().Next();
+
+	public string Type { get; protected set; }
+	public string Title { get; set; }
+
+	public string ToJson()
 	{
-		public uint Id { get; set; } = (uint) new Random().Next();
+		var settings = new JsonSerializerSettings();
+		settings.NullValueHandling = NullValueHandling.Ignore;
+		settings.DefaultValueHandling = DefaultValueHandling.Include;
+		settings.MissingMemberHandling = MissingMemberHandling.Error;
+		settings.Formatting = Formatting.Indented;
+		settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
-		public string Type { get; protected set; }
-		public string Title { get; set; }
+		var content = JsonConvert.SerializeObject(this, settings);
 
-		public string ToJson()
-		{
-			var settings = new JsonSerializerSettings();
-			settings.NullValueHandling = NullValueHandling.Ignore;
-			settings.DefaultValueHandling = DefaultValueHandling.Include;
-			settings.MissingMemberHandling = MissingMemberHandling.Error;
-			settings.Formatting = Formatting.Indented;
-			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-
-			var content = JsonConvert.SerializeObject(this, settings);
-
-			return content;
-		}
-
-		public abstract void FromJson(string json, Player player);
+		return content;
 	}
+
+	public abstract void FromJson(string json, Player player);
 }

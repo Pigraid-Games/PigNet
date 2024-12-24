@@ -26,16 +26,15 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace MiNET.UI
-{
-	public class StepSlider : CustomElement
-	{
-		public StepSlider()
-		{
-			Type = "step_slider";
-		}
+namespace MiNET.UI;
 
-		[JsonProperty("default")] public int Value { get; set; }
-		public List<string> Steps { get; set; } = new List<string>();
+public class StepSlider : CustomElement
+{
+	public StepSlider()
+	{
+		Type = "step_slider";
 	}
+
+	[JsonProperty("default")] public int Value { get; set; }
+	public List<string> Steps { get; set; } = [];
 }

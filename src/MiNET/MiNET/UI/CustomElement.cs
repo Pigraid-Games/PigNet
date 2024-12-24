@@ -23,10 +23,9 @@
 
 #endregion
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public abstract class CustomElement : Element
 {
-	public abstract class CustomElement : Element
-	{
-		public string Type { get; protected set; }
-	}
+	public string Type { get; protected set; }
 }

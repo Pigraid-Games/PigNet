@@ -23,6 +23,11 @@
 
 #endregion
 
+using System;
+using MiNET.Sounds;
+using MiNET.Utils.Vectors;
+using MiNET.Worlds;
+
 namespace MiNET.Items.Armor;
 
 public class ItemNetheriteBoots : ArmorBootsBase
@@ -30,5 +35,18 @@ public class ItemNetheriteBoots : ArmorBootsBase
 	public ItemNetheriteBoots() : base("minecraft:netherite_boots", 751)
 	{
 		ItemMaterial = ItemMaterial.Netherite;
+	}
+	
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+		player.Inventory.SetInventorySlot(slot, player.Inventory.Boots);
+
+		UniqueId = Environment.TickCount;
+		player.Inventory.Boots = this;
+		player.SendArmorForPlayer();
+
+		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		sound.SpawnToPlayers([player]);
 	}
 }

@@ -27,34 +27,33 @@ using System.Collections.Generic;
 using log4net;
 using Newtonsoft.Json;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public class SimpleForm : Form
 {
-	public class SimpleForm : Form
+	private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
+
+	public string Content { get; set; }
+	public List<Button> Buttons { get; set; } = new List<Button>();
+
+	public SimpleForm()
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
+		Type = "form";
+	}
 
-		public string Content { get; set; }
-		public List<Button> Buttons { get; set; } = new List<Button>();
-
-		public SimpleForm()
+	public override void FromJson(string json, Player player)
+	{
+		var jsonSerializerSettings = new JsonSerializerSettings
 		{
-			Type = "form";
-		}
+			PreserveReferencesHandling = PreserveReferencesHandling.None,
+			Formatting = Formatting.Indented,
+		};
 
-		public override void FromJson(string json, Player player)
-		{
-			var jsonSerializerSettings = new JsonSerializerSettings
-			{
-				PreserveReferencesHandling = PreserveReferencesHandling.None,
-				Formatting = Formatting.Indented,
-			};
+		int? parsedResult = JsonConvert.DeserializeObject<int?>(json);
+		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
+		if (!parsedResult.HasValue) return;
 
-			var parsedResult = JsonConvert.DeserializeObject<int?>(json);
-			Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
-			if (!parsedResult.HasValue) return;
-
-			var pressedBtn = Buttons[parsedResult.Value];
-			pressedBtn.Execute(player, this);
-		}
+		Button pressedBtn = Buttons[parsedResult.Value];
+		pressedBtn.Execute(player, this);
 	}
 }

@@ -28,50 +28,62 @@ using System.Collections.Generic;
 using log4net;
 using Newtonsoft.Json;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public class CustomForm : Form
 {
-	public class CustomForm : Form
+	private static readonly ILog Log = LogManager.GetLogger(typeof(CustomForm));
+
+	public CustomForm()
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(CustomForm));
+		Type = "custom_form";
+	}
 
-		public CustomForm()
+	public List<CustomElement> Content { get; set; }
+
+	public override void FromJson(string json, Player player)
+	{
+		var jsonSerializerSettings = new JsonSerializerSettings
 		{
-			Type = "custom_form";
-		}
+			PreserveReferencesHandling = PreserveReferencesHandling.None,
+			Formatting = Formatting.Indented,
+		};
 
-		public List<CustomElement> Content { get; set; }
+		var parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
+		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
 
-		public override void FromJson(string json, Player player)
+		if (parsedResult == null) return; // Pressed [x]
+
+		for (int i = 0; i < Content.Count; i++)
 		{
-			var jsonSerializerSettings = new JsonSerializerSettings
+			CustomElement element = Content[i];
+			switch (element)
 			{
-				PreserveReferencesHandling = PreserveReferencesHandling.None,
-				Formatting = Formatting.Indented,
-			};
-
-			var parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
-			Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
-
-			if (parsedResult == null) return; // Pressed [x]
-
-			for (var i = 0; i < Content.Count; i++)
-			{
-				var element = Content[i];
-				if (element is Input) ((Input) element).Value = (string) parsedResult[i];
-				else if (element is Toggle) ((Toggle) element).Value = (bool) parsedResult[i];
-				else if (element is Slider) ((Slider) element).Value = (float) (double) parsedResult[i];
-				else if (element is StepSlider) ((StepSlider) element).Value = (int) (long) parsedResult[i];
-				else if (element is Dropdown) ((Dropdown) element).Value = (int) (long) parsedResult[i];
+				case Input input:
+					input.Value = (string) parsedResult[i];
+					break;
+				case Toggle toggle:
+					toggle.Value = (bool) parsedResult[i];
+					break;
+				case Slider slider:
+					slider.Value = (float) (double) parsedResult[i];
+					break;
+				case StepSlider slider:
+					slider.Value = (int) (long) parsedResult[i];
+					break;
+				case Dropdown dropdown:
+					dropdown.Value = (int) (long) parsedResult[i];
+					break;
 			}
-
-			Execute(player);
 		}
 
-		[JsonIgnore] public Action<Player, CustomForm> ExecuteAction { get; set; }
+		Execute(player);
+	}
 
-		public void Execute(Player player)
-		{
-			ExecuteAction?.Invoke(player, this);
-		}
+	[JsonIgnore] public Action<Player, CustomForm> ExecuteAction { get; set; }
+
+	public void Execute(Player player)
+	{
+		ExecuteAction?.Invoke(player, this);
 	}
 }

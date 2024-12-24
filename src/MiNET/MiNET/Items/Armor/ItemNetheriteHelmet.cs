@@ -23,6 +23,11 @@
 
 #endregion
 
+using System;
+using MiNET.Sounds;
+using MiNET.Utils.Vectors;
+using MiNET.Worlds;
+
 namespace MiNET.Items.Armor;
 
 public class ItemNetheriteHelmet : ArmorHelmetBase
@@ -30,5 +35,18 @@ public class ItemNetheriteHelmet : ArmorHelmetBase
 	public ItemNetheriteHelmet() : base("minecraft:netherite_helmet", 748)
 	{
 		ItemMaterial = ItemMaterial.Netherite;
+	}
+	
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+		player.Inventory.SetInventorySlot(slot, player.Inventory.Helmet);
+
+		UniqueId = Environment.TickCount;
+		player.Inventory.Helmet = this;
+		player.SendArmorForPlayer();
+
+		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		sound.SpawnToPlayers([player]);
 	}
 }

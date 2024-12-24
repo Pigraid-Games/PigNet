@@ -23,10 +23,9 @@
 
 #endregion
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public abstract class Element
 {
-	public abstract class Element
-	{
-		public string Text { get; set; }
-	}
+	public string Text { get; set; }
 }

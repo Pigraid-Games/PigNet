@@ -25,15 +25,14 @@
 
 using Newtonsoft.Json;
 
-namespace MiNET.UI
-{
-	public class Toggle : CustomElement
-	{
-		public Toggle()
-		{
-			Type = "toggle";
-		}
+namespace MiNET.UI;
 
-		[JsonProperty("default")] public bool Value { get; set; }
+public class Toggle : CustomElement
+{
+	public Toggle()
+	{
+		Type = "toggle";
 	}
+
+	[JsonProperty("default")] public bool Value { get; set; }
 }

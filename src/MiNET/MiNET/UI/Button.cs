@@ -26,24 +26,23 @@
 using System;
 using Newtonsoft.Json;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public abstract class Button : Element
 {
-	public class Button : Element
+	public Image Image { get; set; }
+
+	[JsonIgnore] public Action<Player, SimpleForm> ExecuteAction { get; set; }
+
+	public void Execute(Player player, SimpleForm form)
 	{
-		public Image Image { get; set; }
-
-		[JsonIgnore] public Action<Player, SimpleForm> ExecuteAction { get; set; }
-
-		public void Execute(Player player, SimpleForm form)
-		{
-			ExecuteAction?.Invoke(player, form);
-		}
+		ExecuteAction?.Invoke(player, form);
 	}
+}
 
-	public class Image
-	{
-		public string Type { get; set; } // path, url
+public class Image
+{
+	public string Type { get; set; } // path, url
 
-		[JsonProperty(propertyName: "data")] public string Url { get; set; }
-	}
+	[JsonProperty(propertyName: "data")] public string Url { get; set; }
 }

@@ -25,17 +25,16 @@
 
 using Newtonsoft.Json;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public class Input : CustomElement
 {
-	public class Input : CustomElement
+	public Input()
 	{
-		public Input()
-		{
-			Type = "input";
-		}
-
-		public string Placeholder { get; set; }
-
-		[JsonProperty("default")] public string Value { get; set; }
+		Type = "input";
 	}
+
+	public string Placeholder { get; set; }
+
+	[JsonProperty("default")] public string Value { get; set; }
 }

@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public class Label : CustomElement
 {
-	public class Label : CustomElement
+	public Label()
 	{
-		public Label()
-		{
-			Type = "label";
-		}
+		Type = "label";
 	}
 }

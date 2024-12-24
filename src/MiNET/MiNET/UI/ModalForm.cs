@@ -27,45 +27,44 @@ using System;
 using log4net;
 using Newtonsoft.Json;
 
-namespace MiNET.UI
+namespace MiNET.UI;
+
+public class ModalForm : Form
 {
-	public class ModalForm : Form
+	private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
+
+	public string Content { get; set; }
+	public string Button1 { get; set; }
+	public string Button2 { get; set; }
+
+	public ModalForm()
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
+		Type = "modal";
+	}
 
-		public string Content { get; set; }
-		public string Button1 { get; set; }
-		public string Button2 { get; set; }
-
-		public ModalForm()
+	public override void FromJson(string json, Player player)
+	{
+		var jsonSerializerSettings = new JsonSerializerSettings
 		{
-			Type = "modal";
-		}
+			PreserveReferencesHandling = PreserveReferencesHandling.None,
+			Formatting = Formatting.Indented,
+		};
 
-		public override void FromJson(string json, Player player)
+		var parsedResult = JsonConvert.DeserializeObject<bool?>(json);
+		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
+
+		if (!parsedResult.HasValue) return;
+
+		if (parsedResult.Value)
 		{
-			var jsonSerializerSettings = new JsonSerializerSettings
-			{
-				PreserveReferencesHandling = PreserveReferencesHandling.None,
-				Formatting = Formatting.Indented,
-			};
-
-			var parsedResult = JsonConvert.DeserializeObject<bool?>(json);
-			Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
-
-			if (!parsedResult.HasValue) return;
-
-			if (parsedResult.Value)
-			{
-				Execute(player);
-			}
+			Execute(player);
 		}
+	}
 
-		[JsonIgnore] public Action<Player, ModalForm> ExecuteAction { get; set; }
+	[JsonIgnore] public Action<Player, ModalForm> ExecuteAction { get; set; }
 
-		public void Execute(Player player)
-		{
-			ExecuteAction?.Invoke(player, this);
-		}
+	public void Execute(Player player)
+	{
+		ExecuteAction?.Invoke(player, this);
 	}
 }
