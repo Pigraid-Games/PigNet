@@ -660,11 +660,16 @@ public static class InventoryUtils
 		new Item(294, 0), //golden_hoe
 		new Item(293, 0), //diamond_hoe
 		new Item(747, 0), //netherite_hoe
-		new ItemBow(),
-		new ItemCrossbow(),
-		new ItemMace(),
-		new ItemArrow(),
-		new ItemArrow(6), // arrow_nightVision
+		new Item(261, 0), //bow
+		new Item(471, 0), //crossbow
+		new Item(1047, 0), //mace
+		new ItemArrow(), //base
+		//new ItemArrow(1), //arrow_splashing
+		//new ItemArrow(2), //arrow_mundane
+		//new ItemArrow(3), //arrow_mundane
+		//new ItemArrow(4), //arrow_thick
+		//new ItemArrow(5), //arrow_awkward
+		new ItemArrow(6), //arrow_nightVision
 		new ItemArrow(7), //arrow_nightVision
 		new ItemArrow(8), //arrow_invisibility
 		new ItemArrow(9), //arrow_invisibility
@@ -701,6 +706,11 @@ public static class InventoryUtils
 		new ItemArrow(40), //arrow_turtleMaster
 		new ItemArrow(41), //arrow_slowFalling
 		new ItemArrow(42), //arrow_slowFalling
+		new ItemArrow(43), //arrow_windCharging
+		new ItemArrow(44), //arrow_weaving
+		new ItemArrow(45), //arrow_oozing
+		new ItemArrow(46), //arrow_infestation
+		new ItemArrow(47), // arrow_?
 		new ItemShield(),
 		new ItemCookedChicken(),
 		new ItemCookedPorkchop(),
@@ -723,8 +733,8 @@ public static class InventoryUtils
 		new ItemWarpedFungusOnAStick(),
 		new ItemSnowball(),
 		new ItemWindCharge(),
-		new ItemShears(),
-		new ItemFlintAndSteel(),
+		new Item(359, 0), //shears
+		new Item(259, 0), //flint_and_steel
 		new ItemLead(),
 		new ItemClock(),
 		new ItemCompass(),
@@ -762,7 +772,7 @@ public static class InventoryUtils
 		new ItemDiamondHorseArmor(),
 		new ItemWolfArmor(),
 		new ItemTrident(),
-		new ItemTurtleHelmet(),
+		new Item(469, 0), //turtle_shell
 		new ItemElytra(),
 		new ItemTotemOfUndying(),
 		new ItemGlassBottle(),
@@ -1269,12 +1279,58 @@ public static class InventoryUtils
 		new Item(446, 2), //banner_magenta
 		new Item(446, 6), //banner_pink
 		new Item(446, 15){ ExtraData = new NbtCompound { new NbtInt("Type", 1) } }, //illager_banner
-		new Item(434, 0), //banner_pattern
-		new Item(434, 1), //banner_pattern
-		new Item(434, 2), //banner_pattern
-		new Item(434, 3), //banner_pattern
-		new Item(434, 4), //banner_pattern
-		new Item(434, 5), //banner_pattern
+		new Item(434, 0), //creeper_charge_banner_pattern ok
+		new Item(434, 1), //skull_charge_banner_pattern ok
+		new Item(434, 2), //flower_charge_banner_pattern ok
+		new Item(434, 3), //thing_banner_pattern ok
+		new Item(434, 4), //field_masoned_banner_pattern ok
+		new Item(434, 5), //bordure_intented_banner_pattern ok
+		new Item(434, 6), //snout_banner_pattern ok
+		new Item(434, 7), //globe_banner_pattern ok
+		new Item(1069), //flow_banner_pattern
+		new Item(1070), //guster_banner_pattern
+		new ItemAnglerPotterySherd(),
+		new ItemArcherPotterySherd(),
+		new ItemArmsUpPotterySherd(),
+		new ItemBladePotterySherd(),
+		new ItemBrewerPotterySherd(),
+		new ItemBurnPotterySherd(),
+		new ItemDangerPotterySherd(),
+		new ItemExplorerPotterySherd(),
+		new ItemFlowPotterySherd(),
+		new ItemFriendPotterySherd(),
+		new ItemGusterPotterySherd(),
+		new ItemHeartPotterySherd(),
+		new ItemHeartbreakPotterySherd(),
+		new ItemHowlPotterySherd(),
+		new ItemMinerPotterySherd(),
+		new ItemMournerPotterySherd(),
+		new ItemPlentyPotterySherd(),
+		new ItemPrizePotterySherd(),
+		new ItemScrapePotterySherd(),
+		new ItemSheafPotterySherd(),
+		new ItemShelterPotterySherd(),
+		new ItemSkullPotterySherd(),
+		new ItemSnortPotteryShert(),
+		new ItemNetheriteUpgrade(),
+		new ItemSentryArmorTrim(),
+		new ItemVexArmorTrim(),
+		new ItemWildArmorTrim(),
+		new ItemCoastArmorTrim(),
+		new ItemDuneArmorDrim(),
+		new ItemWayfinderArmorTrim(),
+		new ItemShaperArmorTrim(),
+		new ItemRaiserArmorTrim(),
+		new ItemHostArmorTrim(),
+		new ItemWardArmorTrim(),
+		new ItemSilenceArmorTrim(),
+		new ItemTideArmorTrim(),
+		new ItemSnoutArmorTrim(),
+		new ItemRibArmorTrim(),
+		new ItemEyeArmorTrim(),
+		new ItemSpireArmorTrim(),
+		new ItemFlowArmorTrim(),
+		new ItemBoltArmorTrim(),
 		new Item(401, 0){ ExtraData = new NbtCompound { new NbtCompound("Fireworks") { new NbtList("Explosions", (NbtTagType)0), new NbtByte("Flight") } } }, //firework_rocket
 		new Item(401, 0){ ExtraData = new NbtCompound { new NbtCompound("Fireworks") { new NbtList("Explosions", (NbtTagType)10) { new NbtCompound { new NbtByteArray("FireworkColor", new byte[1]{0}), new NbtByteArray("FireworkFade", new byte[0]{}), new NbtByte("FireworkFlicker", 0), new NbtByte("FireworkTrail", 0), new NbtByte("FireworkType", 0) } }, new NbtByte("Flight", 1) } } }, //firework_rocket_white
 		new Item(401, 0){ ExtraData = new NbtCompound { new NbtCompound("Fireworks") { new NbtList("Explosions", (NbtTagType)10) { new NbtCompound { new NbtByteArray("FireworkColor", new byte[1]{8}), new NbtByteArray("FireworkFade", new byte[0]{}), new NbtByte("FireworkFlicker", 0), new NbtByte("FireworkTrail", 0), new NbtByte("FireworkType", 0) } }, new NbtByte("Flight", 1) } } }, //firework_rocket_light_gray
