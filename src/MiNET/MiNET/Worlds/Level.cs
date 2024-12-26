@@ -1772,6 +1772,16 @@ namespace MiNET.Worlds
 			return rules;
 		}
 
+		public void BroadcastSound(Sound sound, string entityType = null)
+		{
+			if (entityType != null)
+			{
+				BroadcastSound(new PlayerLocation(sound.Position), (LevelSoundEventType) sound.Id, entityType);
+				return;
+			}
+			BroadcastSound(sound.Position, (LevelSoundEventType) sound.Id);
+		}
+
 		public void BroadcastSound(BlockCoordinates position, LevelSoundEventType sound, int blockId = 0, Player sender = null)
 		{
 			var packet = McpeLevelSoundEvent.CreateObject();

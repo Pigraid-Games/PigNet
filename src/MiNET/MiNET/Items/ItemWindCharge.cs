@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -42,7 +43,7 @@ namespace MiNET.Items
 			windCharge.KnownPosition.Y += 1.62f;
 			windCharge.SpawnEntity();
 
-			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
+			world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
 			Item itemInHand = player.Inventory.GetItemInHand();
 			itemInHand.Count--;
 			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);

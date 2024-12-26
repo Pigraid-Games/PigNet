@@ -1046,5 +1046,22 @@
 	"minecraft:ominous_bottle": 1048,
 	"minecraft:ominous_trial_key": 1049,
 	"minecraft:wolf_armor": 1050,
-	"minecraft:brush": 1051
+	"minecraft:brush": 1051,
+	"minecraft:chiseled_bookshelf": 1052,
+	"minecraft:music_disc_creator": 1053,
+	"minecraft:music_disc_creator_music_box": 1054,
+	"minecraft:music_disc_precipice": 1055,
+	"minecraft:cherry_sign": 1056,
+	"minecraft:pale_oak_sign": 1057,
+	"minecraft:bamboo_sign": 1058,
+	"minecraft:skeleton_head": 1059,
+	"minecraft:piglin_head": 1060,
+	"minecraft:charcoal": 1061,
+	"minecraft:copper_ingot": 1062,
+	"minecraft:nether_quartz": 1063,
+	"minecraft:resin_brick": 1064,
+	"minecraft:turtle_scute": 1065,
+	"minecraft:armadillo_scute": 1066,
+	"minecraft:breeze_rod": 1067,
+	"minecraft:heavy_core": 1068
 }

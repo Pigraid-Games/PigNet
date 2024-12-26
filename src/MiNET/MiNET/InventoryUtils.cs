@@ -25,6 +25,7 @@
 
 using System.Collections.Generic;
 using fNbt;
+using MiNET.Blocks;
 using MiNET.Items;
 using MiNET.Items.Armor;
 using MiNET.Items.Food;
@@ -603,61 +604,62 @@ public static class InventoryUtils
 		new Item(-132, 10), //dead_bubble_coral_block
 		new Item(-132, 11), //dead_brain_coral_block
 		new Item(-132, 12), //dead_horn_coral_block
-		new ItemLeatherHelmet(),
-		new ItemChainmailHelmet(),
-		new ItemIronHelmet(),
-		new ItemGoldenHelmet(),
-		new ItemDiamondHelmet(),
-		new ItemNetheriteHelmet(),
-		new ItemLeatherChestplate(),
-		new ItemChainmailChestplate(),
-		new ItemIronChestplate(),
-		new ItemGoldenChestplate(),
-		new ItemDiamondChestplate(),
-		new ItemNetheriteChestplate(),
-		new ItemLeatherLeggings(),
-		new ItemChainmailLeggings(),
-		new ItemIronLeggings(),
-		new ItemGoldenLeggings(),
-		new ItemDiamondLeggings(),
-		new ItemNetheriteLeggings(),
-		new ItemLeatherBoots(),
-		new ItemChainmailBoots(),
-		new ItemIronBoots(),
-		new ItemGoldenBoots(),
-		new ItemDiamondBoots(),
-		new ItemNetheriteBoots(),
-		new ItemWoodenSword(),
-		new ItemStoneSword(),
-		new ItemIronSword(),
-		new ItemGoldenSword(),
-		new ItemDiamondSword(),
-		new ItemNetheriteSword(),
-		new ItemWoodenAxe(),
-		new ItemStoneAxe(),
-		new ItemIronAxe(),
-		new ItemGoldenAxe(),
-		new ItemDiamondAxe(),
-		new ItemNetheriteAxe(),
-		new ItemWoodenPickaxe(),
-		new ItemStonePickaxe(),
-		new ItemIronPickaxe(),
-		new ItemIronPickaxe(),
-		new ItemGoldenPickaxe(),
-		new ItemDiamondPickaxe(),
-		new ItemNetheritePickaxe(),
-		new ItemWoodenShovel(),
-		new ItemStoneShovel(),
-		new ItemIronShovel(),
-		new ItemGoldenShovel(),
-		new ItemDiamondShovel(),
-		new ItemNetheriteShovel(),
-		new ItemWoodenHoe(),
-		new ItemStoneHoe(),
-		new ItemIronHoe(),
-		new ItemGoldenHoe(),
-		new ItemDiamondHoe(),
-		new ItemNetheriteHoe(),
+		#region Equipment Items
+		// TODO: Investigate why passing these items fuck up the creative inventory.
+		new Item(298, 0), //leather_cap
+		new Item(302, 0), //chainmail_helmet
+		new Item(306, 0), //iron_helmet
+		new Item(314, 0), //golden_helmet
+		new Item(310, 0), //diamond_helmet
+		new Item(748, 0), //netherite_helmet
+		new Item(299, 0), //leather_tunic
+		new Item(303, 0), //chainmail_chestplate
+		new Item(307, 0), //iron_chestplate
+		new Item(315, 0), //golden_chestplate
+		new Item(311, 0), //diamond_chestplate
+		new Item(749, 0), //netherite_chestplate
+		new Item(300, 0), //leather_pants
+		new Item(304, 0), //chainmail_leggings
+		new Item(308, 0), //iron_leggings
+		new Item(316, 0), //golden_leggings
+		new Item(312, 0), //diamond_leggings
+		new Item(750, 0), //netherite_leggings
+		new Item(301, 0), //leather_boots
+		new Item(305, 0), //chainmail_boots
+		new Item(309, 0), //iron_boots
+		new Item(317, 0), //golden_boots
+		new Item(313, 0), //diamond_boots
+		new Item(751, 0), //netherite_boots
+		new Item(268, 0), //wooden_sword
+		new Item(272, 0), //stone_sword
+		new Item(267, 0), //iron_sword
+		new Item(283, 0), //golden_sword
+		new Item(276, 0), //diamond_sword
+		new Item(743, 0), //netherite_sword
+		new Item(271, 0), //wooden_axe
+		new Item(275, 0), //stone_axe
+		new Item(258, 0), //iron_axe
+		new Item(286, 0), //golden_axe
+		new Item(279, 0), //diamond_axe
+		new Item(746, 0), //netherite_axe
+		new Item(270, 0), //wooden_pickaxe
+		new Item(274, 0), //stone_pickaxe
+		new Item(257, 0), //iron_pickaxe
+		new Item(285, 0), //golden_pickaxe
+		new Item(278, 0), //diamond_pickaxe
+		new Item(745, 0), //netherite_pickaxe
+		new Item(269, 0), //wooden_shovel
+		new Item(273, 0), //stone_shovel
+		new Item(256, 0), //iron_shovel
+		new Item(284, 0), //golden_shovel
+		new Item(277, 0), //diamond_shovel
+		new Item(744, 0), //netherite_shovel
+		new Item(290, 0), //wooden_hoe
+		new Item(291, 0), //stone_hoe
+		new Item(292, 0), //iron_hoe
+		new Item(294, 0), //golden_hoe
+		new Item(293, 0), //diamond_hoe
+		new Item(747, 0), //netherite_hoe
 		new ItemBow(),
 		new ItemCrossbow(),
 		new ItemMace(),
@@ -727,7 +729,7 @@ public static class InventoryUtils
 		new ItemClock(),
 		new ItemCompass(),
 		new ItemRecoveryCompass(),
-		new ItemGoatHorn(),
+		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Ponder),
 		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Sing),
 		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Seek),
 		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Feel),
@@ -740,14 +742,20 @@ public static class InventoryUtils
 		new ItemSaddle(),
 		new ItemBundle(),
 		new ItemWhiteBundle(),
+		new ItemLightGrayBundle(),
+		new ItemGrayBundle(),
+		new ItemBlackBundle(),
+		new ItemBrownBundle(),
+		new ItemRedBundle(),
 		new ItemOrangeBundle(),
-		new ItemMagentaBundle(),
-		new ItemLightBlueBundle(),
 		new ItemYellowBundle(),
 		new ItemLimeBundle(),
+		new ItemGreenBundle(),
+		new ItemCyanBundle(),
+		new ItemBlueBundle(),
+		new ItemPurpleBundle(),
+		new ItemMagentaBundle(),
 		new ItemPinkBundle(),
-		new ItemGrayBundle(),
-		new ItemLightGrayBundle(),
 		new ItemLeatherHorseArmor(),
 		new ItemIronHorseArmor(),
 		new ItemGoldenHorseArmor(),
@@ -892,6 +900,8 @@ public static class InventoryUtils
 		new ItemOminousBottle(4), //ominous_bottle lvl 5
 		new ItemSpyglass(),
 		new ItemBrush(),
+		#endregion Equipment Items
+		#region Items
 		new ItemStick(),
 		new ItemBed(), //bed_white
 		new ItemBed(8), //bed_light_gray
@@ -909,141 +919,190 @@ public static class InventoryUtils
 		new ItemBed(10), //bed_purple
 		new ItemBed(2), //bed_magenta
 		new ItemBed(6), //bed_pink
-		new Item(50, 0), //torch
-		new Item(-268, 0), //soul_torch
-		new Item(-156, 0), //sea_pickle
-		new Item(-208, 0), //lantern
-		new Item(58, 0), //crafting_table
-		new Item(-200, 0), //cartography_table
-		new Item(-201, 0), //fletching_table
-		new Item(-202, 0), //smithing_table
-		new Item(720, 0), //campfire
-		new Item(61, 0), //furnace
-		new Item(-196, 0), //blast_furnace
-		new Item(-198, 0), //smoker
-		new Item(379, 0), //brewing_stand
-		new Item(145, 0), //anvil
-		new Item(145, 4), //slightly_damaged_anvil
-		new Item(145, 8), //very_damaged_anvil
-		new Item(-195, 0), //grindstone
-		new Item(116, 0), //enchantment_table
-		new Item(47, 0), //bookshelf
-		new Item(-194, 0), //lectern
-		new Item(380, 0), //cauldron
-		new Item(-213, 0), //composter
-		new Item(54, 0), //chest
-		new Item(146, 0), //trapped_chest
-		new Item(130, 0), //ender_chest
-		new Item(-203, 0), //barrel
-		new Item(205, 0), //shulker_box
-		new Item(218, 0), //white_shulker_box
-		new Item(218, 8), //light_gray_shulker_box
-		new Item(218, 7), //gray_shulker_box
-		new Item(218, 15), //black_shulker_box
-		new Item(218, 12), //brown_shulker_box
-		new Item(218, 14), //red_shulker_box
-		new Item(218, 1), //orange_shulker_box
-		new Item(218, 4), //yellow_shulker_box
-		new Item(218, 5), //lime_shulker_box
-		new Item(218, 13), //green_shulker_box
-		new Item(218, 9), //cyan_shulker_box
-		new Item(218, 3), //light_blue_shulker_box
-		new Item(218, 11), //blue_shulker_box
-		new Item(218, 10), //purple_shulker_box
-		new Item(218, 2), //magenta_shulker_box
-		new Item(218, 6), //pink_shulker_box
-		new Item(425, 0), //armor_stand
-		new Item(25, 0), //note_block
-		new Item(84, 0), //jukebox
-		new Item(500, 0), //music_disc_13
-		new Item(501, 0), //music_disc_cat
-		new Item(502, 0), //music_disc_blocks
-		new Item(503, 0), //music_disc_chirp
-		new Item(504, 0), //music_disc_far
-		new Item(505, 0), //music_disc_mall
-		new Item(506, 0), //music_disc_mellohi
-		new Item(507, 0), //music_disc_stal
-		new Item(508, 0), //music_disc_strad
-		new Item(509, 0), //music_disc_ward
-		new Item(510, 0), //music_disc_11
-		new Item(511, 0), //music_disc_wait
-		new Item(348, 0), //glowstone_dust
-		new Item(89, 0), //glowstone
-		new Item(123, 0), //redstone_lamp
-		new Item(169, 0), //sea_lantern
-		new Item(323, 0), //oak_sign
-		new Item(472, 0), //spruce_sign
-		new Item(473, 0), //birch_sign
-		new Item(474, 0), //jungle_sign
-		new Item(475, 0), //acacia_sign
-		new Item(476, 0), //dark_oak_sign
-		new Item(321, 0), //painting
-		new Item(389, 0), //item_frame
-		new Item(390, 0), //flower_pot
-		new Item(281, 0), //bowl
-		new Item(325, 0), //bucket
-		new Item(325, 1), //milk
-		new Item(325, 8), //water_bucket
-		new Item(325, 10), //lava_bucket
-		new Item(325, 2), //bucket_of_cod
-		new Item(325, 3), //bucket_of_salmon
-		new Item(325, 4), //bucket_of_tropical_fish
-		new Item(325, 5), //bucket_of_pufferfish
-		new Item(397, 3), //head
-		new Item(397, 2), //zombie_head
-		new Item(397, 4), //creeper_head
-		new Item(397, 5), //dragon_head
-		new Item(397, 0), //skeleton_skull
-		new Item(397, 1), //wither_skeleton_skull
-		new Item(138, 0), //beacon
-		new Item(-206, 0), //bell
-		new Item(-157, 0), //conduit
-		new Item(-197, 0), //stonecutter
-		new Item(120, 0), //end_portal_frame
-		new Item(263, 0), //coal
-		new Item(263, 1), //charcoal
-		new Item(264, 0), //diamond
-		new Item(452, 0), //iron_nugget
-		new Item(265, 0), //iron_ingot
-		new Item(371, 0), //gold_nugget
-		new Item(266, 0), //gold_ingot
-		new Item(388, 0), //emerald
-		new Item(406, 0), //quartz
-		new Item(337, 0), //clay_ball
-		new Item(336, 0), //brick
-		new Item(405, 0), //netherbrick
-		new Item(409, 0), //prismarine_shard
-		new Item(422, 0), //prismarine_crystals
-		new Item(465, 0), //nautilus_shell
-		new Item(467, 0), //heart_of_the_sea
-		new Item(468, 0), //scute
-		new Item(470, 0), //phantom_membrane
-		new Item(287, 0), //string
-		new Item(288, 0), //feather
-		new Item(318, 0), //flint
-		new Item(289, 0), //gunpowder
-		new Item(334, 0), //leather
-		new Item(415, 0), //rabbit_hide
-		new Item(414, 0), //rabbits_foot
-		new Item(385, 0), //fire_charge
-		new Item(369, 0), //blaze_rod
-		new Item(377, 0), //blaze_powder
-		new Item(378, 0), //magma_cream
-		new Item(376, 0), //fermented_spider_eye
-		new Item(437, 0), //dragon_breath
-		new Item(445, 0), //shulker_shell
-		new Item(370, 0), //ghast_tear
-		new Item(341, 0), //slime_ball
-		new Item(368, 0), //ender_pearl
-		new Item(381, 0), //ender_eye
-		new Item(399, 0), //nether_star
-		new Item(208, 0), //end_rod
-		new Item(426, 0), //end_crystal
-		new Item(339, 0), //paper
-		new Item(340, 0), //book
-		new Item(386, 0), //book_and_quill
-		new Item(1049, 0), //ominous_trial_key
-		new Item(779, 0), //echo_shard
+		new ItemTorch(),
+		new ItemSoulTorch(),
+		new ItemSeaPickle(),
+		new ItemLantern(),
+		new ItemSoulLantern(),
+		new ItemCandle(),
+		new ItemWhiteCandle(),
+		new ItemOrangeCandle(),
+		new ItemPinkCandle(),
+		new ItemLightBlueCandle(),
+		new ItemYellowCandle(),
+		new ItemLimeCandle(),
+		new ItemPinkCandle(),
+		new ItemGrayCandle(),
+		new ItemLightGrayCandle(),
+		new ItemCyanCandle(),
+		new ItemPurpleCandle(),
+		new ItemBrownCandle(),
+		new ItemGreenCandle(),
+		new ItemRedCandle(),
+		new ItemBlackCandle(),
+		new ItemCraftingTable(),
+		new ItemCartographyTable(),
+		new ItemFletchingTable(),
+		new ItemSmitchingTable(),
+		new ItemCampfire(),
+		new ItemSoulCampfire(),
+		new ItemFurnace(),
+		new ItemBlastFurnace(),
+		new ItemSmoker(),
+		new ItemRespawnAnchor(),
+		new ItemBrewingStand(),
+		new ItemAnvil(),
+		new ItemChippedAnvil(),
+		new ItemDamagedAnvil(),
+		new ItemGrindstone(),
+		new ItemEnchantingTable(),
+		new ItemBookshelf(),
+		new ItemChiseledBookshelf(),
+		new ItemLectern(),
+		new ItemCauldron(),
+		new ItemComposter(),
+		new ItemChest(),
+		new ItemTrappedChest(),
+		new ItemEnderChest(),
+		new ItemBarrel(),
+		new ItemShulkerBox(),
+		new ItemWhiteShulkerBox(),
+		new ItemLightGrayShulkerBox(),
+		new ItemGrayShulkerBox(),
+		new ItemBlackShulkerBox(),
+		new ItemBrownShulkerBox(),
+		new ItemRedShulkerBox(),
+		new ItemOrangeShulkerBox(),
+		new ItemYellowShulkerBox(),
+		new ItemLimeShulkerBox(),
+		new ItemGreenShulkerBox(),
+		new ItemCyanShulkerBox(),
+		new ItemLightBlueShulkerBox(),
+		new ItemBlueShulkerBox(),
+		new ItemPurpleShulkerBox(),
+		new ItemMagentaShulkerBox(),
+		new ItemPinkShulkerBox(),
+		new ItemArmorStand(),
+		new ItemNoteBlock(),
+		new ItemJukebox(),
+		new ItemMusicDisc13(),
+		new ItemMusicDiscCat(),
+		new ItemMusicDiscBlocks(),
+		new ItemMusicDiscChirp(),
+		new ItemMusicDiscFar(),
+		new ItemMusicDiscMall(),
+		new ItemMusicDiscMellohi(),
+		new ItemMusicDiscStal(),
+		new ItemMusicDiscStrad(),
+		new ItemMusicDiscWard(),
+		new ItemMusicDisc11(),
+		new ItemMusicDiscWait(),
+		new ItemMusicDiscOtherside(),
+		new ItemMusicDisc5(),
+		new ItemMusicDiscPigstep(),
+		new ItemMusicDiscRelic(),
+		new ItemMusicDiscCreator(),
+		new ItemMusicDiscCreatorMusicBox(),
+		new ItemMusicDiscPrecipice(),
+		new ItemMusicDiscFragment5(),
+		new ItemGlowstoneDust(),
+		new ItemGlowstone(),
+		new ItemRedstoneLamp(),
+		new ItemSeaLantern(),
+		new ItemSign(),
+		new ItemSpruceSign(),
+		new ItemBirchSign(),
+		new ItemJungleSign(),
+		new ItemAcaciaSign(),
+		new ItemDarkOakSign(),
+		new ItemMangroveSign(),
+		new ItemCherrySign(),
+		new ItemPaleOakSign(),
+		new ItemBambooSign(),
+		new ItemCrimsonSign(),
+		new ItemWarpedSign(),
+		new ItemPainting(),
+		new ItemFrame(),
+		new ItemHoneyBottle(),
+		new ItemFlowerPot(),
+		new ItemBowl(),
+		new ItemBucket(0), //bucket
+		new ItemBucket(1), //milk
+		new ItemBucket(8), //water
+		new ItemBucket(10), //lava
+		new ItemBucket(2), //cod
+		new ItemBucket(3), //salmon
+		new ItemBucket(4), //tropical_fish
+		new ItemBucket(5), // pufferfish,
+		new ItemBucket(11), //powder snow
+		new ItemBucket(12), //axolotl
+		new ItemBucket(13), //tadpole
+		new ItemPlayerHead(),
+		new ItemZombieHead(),
+		new ItemCreeperHead(),
+		new ItemDragonHead(),
+		new ItemSkeletonHead(),
+		new ItemWitherSkeletonSkull(),
+		new ItemPiglinHead(),
+		new ItemBeacon(),
+		new ItemBell(),
+		new ItemConduit(),
+		new ItemStonecutter(),
+		new ItemCoal(),
+		new ItemCharcoal(),
+		new ItemDiamond(),
+		new ItemIronNugget(),
+		new ItemRawIron(),
+		new ItemRawGold(),
+		new ItemRawCopper(),
+		new ItemCopperIngot(),
+		new ItemIronIngot(),
+		new ItemNetheriteScrap(),
+		new ItemNetheriteIngot(),
+		new ItemGoldNugget(),
+		new ItemGoldIngot(),
+		new ItemEmerald(),
+		new ItemNetherQuartz(),
+		new ItemClayBall(),
+		new ItemBrick(),
+		new ItemNetherbrick(),
+		new ItemResinBrick(),
+		new ItemPrismarineShard(),
+		new ItemAmethystShard(),
+		new ItemPrismarineCrystals(),
+		new ItemNautilusShell(),
+		new ItemHeartOfTheSea(),
+		new ItemTurtleScute(),
+		new ItemArmadilloScute(),
+		new ItemPhantomMembrane(),
+		new ItemString(),
+		new ItemFeather(),
+		new ItemFlint(),
+		new ItemGunpowder(),
+		new ItemLeather(),
+		new ItemRabbitHide(),
+		new ItemRabbitFoot(),
+		new ItemFireCharge(),
+		new ItemBlazeRod(),
+		new ItemBreezeRod(),
+		new ItemHeavyCore(),
+		new ItemBlazePowder(),
+		new ItemMagmaCream(),
+		new ItemFermentedSpiderEye(),
+		new ItemEchoShard(),
+		new ItemDragonBreath(),
+		new ItemShulkerShell(),
+		new ItemGhastTear(),
+		new ItemSlimeBall(),
+		new ItemEnderPearl(),
+		new ItemEnderEye(),
+		new ItemNetherstar(),
+		new ItemEndRod(),
+		new ItemLightningRod(),
+		new ItemEndCrystal(),
+		new ItemPaper(),
+		new ItemBook(),
+		new ItemWritableBook(),
 		new Item(403, 0){ ExtraData = new NbtCompound { new NbtList("ench", (NbtTagType)10) { new NbtCompound { new NbtShort("id", 0), new NbtShort("lvl", 1) } } } }, //enchanted_book_protection
 		new Item(403, 0){ ExtraData = new NbtCompound { new NbtList("ench", (NbtTagType)10) { new NbtCompound { new NbtShort("id", 0), new NbtShort("lvl", 2) } } } }, //enchanted_book_protection
 		new Item(403, 0){ ExtraData = new NbtCompound { new NbtList("ench", (NbtTagType)10) { new NbtCompound { new NbtShort("id", 0), new NbtShort("lvl", 3) } } } }, //enchanted_book_protection
@@ -1248,7 +1307,6 @@ public static class InventoryUtils
 		new Item(402, 11){ ExtraData = new NbtCompound { new NbtCompound("FireworksItem") { new NbtByteArray("FireworkColor", new byte[1]{11}), new NbtByteArray("FireworkFade", new byte[0]{}), new NbtByte("FireworkFlicker", 0), new NbtByte("FireworkTrail", 0), new NbtByte("FireworkType", 0) }, new NbtInt("customColor", -75715) } }, //firework_star_blue
 		new Item(402, 10){ ExtraData = new NbtCompound { new NbtCompound("FireworksItem") { new NbtByteArray("FireworkColor", new byte[1]{10}), new NbtByteArray("FireworkFade", new byte[0]{}), new NbtByte("FireworkFlicker", 0), new NbtByte("FireworkTrail", 0), new NbtByte("FireworkType", 0) }, new NbtInt("customColor", -8337633) } }, //firework_star_purple
 		new Item(402, 2){ ExtraData = new NbtCompound { new NbtCompound("FireworksItem") { new NbtByteArray("FireworkColor", new byte[1]{2}), new NbtByteArray("FireworkFade", new byte[0]{}), new NbtByte("FireworkFlicker", 0), new NbtByte("FireworkTrail", 0), new NbtByte("FireworkType", 0) }, new NbtInt("customColor", -10585066) } }, //firework_star_magenta
-		new Item(402, 6){ ExtraData = new NbtCompound { new NbtCompound("FireworksItem") { new NbtByteArray("FireworkColor", new byte[1]{6}), new NbtByteArray("FireworkFade", new byte[0]{}), new NbtByte("FireworkFlicker", 0), new NbtByte("FireworkTrail", 0), new NbtByte("FireworkType", 0) }, new NbtInt("customColor", -15295332) } }, //firework_star_pink,
-			
+		#endregion Items
 	};
 }

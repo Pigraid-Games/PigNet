@@ -28,7 +28,7 @@ public class ItemPumpkinPie() : FoodItem("minecraft:pumpkin_pie", 400, 0, 8, 4.8
 public class ItemMelon() : FoodItem("minecraft:melon_slice", 360, 0, 2, 1.2);
 public class ItemGlowBerries() : FoodItem("minecraft:glow_berries", 630, 0, 2, 0.4);
 public class ItemCookie() : FoodItem("minecraft:cookie", 357, 0, 2, 0.4);
-public class ItemCookedSalmon() : FoodItem("minecraft:cooked_salmon", 350, 0, 6, 9.6);
+public class ItemCookedSalmon() : FoodItem("minecraft:cooked_salmon", 463, 0, 6, 9.6);
 public class ItemCookedRabbit() : FoodItem("minecraft:cooked_rabbit", 412, 0, 5, 6);
 public class ItemCookedPorkchop() : FoodItem("minecraft:cooked_porkchop", 320, 0, 8, 12.8);
 public class ItemCookedMutton() : FoodItem("minecraft:cooked_mutton", 424, 0, 6, 9.6);
@@ -38,3 +38,4 @@ public class ItemBread() : FoodItem("minecraft:bread", 297, 0, 5, 6.0);
 public class ItemBeetroot() : FoodItem("minecraft:beetroot", 457, 0, 1, 1.2);
 public class ItemBakedPotato() : FoodItem("minecraft:baked_potato", 393, 0, 5, 7.2);
 public class ItemApple() : FoodItem("minecraft:apple", 260, 0, 4, 2.4);
+public class ItemCookedCod() : Item("minecraft:cooked_cod", 350);

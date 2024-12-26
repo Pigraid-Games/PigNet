@@ -23,45 +23,55 @@
 
 #endregion
 
-using System;
 using System.Numerics;
 using MiNET.Blocks;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
-{
-	public class ItemBanner : ItemBlock
-	{
-		public ItemBanner() : base("minecraft:banner", 446, 0)
-		{
-			MaxStackSize = 16;
-		}
+namespace MiNET.Items;
 
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+public class ItemBanner : ItemBlock
+{
+	public ItemBanner() : base("minecraft:banner", 446, 0)
+	{
+		MaxStackSize = 16;
+	}
+
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		switch (face)
 		{
-			if (face == BlockFace.Down) // At the bottom of block
-			{
+			// At the bottom of block
+			case BlockFace.Down:
 				// Doesn't work, ignore if that happen. 
 				return;
-			}
-
-			if (face == BlockFace.Up)
+			case BlockFace.Up:
 			{
-				if (!(BlockFactory.GetBlockById(176) is StandingBanner banner)) return;
-				banner.ExtraData = ExtraData;
-				banner.Base = Metadata;
+				var banner = new StandingBanner
+				{
+					ExtraData = ExtraData,
+					Base = Metadata
+				};
 				Block = banner;
+				break;
 			}
-			else
+			case BlockFace.North:
+			case BlockFace.South:
+			case BlockFace.West:
+			case BlockFace.East:
+			case BlockFace.None:
+			default:
 			{
-				if (!(BlockFactory.GetBlockById(177) is WallBanner banner)) return;
-				banner.ExtraData = ExtraData;
-				banner.Base = Metadata;
+				var banner = new WallBanner
+				{
+					ExtraData = ExtraData,
+					Base = Metadata
+				};
 				Block = banner;
+				break;
 			}
-
-			base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
 		}
+
+		base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
 	}
 }

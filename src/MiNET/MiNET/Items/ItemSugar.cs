@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemSugar : Item
-	{
-		public ItemSugar() : base("minecraft:sugar", 353)
-		{
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemSugar() : Item("minecraft:sugar", 353);

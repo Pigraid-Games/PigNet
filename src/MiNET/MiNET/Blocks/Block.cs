@@ -29,6 +29,7 @@ using System.Numerics;
 using log4net;
 using MiNET.Items;
 using MiNET.Particles;
+using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;

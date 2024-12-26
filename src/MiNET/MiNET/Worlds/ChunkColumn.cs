@@ -379,6 +379,8 @@ namespace MiNET.Worlds
 		{
 			bool isInLight = true;
 			bool isInAir = true;
+			int warnCount = 0;
+			const int maxWarns = 5;
 
 			for (int y = startY; y >= 0; y--)
 			{
@@ -387,7 +389,8 @@ namespace MiNET.Worlds
 					SubChunk chunk = GetSubChunk(y);
 					if (isInAir && chunk.IsAllAir())
 					{
-						if (chunk.IsDirty) Array.Fill<byte>(chunk._skylight.Data, 0xff);
+						if (chunk.IsDirty)
+							Array.Fill<byte>(chunk._skylight.Data, 0xff);
 						y -= 15;
 						continue;
 					}
@@ -395,7 +398,24 @@ namespace MiNET.Worlds
 					isInAir = false;
 
 					int bid = GetBlockId(x, y, z);
-					if (bid < 0 || bid >= BlockFactory.TransparentBlocks.Count) Log.Warn($"{bid}");
+
+					if (bid < 0 || bid >= BlockFactory.TransparentBlocks.Count || !BlockFactory.TransparentBlocks.ContainsKey(bid))
+					{
+						if (++warnCount >= maxWarns)
+						{
+							Log.Error($"Too many missing block warnings (ID {bid}) at ({x}, {y}, {z}). Stopping recalculation.");
+							break;
+						}
+						
+						if (bid != 0)
+						{
+							SetHeight(x, z, (short) (y + 1));
+							SetSkyLight(x, y, z, 0);
+							isInLight = false;
+						}
+						continue;
+					}
+
 					if (bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 30 && bid != 8 && bid != 9))
 					{
 						SetSkyLight(x, y, z, 15);

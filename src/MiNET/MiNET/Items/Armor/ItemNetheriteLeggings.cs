@@ -46,7 +46,7 @@ public class ItemNetheriteLeggings : ArmorLeggingsBase
 		player.Inventory.Leggings = this;
 		player.SendArmorForPlayer();
 
-		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
 		sound.SpawnToPlayers([player]);
 	}
 }

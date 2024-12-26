@@ -46,7 +46,7 @@ public class ItemNetheriteBoots : ArmorBootsBase
 		player.Inventory.Boots = this;
 		player.SendArmorForPlayer();
 
-		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
 		sound.SpawnToPlayers([player]);
 	}
 }

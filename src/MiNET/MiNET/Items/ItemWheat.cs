@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemWheat : Item
-	{
-		public ItemWheat() : base("minecraft:wheat", 296)
-		{
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemWheat() : Item("minecraft:wheat", 296);

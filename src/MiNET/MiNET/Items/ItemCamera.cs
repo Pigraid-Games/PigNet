@@ -29,20 +29,15 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemCamera(short metadata) : Item("minecraft:camera", 498, metadata)
 {
-	public class ItemCamera : Item
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		public ItemCamera(short metadata) : base("minecraft:camera", 498, metadata)
-		{
-		}
+		BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
-
-			Camera entity = new Camera(world) {KnownPosition = coordinates};
-			entity.SpawnEntity();
-		}
+		var entity = new Camera(world) {KnownPosition = coordinates};
+		entity.SpawnEntity();
 	}
 }

@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -54,7 +55,7 @@ public class ItemSnowball : Item
 		snowBall.KnownPosition.Y += 1.62f;
 		snowBall.Velocity = snowBall.KnownPosition.GetDirection().Normalize() * Force;
 		snowBall.SpawnEntity();
-		world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
+		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
 		Item itemInHand = player.Inventory.GetItemInHand();
 		itemInHand.Count--;
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);

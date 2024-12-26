@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemIronNugget : Item
-	{
-		public ItemIronNugget() : base("minecraft:iron_nugget", 452)
-		{
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemIronNugget() : Item("minecraft:iron_nugget", 452);

@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemSaddle : Item
-	{
-		public ItemSaddle() : base("minecraft:saddle", 329)
-		{
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemSaddle() : Item("minecraft:saddle", 329);

@@ -26,71 +26,66 @@
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
-using log4net;
 using MiNET.Items.Armor;
 using MiNET.Net;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemStick : Item
 {
-	public class ItemStick : Item
+	public ItemStick() : base("minecraft:stick", 280)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemStick));
+		FuelEfficiency = 5;
+	}
 
-		public ItemStick() : base("minecraft:stick", 280)
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		if (player.IsGliding)
 		{
-			FuelEfficiency = 5;
-		}
-
-		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-		{
-			if (player.IsGliding)
+			double currentSpeed = player.CurrentSpeed / 20f;
+			if (currentSpeed > 35f / 20f)
 			{
-				var currentSpeed = player.CurrentSpeed / 20f;
-				if (currentSpeed > 35f / 20f)
-				{
-					//player.SendMessage($"Speed already over max {player.CurrentSpeed:F2}m/s", MessageType.Raw);
-					return;
-				}
-
-				Vector3 velocity = Vector3.Normalize(player.KnownPosition.GetHeadDirection()) * (float) currentSpeed;
-				float factor = (float) (1 + 1 / (1 + currentSpeed * 2));
-				velocity *= factor;
-
-				if (currentSpeed < 7f / 20f)
-				{
-					velocity = Vector3.Normalize(velocity) * 1.2f;
-				}
-
-				McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
-				motions.runtimeEntityId = EntityManager.EntityIdSelf;
-				motions.velocity = velocity;
-
-				player.SendPacket(motions);
+				//player.SendMessage($"Speed already over max {player.CurrentSpeed:F2}m/s", MessageType.Raw);
+				return;
 			}
-			else if (player.Inventory.Chest is ItemElytra)
+
+			Vector3 velocity = Vector3.Normalize(player.KnownPosition.GetHeadDirection()) * (float) currentSpeed;
+			float factor = (float) (1 + 1 / (1 + currentSpeed * 2));
+			velocity *= factor;
+
+			if (currentSpeed < 7f / 20f)
 			{
-				var motions = McpeSetEntityMotion.CreateObject();
-				motions.runtimeEntityId = EntityManager.EntityIdSelf;
-				var velocity = new Vector3(0, 2, 0);
-				motions.velocity = velocity;
-				player.SendPacket(motions);
-
-				_ = SendWithDelay(200, () =>
-				{
-					player.IsGliding = true;
-					player.Height = 0.6;
-					player.BroadcastSetEntityData();
-				});
+				velocity = Vector3.Normalize(velocity) * 1.2f;
 			}
-		}
 
-		private async Task SendWithDelay(int delay, Action action)
-		{
-			await Task.Delay(delay);
-			action();
+			McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
+			motions.runtimeEntityId = EntityManager.EntityIdSelf;
+			motions.velocity = velocity;
+
+			player.SendPacket(motions);
 		}
+		else if (player.Inventory.Chest is ItemElytra)
+		{
+			McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
+			motions.runtimeEntityId = EntityManager.EntityIdSelf;
+			var velocity = new Vector3(0, 2, 0);
+			motions.velocity = velocity;
+			player.SendPacket(motions);
+
+			_ = SendWithDelay(200, () =>
+			{
+				player.IsGliding = true;
+				player.Height = 0.6;
+				player.BroadcastSetEntityData();
+			});
+		}
+	}
+
+	private static async Task SendWithDelay(int delay, Action action)
+	{
+		await Task.Delay(delay);
+		action();
 	}
 }

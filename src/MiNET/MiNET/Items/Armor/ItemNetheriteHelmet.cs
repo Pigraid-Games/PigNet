@@ -46,7 +46,7 @@ public class ItemNetheriteHelmet : ArmorHelmetBase
 		player.Inventory.Helmet = this;
 		player.SendArmorForPlayer();
 
-		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
 		sound.SpawnToPlayers([player]);
 	}
 }

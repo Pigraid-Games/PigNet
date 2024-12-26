@@ -23,13 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemBlazePowder : Item
-	{
-		public ItemBlazePowder() : base("minecraft:blaze_powder", 377)
-		{
-			MaxStackSize = 64;
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemBlazePowder() : Item("minecraft:blaze_powder", 377);

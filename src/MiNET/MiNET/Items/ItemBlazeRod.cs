@@ -23,13 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemBlazeRod : Item
-	{
-		public ItemBlazeRod() : base("minecraft:blaze_rod", 369)
-		{
-			MaxStackSize = 64;
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemBlazeRod() : Item("minecraft:blaze_rod", 369);

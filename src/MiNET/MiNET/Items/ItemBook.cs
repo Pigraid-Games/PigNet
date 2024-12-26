@@ -23,21 +23,14 @@
 
 #endregion
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemBook() : Item("minecraft:book", 340);
+
+public class ItemEnchantedBook : Item
 {
-	public class ItemBook : Item
+	public ItemEnchantedBook() : base("minecraft:enchanted_book", 403)
 	{
-		public ItemBook() : base("minecraft:book", 340)
-		{
-		}
+		MaxStackSize = 1;
 	}
-
-	public class ItemEnchantedBook : Item
-	{
-		public ItemEnchantedBook() : base("minecraft:enchanted_book", 403)
-		{
-			MaxStackSize = 1;
-		}
-	}
-
 }

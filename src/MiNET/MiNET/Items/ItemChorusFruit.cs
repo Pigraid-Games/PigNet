@@ -1,14 +1,9 @@
-﻿namespace MiNET.Items
-{
-	public class ItemChorusFruit : Item
-	{
-		public ItemChorusFruit() : base("minecraft:chorus_fruit", 432)
-		{
-		}
+﻿namespace MiNET.Items;
 
-		public override Item GetSmelt()
-		{
-			return new ItemPoppedChorusFruit();
-		}
+public class ItemChorusFruit() : Item("minecraft:chorus_fruit", 432)
+{
+	public override Item GetSmelt()
+	{
+		return new ItemPoppedChorusFruit();
 	}
 }

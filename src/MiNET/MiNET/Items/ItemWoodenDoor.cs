@@ -33,23 +33,17 @@ namespace MiNET.Items
 {
 	//A door specifies its hinge side in the block data of its upper block, 
 	// and its facing and opened status in the block data of its lower block
-	public class ItemWoodenDoor : ItemBlock
+	public class ItemWoodenDoor(string name = "minecraft:wooden_door", short itemId = 324, byte blockId = 64)
+		: ItemBlock(name, itemId)
 	{
-		private readonly byte _blockId;
-
-		public ItemWoodenDoor(string name = "minecraft:wooden_door", short itemId = 324, byte blockId = 64) : base(name, itemId)
-		{
-			_blockId = blockId;
-		}
-
 		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{
 			byte direction = player.GetDirection();
 
-			var coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
+			BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 
 			// Base block, meta sets orientation
-			DoorBase block = (DoorBase) BlockFactory.GetBlockById(_blockId);
+			var block = (DoorBase) BlockFactory.GetBlockById(blockId);
 			block.Coordinates = coordinates;
 			block.Direction = direction;
 			block.UpperBlockBit = false;
@@ -61,10 +55,21 @@ namespace MiNET.Items
 			int xd = 0;
 			int zd = 0;
 
-			if (direction == 0) zd = 1;
-			else if (direction == 1) xd = -1;
-			else if (direction == 2) zd = -1;
-			else if (direction == 3) xd = 1;
+			switch (direction)
+			{
+				case 0:
+					zd = 1;
+					break;
+				case 1:
+					xd = -1;
+					break;
+				case 2:
+					zd = -1;
+					break;
+				case 3:
+					xd = 1;
+					break;
+			}
 
 			int i1 = (world.GetBlock(x - xd, y, z - zd).IsSolid ? 1 : 0) + (world.GetBlock(x - xd, y + 1, z - zd).IsSolid ? 1 : 0);
 			int j1 = (world.GetBlock(x + xd, y, z + zd).IsSolid ? 1 : 0) + (world.GetBlock(x + xd, y + 1, z + zd).IsSolid ? 1 : 0);
@@ -87,7 +92,7 @@ namespace MiNET.Items
 
 			// The upper door block, meta marks upper and
 			// sets orientation based on adjacent blocks
-			DoorBase blockUpper = (DoorBase) BlockFactory.GetBlockById(_blockId);
+			var blockUpper = (DoorBase) BlockFactory.GetBlockById(blockId);
 			blockUpper.Coordinates = coordinates + Level.Up;
 			blockUpper.Direction = direction;
 			blockUpper.UpperBlockBit = true;
@@ -96,54 +101,22 @@ namespace MiNET.Items
 			world.SetBlock(block);
 			world.SetBlock(blockUpper);
 
-			if (player.GameMode == GameMode.Survival)
-			{
-				var itemInHand = player.Inventory.GetItemInHand();
-				itemInHand.Count--;
-				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-			}
+			if (player.GameMode != GameMode.Survival) return;
+			Item itemInHand = player.Inventory.GetItemInHand();
+			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
 		}
 	}
 
-	public class ItemSpruceDoor : ItemWoodenDoor
-	{
-		public ItemSpruceDoor() : base("minecraft:spruce_door", 427, 193)
-		{
-		}
-	}
+	public class ItemSpruceDoor() : ItemWoodenDoor("minecraft:spruce_door", 427, 193);
 
-	public class ItemBirchDoor : ItemWoodenDoor
-	{
-		public ItemBirchDoor() : base("minecraft:birch_door", 428, 194)
-		{
-		}
-	}
+	public class ItemBirchDoor() : ItemWoodenDoor("minecraft:birch_door", 428, 194);
 
-	public class ItemJungleDoor : ItemWoodenDoor
-	{
-		public ItemJungleDoor() : base("minecraft:jungle_door", 429, 195)
-		{
-		}
-	}
+	public class ItemJungleDoor() : ItemWoodenDoor("minecraft:jungle_door", 429, 195);
 
-	public class ItemAcaciaDoor : ItemWoodenDoor
-	{
-		public ItemAcaciaDoor() : base("minecraft:acacia_door", 430, 196)
-		{
-		}
-	}
+	public class ItemAcaciaDoor() : ItemWoodenDoor("minecraft:acacia_door", 430, 196);
 
-	public class ItemDarkOakDoor : ItemWoodenDoor
-	{
-		public ItemDarkOakDoor() : base("minecraft:dark_oak_door", 431, 197)
-		{
-		}
-	}
+	public class ItemDarkOakDoor() : ItemWoodenDoor("minecraft:dark_oak_door", 431, 197);
 
-	public class ItemIronDoor : ItemWoodenDoor
-	{
-		public ItemIronDoor() : base("minecraft:iron_door", 330, 71)
-		{
-		}
-	}
+	public class ItemIronDoor() : ItemWoodenDoor("minecraft:iron_door", 330, 71);
 }

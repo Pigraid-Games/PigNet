@@ -28,48 +28,44 @@ using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Entities.Passive;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public sealed class ItemShears : Item
 {
-	public class ItemShears : Item
+	public ItemShears() : base("minecraft:shears", 359)
 	{
-		public ItemShears() : base("minecraft:shears", 359)
-		{
-			MaxStackSize = 1;
-			ItemType = ItemType.Sheers;
-			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
-			Durability = 238;
-		}
+		MaxStackSize = 1;
+		ItemType = ItemType.Sheers;
+		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
+		Durability = 238;
+	}
 
-		public override bool DamageItem(Player player, ItemDamageReason reason, Entity target, Block block)
+	public override bool DamageItem(Player player, ItemDamageReason reason, Entity target, Block block)
+	{
+		switch (reason)
 		{
-			switch (reason)
+			case ItemDamageReason.BlockBreak:
 			{
-				case ItemDamageReason.BlockBreak:
-				{
-					if (block is Web || block is Leaves || block is Leaves2 || block is Wool || block is Vine)
-					{
-						Damage++;
-						return Damage >= GetMaxUses() - 1;
-					}
-					return false;
-				}
-				case ItemDamageReason.EntityInteract:
-				{
-					if (target is Sheep)
-					{
-						Damage++;
-						return Damage >= GetMaxUses() - 1;
-					}
-					return false;
-				}
-				default:
-					return false;
+				if (block is not Web && block is not Leaves && block is not Leaves2 && block is not Wool && block is not Vine) return false;
+				Damage++;
+				return Damage >= GetMaxUses() - 1;
 			}
+			case ItemDamageReason.EntityInteract:
+			{
+				if (target is not Sheep) return false;
+				Damage++;
+				return Damage >= GetMaxUses() - 1;
+			}
+			case ItemDamageReason.BlockInteract:
+			case ItemDamageReason.EntityAttack:
+			case ItemDamageReason.ItemUse:
+			default:
+				return false;
 		}
+	}
 
-		public override int GetMaxUses()
-		{
-			return 238;
-		}
+	public override int GetMaxUses()
+	{
+		return 238;
 	}
 }

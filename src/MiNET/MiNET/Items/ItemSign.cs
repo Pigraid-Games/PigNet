@@ -25,79 +25,66 @@
 
 using System.Numerics;
 using MiNET.Blocks;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemSignBase : ItemBlock
 {
-	public class ItemSignBase : ItemBlock
-	{
-		private readonly int _standingId;
-		private readonly int _wallId;
+	private readonly int _standingId;
+	private readonly int _wallId;
 
-		public ItemSignBase(string name, short id, int standingId, int wallId) : base(name, id)
+	public ItemSignBase(string name, short id, int standingId, int wallId) : base(name, id)
+	{
+		_standingId = standingId;
+		_wallId = wallId;
+		MaxStackSize = 1;
+	}
+
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		if (face == BlockFace.Down) // At the bottom of block
 		{
-			_standingId = standingId;
-			_wallId = wallId;
-			MaxStackSize = 1;
+			// Doesn't work, ignore if that happen. 
+			return;
 		}
 
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		if (face == BlockFace.Up) // On top of block
 		{
-			if (face == BlockFace.Down) // At the bottom of block
-			{
-				// Doesn't work, ignore if that happen. 
-				return;
-			}
-
-			if (face == BlockFace.Up) // On top of block
-			{
-				// Standing sign
-				Block = BlockFactory.GetBlockById(_standingId);
-			}
-			else
-			{
-				// Wall sign
-				Block = BlockFactory.GetBlockById(_wallId);
-			}
-
-			base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
+			// Standing sign
+			Block = BlockFactory.GetBlockById(_standingId);
 		}
-	}
+		else
+		{
+			// Wall sign
+			Block = BlockFactory.GetBlockById(_wallId);
+		}
 
-	public class ItemSign : ItemSignBase
-	{
-		public ItemSign() : base("minecraft:oak_sign", 323, 63, 68) { }
-	}
-
-	public class ItemAcaciaSign : ItemSignBase
-	{
-		public ItemAcaciaSign() : base("minecraft:acacia_sign", 475, 445, 456) { }
-	}
-
-	public class ItemSpruceSign : ItemSignBase
-	{
-		public ItemSpruceSign() : base("minecraft:spruce_sign", 472, 436, 437) { }
-	}
-
-	public class ItemBirchSign : ItemSignBase
-	{
-		public ItemBirchSign() : base("minecraft:birch_sign", 473, 441, 442) { }
-	}
-
-	public class ItemJungleSign : ItemSignBase
-	{
-		public ItemJungleSign() : base("minecraft:jungle_sign", 474, 443, 444) { }
-	}
-
-	public class ItemDarkoakSign : ItemSignBase
-	{
-		public ItemDarkoakSign() : base("minecraft:dark_oak_sign", 476, 447, 448) { }
-	}
-
-	public class ItemCrimsonSign : ItemSignBase
-	{
-		public ItemCrimsonSign() : base("minecraft:crimson_sign", 753, 505, 507) { }
+		base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
 	}
 }
+
+public class ItemSign() : ItemSignBase("minecraft:oak_sign", 323, 63, 68);
+
+public class ItemAcaciaSign() : ItemSignBase("minecraft:acacia_sign", 475, 445, 456);
+
+public class ItemSpruceSign() : ItemSignBase("minecraft:spruce_sign", 472, 436, 437);
+
+public class ItemBirchSign() : ItemSignBase("minecraft:birch_sign", 473, 441, 442);
+
+public class ItemJungleSign() : ItemSignBase("minecraft:jungle_sign", 474, 443, 444);
+
+public class ItemDarkoakSign() : ItemSignBase("minecraft:dark_oak_sign", 476, 447, 448);
+
+public class ItemMangroveSign() : ItemSignBase("minecraft:mangrove_sign", 1005, 63, 68); // TODO: Fix standingId & wallId
+
+public class ItemCherrySign() : ItemSignBase("minecraft:cherry_sign", 1056, 63, 68); // TODO: Fix standingId & wallId
+
+public class ItemPaleOakSign() : ItemSignBase("minecraft:pale_oak_sign", 1057, 63, 68); // TODO: Fix standingId & wallId
+
+public class ItemBambooSign() : ItemSignBase("minecraft:bamboo_sign", 1058, 63, 68); // TODO: Fix standingId & wallId
+
+public class ItemCrimsonSign() : ItemSignBase("minecraft:crimson_sign", 753, 505, 507);
+
+public class ItemWarpedSign() : ItemSignBase("minecraft:warped_sign", 754, 63, 68); // TODO: Fix standingId & wallId

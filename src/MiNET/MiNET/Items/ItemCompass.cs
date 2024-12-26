@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemCompass : Item
-	{
-		public ItemCompass() : base("minecraft:compass", 345)
-		{
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemCompass() : Item("minecraft:compass", 345);

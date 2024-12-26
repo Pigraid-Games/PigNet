@@ -24,7 +24,6 @@
 #endregion
 
 using System.Numerics;
-using log4net;
 using MiNET.Blocks;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -33,7 +32,6 @@ namespace MiNET.Items
 {
 	public class ItemBucket : Item
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemBucket));
 		private bool _isUsing;
 		public ItemBucket(short metadata) : base("minecraft:bucket", 325, metadata)
 		{
@@ -65,36 +63,42 @@ namespace MiNET.Items
 
 		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{
-			if (Metadata == 8 || Metadata == 10) //Prevent some kind of cheating...
+			switch (Metadata)
 			{
-				var itemBlock = new ItemBlock(BlockFactory.GetBlockById((byte) Metadata));
-				itemBlock.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
-			}
-			else if (Metadata == 0) // Empty bucket
-			{
-				// Pick up water/lava
-				var block = world.GetBlock(blockCoordinates);
-				switch (block)
+				//Prevent some kind of cheating...
+				case 8 or 10:
 				{
-					case Stationary fluid:
+					var itemBlock = new ItemBlock(BlockFactory.GetBlockById((byte) Metadata));
+					itemBlock.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
+					break;
+				}
+				// Empty bucket
+				case 0:
+				{
+					// Pick up water/lava
+					Block block = world.GetBlock(blockCoordinates);
+					switch (block)
 					{
-						if (fluid.LiquidDepth == 0) // Only source blocks
+						case Stationary fluid:
 						{
-							world.SetAir(blockCoordinates);
+							if (fluid.LiquidDepth == 0) // Only source blocks
+							{
+								world.SetAir(blockCoordinates);
+							}
+							break;
 						}
-						break;
-					}
-					case Flowing fluid:
-					{
-						if (fluid.LiquidDepth == 0) // Only source blocks
+						case Flowing fluid:
 						{
-							world.SetAir(blockCoordinates);
+							if (fluid.LiquidDepth == 0) // Only source blocks
+							{
+								world.SetAir(blockCoordinates);
+							}
+							break;
 						}
-						break;
 					}
+					break;
 				}
 			}
-
 			FuelEfficiency = (short) (Metadata == 10 ? 1000 : 0);
 		}
 	}

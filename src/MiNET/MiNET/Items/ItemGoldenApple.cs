@@ -26,23 +26,18 @@
 using MiNET.Effects;
 using MiNET.Items.Food;
 
-namespace MiNET.Items
-{
-	public class ItemGoldenApple : FoodItem
-	{
-		public ItemGoldenApple() : base("minecraft:golden_apple", 322, 0, 4, 9.6)
-		{
-		}
+namespace MiNET.Items;
 
-		protected override void Consume(Player player)
+public class ItemGoldenApple() : FoodItem("minecraft:golden_apple", 322, 0, 4, 9.6)
+{
+	protected override void Consume(Player player)
+	{
+		base.Consume(player);
+		player.SetEffect(new Absorption() {Duration = 2400});
+		player.SetEffect(new Regeneration()
 		{
-			base.Consume(player);
-			player.SetEffect(new Absorption() {Duration = 2400});
-			player.SetEffect(new Regeneration()
-			{
-				Duration = 100,
-				Level = 1
-			});
-		}
+			Duration = 100,
+			Level = 1
+		});
 	}
 }

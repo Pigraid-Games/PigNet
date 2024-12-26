@@ -1,4 +1,5 @@
 ﻿using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -29,8 +30,9 @@ public class ItemExperienceBottle : Item
 		experienceBottle.KnownPosition.Y += 1.62f;
 		experienceBottle.Velocity = experienceBottle.KnownPosition.GetDirection().Normalize() * Force;
 		experienceBottle.SpawnEntity();
-		world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
+		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
 		Item itemInHand = player.Inventory.GetItemInHand();
+		if (player.GameMode == GameMode.Creative) return;
 		itemInHand.Count--;
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);
 	}

@@ -27,63 +27,58 @@ using System;
 using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Blocks;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemSkull : Item
 {
-	public class ItemSkull : Item
+	public ItemSkull(short metadata) : base("minecraft:skull", 397, metadata)
 	{
-		public ItemSkull(short metadata) : base("minecraft:skull", 397, metadata)
+		MaxStackSize = 1;
+	}
+
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
+		Item itemInHand = player.Inventory.GetItemInHand();
+		var skull = (SkullBase) BlockFactory.GetBlockById(144);
+		if (itemInHand.Metadata > 0)
 		{
-			MaxStackSize = 1;
+			skull = (SkullBase) BlockFactory.GetBlockById(1219 + itemInHand.Metadata);
+		}
+		if (face == BlockFace.Up) // On top of block
+		{
+			skull.Coordinates = coordinates;
+			skull.FacingDirection = 1; // Skull on floor, rotation in block entity
+			world.SetBlock(skull);
+		}
+		else if (face == BlockFace.Down) // At the bottom of block
+		{
+			// Doesn't work, ignore if that happen. 
+			return;
+		}
+		else
+		{
+			skull.Coordinates = coordinates;
+			skull.FacingDirection = (int) face; // Skull on floor, rotation in block entity
+			world.SetBlock(skull);
 		}
 
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		// Then we create and set the sign block entity that has all the intersting data
+
+		var skullBlockEntity = new SkullBlockEntity
 		{
-			var coor = GetNewCoordinatesFromFace(blockCoordinates, face);
-			var itemInHand = player.Inventory.GetItemInHand();
-			var skull = (SkullBase) BlockFactory.GetBlockById(144);
-			if (itemInHand.Metadata > 0)
-			{
-				skull = (SkullBase) BlockFactory.GetBlockById(1219 + itemInHand.Metadata);
-			}
-			if (face == BlockFace.Up) // On top of block
-			{
-				skull.Coordinates = coor;
-				skull.FacingDirection = 1; // Skull on floor, rotation in block entity
-				world.SetBlock(skull);
-			}
-			else if (face == BlockFace.Down) // At the bottom of block
-			{
-				// Doesn't work, ignore if that happen. 
-				return;
-			}
-			else
-			{
-				skull.Coordinates = coor;
-				skull.FacingDirection = (int) face; // Skull on floor, rotation in block entity
-				world.SetBlock(skull);
-			}
+			Coordinates = coordinates,
+			Rotation = (byte) ((int) (Math.Floor(((player.KnownPosition.Yaw)) * 16 / 360) + 0.5) & 0x0f),
+			SkullType = (byte) Metadata
+		};
 
-			// Then we create and set the sign block entity that has all the intersting data
+		world.SetBlockEntity(skullBlockEntity);
 
-			var skullBlockEntity = new SkullBlockEntity
-			{
-				Coordinates = coor,
-				Rotation = (byte) ((int) (Math.Floor(((player.KnownPosition.Yaw)) * 16 / 360) + 0.5) & 0x0f),
-				SkullType = (byte) Metadata
-			};
-
-
-			world.SetBlockEntity(skullBlockEntity);
-
-			if (player.GameMode == GameMode.Survival)
-			{
-				itemInHand.Count--;
-				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-			}
-		}
+		if (player.GameMode != GameMode.Survival) return;
+		itemInHand.Count--;
+		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
 	}
 }

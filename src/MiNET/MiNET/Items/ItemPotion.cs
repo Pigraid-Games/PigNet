@@ -23,49 +23,42 @@
 
 #endregion
 
-using log4net;
+using System.Collections.Generic;
 using MiNET.Effects;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemPotion(short metadata) : Item("minecraft:potion", 373, metadata)
 {
-	public class ItemPotion : Item
+	private bool _isUsing;
+
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemPotion));
-
-		public ItemPotion(short metadata) : base("minecraft:potion", 373, metadata)
+		if (_isUsing)
 		{
-		}
+			List<Effect> effects = Effect.GetEffects(Metadata);
 
-		private bool _isUsing;
-
-		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-		{
-			if (_isUsing)
+			foreach (Effect effect in effects)
 			{
-				var effects = Effect.GetEffects(Metadata);
-
-				foreach (var effect in effects)
-				{
-					player.SetEffect(effect);
-				}
-
-				if (player.GameMode == GameMode.Survival || player.GameMode == GameMode.Adventure)
-				{
-					player.Inventory.ClearInventorySlot((byte) player.Inventory.InHandSlot);
-					player.Inventory.SetFirstEmptySlot(ItemFactory.GetItem(374), true);
-				}
-				_isUsing = false;
-				return;
+				player.SetEffect(effect);
 			}
 
-			_isUsing = true;
+			if (player.GameMode is GameMode.Survival or GameMode.Adventure)
+			{
+				player.Inventory.ClearInventorySlot((byte) player.Inventory.InHandSlot);
+				player.Inventory.SetFirstEmptySlot(ItemFactory.GetItem(374), true);
+			}
+			_isUsing = false;
+			return;
 		}
 
-		public override void Release(Level world, Player player, BlockCoordinates blockCoordinates)
-		{
-			_isUsing = false;
-		}
+		_isUsing = true;
+	}
+
+	public override void Release(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		_isUsing = false;
 	}
 }

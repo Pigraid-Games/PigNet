@@ -25,13 +25,12 @@
 
 using MiNET.Blocks;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemBeetrootSeeds : ItemBlock
 {
-	public class ItemBeetrootSeeds : ItemBlock
+	public ItemBeetrootSeeds() : base("minecraft:beetroot_seeds", 458)
 	{
-		public ItemBeetrootSeeds() : base("minecraft:beetroot_seeds", 458)
-		{
-			Block = BlockFactory.GetBlockById(244);
-		}
+		Block = new Beetroot();
 	}
 }

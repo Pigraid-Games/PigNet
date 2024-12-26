@@ -1,6 +1,7 @@
 ﻿using System;
 using fNbt;
 using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -60,9 +61,7 @@ public sealed class ItemCrossbow : Item
 				arrow.SpawnEntity();
 			}
 			player.Inventory.DamageItemInHand(ItemDamageReason.ItemUse, player, null);
-
-			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.CrossbowShoot);
-				
+			player.SendSound(new CrossbowShootSound(player.KnownPosition));
 			_isLoading = false;
 		}
 		else
@@ -70,7 +69,7 @@ public sealed class ItemCrossbow : Item
 			long timeUsed = Environment.TickCount64 - _useTime;
 			if (timeUsed >= 1100)
 			{
-				world.BroadcastSound(player.KnownPosition, LevelSoundEventType.CrossbowLoadingEnd);
+				player.SendSound(new CrossbowLoadingEndSound(player.KnownPosition));
 				ExtraData =
 				[
 					new NbtCompound("chargedItem")
@@ -82,7 +81,7 @@ public sealed class ItemCrossbow : Item
 				];
 				player.SendPlayerInventory();
 				_isLoading = false;
-			} else world.BroadcastSound(player.KnownPosition, LevelSoundEventType.CrossbowLoadingStart);
+			} else player.SendSound(new CrossbowLoadingStartSound(player.KnownPosition));
 		}
 	}
 
@@ -91,7 +90,7 @@ public sealed class ItemCrossbow : Item
 		long timeUsed = Environment.TickCount64 - _useTime;
 		if (timeUsed >= 1100)
 		{
-			world.BroadcastSound(player.KnownPosition, LevelSoundEventType.CrossbowLoadingEnd);
+			player.SendSound(new CrossbowLoadingEndSound(player.KnownPosition));
 			ExtraData =
 			[
 				new NbtCompound("chargedItem")

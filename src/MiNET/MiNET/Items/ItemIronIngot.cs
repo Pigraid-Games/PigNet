@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemIronIngot : Item
-	{
-		public ItemIronIngot() : base("minecraft:iron_ingot", 265)
-		{
-		}
-	}
-}
+namespace MiNET.Items;
+
+public class ItemIronIngot() : Item("minecraft:iron_ingot", 265);

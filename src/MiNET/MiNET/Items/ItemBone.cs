@@ -23,17 +23,6 @@
 
 #endregion
 
-namespace MiNET.Items
-{
-	public class ItemBone : Item
-	{
-		public ItemBone() : base("minecraft:bone", 352)
-		{
-		}
+namespace MiNET.Items;
 
-		public override Item GetSmelt()
-		{
-			return ItemFactory.GetItem(364);
-		}
-	}
-}
+public class ItemBone() : Item("minecraft:bone", 352);

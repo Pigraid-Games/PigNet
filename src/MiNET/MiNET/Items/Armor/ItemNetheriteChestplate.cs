@@ -46,7 +46,7 @@ public class ItemNetheriteChestplate : ArmorChestplateBase
 		player.Inventory.Chest = this;
 		player.SendArmorForPlayer();
 
-		var sound = new LevelSoundEventTypeSounds.ArmorEquipNetheriteSound(blockCoordinates);
+		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
 		sound.SpawnToPlayers([player]);
 	}
 }

@@ -23,14 +23,12 @@
 
 #endregion
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemCoal : Item
 {
-	public class ItemCoal : Item
+	public ItemCoal() : base("minecraft:coal", 263)
 	{
-		public ItemCoal() : base("minecraft:coal", 263)
-		{
-			MaxStackSize = 64;
-			FuelEfficiency = 80;
-		}
+		FuelEfficiency = 80;
 	}
 }

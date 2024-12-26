@@ -57,6 +57,7 @@ using Newtonsoft.Json;
 using System.IO.Compression;
 using System.Net.Sockets;
 using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 
 namespace MiNET
 {
@@ -3802,6 +3803,11 @@ namespace MiNET
 			McpeSetTime message = McpeSetTime.CreateObject();
 			message.time = time;
 			SendPacket(message);
+		}
+
+		public void SendSound(Sound sound)
+		{
+			SendSound(sound.Position, (LevelSoundEventType) sound.Id);
 		}
 
 		public void SendSound(BlockCoordinates position, LevelSoundEventType sound, int blockId = 0)

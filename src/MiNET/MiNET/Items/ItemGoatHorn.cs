@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -60,36 +61,34 @@ public sealed class ItemGoatHorn : Item
 
 		CooldownTracker[player] = DateTime.UtcNow;
 
-		LevelSoundEventType levelSoundEventType;
 		switch ((GoatHornType)Metadata)
 		{
 			case GoatHornType.Ponder:
-				levelSoundEventType = LevelSoundEventType.HornCall0;
+				world.BroadcastSound(new HornCallPonderSound(player.KnownPosition));
 				break;
 			case GoatHornType.Sing:
-				levelSoundEventType = LevelSoundEventType.HornCall1;
+				world.BroadcastSound(new HornCallSingSound(player.KnownPosition));
 				break;
 			case GoatHornType.Seek:
-				levelSoundEventType = LevelSoundEventType.HornCall2;
+				world.BroadcastSound(new HornCallSeekSound(player.KnownPosition));
 				break;
 			case GoatHornType.Feel:
-				levelSoundEventType = LevelSoundEventType.HornCall3;
+				world.BroadcastSound(new HornCallFeelSound(player.KnownPosition));
 				break;
 			case GoatHornType.Admire:
-				levelSoundEventType = LevelSoundEventType.HornCall4;
+				world.BroadcastSound(new HornCallAdmireSound(player.KnownPosition));
 				break;
 			case GoatHornType.Call:
-				levelSoundEventType = LevelSoundEventType.HornCall5;
+				world.BroadcastSound(new HornCallCallSound(player.KnownPosition));
 				break;
 			case GoatHornType.Yearn:
-				levelSoundEventType = LevelSoundEventType.HornCall6;
+				world.BroadcastSound(new HornCallYearnSound(player.KnownPosition));
 				break;
 			case GoatHornType.Dream:
-				levelSoundEventType = LevelSoundEventType.HornCall7;
+				world.BroadcastSound(new HornCallDreamSound(player.KnownPosition));
 				break;
 			default:
 				return;
 		}
-		player.Level.BroadcastSound(player.KnownPosition.ToVector3(), levelSoundEventType);
 	}
 }

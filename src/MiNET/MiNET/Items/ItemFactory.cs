@@ -132,6 +132,7 @@ public class ItemFactory
 		{ -413, (_, _) => new ItemWhiteCandle() },
 		{ -412, (_, _) => new ItemCandle() },
 		{ 0, (_, _) => new ItemAir() },
+		{ 15, (_, _) => new ItemBoneMeal() },
 		{ 256, (_, _) => new ItemIronShovel() },
 		{ 257, (_, _) => new ItemIronPickaxe() },
 		{ 258, (_, _) => new ItemIronAxe() },
@@ -499,8 +500,6 @@ public class ItemTropicalFish() : Item("minecraft:tropical_fish", 461);
 
 public class ItemPufferFish() : Item("minecraft:pufferfish", 462);
 
-public class ItemCookedCod() : Item("minecraft:cooked_cod", 350); // couldn't find
-
 public class ItemSparkler() : Item("minecraft:sparkler", 442);
 
 public class ItemDriedKelp() : Item("minecraft:dried_kelp", 464);
@@ -728,3 +727,5 @@ public class ItemOminousTrialKey() : Item("minecraft:ominous_trial_key", 1049);
 public class ItemWolfArmor() : Item("minecraft:wolf_armor", 1050);
 
 public class ItemBrush() : Item("minecraft:brush", 1051);
+
+public class ItemBoneMeal() : Item("minecraft:bone_meal", 15);

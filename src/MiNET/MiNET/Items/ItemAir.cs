@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemAir : Item
 {
-	public class ItemAir : Item
+	public ItemAir() : base("minecraft:air", 0, 0, 0)
 	{
-		public ItemAir() : base("minecraft:air", 0, 0, 0)
-		{
-			UniqueId = 0;
-		}
+		UniqueId = 0;
 	}
 }

@@ -24,41 +24,28 @@
 #endregion
 
 using System.Numerics;
-using log4net;
 using MiNET.Entities.Vehicles;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
 namespace MiNET.Items
 {
-	public class ItemBoat : Item
+	public class ItemBoat(short metadata) : Item("minecraft:boat", 333, metadata)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemBoat));
-
-		public ItemBoat(short metadata) : base("minecraft:boat", 333, metadata)
-		{
-		}
-
 		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{
-			var coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
+			BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 
-			Boat entity = new Boat(world);
-			entity.KnownPosition = coordinates;
+			var entity = new Boat(world)
+			{
+				KnownPosition = coordinates
+			};
 			entity.SpawnEntity();
 
-			if (player.GameMode == GameMode.Survival)
-			{
-				var itemInHand = player.Inventory.GetItemInHand();
-				itemInHand.Count--;
-				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-			}
-		}
-
-		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-		{
-			Log.Debug("Use item boat");
-			base.UseItem(world, player, blockCoordinates);
+			if (player.GameMode != GameMode.Survival) return;
+			Item itemInHand = player.Inventory.GetItemInHand();
+			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
 		}
 	}
 }

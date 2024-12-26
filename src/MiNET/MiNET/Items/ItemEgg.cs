@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -54,7 +55,9 @@ public class ItemEgg : Item
 		egg.KnownPosition.Y += 1.62f;
 		egg.Velocity = egg.KnownPosition.GetDirection().Normalize() * (Force);
 		egg.SpawnEntity();
-		world.BroadcastSound(player.KnownPosition, LevelSoundEventType.Throw, "minecraft:player");
+		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
+
+		if (player.GameMode == GameMode.Creative) return;
 		Item itemInHand = player.Inventory.GetItemInHand();
 		itemInHand.Count--;
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);

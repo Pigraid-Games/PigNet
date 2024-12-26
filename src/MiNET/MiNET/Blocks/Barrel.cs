@@ -29,6 +29,7 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 using MiNET.Items.Tools;
+using MiNET.Sounds;
 
 namespace MiNET.Blocks
 {
@@ -62,7 +63,7 @@ namespace MiNET.Blocks
 		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 		{
 			Log.Debug($"Opening barrel {blockCoordinates}");
-			world.BroadcastSound(blockCoordinates, LevelSoundEventType.BlockBarrelOpen);
+			world.BroadcastSound(new BlockBarrelOpenSound(blockCoordinates));
 			return true;
 		}
 	}

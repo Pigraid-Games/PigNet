@@ -25,50 +25,34 @@
 
 using System.Numerics;
 using MiNET.Blocks;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemSlate : ItemBlock
 {
-	public class ItemSlate : ItemBlock
+	public ItemSlate(short size = 0) : base("minecraft:board", 454, size)
 	{
-		public ItemSlate(short size = 0) : base("minecraft:board", 454, size)
-		{
-			MaxStackSize = 16;
-		}
-
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			// block 230, data 32-35 (rotations) Slate, Poster or Board
-
-			if (face == BlockFace.Down) // At the bottom of block
-			{
-				// Doesn't work, ignore if that happen. 
-				return;
-			}
-			else
-			{
-				Block = BlockFactory.GetBlockById(230);
-			}
-
-			Block.Metadata = (byte) Metadata;
-
-			base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
-		}
+		MaxStackSize = 16;
 	}
 
-	public class ItemPoster : ItemSlate
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		public ItemPoster() : base(1)
-		{
-		}
-	}
+		// block 230, data 32-35 (rotations) Slate, Poster or Board
 
-	public class ItemBoard : ItemSlate
-	{
-		public ItemBoard() : base(2)
+		if (face == BlockFace.Down) // At the bottom of block
 		{
+			// Doesn't work, ignore if that happen. 
+			return;
 		}
+		Block = BlockFactory.GetBlockById(230);
+		Block.Metadata = (byte) Metadata;
+
+		base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
 	}
 }
+
+public class ItemPoster() : ItemSlate(1);
+
+public class ItemBoard() : ItemSlate(2);

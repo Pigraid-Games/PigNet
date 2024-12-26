@@ -25,13 +25,12 @@
 
 using MiNET.Blocks;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemWheatSeeds : ItemBlock
 {
-	public class ItemWheatSeeds : ItemBlock
+	public ItemWheatSeeds() : base("minecraft:wheat_seeds", 295)
 	{
-		public ItemWheatSeeds() : base("minecraft:wheat_seeds", 295)
-		{
-			Block = BlockFactory.GetBlockById(59);
-		}
+		Block = BlockFactory.GetBlockById(59);
 	}
 }

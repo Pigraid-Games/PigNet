@@ -29,6 +29,7 @@ using fNbt;
 using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Entities.Projectiles;
+using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -149,8 +150,8 @@ public sealed class ItemBow : Item
 		arrow.KnownPosition.Pitch = (float) arrow.Velocity.GetPitch();
 		arrow.BroadcastMovement = true;
 		arrow.DespawnOnImpact = false;
-			
-		world.BroadcastSound(blockCoordinates, LevelSoundEventType.Bow);
+		
+		world.BroadcastSound(new BowSound(player.KnownPosition));
 		arrow.SpawnEntity();
 			
 		inventory.DamageItemInHand(ItemDamageReason.ItemUse, player, null);

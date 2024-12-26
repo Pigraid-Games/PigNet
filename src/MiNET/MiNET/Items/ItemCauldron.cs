@@ -25,13 +25,12 @@
 
 using MiNET.Blocks;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemCauldron : ItemBlock
 {
-	public class ItemCauldron : ItemBlock
+	public ItemCauldron() : base("minecraft:cauldron", 380, 0)
 	{
-		public ItemCauldron() : base("minecraft:cauldron", 380, 0)
-		{
-			Block = BlockFactory.GetBlockById(118);
-		}
+		Block = new Cauldron();
 	}
 }

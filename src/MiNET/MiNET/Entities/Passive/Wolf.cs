@@ -80,7 +80,7 @@ namespace MiNET.Entities.Passive
 				{
 					if (item is ItemDye)
 					{
-						var color = ItemDye.toColorCode(item.Metadata);
+						var color = ItemDye.ToColorCode(item.Metadata);
 						if (color != 255 && color != CollarColor)
 						{
 							CollarColor = color;
