@@ -485,7 +485,8 @@ public class ItemFactory
 		{ 1109, (_, _) => new ItemEyeArmorTrim() },
 		{ 1110, (_, _) => new ItemSpireArmorTrim() },
 		{ 1111, (_, _) => new ItemFlowArmorTrim() },
-		{ 1112, (_, _) => new ItemBoltArmorTrim() }
+		{ 1112, (_, _) => new ItemBoltArmorTrim() },
+		{ 1113, (_, _) => new ItemCupLove() }
 	};
 
 	public static Item GetItem(short id, short metadata = 0, int count = 1)
@@ -794,3 +795,12 @@ public class ItemBoneMeal() : Item("minecraft:bone_meal", 15);
 public class ItemFlowBannerPattern() : Item("minecraft:flow_banner_pattern", 1069);
 
 public class ItemGusterBannerPattern() : Item("minecraft:guster_banner_pattern", 1070);
+
+public class ItemCupLove : ArmorChestplateBase
+{
+	public ItemCupLove() : base("pigraid:cuplove", 1113)
+	{
+		MaxStackSize = 1;
+		ItemMaterial = ItemMaterial.Diamond;
+	}
+}
