@@ -46,14 +46,19 @@ public class ItemStick : Item
 		{
 			double currentSpeed = player.CurrentSpeed / 20f;
 			if (currentSpeed > 35f / 20f)
+			{
 				//player.SendMessage($"Speed already over max {player.CurrentSpeed:F2}m/s", MessageType.Raw);
 				return;
+			}
 
 			Vector3 velocity = Vector3.Normalize(player.KnownPosition.GetHeadDirection()) * (float) currentSpeed;
-			float factor = (float) (1 + (1 / (1 + (currentSpeed * 2))));
+			float factor = (float) (1 + 1 / (1 + currentSpeed * 2));
 			velocity *= factor;
 
-			if (currentSpeed < 7f / 20f) velocity = Vector3.Normalize(velocity) * 1.2f;
+			if (currentSpeed < 7f / 20f)
+			{
+				velocity = Vector3.Normalize(velocity) * 1.2f;
+			}
 
 			McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
 			motions.runtimeEntityId = EntityManager.EntityIdSelf;

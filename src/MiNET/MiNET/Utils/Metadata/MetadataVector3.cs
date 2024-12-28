@@ -26,48 +26,55 @@
 using System.IO;
 using System.Numerics;
 
-namespace MiNET.Utils.Metadata;
-
-public class MetadataVector3 : MetadataEntry
+namespace MiNET.Utils.Metadata
 {
-	public override byte Identifier => 8;
-
-	public override string FriendlyName => "vector3";
-
-	public Vector3 Value { get; set; }
-
-	public MetadataVector3()
+	public class MetadataVector3 : MetadataEntry
 	{
-	}
-
-	public MetadataVector3(float x, float y, float z) : this(new Vector3(x, y, z))
-	{
-	}
-
-	public MetadataVector3(Vector3 value)
-	{
-		Value = value;
-	}
-
-	public override void FromStream(BinaryReader reader)
-	{
-		Value = new Vector3
+		public override byte Identifier
 		{
-			X = reader.ReadSingle(),
-			Y = reader.ReadSingle(),
-			Z = reader.ReadSingle()
-		};
-	}
+			get { return 8; }
+		}
 
-	public override void WriteTo(BinaryWriter reader)
-	{
-		reader.Write(Value.X);
-		reader.Write(Value.Y);
-		reader.Write(Value.Z);
-	}
+		public override string FriendlyName
+		{
+			get { return "vector3"; }
+		}
 
-	public override string ToString()
-	{
-		return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
+		public Vector3 Value { get; set; }
+
+		public MetadataVector3()
+		{
+		}
+
+		public MetadataVector3(float x, float y, float z) : this(new Vector3(x, y, z))
+		{
+		}
+
+		public MetadataVector3(Vector3 value)
+		{
+			Value = value;
+		}
+
+		public override void FromStream(BinaryReader reader)
+		{
+			Value = new Vector3
+			{
+				X = reader.ReadSingle(),
+				Y = reader.ReadSingle(),
+				Z = reader.ReadSingle(),
+			};
+		}
+
+		public override void WriteTo(BinaryWriter reader)
+		{
+			reader.Write(Value.X);
+			reader.Write(Value.Y);
+			reader.Write(Value.Z);
+		}
+
+		public override string ToString()
+		{
+			return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
+		}
 	}
 }

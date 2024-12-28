@@ -27,17 +27,18 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace MiNET.Net.RakNet;
-
-public interface IPacketSender
+namespace MiNET.Net.RakNet
 {
-	//public Task SendPacketAsync(RakSession session, Packet message);
-	//public Task SendDatagramAsync(RakSession session, Datagram datagram);
+	public interface IPacketSender
+	{
+		//public Task SendPacketAsync(RakSession session, Packet message);
+		//public Task SendDatagramAsync(RakSession session, Datagram datagram);
 
-	public void SendData(byte[] data, IPEndPoint targetEndPoint);
-	public Task SendDataAsync(byte[] data, IPEndPoint targetEndPoint);
-	public Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint);
-	public Task SendPacketAsync(RakSession session, Packet message);
-	public Task SendPacketAsync(RakSession session, List<Packet> message);
-	void Close(RakSession session);
+		public void SendData(byte[] data, IPEndPoint targetEndPoint);
+		public Task SendDataAsync(byte[] data, IPEndPoint targetEndPoint);
+		public Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint);
+		public Task SendPacketAsync(RakSession session, Packet message);
+		public Task SendPacketAsync(RakSession session, List<Packet> message);
+		void Close(RakSession session);
+	}
 }

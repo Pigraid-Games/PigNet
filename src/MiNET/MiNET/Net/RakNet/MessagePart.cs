@@ -26,79 +26,80 @@
 using System;
 using log4net;
 
-namespace MiNET.Net.RakNet;
-
-public class MessagePart : Packet<MessagePart> // Replace this with stream
+namespace MiNET.Net.RakNet
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(MessagePart));
-
-	public Memory<byte> Buffer { get; set; }
-	public byte ContainedMessageId { get; set; }
-
-	public MessagePart()
+	public class MessagePart : Packet<MessagePart> // Replace this with stream
 	{
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(MessagePart));
 
-	public override void Reset()
-	{
-		base.Reset();
-		ReliabilityHeader.Reset();
-		ContainedMessageId = 0;
-		Buffer = null;
-	}
+		public Memory<byte> Buffer { get; set; }
+		public byte ContainedMessageId { get; set; }
 
-	protected override void EncodePacket()
-	{
-		// DO NOT CALL base.EncodePackage();
-
-		Memory<byte> encodedMessage = Buffer;
-
-		if (encodedMessage.Length == 0) Log.Error("Bad size 0 in message part");
-		//if(ReliabilityHeader.Reliability != Reliability.ReliableOrdered) Log.Warn($"Sending message with reliability={ReliabilityHeader.Reliability}");
-
-		byte flags = (byte) ((byte) ReliabilityHeader.Reliability << 5);
-		Write((byte) (flags | (ReliabilityHeader.HasSplit ? 0b00010000 : 0x00)));
-		Write((short) (encodedMessage.Length * 8), true); // bit length
-
-		switch (ReliabilityHeader.Reliability)
+		public MessagePart()
 		{
-			case Reliability.Reliable:
-			case Reliability.ReliableOrdered:
-			case Reliability.ReliableSequenced:
-			case Reliability.ReliableWithAckReceipt:
-			case Reliability.ReliableOrderedWithAckReceipt:
-				Write(ReliabilityHeader.ReliableMessageNumber);
-				break;
 		}
 
-		//switch (ReliabilityHeader.Reliability)
-		//{
-		//	case Reliability.UnreliableSequenced:
-		//	case Reliability.ReliableSequenced:
-		//		ReliabilityHeader.SequencingIndex = WriteLittle();
-		//		break;
-		//}
-
-		switch (ReliabilityHeader.Reliability)
+		public override void Reset()
 		{
-			case Reliability.UnreliableSequenced:
-			case Reliability.ReliableOrdered:
-			case Reliability.ReliableSequenced:
-			case Reliability.ReliableOrderedWithAckReceipt:
-				Write(ReliabilityHeader.OrderingIndex);
-				Write(ReliabilityHeader.OrderingChannel);
-				break;
+			base.Reset();
+			ReliabilityHeader.Reset();
+			ContainedMessageId = 0;
+			Buffer = null;
 		}
 
-		if (ReliabilityHeader.HasSplit)
+		protected override void EncodePacket()
 		{
-			Write(ReliabilityHeader.PartCount, true);
-			Write(ReliabilityHeader.PartId, true);
-			Write(ReliabilityHeader.PartIndex, true);
+			// DO NOT CALL base.EncodePackage();
+
+			Memory<byte> encodedMessage = Buffer;
+
+			if(encodedMessage.Length == 0) Log.Error("Bad size 0 in message part");
+			//if(ReliabilityHeader.Reliability != Reliability.ReliableOrdered) Log.Warn($"Sending message with reliability={ReliabilityHeader.Reliability}");
+
+			byte flags = (byte) (((byte) ReliabilityHeader.Reliability) << 5);
+			Write((byte) (flags | (ReliabilityHeader.HasSplit ? 0b00010000 : 0x00)));
+			Write((short) (encodedMessage.Length * 8), true); // bit length
+
+			switch (ReliabilityHeader.Reliability)
+			{
+				case Reliability.Reliable:
+				case Reliability.ReliableOrdered:
+				case Reliability.ReliableSequenced:
+				case Reliability.ReliableWithAckReceipt:
+				case Reliability.ReliableOrderedWithAckReceipt:
+					Write(ReliabilityHeader.ReliableMessageNumber);
+					break;
+			}
+
+			//switch (ReliabilityHeader.Reliability)
+			//{
+			//	case Reliability.UnreliableSequenced:
+			//	case Reliability.ReliableSequenced:
+			//		ReliabilityHeader.SequencingIndex = WriteLittle();
+			//		break;
+			//}
+
+			switch (ReliabilityHeader.Reliability)
+			{
+				case Reliability.UnreliableSequenced:
+				case Reliability.ReliableOrdered:
+				case Reliability.ReliableSequenced:
+				case Reliability.ReliableOrderedWithAckReceipt:
+					Write(ReliabilityHeader.OrderingIndex);
+					Write(ReliabilityHeader.OrderingChannel);
+					break;
+			}
+
+			if (ReliabilityHeader.HasSplit)
+			{
+				Write(ReliabilityHeader.PartCount, true);
+				Write(ReliabilityHeader.PartId, true);
+				Write(ReliabilityHeader.PartIndex, true);
+			}
+
+			// Message body
+
+			Write(encodedMessage);
 		}
-
-		// Message body
-
-		Write(encodedMessage);
 	}
 }

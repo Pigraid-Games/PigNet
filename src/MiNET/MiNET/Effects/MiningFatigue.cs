@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class MiningFatigue : Effect
+namespace MiNET.Effects
 {
-	public MiningFatigue() : base(EffectType.MiningFatigue)
+	public class MiningFatigue : Effect
 	{
-		ParticleColor = Color.FromArgb(0x4A, 0x42, 0x17);
+		public MiningFatigue() : base(EffectType.MiningFatigue)
+		{
+			ParticleColor = Color.FromArgb(0x4A, 0x42, 0x17);
+		}
 	}
 }

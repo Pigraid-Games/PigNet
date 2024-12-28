@@ -28,20 +28,21 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class Dropper : Block
+namespace MiNET.Blocks
 {
-	public Dropper() : base(125)
+	public partial class Dropper : Block
 	{
-		BlastResistance = 17.5f;
-		Hardness = 3.5f;
-	}
+		public Dropper() : base(125)
+		{
+			BlastResistance = 17.5f;
+			Hardness = 3.5f;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-		return false;
+			return false;
+		}
 	}
 }

@@ -28,23 +28,27 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Reeds : Block
+namespace MiNET.Blocks
 {
-	public Reeds() : base(83)
+	public partial class Reeds : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
-	}
+		public Reeds() : base(83)
+		{
+			IsSolid = false;
+			IsTransparent = true;
+		}
 
-	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
-	{
-		if (Coordinates.BlockDown() == blockCoordinates) level.BreakBlock(null, this);
-	}
+		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+		{
+			if (Coordinates.BlockDown() == blockCoordinates)
+			{
+				level.BreakBlock(null, this);
+			}
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return new[] { ItemFactory.GetItem(338, 0, 1) };
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {ItemFactory.GetItem(338, 0, 1)};
+		}
 	}
 }

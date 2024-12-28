@@ -26,289 +26,293 @@
 using System;
 using System.Numerics;
 
-namespace MiNET.Utils.Vectors;
-
-public struct BlockCoordinates : IEquatable<BlockCoordinates>
+namespace MiNET.Utils.Vectors
 {
-	public int X, Y, Z;
-
-	public BlockCoordinates(int value)
+	public struct BlockCoordinates : IEquatable<BlockCoordinates>
 	{
-		X = Y = Z = value;
-	}
+		public int X, Y, Z;
 
-	public BlockCoordinates(int x, int y, int z)
-	{
-		X = x;
-		Y = y;
-		Z = z;
-	}
+		public BlockCoordinates(int value)
+		{
+			X = Y = Z = value;
+		}
 
-	public BlockCoordinates(BlockCoordinates v)
-	{
-		X = v.X;
-		Y = v.Y;
-		Z = v.Z;
-	}
+		public BlockCoordinates(int x, int y, int z)
+		{
+			X = x;
+			Y = y;
+			Z = z;
+		}
 
-	public BlockCoordinates(PlayerLocation location)
-	{
-		X = (int) Math.Floor(location.X);
-		Y = (int) Math.Floor(location.Y);
-		Z = (int) Math.Floor(location.Z);
-	}
+		public BlockCoordinates(BlockCoordinates v)
+		{
+			X = v.X;
+			Y = v.Y;
+			Z = v.Z;
+		}
 
-	public BlockCoordinates(Vector3 location)
-	{
-		X = (int) Math.Floor(location.X);
-		Y = (int) Math.Floor(location.Y);
-		Z = (int) Math.Floor(location.Z);
-	}
+		public BlockCoordinates(PlayerLocation location)
+		{
+			X = (int) Math.Floor(location.X);
+			Y = (int) Math.Floor(location.Y);
+			Z = (int) Math.Floor(location.Z);
+		}
+
+		public BlockCoordinates(Vector3 location)
+		{
+			X = (int) Math.Floor(location.X);
+			Y = (int) Math.Floor(location.Y);
+			Z = (int) Math.Floor(location.Z);
+		}
 
 
-	/// <summary>
-	///     Calculates the distance between two BlockCoordinates objects.
-	/// </summary>
-	public double DistanceTo(BlockCoordinates other)
-	{
-		return Math.Sqrt(Square(other.X - X) +
-						Square(other.Y - Y) +
-						Square(other.Z - Z));
-	}
+		/// <summary>
+		///     Calculates the distance between two BlockCoordinates objects.
+		/// </summary>
+		public double DistanceTo(BlockCoordinates other)
+		{
+			return Math.Sqrt(Square(other.X - X) +
+							Square(other.Y - Y) +
+							Square(other.Z - Z));
+		}
 
-	/// <summary>
-	///     Calculates the square of a num.
-	/// </summary>
-	private int Square(int num)
-	{
-		return num * num;
-	}
+		/// <summary>
+		///     Calculates the square of a num.
+		/// </summary>
+		private int Square(int num)
+		{
+			return num * num;
+		}
 
-	public BlockCoordinates Abs()
-	{
-		return new BlockCoordinates(
-			Math.Abs(X),
-			Math.Abs(Y),
-			Math.Abs(Z)
-		);
-	}
+		public BlockCoordinates Abs()
+		{
+			return new BlockCoordinates(
+				Math.Abs(X),
+				Math.Abs(Y),
+				Math.Abs(Z)
+			);
+		}
 
-	/// <summary>
-	///     Finds the distance of this Coordinate3D from BlockCoordinates.Zero
-	/// </summary>
-	public double Distance => DistanceTo(Zero);
+		/// <summary>
+		///     Finds the distance of this Coordinate3D from BlockCoordinates.Zero
+		/// </summary>
+		public double Distance
+		{
+			get { return DistanceTo(Zero); }
+		}
 
-	public static BlockCoordinates Min(BlockCoordinates value1, BlockCoordinates value2)
-	{
-		return new BlockCoordinates(
-			Math.Min(value1.X, value2.X),
-			Math.Min(value1.Y, value2.Y),
-			Math.Min(value1.Z, value2.Z)
-		);
-	}
+		public static BlockCoordinates Min(BlockCoordinates value1, BlockCoordinates value2)
+		{
+			return new BlockCoordinates(
+				Math.Min(value1.X, value2.X),
+				Math.Min(value1.Y, value2.Y),
+				Math.Min(value1.Z, value2.Z)
+			);
+		}
 
-	public static BlockCoordinates Max(BlockCoordinates value1, BlockCoordinates value2)
-	{
-		return new BlockCoordinates(
-			Math.Max(value1.X, value2.X),
-			Math.Max(value1.Y, value2.Y),
-			Math.Max(value1.Z, value2.Z)
-		);
-	}
+		public static BlockCoordinates Max(BlockCoordinates value1, BlockCoordinates value2)
+		{
+			return new BlockCoordinates(
+				Math.Max(value1.X, value2.X),
+				Math.Max(value1.Y, value2.Y),
+				Math.Max(value1.Z, value2.Z)
+			);
+		}
 
-	public static bool operator !=(BlockCoordinates a, BlockCoordinates b)
-	{
-		return !a.Equals(b);
-	}
+		public static bool operator !=(BlockCoordinates a, BlockCoordinates b)
+		{
+			return !a.Equals(b);
+		}
 
-	public static bool operator ==(BlockCoordinates a, BlockCoordinates b)
-	{
-		return a.Equals(b);
-	}
+		public static bool operator ==(BlockCoordinates a, BlockCoordinates b)
+		{
+			return a.Equals(b);
+		}
 
-	public static BlockCoordinates operator +(BlockCoordinates a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-	}
+		public static BlockCoordinates operator +(BlockCoordinates a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		}
 
-	public static BlockCoordinates operator -(BlockCoordinates a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-	}
+		public static BlockCoordinates operator -(BlockCoordinates a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		}
 
-	public static BlockCoordinates operator -(BlockCoordinates a)
-	{
-		return new BlockCoordinates(-a.X, -a.Y, -a.Z);
-	}
+		public static BlockCoordinates operator -(BlockCoordinates a)
+		{
+			return new BlockCoordinates(-a.X, -a.Y, -a.Z);
+		}
 
-	public static BlockCoordinates operator *(BlockCoordinates a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
-	}
+		public static BlockCoordinates operator *(BlockCoordinates a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+		}
 
-	public static BlockCoordinates operator /(BlockCoordinates a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
-	}
+		public static BlockCoordinates operator /(BlockCoordinates a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
+		}
 
-	public static BlockCoordinates operator %(BlockCoordinates a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a.X % b.X, a.Y % b.Y, a.Z % b.Z);
-	}
+		public static BlockCoordinates operator %(BlockCoordinates a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a.X % b.X, a.Y % b.Y, a.Z % b.Z);
+		}
 
-	public static BlockCoordinates operator +(BlockCoordinates a, int b)
-	{
-		return new BlockCoordinates(a.X + b, a.Y + b, a.Z + b);
-	}
+		public static BlockCoordinates operator +(BlockCoordinates a, int b)
+		{
+			return new BlockCoordinates(a.X + b, a.Y + b, a.Z + b);
+		}
 
-	public static BlockCoordinates operator -(BlockCoordinates a, int b)
-	{
-		return new BlockCoordinates(a.X - b, a.Y - b, a.Z - b);
-	}
+		public static BlockCoordinates operator -(BlockCoordinates a, int b)
+		{
+			return new BlockCoordinates(a.X - b, a.Y - b, a.Z - b);
+		}
 
-	public static BlockCoordinates operator *(BlockCoordinates a, int b)
-	{
-		return new BlockCoordinates(a.X * b, a.Y * b, a.Z * b);
-	}
+		public static BlockCoordinates operator *(BlockCoordinates a, int b)
+		{
+			return new BlockCoordinates(a.X * b, a.Y * b, a.Z * b);
+		}
 
-	public static BlockCoordinates operator /(BlockCoordinates a, int b)
-	{
-		return new BlockCoordinates(a.X / b, a.Y / b, a.Z / b);
-	}
+		public static BlockCoordinates operator /(BlockCoordinates a, int b)
+		{
+			return new BlockCoordinates(a.X / b, a.Y / b, a.Z / b);
+		}
 
-	public static BlockCoordinates operator %(BlockCoordinates a, int b)
-	{
-		return new BlockCoordinates(a.X % b, a.Y % b, a.Z % b);
-	}
+		public static BlockCoordinates operator %(BlockCoordinates a, int b)
+		{
+			return new BlockCoordinates(a.X % b, a.Y % b, a.Z % b);
+		}
 
-	public static BlockCoordinates operator +(int a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a + b.X, a + b.Y, a + b.Z);
-	}
+		public static BlockCoordinates operator +(int a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a + b.X, a + b.Y, a + b.Z);
+		}
 
-	public static BlockCoordinates operator -(int a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a - b.X, a - b.Y, a - b.Z);
-	}
+		public static BlockCoordinates operator -(int a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a - b.X, a - b.Y, a - b.Z);
+		}
 
-	public static BlockCoordinates operator *(int a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a * b.X, a * b.Y, a * b.Z);
-	}
+		public static BlockCoordinates operator *(int a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a * b.X, a * b.Y, a * b.Z);
+		}
 
-	public static BlockCoordinates operator /(int a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a / b.X, a / b.Y, a / b.Z);
-	}
+		public static BlockCoordinates operator /(int a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a / b.X, a / b.Y, a / b.Z);
+		}
 
-	public static BlockCoordinates operator %(int a, BlockCoordinates b)
-	{
-		return new BlockCoordinates(a % b.X, a % b.Y, a % b.Z);
-	}
+		public static BlockCoordinates operator %(int a, BlockCoordinates b)
+		{
+			return new BlockCoordinates(a % b.X, a % b.Y, a % b.Z);
+		}
 
-	public static explicit operator BlockCoordinates(ChunkCoordinates a)
-	{
-		return new BlockCoordinates(a.X << 4, 0, a.Z << 4);
-	}
+		public static explicit operator BlockCoordinates(ChunkCoordinates a)
+		{
+			return new BlockCoordinates(a.X << 4, 0, a.Z << 4);
+		}
 
-	public static implicit operator BlockCoordinates(Vector3 a)
-	{
-		return new BlockCoordinates(a);
-	}
+		public static implicit operator BlockCoordinates(Vector3 a)
+		{
+			return new BlockCoordinates(a);
+		}
 
-	public static explicit operator BlockCoordinates(PlayerLocation a)
-	{
-		return new BlockCoordinates(a);
-	}
+		public static explicit operator BlockCoordinates(PlayerLocation a)
+		{
+			return new BlockCoordinates(a);
+		}
 
-	public static implicit operator Vector3(BlockCoordinates a)
-	{
-		return new Vector3(a.X, a.Y, a.Z);
-	}
+		public static implicit operator Vector3(BlockCoordinates a)
+		{
+			return new Vector3(a.X, a.Y, a.Z);
+		}
 
-	public static readonly BlockCoordinates Zero = new(0);
-	public static readonly BlockCoordinates One = new(1);
+		public static readonly BlockCoordinates Zero = new BlockCoordinates(0);
+		public static readonly BlockCoordinates One = new BlockCoordinates(1);
 
-	public static readonly BlockCoordinates Up = new(0, 1, 0);
-	public static readonly BlockCoordinates Down = new(0, -1, 0);
-	public static readonly BlockCoordinates East = new(1, 0, 0);
-	public static readonly BlockCoordinates West = new(-1, 0, 0);
-	public static readonly BlockCoordinates North = new(0, 0, -1);
-	public static readonly BlockCoordinates South = new(0, 0, 1);
+		public static readonly BlockCoordinates Up = new BlockCoordinates(0, 1, 0);
+		public static readonly BlockCoordinates Down = new BlockCoordinates(0, -1, 0);
+		public static readonly BlockCoordinates East = new BlockCoordinates(1, 0, 0);
+		public static readonly BlockCoordinates West = new BlockCoordinates(-1, 0, 0);
+		public static readonly BlockCoordinates North = new BlockCoordinates(0, 0, -1);
+		public static readonly BlockCoordinates South = new BlockCoordinates(0, 0, 1);
 
-	// not sure these are useful. Three is no "left" or "right" here :-(
-	public static readonly BlockCoordinates Left = new(-1, 0, 0);
-	public static readonly BlockCoordinates Right = new(1, 0, 0);
-	public static readonly BlockCoordinates Backwards = new(0, 0, -1);
-	public static readonly BlockCoordinates Forwards = new(0, 0, 1);
+		// not sure these are useful. Three is no "left" or "right" here :-(
+		public static readonly BlockCoordinates Left = new BlockCoordinates(-1, 0, 0);
+		public static readonly BlockCoordinates Right = new BlockCoordinates(1, 0, 0);
+		public static readonly BlockCoordinates Backwards = new BlockCoordinates(0, 0, -1);
+		public static readonly BlockCoordinates Forwards = new BlockCoordinates(0, 0, 1);
 
-	public BlockCoordinates BlockUp()
-	{
-		return this + Up;
-	}
+		public BlockCoordinates BlockUp()
+		{
+			return this + Up;
+		}
 
-	public BlockCoordinates BlockDown()
-	{
-		return this + Down;
-	}
+		public BlockCoordinates BlockDown()
+		{
+			return this + Down;
+		}
 
-	public BlockCoordinates BlockEast()
-	{
-		return this + East;
-	}
+		public BlockCoordinates BlockEast()
+		{
+			return this + East;
+		}
 
-	public BlockCoordinates BlockWest()
-	{
-		return this + West;
-	}
+		public BlockCoordinates BlockWest()
+		{
+			return this + West;
+		}
 
-	public BlockCoordinates BlockNorth()
-	{
-		return this + North;
-	}
+		public BlockCoordinates BlockNorth()
+		{
+			return this + North;
+		}
 
-	public BlockCoordinates BlockSouth()
-	{
-		return this + South;
-	}
+		public BlockCoordinates BlockSouth()
+		{
+			return this + South;
+		}
 
-	public BlockCoordinates BlockNorthEast()
-	{
-		return this + North + East;
-	}
+		public BlockCoordinates BlockNorthEast()
+		{
+			return this + North + East;
+		}
 
-	public BlockCoordinates BlockNorthWest()
-	{
-		return this + North + West;
-	}
+		public BlockCoordinates BlockNorthWest()
+		{
+			return this + North + West;
+		}
 
-	public BlockCoordinates BlockSouthEast()
-	{
-		return this + South + East;
-	}
+		public BlockCoordinates BlockSouthEast()
+		{
+			return this + South + East;
+		}
 
-	public BlockCoordinates BlockSouthWest()
-	{
-		return this + South + West;
-	}
+		public BlockCoordinates BlockSouthWest()
+		{
+			return this + South + West;
+		}
 
-	public bool Equals(BlockCoordinates other)
-	{
-		return X == other.X && Y == other.Y && Z == other.Z;
-	}
+		public bool Equals(BlockCoordinates other)
+		{
+			return X == other.X && Y == other.Y && Z == other.Z;
+		}
 
-	public override bool Equals(object obj)
-	{
-		return obj is BlockCoordinates other && Equals(other);
-	}
+		public override bool Equals(object obj)
+		{
+			return obj is BlockCoordinates other && Equals(other);
+		}
 
-	public override int GetHashCode()
-	{
-		return HashCode.Combine(X, Y, Z);
-	}
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(X, Y, Z);
+		}
 
-	public override string ToString()
-	{
-		return $"X={X}, Y={Y}, Z={Z}";
+		public override string ToString()
+		{
+			return $"X={X}, Y={Y}, Z={Z}";
+		}
 	}
 }

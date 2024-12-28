@@ -25,21 +25,26 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Poison : Effect
+namespace MiNET.Effects
 {
-	public Poison() : base(EffectType.Poison)
+	public class Poison : Effect
 	{
-		ParticleColor = Color.FromArgb(0x87, 0xa3, 0x63);
-	}
+		public Poison() : base(EffectType.Poison)
+		{
+			ParticleColor = Color.FromArgb(0x87, 0xa3, 0x63);
+		}
 
-	public override void OnTick(Player player)
-	{
-		if (Duration % (Level == 1 ? 25 : 50) == 0)
-			if (player.HealthManager.Health > 12)
-				player.HealthManager.TakeHit(null, 2, DamageCause.Magic);
+		public override void OnTick(Player player)
+		{
+			if (Duration % (Level == 1 ? 25 : 50) == 0)
+			{
+				if (player.HealthManager.Health > 12)
+				{
+					player.HealthManager.TakeHit(null, 2, DamageCause.Magic);
+				}
+			}
 
-		base.OnTick(player);
+			base.OnTick(player);
+		}
 	}
 }

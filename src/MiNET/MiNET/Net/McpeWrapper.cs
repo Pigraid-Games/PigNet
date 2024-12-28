@@ -25,20 +25,21 @@
 
 using System;
 
-namespace MiNET.Net;
-
-public partial class McpeWrapper : Packet<McpeWrapper>
+namespace MiNET.Net
 {
-	public ReadOnlyMemory<byte> payload; // = null;
-
-
-	partial void AfterEncode()
+	public partial class McpeWrapper : Packet<McpeWrapper>
 	{
-		Write(payload);
-	}
+		public ReadOnlyMemory<byte> payload; // = null;
 
-	partial void AfterDecode()
-	{
-		payload = ReadReadOnlyMemory(0, true);
+
+		partial void AfterEncode()
+		{
+			Write(payload);
+		}
+
+		partial void AfterDecode()
+		{
+			payload = ReadReadOnlyMemory(0, true);
+		}
 	}
 }

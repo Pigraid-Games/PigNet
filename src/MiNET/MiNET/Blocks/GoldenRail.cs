@@ -23,15 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class GoldenRail : Block
+namespace MiNET.Blocks
 {
-	public GoldenRail() : base(27)
+	public partial class GoldenRail : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
-		BlastResistance = 3.5f;
-		Hardness = 0.7f;
+		public GoldenRail() : base(27)
+		{
+			IsSolid = false;
+			IsTransparent = true;
+			BlastResistance = 3.5f;
+			Hardness = 0.7f;
+		}
 	}
 }

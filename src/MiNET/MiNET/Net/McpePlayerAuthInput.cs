@@ -23,22 +23,28 @@ public partial class McpePlayerAuthInput : Packet<McpePlayerAuthInput>
 
 	partial void AfterDecode()
 	{
-		Vector2 Rot = ReadVector2();
-		Vector3 Pos = ReadVector3();
+		var Rot = ReadVector2();
+		var Pos = ReadVector3();
 		MoveVector = ReadVector2();
-		float HeadYaw = ReadFloat();
+		var HeadYaw = ReadFloat();
 		Position = new PlayerLocation(Pos.X, Pos.Y, Pos.Z, HeadYaw, Rot.Y, Rot.X);
-		InputFlags = (AuthInputFlags) ReadUnsignedVarLong();
-		InputMode = (PlayerInputMode) ReadUnsignedVarInt();
-		PlayMode = (PlayerPlayMode) ReadUnsignedVarInt();
+		InputFlags = (AuthInputFlags)ReadUnsignedVarLong();
+		InputMode = (PlayerInputMode)ReadUnsignedVarInt();
+		PlayMode = (PlayerPlayMode)ReadUnsignedVarInt();
 		InteractionModel = (PlayerInteractionModel) ReadUnsignedVarInt();
 		InteractRotation = ReadVector2();
 		Tick = ReadUnsignedVarLong();
 		Delta = ReadVector3();
 
-		if ((InputFlags & AuthInputFlags.PerformItemStackRequest) != 0) ItemStack = ReadItemStackRequests(true);
+		if ((InputFlags & AuthInputFlags.PerformItemStackRequest) != 0)
+		{
+			ItemStack = ReadItemStackRequests(true);
+		}
 
-		if ((InputFlags & AuthInputFlags.PerformBlockActions) != 0) Actions = ReadPlayerBlockActions();
+		if ((InputFlags & AuthInputFlags.PerformBlockActions) != 0)
+		{
+			Actions = ReadPlayerBlockActions();
+		}
 
 		AnalogMoveVector = ReadVector2();
 		CameraOrientation = ReadVector3();
@@ -47,10 +53,10 @@ public partial class McpePlayerAuthInput : Packet<McpePlayerAuthInput>
 
 	partial void AfterEncode()
 	{
-		WriteUnsignedVarLong((long) InputFlags);
-		WriteUnsignedVarInt((uint) InputMode);
-		WriteUnsignedVarInt((uint) PlayMode);
-		WriteUnsignedVarInt((uint) InteractionModel);
+		WriteUnsignedVarLong((long)InputFlags);
+		WriteUnsignedVarInt((uint)InputMode);
+		WriteUnsignedVarInt((uint)PlayMode);
+		WriteUnsignedVarInt((uint)InteractionModel);
 		Write(InteractRotation);
 		WriteUnsignedVarLong(Tick);
 		Write(Delta);
@@ -61,18 +67,18 @@ public partial class McpePlayerAuthInput : Packet<McpePlayerAuthInput>
 	public override void Reset()
 	{
 		base.Reset();
-		Position = default;
-		MoveVector = default;
+		Position = default(PlayerLocation);
+		MoveVector = default(Vector2);
 		InputFlags = 0;
 		InputMode = PlayerInputMode.Mouse;
 		PlayMode = PlayerPlayMode.Normal;
 		InteractionModel = PlayerInteractionModel.Touch;
-		InteractRotation = default;
+		InteractRotation = default(Vector2);
 		Tick = 0;
 		Delta = Vector3.Zero;
 		AnalogMoveVector = Vector2.Zero;
-		Actions = default;
-		ItemStack = default;
+		Actions = default(PlayerBlockActions);
+		ItemStack = default(ItemStackRequests);
 	}
 
 	public enum PlayerPlayMode
@@ -87,7 +93,7 @@ public partial class McpePlayerAuthInput : Packet<McpePlayerAuthInput>
 		ExitLevel = 7,
 		ExitLevelLivingRoom = 8
 	}
-
+	
 	public enum PlayerInputMode
 	{
 		Mouse = 1,
@@ -105,7 +111,7 @@ public partial class McpePlayerAuthInput : Packet<McpePlayerAuthInput>
 
 	public class PlayerBlockActions
 	{
-		public List<PlayerBlockActionData> PlayerBlockAction = new();
+		public List<PlayerBlockActionData> PlayerBlockAction = new List<PlayerBlockActionData>();
 	}
 
 	public class PlayerBlockActionData

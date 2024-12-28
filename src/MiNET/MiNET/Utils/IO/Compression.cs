@@ -30,95 +30,101 @@ using System.IO.Compression;
 using log4net;
 using MiNET.Net;
 
-namespace MiNET.Utils.IO;
-
-public class Compression
+namespace MiNET.Utils.IO
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Compression));
-
-	public static byte[] Compress(Memory<byte> input, bool writeLen = false, CompressionLevel compressionLevel = CompressionLevel.Fastest)
+	public class Compression
 	{
-		using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Compression));
+
+		public static byte[] Compress(Memory<byte> input, bool writeLen = false, CompressionLevel compressionLevel = CompressionLevel.Fastest)
 		{
-			using (var compressStream = new DeflateStream(stream, compressionLevel, true))
-			{
-				if (writeLen) WriteLength(compressStream, input.Length);
-
-				compressStream.Write(input.Span);
-			}
-
-			byte[] bytes = stream.ToArray();
-			byte[] finalBytes = new byte[bytes.Length + 1];
-			finalBytes[0] = 0x00;
-			Array.Copy(bytes, 0, finalBytes, 1, bytes.Length);
-			return finalBytes;
-		}
-	}
-
-	public static byte[] CompressPacketsForWrapper(List<Packet> packets, CompressionLevel compressionLevel = CompressionLevel.Fastest, bool InitializedCompression = false)
-	{
-		long length = 0;
-		foreach (Packet packet in packets)
-			length += packet.Encode().Length;
-
-		if (compressionLevel == CompressionLevel.NoCompression)
-			using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
-			{
-				foreach (Packet packet in packets)
-				{
-					byte[] bs = packet.Encode();
-					if (bs != null && bs.Length > 0)
-					{
-						BatchUtils.WriteLength(stream, bs.Length);
-						stream.Write(bs, 0, bs.Length);
-					}
-					packet.PutPool();
-				}
-				byte[] bytes = stream.ToArray();
-				if (InitializedCompression)
-				{
-					byte[] finalBytes = new byte[bytes.Length + 1];
-					finalBytes[0] = 0xff;
-					Array.Copy(bytes, 0, finalBytes, 1, bytes.Length);
-					return finalBytes;
-				}
-				return bytes;
-			}
-		else
-		{
-			compressionLevel = length > 1000 ? compressionLevel : CompressionLevel.NoCompression;
 			using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
 			{
 				using (var compressStream = new DeflateStream(stream, compressionLevel, true))
+				{
+					if (writeLen)
+					{
+						WriteLength(compressStream, input.Length);
+					}
+
+					compressStream.Write(input.Span);
+				}
+
+				byte[] bytes = stream.ToArray();
+				byte[] finalBytes = new byte[bytes.Length + 1];
+				finalBytes[0] = 0x00;
+				Array.Copy(bytes, 0, finalBytes, 1, bytes.Length);
+				return finalBytes;
+			}
+		}
+
+		public static byte[] CompressPacketsForWrapper(List<Packet> packets, CompressionLevel compressionLevel = CompressionLevel.Fastest, bool InitializedCompression = false)
+		{
+			long length = 0;
+			foreach (Packet packet in packets)
+				length += packet.Encode().Length;
+
+			if (compressionLevel == CompressionLevel.NoCompression)
+			{
+				using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
 				{
 					foreach (Packet packet in packets)
 					{
 						byte[] bs = packet.Encode();
 						if (bs != null && bs.Length > 0)
 						{
-							BatchUtils.WriteLength(compressStream, bs.Length);
-							compressStream.Write(bs, 0, bs.Length);
+							BatchUtils.WriteLength(stream, bs.Length);
+							stream.Write(bs, 0, bs.Length);
 						}
 						packet.PutPool();
 					}
-					compressStream.Flush();
+					byte[] bytes = stream.ToArray();
+					if (InitializedCompression)
+					{
+						byte[] finalBytes = new byte[bytes.Length + 1];
+						finalBytes[0] = 0xff;
+						Array.Copy(bytes, 0, finalBytes, 1, bytes.Length);
+						return finalBytes;
+					}
+					return bytes;
 				}
-				byte[] bytes = stream.ToArray();
-				if (InitializedCompression)
+			}
+			else
+			{
+				compressionLevel = length > 1000 ? compressionLevel : CompressionLevel.NoCompression;
+				using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
 				{
-					byte[] finalBytes = new byte[bytes.Length + 1];
-					finalBytes[0] = 0x00;
-					Array.Copy(bytes, 0, finalBytes, 1, bytes.Length);
-					return finalBytes;
+					using (var compressStream = new DeflateStream(stream, compressionLevel, true))
+					{
+						foreach (Packet packet in packets)
+						{
+							byte[] bs = packet.Encode();
+							if (bs != null && bs.Length > 0)
+							{
+								BatchUtils.WriteLength(compressStream, bs.Length);
+								compressStream.Write(bs, 0, bs.Length);
+							}
+							packet.PutPool();
+						}
+						compressStream.Flush();
+					}
+					byte[] bytes = stream.ToArray();
+					if (InitializedCompression)
+					{
+						byte[] finalBytes = new byte[bytes.Length + 1];
+						finalBytes[0] = 0x00;
+						Array.Copy(bytes, 0, finalBytes, 1, bytes.Length);
+						return finalBytes;
+					}
+					return bytes;
 				}
-				return bytes;
 			}
 		}
-	}
 
 
-	public static void WriteLength(Stream stream, int lenght)
-	{
-		VarInt.WriteUInt32(stream, (uint) lenght);
+		public static void WriteLength(Stream stream, int lenght)
+		{
+			VarInt.WriteUInt32(stream, (uint) lenght);
+		}
 	}
 }

@@ -23,12 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class RepeaterBase : Block
+namespace MiNET.Blocks
 {
-	protected RepeaterBase(byte id) : base(id)
+	public partial class RepeaterBase : Block
 	{
-		IsTransparent = true;
+		public RepeaterBase(byte id) : base(id)
+		{
+			IsTransparent = true;
+		}
 	}
 }

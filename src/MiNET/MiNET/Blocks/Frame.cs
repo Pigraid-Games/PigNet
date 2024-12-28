@@ -31,67 +31,76 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Frame : Block
+namespace MiNET.Blocks
 {
-	public Frame() : base(199)
+	public partial class Frame : Block
 	{
-		IsTransparent = true;
-		IsSolid = false;
-	}
-
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		return world.GetBlock(blockCoordinates).IsReplaceable;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = (int) face;
-
-		var itemFrameBlockEntity = new ItemFrameBlockEntity { Coordinates = Coordinates };
-		world.SetBlockEntity(itemFrameBlockEntity);
-
-		return false;
-	}
-
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Frame));
-
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-
-		if (world.GetBlockEntity(blockCoordinates) is ItemFrameBlockEntity blockEntity)
+		public Frame() : base(199)
 		{
-			int rotation = blockEntity.Rotation;
-
-			if (itemInHand.Equals(blockEntity.ItemInFrame) && itemInHand.Equals(new ItemAir())) return true;
-
-			if (itemInHand.Equals(blockEntity.ItemInFrame) || itemInHand.Equals(new ItemAir()))
-			{
-				itemInHand = blockEntity.ItemInFrame;
-				rotation++;
-				if (rotation > 7) rotation = 0;
-			}
-			else
-				rotation = 0;
-
-			blockEntity.SetItem(itemInHand, rotation);
-			world.SetBlockEntity(blockEntity);
+			IsTransparent = true;
+			IsSolid = false;
 		}
 
-		return true;
-	}
-
-	public void ClearItem(Level world)
-	{
-		if (world.GetBlockEntity(Coordinates) is ItemFrameBlockEntity blockEntity)
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 		{
-			Item item = blockEntity.ItemInFrame;
-			blockEntity.SetItem(null, 0);
-			world.SetBlockEntity(blockEntity);
-			if (item != null) world.DropItem(Coordinates, item);
+			return world.GetBlock(blockCoordinates).IsReplaceable;
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = (int) face;
+
+			var itemFrameBlockEntity = new ItemFrameBlockEntity {Coordinates = Coordinates};
+			world.SetBlockEntity(itemFrameBlockEntity);
+
+			return false;
+		}
+
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Frame));
+
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			Item itemInHand = player.Inventory.GetItemInHand();
+
+			if (world.GetBlockEntity(blockCoordinates) is ItemFrameBlockEntity blockEntity)
+			{
+				int rotation = blockEntity.Rotation;
+
+				if (itemInHand.Equals(blockEntity.ItemInFrame) && itemInHand.Equals(new ItemAir())) return true;
+
+				if (itemInHand.Equals(blockEntity.ItemInFrame) || itemInHand.Equals(new ItemAir()))
+				{
+					itemInHand = blockEntity.ItemInFrame;
+					rotation++;
+					if (rotation > 7)
+					{
+						rotation = 0;
+					}
+				}
+				else
+				{
+					rotation = 0;
+				}
+
+				blockEntity.SetItem(itemInHand, rotation);
+				world.SetBlockEntity(blockEntity);
+			}
+
+			return true;
+		}
+
+		public void ClearItem(Level world)
+		{
+			if (world.GetBlockEntity(Coordinates) is ItemFrameBlockEntity blockEntity)
+			{
+				Item item = blockEntity.ItemInFrame;
+				blockEntity.SetItem(null, 0);
+				world.SetBlockEntity(blockEntity);
+				if (item != null)
+				{
+					world.DropItem(Coordinates, item);
+				}
+			}
 		}
 	}
 }

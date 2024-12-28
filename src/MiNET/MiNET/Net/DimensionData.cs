@@ -1,5 +1,4 @@
 #region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,20 +19,21 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2022 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
 using System.Collections.Generic;
 
-namespace MiNET.Net;
-
-public class DimensionData
+namespace MiNET.Net
 {
-	public int MaxHeight { get; set; }
-	public int MinHeight { get; set; }
-	public int Generator { get; set; }
-}
+	public class DimensionData
+	{
+		public int MaxHeight { get; set; }
+		public int MinHeight { get; set; }
+		public int Generator { get; set; }
+	}
 
-public class DimensionDefinitions : Dictionary<string, DimensionData>
-{
+	public class DimensionDefinitions : Dictionary<string, DimensionData>
+	{
+
+	}
 }

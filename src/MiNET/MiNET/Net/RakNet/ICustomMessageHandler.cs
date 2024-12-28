@@ -27,45 +27,46 @@ using System;
 using System.Collections.Generic;
 using log4net;
 
-namespace MiNET.Net.RakNet;
-
-public interface ICustomMessageHandler
+namespace MiNET.Net.RakNet
 {
-	void Connected();
-
-	void Disconnect(string reason, bool sendDisconnect = true);
-
-	void HandlePacket(Packet message);
-
-	Packet HandleOrderedSend(Packet packet);
-	List<Packet> PrepareSend(List<Packet> packetsToSend);
-}
-
-public class DefaultMessageHandler : ICustomMessageHandler
-{
-	private static readonly ILog Log = LogManager.GetLogger(typeof(DefaultMessageHandler));
-
-	public void Connected()
+	public interface ICustomMessageHandler
 	{
+		void Connected();
+
+		void Disconnect(string reason, bool sendDisconnect = true);
+
+		void HandlePacket(Packet message);
+
+		Packet HandleOrderedSend(Packet packet);
+		List<Packet> PrepareSend(List<Packet> packetsToSend);
 	}
 
-	public void Disconnect(string reason, bool sendDisconnect = true)
+	public class DefaultMessageHandler : ICustomMessageHandler
 	{
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(DefaultMessageHandler));
 
-	public void HandlePacket(Packet message)
-	{
-		Log.Warn($"Default custom message handler. Probably not what you want!");
-	}
+		public void Connected()
+		{
+		}
 
-	public Packet HandleOrderedSend(Packet packet)
-	{
-		Log.Warn($"Default custom message handler. Probably not what you want!");
-		return packet;
-	}
+		public void Disconnect(string reason, bool sendDisconnect = true)
+		{
+		}
 
-	public List<Packet> PrepareSend(List<Packet> packetsToSend)
-	{
-		return packetsToSend;
+		public void HandlePacket(Packet message)
+		{
+			Log.Warn($"Default custom message handler. Probably not what you want!");
+		}
+
+		public Packet HandleOrderedSend(Packet packet)
+		{
+			Log.Warn($"Default custom message handler. Probably not what you want!");
+			return packet;
+		}
+
+		public List<Packet> PrepareSend(List<Packet> packetsToSend)
+		{
+			return packetsToSend;
+		}
 	}
 }

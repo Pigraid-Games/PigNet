@@ -32,107 +32,109 @@ using System.Linq;
 using System.Numerics;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks;
-
-public partial class Jukebox : Block
+namespace MiNET.Blocks
 {
-	private static int[] discIds = { 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511 };
-	private static Item disc { get; set; }
-	private static bool playing { get; set; } = false;
-
-	public Jukebox() : base(84)
+	public partial class Jukebox : Block
 	{
-		BlastResistance = 30;
-		Hardness = 2f;
-	}
-
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe ? true : false;
-	}
-
-	public override void BreakBlock(Level level, BlockFace face, bool silent = false)
-	{
-		if (level.BlockWithTicks.TryGetValue(Coordinates, out long value)) level.CancelBlockTick(this);
-		if (playing)
+		private static int[] discIds = { 500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511 };
+		private static Item disc { get; set; }
+		private static bool playing { get; set; } = false;
+		public Jukebox() : base(84)
 		{
-			// TODO: Add the sound to the list
-			level.BroadcastSound(Coordinates, LevelSoundEventType.RecordNull);
-			level.DropItem(Coordinates, disc);
+			BlastResistance = 30;
+			Hardness = 2f;
 		}
-		base.BreakBlock(level, face);
-	}
 
-	public override void OnTick(Level level, bool isRandom)
-	{
-		if (isRandom) return;
-		LegacyParticle particle = new NoteParticle(level) { Position = new Vector3(Coordinates.X + 0.5f, Coordinates.Y + 1, Coordinates.Z + 0.5f) };
-		particle.Spawn();
-		if (playing) level.ScheduleBlockTick(this, 20);
-	}
-
-	public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		if (playing == true)
+		public override bool IsBestTool(Item item)
 		{
-			level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordNull);
-			level.DropItem(blockCoordinates, disc);
-			playing = false;
-			level.CancelBlockTick(this);
+			return item is ItemAxe ? true : false;
 		}
-		else
+
+		public override void BreakBlock(Level level, BlockFace face, bool silent = false)
 		{
-			Item itemInHand = player.Inventory.GetItemInHand();
-			if (!discIds.Contains(itemInHand.Id)) return true;
-			disc = itemInHand;
-			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, new ItemAir());
-			switch (itemInHand.Id)
+			if (level.BlockWithTicks.TryGetValue(Coordinates, out long value))
 			{
-				case 500:
-					// TODO: Add the sound
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.Record13);
-					break;
-				case 501:
-					;
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordCat);
-					break;
-				case 502:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordBlocks);
-					break;
-				case 503:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordChirp);
-					break;
-				case 504:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordFar);
-					break;
-				case 505:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordMall);
-					break;
-				case 506:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordMellohi);
-					break;
-				case 507:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordStal);
-					break;
-				case 508:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordStrad);
-					break;
-				case 509:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordWard);
-					break;
-				case 510:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.Record11);
-					break;
-				case 511:
-					level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordWait);
-					break;
-				// TODO: Add the other sounds
-				default:
-					return true;
+				level.CancelBlockTick(this);
 			}
-			playing = true;
-			level.ScheduleBlockTick(this, 20);
+			if (playing)
+			{
+				level.BroadcastSound(Coordinates, LevelSoundEventType.RecordNull);
+				level.DropItem(Coordinates, disc);
+			}
+			base.BreakBlock(level, face);
 		}
-		return true;
+
+		public override void OnTick(Level level, bool isRandom)
+		{
+			if (isRandom) { return; }
+			LegacyParticle particle = new NoteParticle(level) { Position = new Vector3(Coordinates.X + 0.5f, Coordinates.Y + 1, Coordinates.Z + 0.5f) };
+			particle.Spawn();
+			if (playing)
+			{
+				level.ScheduleBlockTick(this, 20);
+			}
+		}
+
+		public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			if (playing == true)
+			{
+				level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordNull);
+				level.DropItem(blockCoordinates, disc);
+				playing = false;
+				level.CancelBlockTick(this);
+			}
+			else
+			{
+				var itemInHand = player.Inventory.GetItemInHand();
+				if (!discIds.Contains(itemInHand.Id)) { return true; }
+				disc = itemInHand;
+				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, new ItemAir());
+				switch (itemInHand.Id)
+				{
+					case 500:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.Record13);
+						break;
+					case 501:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordCat);
+						break;
+					case 502:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordBlocks);
+						break;
+					case 503:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordChirp);
+						break;
+					case 504:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordFar);
+						break;
+					case 505:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordMall);
+						break;
+					case 506:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordMellohi);
+						break;
+					case 507:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordStal);
+						break;
+					case 508:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordStrad);
+						break;
+					case 509:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordWard);
+						break;
+					case 510:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.Record11);
+						break;
+					case 511:
+						level.BroadcastSound(blockCoordinates, LevelSoundEventType.RecordWait);
+						break;
+					default:
+						return true;
+				}
+				playing = true;
+				level.ScheduleBlockTick(this, 20);
+			}
+				return true;
+		}
 	}
 }

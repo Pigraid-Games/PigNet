@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class GoldBlock : Block
+namespace MiNET.Blocks
 {
-	public GoldBlock() : base(41)
+	public partial class GoldBlock : Block
 	{
-		BlastResistance = 30;
-		Hardness = 3;
+		public GoldBlock() : base(41)
+		{
+			BlastResistance = 30;
+			Hardness = 3;
+		}
 	}
 }

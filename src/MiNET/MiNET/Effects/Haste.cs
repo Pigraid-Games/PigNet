@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Haste : Effect
+namespace MiNET.Effects
 {
-	public Haste() : base(EffectType.Haste)
+	public class Haste : Effect
 	{
-		ParticleColor = Color.FromArgb(0xD9, 0xC0, 0x43);
+		public Haste() : base(EffectType.Haste)
+		{
+			ParticleColor = Color.FromArgb(0xD9, 0xC0, 0x43);
+		}
 	}
 }

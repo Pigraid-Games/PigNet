@@ -65,7 +65,7 @@ namespace MiNET.Client
 		public override void HandleMcpeDisconnect(McpeDisconnect message)
 		{
 			Log.Warn("[Disconnect Screen] ");
-			switch (message.Message.ToString())
+			switch (message.message.ToString())
 			{
 				case "disconnectionScreen.notAuthenticated":
 					Log.Warn("You need to authenticate to Xbox Live services to join this server.");
@@ -84,7 +84,7 @@ namespace MiNET.Client
 					Log.Warn("Client sent invalid packet.");
 					break;
 				default:
-					Log.Warn($"Server requested disconnect with message {message.Message.ToString()}");
+					Log.Warn($"Server requested disconnect with message {message.message.ToString()}");
 					break;
 			}
 			base.HandleMcpeDisconnect(message);
@@ -98,7 +98,7 @@ namespace MiNET.Client
 			sb.AppendLine();
 
 			sb.AppendLine("Texture packs:");
-			foreach (TexturePackInfo info in message.TexturePacks)
+			foreach (TexturePackInfo info in message.texturepacks)
 			{
 				sb.AppendLine($"ID={info.UUID}, Version={info.Version}, Unknown={info.Size}");
 			}
@@ -293,18 +293,18 @@ namespace MiNET.Client
 		{
 			if (Client.IsEmulator) return;
 
-			Log.DebugFormat("McpeAddPlayer Entity ID: {0}", message.EntityIdSelf);
-			Log.DebugFormat("McpeAddPlayer Runtime Entity ID: {0}", message.RuntimeEntityId);
-			Log.DebugFormat("X: {0}", message.X);
-			Log.DebugFormat("Y: {0}", message.Y);
-			Log.DebugFormat("Z: {0}", message.Z);
-			Log.DebugFormat("Yaw: {0}", message.Yaw);
-			Log.DebugFormat("Pitch: {0}", message.Pitch);
-			Log.DebugFormat("Velocity X: {0}", message.SpeedX);
-			Log.DebugFormat("Velocity Y: {0}", message.SpeedY);
-			Log.DebugFormat("Velocity Z: {0}", message.SpeedZ);
-			Log.DebugFormat("Metadata: {0}", Client.MetadataToCode(message.Metadata));
-			Log.DebugFormat("Links count: {0}", message.Links?.Count);
+			Log.DebugFormat("McpeAddPlayer Entity ID: {0}", message.entityIdSelf);
+			Log.DebugFormat("McpeAddPlayer Runtime Entity ID: {0}", message.runtimeEntityId);
+			Log.DebugFormat("X: {0}", message.x);
+			Log.DebugFormat("Y: {0}", message.y);
+			Log.DebugFormat("Z: {0}", message.z);
+			Log.DebugFormat("Yaw: {0}", message.yaw);
+			Log.DebugFormat("Pitch: {0}", message.pitch);
+			Log.DebugFormat("Velocity X: {0}", message.speedX);
+			Log.DebugFormat("Velocity Y: {0}", message.speedY);
+			Log.DebugFormat("Velocity Z: {0}", message.speedZ);
+			Log.DebugFormat("Metadata: {0}", Client.MetadataToCode(message.metadata));
+			Log.DebugFormat("Links count: {0}", message.links?.Count);
 		}
 
 		public override void HandleMcpeAddEntity(McpeAddEntity message)
@@ -603,13 +603,13 @@ namespace MiNET.Client
 			// TODO doesn't work anymore I guess
 			if (Client.IsEmulator) return;
 
-			if (message.BlobHashes != null)
+			if (message.blobHashes != null)
 			{
-				var hits = new ulong[message.BlobHashes.Length];
+				var hits = new ulong[message.blobHashes.Length];
 
-				for (int i = 0; i < message.BlobHashes.Length; i++)
+				for (int i = 0; i < message.blobHashes.Length; i++)
 				{
-					ulong hash = message.BlobHashes[i];
+					ulong hash = message.blobHashes[i];
 					hits[i] = hash;
 					Log.Debug($"Got hashes for {message.chunkX}, {message.chunkZ}, {hash}");
 				}
@@ -622,7 +622,7 @@ namespace MiNET.Client
 			{
 				Client.Chunks.GetOrAdd(new ChunkCoordinates(message.chunkX, message.chunkZ), coordinates =>
 				{
-					Log.Debug($"Chunk X={message.chunkX}, Z={message.chunkZ}, size={message.ChunkData.Length}, Count={Client.Chunks.Count}");
+					Log.Debug($"Chunk X={message.chunkX}, Z={message.chunkZ}, size={message.chunkData.Length}, Count={Client.Chunks.Count}");
 					if (BlockstateGenerator.running == false){ Console.WriteLine($"[McpeLevelChunk] Got chunk | X: {message.chunkX,-4} | Z: {message.chunkZ,-4} |"); ; }
 						//broken, chunkData have weird values. Expected header something like: 09 01 02 08
 						//Log.Debug($"{Packet.HexDump(message.Bytes)}");

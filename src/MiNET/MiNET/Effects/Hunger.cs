@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Hunger : Effect
+namespace MiNET.Effects
 {
-	public Hunger() : base(EffectType.Hunger)
+	public class Hunger : Effect
 	{
-		ParticleColor = Color.FromArgb(0x58, 0x76, 0x53);
+		public Hunger() : base(EffectType.Hunger)
+		{
+			ParticleColor = Color.FromArgb(0x58, 0x76, 0x53);
+		}
 	}
 }

@@ -29,19 +29,20 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class Observer : Block
+namespace MiNET.Blocks
 {
-	public Observer() : base(251)
+	public partial class Observer : Block
 	{
-		BlastResistance = 17.5f;
-		IsTransparent = true;
-	}
+		public Observer() : base(251)
+		{
+			BlastResistance = 17.5f;
+			IsTransparent = true;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = ItemBlock.GetReverseFacingDirectionFromEntity(player);
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = ItemBlock.GetReverseFacingDirectionFromEntity(player);
+			return false;
+		}
 	}
 }

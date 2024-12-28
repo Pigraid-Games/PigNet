@@ -25,20 +25,21 @@
 
 using System;
 
-namespace MiNET.Net.RakNet;
-
-public class SplitPartPacket : Packet<SplitPartPacket>
+namespace MiNET.Net.RakNet
 {
-	public ReadOnlyMemory<byte> Message { get; set; }
-
-	public SplitPartPacket()
+	public class SplitPartPacket : Packet<SplitPartPacket>
 	{
-	}
+		public ReadOnlyMemory<byte> Message { get; set; }
 
-	public override void Reset()
-	{
-		base.Reset();
+		public SplitPartPacket()
+		{
+		}
 
-		Message = null;
+		public override void Reset()
+		{
+			base.Reset();
+
+			Message = null;
+		}
 	}
 }

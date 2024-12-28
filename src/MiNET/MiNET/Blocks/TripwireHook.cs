@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class TripwireHook : Block
+namespace MiNET.Blocks
 {
-	public TripwireHook() : base(131)
+	public partial class TripwireHook : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
+		public TripwireHook() : base(131)
+		{
+			IsSolid = false;
+			IsTransparent = true;
+		}
 	}
 }

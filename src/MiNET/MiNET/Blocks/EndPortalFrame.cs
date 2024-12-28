@@ -30,36 +30,40 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class EndPortalFrame : Block
+namespace MiNET.Blocks
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
-
-	public EndPortalFrame() : base(120)
+	public partial class EndPortalFrame : Block
 	{
-		LightLevel = 1;
-		BlastResistance = 18000000;
-		Hardness = 60000;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
+		public EndPortalFrame() : base(120)
+		{
+			LightLevel = 1;
+			BlastResistance = 18000000;
+			Hardness = 60000;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Direction = player.GetDirection();
-		return false;
-	}
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetDirection();
+			return false;
+		}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-		if (itemInHand.Name != "minecraft:ender_eye" || EndPortalEyeBit != false) return true;
-		EndPortalEyeBit = true;
-		world.SetBlock(this);
-		// TODO: Add the sound
-		world.BroadcastSound(blockCoordinates, LevelSoundEventType.BlockEndPortalFrameFill);
-		if (player.GameMode != GameMode.Survival) return true;
-		itemInHand.Count--;
-		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-		return true;
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+			if(itemInHand.Name == "minecraft:ender_eye" && EndPortalEyeBit == false)
+			{
+				EndPortalEyeBit = true;
+				world.SetBlock(this);
+				world.BroadcastSound(blockCoordinates, LevelSoundEventType.BlockEndPortalFrameFill);
+				if (player.GameMode == GameMode.Survival)
+				{
+					itemInHand.Count--;
+					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+				}
+			}
+			return true;
+		}
+
 	}
 }

@@ -26,19 +26,21 @@
 using System.Collections.Generic;
 using MiNET.Items;
 
-namespace MiNET.Utils;
-
-public class ItemStacks : List<Item>
+namespace MiNET.Utils
 {
-}
+	public class ItemStacks : List<Item>
+	{
+	}
 
-public class CreativeItemStacks : ItemStacks
-{
-}
+	public class CreativeItemStacks : ItemStacks
+	{
+		
+	}
 
-/// <summary>
-/// An item stack without unique identifiers
-/// </summary>
-public class GlobalItemStacks : List<Item>
-{
+	/// <summary>
+	/// An item stack without unique identifiers
+	/// </summary>
+	public class GlobalItemStacks : List<Item>
+	{
+	}
 }

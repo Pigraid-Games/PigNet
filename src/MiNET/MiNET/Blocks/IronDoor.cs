@@ -27,11 +27,12 @@ using System.Numerics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class IronDoor : DoorBase
+namespace MiNET.Blocks
 {
-	public IronDoor() : base(71)
+	public partial class IronDoor : DoorBase
 	{
+		public IronDoor() : base(71)
+		{
+		}
 	}
 }

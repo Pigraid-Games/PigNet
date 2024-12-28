@@ -22,26 +22,27 @@
 // All Rights Reserved.
 
 #endregion
-
 using System.Numerics;
+using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class StainedGlass : Glass
+namespace MiNET.Blocks
 {
-	public StainedGlass() : base(241)
+	public partial class StainedGlass : Glass
 	{
-		IsTransparent = true;
-		BlastResistance = 1.5f;
-		Hardness = 0.3f;
-		IsBlockingSkylight = false;
-	}
+		public StainedGlass() : base(241)
+		{
+			IsTransparent = true;
+			BlastResistance = 1.5f;
+			Hardness = 0.3f;
+			IsBlockingSkylight = false;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
+			return false;
+		}
 	}
 }

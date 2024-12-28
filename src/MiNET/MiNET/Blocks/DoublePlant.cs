@@ -28,44 +28,45 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class DoublePlant : Block
+namespace MiNET.Blocks
 {
-	public DoublePlant() : base(175)
+	public partial class DoublePlant : Block
 	{
-		BlastResistance = 3;
-		Hardness = 0.6f;
-
-		IsSolid = false;
-		IsReplaceable = true;
-		IsTransparent = true;
-	}
-
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
+		public DoublePlant() : base(175)
 		{
-			Block under = world.GetBlock(Coordinates.BlockDown());
-			return under is Grass || under is Dirt;
+			BlastResistance = 3;
+			Hardness = 0.6f;
+
+			IsSolid = false;
+			IsReplaceable = true;
+			IsTransparent = true;
 		}
 
-		return false;
-	}
-
-	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
-	{
-		if (Coordinates.BlockDown() == blockCoordinates)
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 		{
-			level.SetAir(Coordinates);
-			UpdateBlocks(level);
+			if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
+			{
+				Block under = world.GetBlock(Coordinates.BlockDown());
+				return under is Grass || under is Dirt;
+			}
+
+			return false;
 		}
-	}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		if (UpperBlockBit) return base.GetDrops(tool);
+		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+		{
+			if (Coordinates.BlockDown() == blockCoordinates)
+			{
+				level.SetAir(Coordinates);
+				UpdateBlocks(level);
+			}
+		}
 
-		return new Item[0];
+		public override Item[] GetDrops(Item tool)
+		{
+			if (UpperBlockBit) return base.GetDrops(tool);
+
+			return new Item[0];
+		}
 	}
 }

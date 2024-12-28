@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class DaylightDetectorInverted : Block
+namespace MiNET.Blocks
 {
-	public DaylightDetectorInverted() : base(178)
+	public partial class DaylightDetectorInverted : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 1;
-		Hardness = 0.2f;
+		public DaylightDetectorInverted() : base(178)
+		{
+			IsTransparent = true;
+			BlastResistance = 1;
+			Hardness = 0.2f;
+		}
 	}
 }

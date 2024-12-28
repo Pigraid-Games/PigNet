@@ -25,18 +25,23 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Sandstone : Block
+namespace MiNET.Blocks
 {
-	public Sandstone() : base(24)
+	public partial class Sandstone : Block
 	{
-		BlastResistance = 4;
-		Hardness = 0.8f;
-	}
+		public Sandstone() : base(24)
+		{
+			BlastResistance = 4;
+			Hardness = 0.8f;
+		}
 
-	public override Item GetSmelt()
-	{
-		return SandStoneType == "default" ? ItemFactory.GetItem("minecraft:sandstone", 3) : null;
+		public override Item GetSmelt()
+		{
+			if (SandStoneType == "default")
+			{
+				return ItemFactory.GetItem(24, 3);
+			}
+			return null;
+		}
 	}
 }

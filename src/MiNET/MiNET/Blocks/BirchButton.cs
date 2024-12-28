@@ -23,12 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class BirchButton : Button
+namespace MiNET.Blocks
 {
-	public BirchButton() : base(396)
+	public partial class BirchButton : Button
 	{
-		TickRate = 30;
+		public BirchButton() : base(396)
+		{
+			TickRate = 30;
+		}
 	}
 }

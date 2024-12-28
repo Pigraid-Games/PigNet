@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class JungleStairs : BlockStairs
+namespace MiNET.Blocks
 {
-	public JungleStairs() : base(136)
+	public partial class JungleStairs : BlockStairs
 	{
-		BlastResistance = 15;
-		Hardness = 2;
-		IsFlammable = true;
+		public JungleStairs() : base(136)
+		{
+			BlastResistance = 15;
+			Hardness = 2;
+			IsFlammable = true;
+		}
 	}
 }

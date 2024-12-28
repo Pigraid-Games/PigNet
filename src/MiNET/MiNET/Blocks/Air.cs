@@ -25,21 +25,22 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Air : Block
+namespace MiNET.Blocks
 {
-	public Air() : base(0)
+	public partial class Air : Block
 	{
-		IsReplaceable = true;
-		IsSolid = false;
-		IsBuildable = false;
-		IsTransparent = true;
-		IsBlockingSkylight = false;
-	}
+		public Air() : base(0)
+		{
+			IsReplaceable = true;
+			IsSolid = false;
+			IsBuildable = false;
+			IsTransparent = true;
+			IsBlockingSkylight = false;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return [];
+		public override Item[] GetDrops(Item tool)
+		{
+			return new Item[0];
+		}
 	}
 }

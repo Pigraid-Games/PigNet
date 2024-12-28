@@ -22,91 +22,75 @@
 // All Rights Reserved.
 
 #endregion
-
 using System.Numerics;
 using MiNET.Items;
 using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Log : Block
+namespace MiNET.Blocks
 {
-	public Log() : base(17)
+	public partial class Log : Block
 	{
-		FuelEfficiency = 15;
-		BlastResistance = 10;
-		Hardness = 2;
-		IsFlammable = true;
-	}
-
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe ? true : false;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		switch (ItemBlock.GetPillarAxisFromFace(face))
+		public Log() : base(17)
 		{
-			case BlockAxis.X:
-				PillarAxis = "x";
-				break;
-			case BlockAxis.Y:
-				PillarAxis = "y";
-				break;
-			case BlockAxis.Z:
-				PillarAxis = "z";
-				break;
+			FuelEfficiency = 15;
+			BlastResistance = 10;
+			Hardness = 2;
+			IsFlammable = true;
 		}
-		return false;
-	}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-
-		if (itemInHand is ItemAxe)
+		public override bool IsBestTool(Item item)
 		{
-			switch (OldLogType)
+			return item is ItemAxe ? true : false;
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			switch (ItemBlock.GetPillarAxisFromFace(face))
 			{
-				case "oak":
-					world.SetBlock(new StrippedOakLog
-					{
-						Coordinates = Coordinates,
-						PillarAxis = PillarAxis
-					});
+				case BlockAxis.X:
+					PillarAxis = "x";
 					break;
-				case "spruce":
-					world.SetBlock(new StrippedSpruceLog
-					{
-						Coordinates = Coordinates,
-						PillarAxis = PillarAxis
-					});
+				case BlockAxis.Y:
+					PillarAxis = "y";
 					break;
-				case "birch":
-					world.SetBlock(new StrippedBirchLog
-					{
-						Coordinates = Coordinates,
-						PillarAxis = PillarAxis
-					});
-					break;
-				case "jungle":
-					world.SetBlock(new StrippedJungleLog
-					{
-						Coordinates = Coordinates,
-						PillarAxis = PillarAxis
-					});
+				case BlockAxis.Z:
+					PillarAxis = "z";
 					break;
 			}
-			return true;
+			return false;
 		}
-		return false;
-	}
 
-	public override Item GetSmelt()
-	{
-		return ItemFactory.GetItem(263, 1);
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+
+			if (itemInHand is ItemAxe)
+			{
+				switch (OldLogType)
+				{
+					case "oak":
+						world.SetBlock(new StrippedOakLog { Coordinates = Coordinates, PillarAxis = PillarAxis});
+						break;
+					case "spruce":
+						world.SetBlock(new StrippedSpruceLog { Coordinates = Coordinates, PillarAxis = PillarAxis });
+						break;
+					case "birch":
+						world.SetBlock(new StrippedBirchLog { Coordinates = Coordinates, PillarAxis = PillarAxis });
+						break;
+					case "jungle":
+						world.SetBlock(new StrippedJungleLog { Coordinates = Coordinates, PillarAxis = PillarAxis });
+						break;
+				}
+				return true;
+			}
+			return false;
+		}
+
+		public override Item GetSmelt()
+		{
+			return ItemFactory.GetItem(263, 1);
+		}
 	}
 }

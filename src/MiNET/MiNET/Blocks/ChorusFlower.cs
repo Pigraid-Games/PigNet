@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class ChorusFlower : Block
+namespace MiNET.Blocks
 {
-	public ChorusFlower() : base(200)
+	public partial class ChorusFlower : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 2;
+		public ChorusFlower() : base(200)
+		{
+			IsTransparent = true;
+			BlastResistance = 2;
+		}
 	}
 }

@@ -23,11 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class PurpurStairs : BlockStairs
+namespace MiNET.Blocks
 {
-	public PurpurStairs() : base(203)
+	public partial class PurpurStairs : BlockStairs
 	{
+		public PurpurStairs() : base(203)
+		{
+		}
 	}
 }

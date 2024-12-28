@@ -28,104 +28,144 @@ using log4net;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Net;
-
-public partial class McpeMoveEntityDelta
+namespace MiNET.Net
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(McpeMoveEntityDelta));
-
-	public const int HasX = 0x01;
-	public const int HasY = 0x02;
-	public const int HasZ = 0x04;
-	public const int HasRotX = 0x08;
-	public const int HasRotY = 0x10;
-	public const int HasRotZ = 0x20;
-	public const int OnGround = 0x40;
-
-	public PlayerLocation currentPosition; // = null;
-	public PlayerLocation prevSentPosition; // = null;
-	public bool isOnGround; // = null;
-
-	private float _dX;
-	private float _dY;
-	private float _dZ;
-
-	partial void BeforeEncode()
+	public partial class McpeMoveEntityDelta
 	{
-		// set the flags
-		bool shouldSend = flags != 0 || SetFlags();
+		private static readonly ILog Log = LogManager.GetLogger(typeof(McpeMoveEntityDelta));
 
-		if (Log.IsDebugEnabled && !shouldSend) Log.Warn("Sending delta move with no change. Please fix!");
-	}
+		public const int HasX = 0x01;
+		public const int HasY = 0x02;
+		public const int HasZ = 0x04;
+		public const int HasRotX = 0x08;
+		public const int HasRotY = 0x10;
+		public const int HasRotZ = 0x20;
+		public const int OnGround = 0x40;
 
-	public bool SetFlags()
-	{
-		flags = 0;
+		public PlayerLocation currentPosition; // = null;
+		public PlayerLocation prevSentPosition; // = null;
+		public bool isOnGround; // = null;
 
-		if (currentPosition == null || prevSentPosition == null) return false;
+		private float _dX;
+		private float _dY;
+		private float _dZ;
 
-		_dX = currentPosition.X;
-		_dY = currentPosition.Y;
-		_dZ = currentPosition.Z;
+		partial void BeforeEncode()
+		{
+			// set the flags
+			bool shouldSend = flags != 0 || SetFlags();
 
-		if (_dX != 0) flags |= HasX;
-		if (_dY != 0) flags |= HasY;
-		if (_dZ != 0) flags |= HasZ;
+			if (Log.IsDebugEnabled && !shouldSend) Log.Warn("Sending delta move with no change. Please fix!");
+		}
 
-		if (prevSentPosition.Pitch != currentPosition.Pitch) flags |= HasRotX;
-		if (prevSentPosition.Yaw != currentPosition.Yaw) flags |= HasRotY;
-		if (prevSentPosition.HeadYaw != currentPosition.HeadYaw) flags |= HasRotZ;
+		public bool SetFlags()
+		{
+			flags = 0;
 
-		if (flags != 0 && isOnGround) flags |= OnGround;
+			if (currentPosition == null || prevSentPosition == null) return false;
 
-		return flags != 0;
-	}
+			_dX = currentPosition.X;
+			_dY = currentPosition.Y;
+			_dZ = currentPosition.Z;
 
-	partial void AfterEncode()
-	{
-		// write the values
-		if ((flags & 0x1) != 0) Write(_dX);
-		if ((flags & 0x2) != 0) Write(_dY);
-		if ((flags & 0x4) != 0) Write(_dZ);
+			if (_dX != 0) flags |= HasX;
+			if (_dY != 0) flags |= HasY;
+			if (_dZ != 0) flags |= HasZ;
 
-		float d = 256f / 360f;
-		if ((flags & 0x8) != 0) Write((byte) Math.Round(currentPosition.Pitch * d)); // 256/360
+			if (prevSentPosition.Pitch != currentPosition.Pitch) flags |= HasRotX;
+			if (prevSentPosition.Yaw != currentPosition.Yaw) flags |= HasRotY;
+			if (prevSentPosition.HeadYaw != currentPosition.HeadYaw) flags |= HasRotZ;
 
-		if ((flags & 0x10) != 0) Write((byte) Math.Round(currentPosition.Yaw * d)); // 256/360
+			if (flags != 0 && isOnGround) flags |= OnGround;
 
-		if ((flags & 0x20) != 0) Write((byte) Math.Round(currentPosition.HeadYaw * d)); // 256/360
-	}
+			return flags != 0;
+		}
 
-	public PlayerLocation GetCurrentPosition(PlayerLocation previousPosition)
-	{
-		PlayerLocation pos = previousPosition;
-		pos.X = (flags & HasX) != 0 ? currentPosition.X : previousPosition.X;
-		pos.Y = (flags & HasY) != 0 ? currentPosition.Y : previousPosition.Y;
-		pos.Z = (flags & HasZ) != 0 ? currentPosition.Z : previousPosition.Z;
+		partial void AfterEncode()
+		{
+			// write the values
+			if ((flags & 0x1) != 0)
+			{
+				Write(_dX);
+			}
+			if ((flags & 0x2) != 0)
+			{
+				Write(_dY);
+			}
+			if ((flags & 0x4) != 0)
+			{
+				Write(_dZ);
+			}
 
-		pos.HeadYaw = (flags & HasRotZ) != 0 ? -currentPosition.HeadYaw : previousPosition.HeadYaw;
-		pos.Yaw = (flags & HasRotY) != 0 ? -currentPosition.Yaw : previousPosition.Yaw;
-		pos.Pitch = (flags & HasRotX) != 0 ? -currentPosition.Pitch : previousPosition.Pitch;
+			float d = 256f / 360f;
+			if ((flags & 0x8) != 0)
+			{
+				Write((byte) Math.Round(currentPosition.Pitch * d)); // 256/360
+			}
 
-		//pos.OnGround = this.isOnGround;
-		return pos;
-	}
+			if ((flags & 0x10) != 0)
+			{
+				Write((byte) Math.Round(currentPosition.Yaw * d)); // 256/360
+			}
 
-	partial void AfterDecode()
-	{
-		currentPosition = new PlayerLocation();
+			if ((flags & 0x20) != 0)
+			{
+				Write((byte) Math.Round(currentPosition.HeadYaw * d)); // 256/360
+			}
+		}
 
-		if ((flags & HasX) != 0) currentPosition.X = ReadFloat();
-		if ((flags & HasY) != 0) currentPosition.Y = ReadFloat();
-		if ((flags & HasZ) != 0) currentPosition.Z = ReadFloat();
+		public PlayerLocation GetCurrentPosition(PlayerLocation previousPosition)
+		{
+			var pos = previousPosition;
+			pos.X = ((flags & HasX) != 0) ? currentPosition.X : previousPosition.X;
+			pos.Y = ((flags & HasY) != 0) ? currentPosition.Y : previousPosition.Y;
+			pos.Z = ((flags & HasZ) != 0) ? currentPosition.Z : previousPosition.Z;
+      
+			pos.HeadYaw = ((flags & HasRotZ) != 0) ? -currentPosition.HeadYaw : previousPosition.HeadYaw;
+			pos.Yaw = ((flags & HasRotY) != 0) ? -currentPosition.Yaw : previousPosition.Yaw;
+			pos.Pitch = ((flags & HasRotX) != 0) ? -currentPosition.Pitch : previousPosition.Pitch;
 
-		float d = 1f / (256f / 360f);
-		if ((flags & HasRotX) != 0) currentPosition.Pitch = ReadByte() * d;
+			//pos.OnGround = this.isOnGround;
+			return pos;
+		}
 
-		if ((flags & HasRotY) != 0) currentPosition.Yaw = ReadByte() * d;
+		partial void AfterDecode()
+		{
+			currentPosition = new PlayerLocation();
 
-		if ((flags & HasRotZ) != 0) currentPosition.HeadYaw = ReadByte() * d;
+			if ((flags & HasX) != 0)
+			{
+				currentPosition.X = ReadFloat();
+			}
+			if ((flags & HasY) != 0)
+			{
+				currentPosition.Y = ReadFloat();
+			}
+			if ((flags & HasZ) != 0)
+			{
+				currentPosition.Z = ReadFloat();
+			}
 
-		if ((flags & OnGround) != 0) isOnGround = true;
+			float d = 1f / (256f / 360f);
+			if ((flags & HasRotX) != 0)
+			{
+				currentPosition.Pitch = ReadByte() * d;
+			}
+
+			if ((flags & HasRotY) != 0)
+			{
+				currentPosition.Yaw = ReadByte() * d;
+			}
+
+			if ((flags & HasRotZ) != 0)
+			{
+				currentPosition.HeadYaw = ReadByte() * d;
+			}
+
+			if ((flags & OnGround) != 0)
+			{
+				isOnGround = true;
+			}
+		}
 	}
 }

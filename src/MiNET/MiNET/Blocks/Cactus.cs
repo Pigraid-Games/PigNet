@@ -25,19 +25,20 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Cactus : Block
+namespace MiNET.Blocks
 {
-	public Cactus() : base(81)
+	public partial class Cactus : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 2;
-		Hardness = 0.4f;
-	}
+		public Cactus() : base(81)
+		{
+			IsTransparent = true;
+			BlastResistance = 2;
+			Hardness = 0.4f;
+		}
 
-	public override Item GetSmelt()
-	{
-		return ItemFactory.GetItem("minecraft:dye", 2);
+		public override Item GetSmelt()
+		{
+			return ItemFactory.GetItem(351, 2);
+		}
 	}
 }

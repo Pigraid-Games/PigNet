@@ -137,7 +137,7 @@ namespace MiNET.Console
 
 		public override void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
 		{
-			foreach (KeyValuePair<ulong, byte[]> kv in message.Blobs)
+			foreach (KeyValuePair<ulong, byte[]> kv in message.blobs)
 			{
 				ulong hash = kv.Key;
 				byte[] data = kv.Value;
@@ -187,7 +187,7 @@ namespace MiNET.Console
 
 		public override void HandleMcpeLevelChunk(McpeLevelChunk message)
 		{
-			if (message.BlobHashes != null) 
+			if (message.blobHashes != null) 
 			{
 				var chunk = new CachedChunk
 				{
@@ -200,7 +200,7 @@ namespace MiNET.Console
 				var hits = new List<ulong>();
 				var misses = new List<ulong>();
 
-				ulong biomeHash = message.BlobHashes.Last();
+				ulong biomeHash = message.blobHashes.Last();
 				if (Client.BlobCache.TryGetValue(biomeHash, out byte[] biomes))
 				{
 					chunk.Chunk.biomeId = biomes;
@@ -212,9 +212,9 @@ namespace MiNET.Console
 					misses.Add(biomeHash);
 				}
 
-				for (int i = 0; i < message.BlobHashes.Length - 1; i++)
+				for (int i = 0; i < message.blobHashes.Length - 1; i++)
 				{
-					ulong hash = message.BlobHashes[i];
+					ulong hash = message.blobHashes[i];
 					if (Client.BlobCache.TryGetValue(hash, out byte[] data))
 					{
 						chunk.Chunk[i] = ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates)[0];
@@ -238,8 +238,8 @@ namespace MiNET.Console
 			else
 			{
 				var coord = new ChunkCoordinates(message.chunkX, message.chunkZ);
-				int chunkCount = (int) message.SubChunkCount;
-				byte[] data = message.ChunkData;
+				int chunkCount = (int) message.subChunkCount;
+				byte[] data = message.chunkData;
 
 				ChunkColumn chunk = null;
 				try

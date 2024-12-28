@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Wither : Effect
+namespace MiNET.Effects
 {
-	public Wither() : base(EffectType.Wither)
+	public class Wither : Effect
 	{
-		ParticleColor = Color.FromArgb(0x35, 0x2A, 0x27);
+		public Wither() : base(EffectType.Wither)
+		{
+			ParticleColor = Color.FromArgb(0x35, 0x2A, 0x27);
+		}
 	}
 }

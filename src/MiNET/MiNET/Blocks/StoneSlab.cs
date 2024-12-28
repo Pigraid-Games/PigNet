@@ -25,53 +25,57 @@
 
 using System;
 using System.Numerics;
-using MiNET.Items;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class StoneSlab : Block
+namespace MiNET.Blocks
 {
-	public StoneSlab() : base(44)
+	public partial class StoneSlab : Block
 	{
-		BlastResistance = 30;
-		Hardness = 2;
-		IsTransparent = true; // Partial - blocks light.
-		IsBlockingSkylight = false; // Partial - blocks light.
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-
-		TopSlotBit = faceCoords.Y > 0.5 && face != BlockFace.Up;
-
-		StoneSlabType = itemInHand.Metadata switch
+		public StoneSlab() : base(44)
 		{
-			0 => "smooth_stone",
-			1 => "sandstone",
-			2 => "wood",
-			3 => "cobblestone",
-			4 => "brick",
-			5 => "stone_brick",
-			6 => "quartz",
-			7 => "nether_brick",
-			_ => throw new ArgumentOutOfRangeException()
-		};
-
-		var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
-
-		foreach (IBlockState state in world.GetBlock(slabcoordinates).GetState().States)
-		{
-			if (state is not BlockStateString { Name: "stone_slab_type" } s) continue;
-			if (world.GetBlock(slabcoordinates).Name != "minecraft:stone_slab" || s.Value != StoneSlabType) continue;
-			var block = new DoubleStoneSlab();
-			block.SetState(GetState().States);
-			world.SetBlock(block);
-			return true;
+			BlastResistance = 30;
+			Hardness = 2;
+			IsTransparent = true; // Partial - blocks light.
+			IsBlockingSkylight = false; // Partial - blocks light.
 		}
-		return false;
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+
+			TopSlotBit = (faceCoords.Y > 0.5 && face != BlockFace.Up);
+
+			StoneSlabType = itemInHand.Metadata switch
+			{
+				0 => "smooth_stone",
+				1 => "sandstone",
+				2 => "wood",
+				3 => "cobblestone",
+				4 => "brick",
+				5 => "stone_brick",
+				6 => "quartz",
+				7 => "nether_brick",
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
+
+			foreach (var state in world.GetBlock(slabcoordinates).GetState().States)
+			{
+				if (state is BlockStateString s && s.Name == "stone_slab_type")
+				{
+					if (world.GetBlock(slabcoordinates).Name == "minecraft:stone_slab" && s.Value == StoneSlabType)
+					{
+						var block = new DoubleStoneSlab();
+						block.SetState(GetState().States);
+						world.SetBlock(block);
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
 }

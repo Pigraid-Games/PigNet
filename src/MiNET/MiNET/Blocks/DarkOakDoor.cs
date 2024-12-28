@@ -23,11 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class DarkOakDoor : DoorBase
+namespace MiNET.Blocks
 {
-	public DarkOakDoor() : base(197)
+	public partial class DarkOakDoor : DoorBase
 	{
+		public DarkOakDoor() : base(197)
+		{
+		}
 	}
 }

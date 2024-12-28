@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Podzol : Block
+namespace MiNET.Blocks
 {
-	public Podzol() : base(243)
+	public partial class Podzol : Block
 	{
-		BlastResistance = 2.5f;
-		Hardness = 0.5f;
+		public Podzol() : base(243)
+		{
+			BlastResistance = 2.5f;
+			Hardness = 0.5f;
+		}
 	}
 }

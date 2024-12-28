@@ -27,13 +27,18 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class UnpoweredComparator() : ComparatorBase(149)
+namespace MiNET.Blocks
 {
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	public partial class UnpoweredComparator : ComparatorBase
 	{
-		Direction = player.GetCardinalDirection();
-		return false;
+		public UnpoweredComparator() : base(149)
+		{
+		}
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetCardinalDirection();
+			return false;
+		}
+
 	}
 }

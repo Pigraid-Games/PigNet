@@ -34,274 +34,283 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public class Block : ICloneable
+namespace MiNET.Blocks
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
-
-	public bool IsGenerated { get; protected set; } = false;
-
-	public BlockCoordinates Coordinates { get; set; }
-
-	public virtual string Name { get; protected set; }
-	public int Id { get; }
-	public byte Metadata { get; set; }
-
-	public float Hardness { get; protected set; } = 0;
-	public float BlastResistance { get; protected set; } = 0;
-	public short FuelEfficiency { get; protected set; } = 0;
-	public float FrictionFactor { get; protected set; } = 0.6f;
-	public int LightLevel { get; set; } = 0;
-
-	public bool IsReplaceable { get; protected set; } = false;
-	public bool IsSolid { get; protected set; } = true;
-	public bool IsBuildable { get; protected set; } = true;
-	public bool IsTransparent { get; protected set; } = false;
-	public bool IsFlammable { get; protected set; } = false;
-	public bool IsBlockingSkylight { get; protected set; } = true;
-
-	public byte BlockLight { get; set; }
-	public byte SkyLight { get; set; }
-
-	public byte BiomeId { get; set; }
-
-	//TODO: Update ALL blocks with names.
-	public Block(string name, int id)
+	public class Block : ICloneable
 	{
-		Name = name;
-		Id = id;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
 
-	public Block(int id) : this(string.Empty, id)
-	{
-	}
+		public bool IsGenerated { get; protected set; } = false;
 
-	public virtual void SetState(BlockStateContainer blockstate)
-	{
-		SetState(blockstate.States);
-	}
+		public BlockCoordinates Coordinates { get; set; }
 
-	public virtual void SetState(List<IBlockState> states)
-	{
-	}
+		public virtual string Name { get; protected set; }
+		public int Id { get; }
+		public byte Metadata { get; set; }
 
-	public virtual BlockStateContainer GetState()
-	{
-		return null;
-	}
+		public float Hardness { get; protected set; } = 0;
+		public float BlastResistance { get; protected set; } = 0;
+		public short FuelEfficiency { get; protected set; } = 0;
+		public float FrictionFactor { get; protected set; } = 0.6f;
+		public int LightLevel { get; set; } = 0;
 
-	public virtual int GetDirection()
-	{
-		foreach (IBlockState state in GetState().States)
-			if (state is BlockStateInt s && s.Name == "direction")
-				return s.Value;
-		return 0;
-	}
+		public bool IsReplaceable { get; protected set; } = false;
+		public bool IsSolid { get; protected set; } = true;
+		public bool IsBuildable { get; protected set; } = true;
+		public bool IsTransparent { get; protected set; } = false;
+		public bool IsFlammable { get; protected set; } = false;
+		public bool IsBlockingSkylight { get; protected set; } = true;
 
-	public virtual BlockStateContainer GetGlobalState()
-	{
-		BlockStateContainer currentState = GetState();
-		if (!BlockFactory.BlockStates.TryGetValue(currentState, out BlockStateContainer blockstate))
+		public byte BlockLight { get; set; }
+		public byte SkyLight { get; set; }
+
+		public byte BiomeId { get; set; }
+
+		//TODO: Update ALL blocks with names.
+		public Block(string name, int id)
 		{
-			Log.Warn($"Did not find block state for {this}, {currentState}");
+			Name = name;
+			Id = id;
+		}
+
+		public Block(int id) : this(string.Empty, id)
+		{
+		}
+
+		public virtual void SetState(BlockStateContainer blockstate)
+		{
+			SetState(blockstate.States);
+		}
+
+		public virtual void SetState(List<IBlockState> states)
+		{
+		}
+
+		public virtual BlockStateContainer GetState()
+		{
 			return null;
 		}
 
-		return blockstate;
-	}
-
-	public int GetRuntimeId()
-	{
-		BlockStateContainer currentState = GetState();
-		if (!BlockFactory.BlockStates.TryGetValue(currentState, out BlockStateContainer blockstate))
+		public virtual int GetDirection()
 		{
-			Log.Warn($"Did not find block state for {this}, {currentState}");
-			return -1;
+			foreach (var state in GetState().States)
+			{
+				if (state is BlockStateInt s && s.Name == "direction")
+				{
+					return s.Value;
+				}
+			}
+			return 0;
 		}
 
-		return blockstate.RuntimeId;
-	}
-
-	public virtual Item GetItem(int count = 1)
-	{
-		int id = Id;
-		if (id > 255) id = -(id - 255);
-		return ItemFactory.GetItem((short) id, Metadata, count);
-	}
-
-	public bool CanPlace(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		return CanPlace(world, player, Coordinates, targetCoordinates, face);
-	}
-
-	protected virtual bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		BoundingBox playerBbox = player.GetBoundingBox() - 0.01f;
-		BoundingBox blockBbox = GetBoundingBox();
-		if (playerBbox.Intersects(blockBbox))
+		public virtual BlockStateContainer GetGlobalState()
 		{
-			Log.Debug($"Player bbox={playerBbox}, block bbox={blockBbox}, intersects={playerBbox.Intersects(blockBbox)}");
-			Log.Debug($"Can't build where you are standing");
+			BlockStateContainer currentState = GetState();
+			if (!BlockFactory.BlockStates.TryGetValue(currentState, out var blockstate))
+			{
+				Log.Warn($"Did not find block state for {this}, {currentState}");
+				return null;
+			}
+
+			return blockstate;
+		}
+
+		public int GetRuntimeId()
+		{
+			BlockStateContainer currentState = GetState();
+			if (!BlockFactory.BlockStates.TryGetValue(currentState, out var blockstate))
+			{
+				Log.Warn($"Did not find block state for {this}, {currentState}");
+				return -1;
+			}
+
+			return blockstate.RuntimeId;
+		}
+
+		public virtual Item GetItem(int count = 1)
+		{
+			var id = Id;
+			if (id > 255)
+			{
+				id = -(id - 255);
+			}
+			return ItemFactory.GetItem((short) id, Metadata, count);
+		}
+
+		public bool CanPlace(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face)
+		{
+			return CanPlace(world, player, Coordinates, targetCoordinates, face);
+		}
+
+		protected virtual bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+		{
+			var playerBbox = (player.GetBoundingBox() - 0.01f);
+			var blockBbox = GetBoundingBox();
+			if (playerBbox.Intersects(blockBbox))
+			{
+				Log.Debug($"Player bbox={playerBbox}, block bbox={blockBbox}, intersects={playerBbox.Intersects(blockBbox)}");
+				Log.Debug($"Can't build where you are standing");
+				return false;
+			}
+
+			return world.GetBlock(blockCoordinates).IsReplaceable;
+		}
+
+		public virtual void BreakBlock(Level world, BlockFace face, bool silent = false)
+		{
+			var runtimeId = BlockFactory.GetRuntimeId(this.Id, this.Metadata);
+			if (!silent)
+			{
+				var particle = new DestroyBlockParticle(world, Coordinates, runtimeId);
+				particle.Spawn();
+			}
+
+			world.SetAir(Coordinates);
+			UpdateBlocks(world);
+			world.BroadcastSound(Coordinates, LevelSoundEventType.BreakBlock, Id);
+		}
+
+		protected void UpdateBlocks(Level world)
+		{
+			world.GetBlock(Coordinates.BlockUp()).BlockUpdate(world, Coordinates);
+			world.GetBlock(Coordinates.BlockDown()).BlockUpdate(world, Coordinates);
+			world.GetBlock(Coordinates.BlockWest()).BlockUpdate(world, Coordinates);
+			world.GetBlock(Coordinates.BlockEast()).BlockUpdate(world, Coordinates);
+			world.GetBlock(Coordinates.BlockSouth()).BlockUpdate(world, Coordinates);
+			world.GetBlock(Coordinates.BlockNorth()).BlockUpdate(world, Coordinates);
+		}
+
+		public virtual bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			// No default placement. Return unhandled.
 			return false;
 		}
 
-		return world.GetBlock(blockCoordinates).IsReplaceable;
-	}
-
-	public virtual void BreakBlock(Level world, BlockFace face, bool silent = false)
-	{
-		uint runtimeId = BlockFactory.GetRuntimeId(Id, Metadata);
-		if (!silent)
+		public virtual void BlockAdded(Level level)
 		{
-			var particle = new DestroyBlockParticle(world, Coordinates, runtimeId);
-			particle.Spawn();
 		}
 
-		world.SetAir(Coordinates);
-		UpdateBlocks(world);
-		world.BroadcastSound(new BreakBlockSound(Coordinates));
-	}
-
-	protected void UpdateBlocks(Level world)
-	{
-		world.GetBlock(Coordinates.BlockUp()).BlockUpdate(world, Coordinates);
-		world.GetBlock(Coordinates.BlockDown()).BlockUpdate(world, Coordinates);
-		world.GetBlock(Coordinates.BlockWest()).BlockUpdate(world, Coordinates);
-		world.GetBlock(Coordinates.BlockEast()).BlockUpdate(world, Coordinates);
-		world.GetBlock(Coordinates.BlockSouth()).BlockUpdate(world, Coordinates);
-		world.GetBlock(Coordinates.BlockNorth()).BlockUpdate(world, Coordinates);
-	}
-
-	public virtual bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		// No default placement. Return unhandled.
-		return false;
-	}
-
-	public virtual void BlockAdded(Level level)
-	{
-	}
-
-	public virtual bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		// No default interaction. Return unhandled.
-		return false;
-	}
-
-	public virtual void OnTick(Level level, bool isRandom)
-	{
-	}
-
-	public virtual void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
-	{
-	}
-
-	public float GetHardness()
-	{
-		return Hardness / 5.0F;
-	}
-
-	//public double GetMineTime(Item miningTool)
-	//{
-	//	int multiplier = (int) miningTool.ItemMaterial;
-	//	return Hardness*(1.5*multiplier);
-	//}
-
-	protected BlockCoordinates GetNewCoordinatesFromFace(BlockCoordinates target, BlockFace face)
-	{
-		switch (face)
+		public virtual bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 		{
-			case BlockFace.Down:
-				return target + Level.Down;
-			case BlockFace.Up:
-				return target + Level.Up;
-			case BlockFace.North:
-				return target + Level.North;
-			case BlockFace.South:
-				return target + Level.South;
-			case BlockFace.West:
-				return target + Level.West;
-			case BlockFace.East:
-				return target + Level.East;
-			default:
-				return target;
+			// No default interaction. Return unhandled.
+			return false;
+		}
+
+		public virtual void OnTick(Level level, bool isRandom)
+		{
+		}
+
+		public virtual void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+		{
+		}
+
+		public float GetHardness()
+		{
+			return Hardness / 5.0F;
+		}
+
+		//public double GetMineTime(Item miningTool)
+		//{
+		//	int multiplier = (int) miningTool.ItemMaterial;
+		//	return Hardness*(1.5*multiplier);
+		//}
+
+		protected BlockCoordinates GetNewCoordinatesFromFace(BlockCoordinates target, BlockFace face)
+		{
+			switch (face)
+			{
+				case BlockFace.Down:
+					return target + Level.Down;
+				case BlockFace.Up:
+					return target + Level.Up;
+				case BlockFace.North:
+					return target + Level.North;
+				case BlockFace.South:
+					return target + Level.South;
+				case BlockFace.West:
+					return target + Level.West;
+				case BlockFace.East:
+					return target + Level.East;
+				default:
+					return target;
+			}
+		}
+
+		public virtual Item[] GetDrops(Item tool)
+		{
+			var item = GetItem();
+			if (item == null) return new Item[0];
+
+			item.Count = 1;
+
+			return new[] {item};
+		}
+
+		public virtual bool IsBestTool(Item item)
+		{
+			return false;
+		}
+
+		public virtual Item GetSmelt()
+		{
+			return null;
+		}
+
+		public virtual float GetExperiencePoints()
+		{
+			return 0;
+		}
+
+		public virtual void DoPhysics(Level level)
+		{
+		}
+
+		public virtual BoundingBox GetBoundingBox()
+		{
+			return new BoundingBox(Coordinates, Coordinates + 1);
+		}
+
+
+		public object Clone()
+		{
+			return MemberwiseClone();
+		}
+
+		public override string ToString()
+		{
+			return $"Id: {Id}, Metadata: {GetState()}, Coordinates: {Coordinates}";
 		}
 	}
 
-	public virtual Item[] GetDrops(Item tool)
-	{
-		Item item = GetItem();
-		if (item == null) return new Item[0];
-
-		item.Count = 1;
-
-		return new[] { item };
-	}
-
-	public virtual bool IsBestTool(Item item)
-	{
-		return false;
-	}
-
-	public virtual Item GetSmelt()
-	{
-		return null;
-	}
-
-	public virtual float GetExperiencePoints()
-	{
-		return 0;
-	}
-
-	public virtual void DoPhysics(Level level)
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+	public class StateAttribute : Attribute
 	{
 	}
 
-	public virtual BoundingBox GetBoundingBox()
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+	public class StateBitAttribute : StateAttribute
 	{
-		return new BoundingBox(Coordinates, Coordinates + 1);
 	}
 
 
-	public object Clone()
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+	public class StateRangeAttribute : StateAttribute
 	{
-		return MemberwiseClone();
+		public int Minimum { get; }
+		public int Maximum { get; }
+
+		public StateRangeAttribute(int minimum, int maximum)
+		{
+			Minimum = minimum;
+			Maximum = maximum;
+		}
 	}
 
-	public override string ToString()
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+	public class StateEnumAttribute : StateAttribute
 	{
-		return $"Id: {Id}, Metadata: {GetState()}, Coordinates: {Coordinates}";
-	}
-}
-
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-public class StateAttribute : Attribute
-{
-}
-
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-public class StateBitAttribute : StateAttribute
-{
-}
-
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-public class StateRangeAttribute : StateAttribute
-{
-	public int Minimum { get; }
-	public int Maximum { get; }
-
-	public StateRangeAttribute(int minimum, int maximum)
-	{
-		Minimum = minimum;
-		Maximum = maximum;
-	}
-}
-
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
-public class StateEnumAttribute : StateAttribute
-{
-	public StateEnumAttribute(params string[] validValues)
-	{
+		public StateEnumAttribute(params string[] validValues)
+		{
+		}
 	}
 }

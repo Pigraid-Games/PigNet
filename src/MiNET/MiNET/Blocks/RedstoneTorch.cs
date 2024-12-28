@@ -27,60 +27,68 @@ using System.Numerics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class RedstoneTorch : Block
+namespace MiNET.Blocks
 {
-	public RedstoneTorch() : base(76)
+	public partial class RedstoneTorch : Block
 	{
-		LightLevel = 7;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		if (face == BlockFace.Down)
-			return true;
-
-		switch (face)
+		public RedstoneTorch() : base(76)
 		{
-			case BlockFace.Up:
-				TorchFacingDirection = "top";
-				break;
-			case BlockFace.North:
-				TorchFacingDirection = "south";
-				break;
-			case BlockFace.South:
-				TorchFacingDirection = "north";
-				break;
-			case BlockFace.West:
-				TorchFacingDirection = "east";
-				break;
-			case BlockFace.East:
-				TorchFacingDirection = "west";
-				break;
+			LightLevel = 7;
 		}
 
-		return false;
-	}
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
 
-	public override void BreakBlock(Level level, BlockFace face, bool silent = false)
-	{
-		BlockCoordinates[] cord = { Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockUp(), Coordinates.BlockDown() };
-		level.CancelBlockTick(this);
-		foreach (BlockCoordinates bCord in cord) RedstoneController.signal(level, bCord, false);
-		base.BreakBlock(level, face);
-	}
+			if (face == BlockFace.Down)
+				return true;
 
-	public override void BlockAdded(Level level)
-	{
-		if (level.RedstoneEnabled) level.ScheduleBlockTick(this, 10);
-	}
+			switch (face)
+			{
+				case BlockFace.Up:
+					TorchFacingDirection = "top";
+					break;
+				case BlockFace.North:
+					TorchFacingDirection = "south";
+					break;
+				case BlockFace.South:
+					TorchFacingDirection = "north";
+					break;
+				case BlockFace.West:
+					TorchFacingDirection = "east";
+					break;
+				case BlockFace.East:
+					TorchFacingDirection = "west";
+					break;
+			}
 
-	public override void OnTick(Level level, bool isRandom)
-	{
-		if (isRandom) return;
-		BlockCoordinates[] cord = { Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockUp(), Coordinates.BlockDown() };
-		foreach (BlockCoordinates bCord in cord) RedstoneController.signal(level, bCord, true);
-		level.ScheduleBlockTick(this, 10);
+			return false;
+		}
+
+		public override void BreakBlock(Level level, BlockFace face, bool silent = false)
+		{
+			BlockCoordinates[] cord = { Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockUp(), Coordinates.BlockDown() };
+			level.CancelBlockTick(this);
+			foreach (BlockCoordinates bCord in cord)
+			{
+				RedstoneController.signal(level, bCord, false);
+			}
+			base.BreakBlock(level, face);
+		}
+
+		public override void BlockAdded(Level level)
+		{
+			if (level.RedstoneEnabled) { level.ScheduleBlockTick(this, 10); }
+		}
+
+		public override void OnTick(Level level, bool isRandom)
+		{
+			if (isRandom) { return; }
+			BlockCoordinates[] cord = { Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockUp(), Coordinates.BlockDown() };
+			foreach (BlockCoordinates bCord in cord)
+			{
+				RedstoneController.signal(level, bCord, true);
+			}
+			level.ScheduleBlockTick(this, 10);
+		}
 	}
 }

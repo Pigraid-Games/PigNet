@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,7 +19,6 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2024 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
 using System;
@@ -34,7 +32,7 @@ namespace MiNET.Items;
 public sealed class ItemGoatHorn : Item
 {
 	private static readonly Dictionary<Player, DateTime> CooldownTracker = new();
-
+	
 	public enum GoatHornType
 	{
 		Ponder,
@@ -49,7 +47,7 @@ public sealed class ItemGoatHorn : Item
 
 	public ItemGoatHorn(GoatHornType goatHornType = GoatHornType.Ponder) : base("minecraft:goat_horn", 761)
 	{
-		Metadata = (short) goatHornType;
+		Metadata = (short)goatHornType;
 		MaxStackSize = 1;
 	}
 
@@ -63,7 +61,7 @@ public sealed class ItemGoatHorn : Item
 
 		CooldownTracker[player] = DateTime.UtcNow;
 
-		switch ((GoatHornType) Metadata)
+		switch ((GoatHornType)Metadata)
 		{
 			case GoatHornType.Ponder:
 				world.BroadcastSound(new HornCallPonderSound(player.KnownPosition));

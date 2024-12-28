@@ -28,92 +28,77 @@ using fNbt;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items;
-
-public abstract class ArmorHelmetBase : Item
+namespace MiNET.Items
 {
-	protected ArmorHelmetBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
+	public abstract class ArmorHelmetBase : Item
 	{
-		ExtraData = new NbtCompound
+		protected ArmorHelmetBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
 		{
-			new NbtInt("Damage", 0),
-			new NbtInt("RepairCost", 1)
-		};
-	}
+			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+		}
 
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Helmet);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Helmet = this;
-		player.SendArmorForPlayer();
-	}
-}
-
-public abstract class ArmorChestplateBase : Item
-{
-	protected ArmorChestplateBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
-	{
-		ExtraData = new NbtCompound
+		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
-			new NbtInt("Damage", 0),
-			new NbtInt("RepairCost", 1)
-		};
+			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+			player.Inventory.SetInventorySlot(slot, player.Inventory.Helmet);
+
+			UniqueId = Environment.TickCount;
+			player.Inventory.Helmet = this;
+			player.SendArmorForPlayer();
+		}
 	}
 
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	public abstract class ArmorChestplateBase : Item
 	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Chest = this;
-		player.SendArmorForPlayer();
-	}
-}
-
-public abstract class ArmorLeggingsBase : Item
-{
-	protected ArmorLeggingsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
-	{
-		ExtraData = new NbtCompound
+		protected ArmorChestplateBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
 		{
-			new NbtInt("Damage", 0),
-			new NbtInt("RepairCost", 1)
-		};
-	}
+			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+		}
 
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Leggings);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Leggings = this;
-		player.SendArmorForPlayer();
-	}
-}
-
-public abstract class ArmorBootsBase : Item
-{
-	protected ArmorBootsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
-	{
-		ExtraData = new NbtCompound
+		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
-			new NbtInt("Damage", 0),
-			new NbtInt("RepairCost", 1)
-		};
+			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+			player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
+
+			UniqueId = Environment.TickCount;
+			player.Inventory.Chest = this;
+			player.SendArmorForPlayer();
+		}
 	}
 
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	public abstract class ArmorLeggingsBase : Item
 	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Boots);
+		protected ArmorLeggingsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
+		{
+			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+		}
 
-		UniqueId = Environment.TickCount;
-		player.Inventory.Boots = this;
-		player.SendArmorForPlayer();
+		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+		{
+			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+			player.Inventory.SetInventorySlot(slot, player.Inventory.Leggings);
+
+			UniqueId = Environment.TickCount;
+			player.Inventory.Leggings = this;
+			player.SendArmorForPlayer();
+		}
+	}
+
+	public abstract class ArmorBootsBase : Item
+	{
+		protected ArmorBootsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
+		{
+			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+		}
+
+		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+		{
+			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+			player.Inventory.SetInventorySlot(slot, player.Inventory.Boots);
+
+			UniqueId = Environment.TickCount;
+			player.Inventory.Boots = this;
+			player.SendArmorForPlayer();
+		}
 	}
 }

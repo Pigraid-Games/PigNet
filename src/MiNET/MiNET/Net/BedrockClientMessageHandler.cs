@@ -26,35 +26,36 @@
 using System;
 using MiNET.Net.RakNet;
 
-namespace MiNET.Net;
-
-public class BedrockClientMessageHandler : BedrockMessageHandlerBase
+namespace MiNET.Net
 {
-	private readonly McpeClientMessageDispatcher _messageDispatcher;
-
-	public Action ConnectionAction { get; set; }
-
-	public BedrockClientMessageHandler(RakSession session, IMcpeClientMessageHandler handler) : base(session)
+	public class BedrockClientMessageHandler : BedrockMessageHandlerBase
 	{
-		_messageDispatcher = new McpeClientMessageDispatcher(handler);
-	}
+		private readonly McpeClientMessageDispatcher _messageDispatcher;
 
-	public override void Connected()
-	{
-		ConnectionAction?.Invoke();
-	}
+		public Action ConnectionAction { get; set; }
 
-	public override void Disconnect(string reason, bool sendDisconnect = true)
-	{
-	}
+		public BedrockClientMessageHandler(RakSession session, IMcpeClientMessageHandler handler) : base(session)
+		{
+			_messageDispatcher = new McpeClientMessageDispatcher(handler);
+		}
 
-	public override Packet OnSendCustomPacket(Packet message)
-	{
-		return message;
-	}
+		public override void Connected()
+		{
+			ConnectionAction?.Invoke();
+		}
 
-	public override void HandleCustomPacket(Packet message)
-	{
-		_messageDispatcher.HandlePacket(message);
+		public override void Disconnect(string reason, bool sendDisconnect = true)
+		{
+		}
+
+		public override Packet OnSendCustomPacket(Packet message)
+		{
+			return message;
+		}
+
+		public override void HandleCustomPacket(Packet message)
+		{
+			_messageDispatcher.HandlePacket(message);
+		}
 	}
 }

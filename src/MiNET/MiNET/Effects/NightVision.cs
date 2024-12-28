@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class NightVision : Effect
+namespace MiNET.Effects
 {
-	public NightVision() : base(EffectType.NightVision)
+	public class NightVision : Effect
 	{
-		ParticleColor = Color.FromArgb(0xc2, 0xff, 0x66);
+		public NightVision() : base(EffectType.NightVision)
+		{
+			ParticleColor = Color.FromArgb(0xc2, 0xff, 0x66);
+		}
 	}
 }

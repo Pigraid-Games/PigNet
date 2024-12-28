@@ -32,44 +32,43 @@ using System;
 using MiNET.Items;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks;
-
-public abstract class FenceGateBlocks : Block
+namespace MiNET.Blocks
 {
-	[StateRange(0, 3)] public virtual int Direction { get; set; }
-	[StateBit] public virtual bool OpenBit { get; set; } = false;
-
-	public FenceGateBlocks(byte id) : base(id)
+	public abstract class FenceGateBlocks : Block
 	{
-		FuelEfficiency = 15;
-		IsTransparent = true;
-		BlastResistance = 15;
-		Hardness = 2;
-		IsFlammable = true;
-	}
-
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe ? true : false;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Direction = player.GetDirectionEmum() switch
+		[StateRange(0, 3)] public virtual int Direction { get; set; }
+		[StateBit] public virtual bool OpenBit { get; set; } = false;
+		public FenceGateBlocks(byte id) : base(id)
 		{
-			Entity.Direction.West => 0,
-			Entity.Direction.North => 1,
-			Entity.Direction.East => 2,
-			Entity.Direction.South => 3,
-			_ => throw new ArgumentOutOfRangeException()
-		};
-		return false;
-	}
+			FuelEfficiency = 15;
+			IsTransparent = true;
+			BlastResistance = 15;
+			Hardness = 2;
+			IsFlammable = true;
+		}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		var sound = new Sound((short) LevelEventType.SoundOpenDoor, blockCoordinates);
-		sound.Spawn(world);
-		return true;
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetDirectionEmum() switch
+			{
+				Entity.Direction.West => 0,
+				Entity.Direction.North => 1,
+				Entity.Direction.East => 2,
+				Entity.Direction.South => 3,
+				_ => throw new ArgumentOutOfRangeException()
+			};
+			return false;
+		}
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			var sound = new Sound((short) LevelEventType.SoundOpenDoor, blockCoordinates);
+			sound.Spawn(world);
+			return true;
+		}
 	}
 }

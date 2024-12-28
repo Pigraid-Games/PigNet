@@ -29,85 +29,89 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public class PortalInfo
+namespace MiNET.Blocks
 {
-	public BlockCoordinates Coordinates { get; set; }
-	public bool HasPlatform { get; set; }
-	public BoundingBox Size { get; set; }
-}
-
-public partial class Portal : Block
-{
-	public Portal() : base(90)
+	public class PortalInfo
 	{
-		IsTransparent = true;
-		IsSolid = false;
-		LightLevel = 11;
-		Hardness = 60000;
+		public BlockCoordinates Coordinates { get; set; }
+		public bool HasPlatform { get; set; }
+		public BoundingBox Size { get; set; }
 	}
 
-	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+	public partial class Portal : Block
 	{
-		bool shouldKeep = true;
-		shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockUp()));
-		shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockDown()));
-
-		//if (Metadata < 2)
-		if (PortalAxis == "x")
+		public Portal() : base(90)
 		{
-			shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockWest()));
-			shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockEast()));
-		}
-		else
-		{
-			shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockSouth()));
-			shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockNorth()));
+			IsTransparent = true;
+			IsSolid = false;
+			LightLevel = 11;
+			Hardness = 60000;
 		}
 
-		if (!shouldKeep) Fill(level, Coordinates);
-	}
-
-	private bool IsValid(Block block)
-	{
-		return block is Obsidian || block is Portal;
-	}
-
-	public override Item[] GetDrops(Item tool)
-	{
-		return new Item[0];
-	}
-
-
-	public void Fill(Level level, BlockCoordinates origin)
-	{
-		var visits = new Queue<BlockCoordinates>();
-
-		visits.Enqueue(origin); // Kick it off with some good stuff
-
-		while (visits.Count > 0)
+		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
 		{
-			BlockCoordinates coordinates = visits.Dequeue();
+			bool shouldKeep = true;
+			shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockUp()));
+			shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockDown()));
 
-			if (!(level.GetBlock(coordinates) is Portal)) continue;
-
-			level.SetAir(coordinates);
-
-			//if (Metadata == 0)
+			//if (Metadata < 2)
 			if (PortalAxis == "x")
 			{
-				visits.Enqueue(coordinates + Level.East);
-				visits.Enqueue(coordinates + Level.West);
+				shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockWest()));
+				shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockEast()));
 			}
 			else
 			{
-				visits.Enqueue(coordinates + Level.North);
-				visits.Enqueue(coordinates + Level.South);
+				shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockSouth()));
+				shouldKeep &= IsValid(level.GetBlock(Coordinates.BlockNorth()));
 			}
 
-			visits.Enqueue(coordinates + Level.Down);
-			visits.Enqueue(coordinates + Level.Up);
+			if (!shouldKeep)
+			{
+				Fill(level, Coordinates);
+			}
+		}
+
+		private bool IsValid(Block block)
+		{
+			return block is Obsidian || block is Portal;
+		}
+
+		public override Item[] GetDrops(Item tool)
+		{
+			return new Item[0];
+		}
+
+
+		public void Fill(Level level, BlockCoordinates origin)
+		{
+			Queue<BlockCoordinates> visits = new Queue<BlockCoordinates>();
+
+			visits.Enqueue(origin); // Kick it off with some good stuff
+
+			while (visits.Count > 0)
+			{
+				var coordinates = visits.Dequeue();
+
+				if (!(level.GetBlock(coordinates) is Portal)) continue;
+
+				level.SetAir(coordinates);
+
+				//if (Metadata == 0)
+				if (PortalAxis == "x")
+				{
+					visits.Enqueue(coordinates + Level.East);
+					visits.Enqueue(coordinates + Level.West);
+				}
+				else
+				{
+					visits.Enqueue(coordinates + Level.North);
+					visits.Enqueue(coordinates + Level.South);
+				}
+
+				visits.Enqueue(coordinates + Level.Down);
+				visits.Enqueue(coordinates + Level.Up);
+			}
 		}
 	}
 }

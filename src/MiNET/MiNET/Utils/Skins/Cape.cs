@@ -1,22 +1,20 @@
 ﻿using System;
 
-namespace MiNET.Utils.Skins;
-
-public class Cape : ICloneable
+namespace MiNET.Utils.Skins
 {
-	public string Id { get; set; }
-	public int ImageHeight { get; set; }
-	public int ImageWidth { get; set; }
-	public byte[] Data { get; set; }
-	public bool OnClassicSkin { get; set; }
-
-	public Cape()
+	public class Cape : ICloneable
 	{
-		Data = new byte[0];
-	}
+		public string Id { get; set; }
+		public int ImageHeight { get; set; }
+		public int ImageWidth { get; set; }
+		public byte[] Data { get; set; }
+		public bool OnClassicSkin { get; set; }
 
-	public object Clone()
-	{
-		return MemberwiseClone();
+		public Cape()
+		{
+			Data = new byte[0];
+		}
+
+		public object Clone() => MemberwiseClone();
 	}
 }

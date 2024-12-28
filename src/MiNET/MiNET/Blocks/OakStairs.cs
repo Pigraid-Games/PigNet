@@ -23,15 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class OakStairs : BlockStairs
+namespace MiNET.Blocks
 {
-	public OakStairs() : base(53)
+	public partial class OakStairs : BlockStairs
 	{
-		IsTransparent = true; // Partial - Blocks light.
-		BlastResistance = 15;
-		Hardness = 2;
-		IsFlammable = true;
+		public OakStairs() : base(53)
+		{
+			IsTransparent = true; // Partial - Blocks light.
+			BlastResistance = 15;
+			Hardness = 2;
+			IsFlammable = true;
+		}
 	}
 }

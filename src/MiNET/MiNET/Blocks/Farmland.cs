@@ -31,59 +31,67 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Farmland : Block
+namespace MiNET.Blocks
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Farmland));
-
-	public Farmland() : base(60)
+	public partial class Farmland : Block
 	{
-		IsTransparent = true; // Partial - blocks light.
-		IsBlockingSkylight = false; // Partial - blocks light.
-		BlastResistance = 3;
-		Hardness = 0.6f;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Farmland));
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return new[] { new ItemBlock(new Dirt(), 0) { Count = 1 } }; // Drop dirt block
-	}
+		public Farmland() : base(60)
+		{
+			IsTransparent = true; // Partial - blocks light.
+			IsBlockingSkylight = false; // Partial - blocks light.
+			BlastResistance = 3;
+			Hardness = 0.6f;
+		}
 
-	public override void OnTick(Level level, bool isRandom)
-	{
-		int data = MoisturizedAmount;
-		if (FindWater(level, Coordinates, new List<BlockCoordinates>(), 0))
-			MoisturizedAmount = 7;
-		else
-			MoisturizedAmount = Math.Max(0, MoisturizedAmount - 1);
-		if (data != MoisturizedAmount) level.SetBlock(this);
-	}
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {new ItemBlock(new Dirt(), 0) {Count = 1}}; // Drop dirt block
+		}
 
-	public bool FindWater(Level level, BlockCoordinates coord, List<BlockCoordinates> visited, int distance)
-	{
-		if (visited.Contains(coord)) return false;
+		public override void OnTick(Level level, bool isRandom)
+		{
+			var data = MoisturizedAmount;
+			if (FindWater(level, Coordinates, new List<BlockCoordinates>(), 0))
+			{
+				MoisturizedAmount = 7;
+			}
+			else
+			{
+				MoisturizedAmount = Math.Max(0, MoisturizedAmount - 1);
+			}
+			if (data != MoisturizedAmount)
+			{
+				level.SetBlock(this);
+			}
+		}
 
-		Block block = level.GetBlock(coord);
-		if (block is Water || block is FlowingWater) return true;
+		public bool FindWater(Level level, BlockCoordinates coord, List<BlockCoordinates> visited, int distance)
+		{
+			if (visited.Contains(coord)) return false;
 
-		visited.Add(coord);
+			var block = level.GetBlock(coord);
+			if (block is Water || block is FlowingWater) return true;
 
-		if (distance >= 4) return false;
+			visited.Add(coord);
 
-		// check down
-		//if (FindWater(level, coord + BlockCoordinates.Down, visited, distance + 1)) return true;
-		// check west
-		if (FindWater(level, coord.BlockWest(), visited, distance + 1)) return true;
-		// check east
-		if (FindWater(level, coord.BlockEast(), visited, distance + 1)) return true;
-		// check south
-		if (FindWater(level, coord.BlockSouth(), visited, distance + 1)) return true;
-		// check north
-		if (FindWater(level, coord.BlockNorth(), visited, distance + 1)) return true;
-		// check up
-		//if (FindWater(level, coord + BlockCoordinates.Up, visited, distance + 1)) return true;
+			if (distance >= 4) return false;
 
-		return false;
+			// check down
+			//if (FindWater(level, coord + BlockCoordinates.Down, visited, distance + 1)) return true;
+			// check west
+			if (FindWater(level, coord.BlockWest(), visited, distance + 1)) return true;
+			// check east
+			if (FindWater(level, coord.BlockEast(), visited, distance + 1)) return true;
+			// check south
+			if (FindWater(level, coord.BlockSouth(), visited, distance + 1)) return true;
+			// check north
+			if (FindWater(level, coord.BlockNorth(), visited, distance + 1)) return true;
+			// check up
+			//if (FindWater(level, coord + BlockCoordinates.Up, visited, distance + 1)) return true;
+
+			return false;
+		}
 	}
 }

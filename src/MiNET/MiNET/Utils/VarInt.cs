@@ -30,181 +30,188 @@ using System.Runtime.CompilerServices;
 using log4net;
 using MiNET.Net;
 
-namespace MiNET.Utils;
-
-public static class VarInt
+namespace MiNET.Utils
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(VarInt));
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static uint EncodeZigZag32(int n)
+	public static class VarInt
 	{
-		// Note:  the right-shift must be arithmetic
-		return (uint) ((n << 1) ^ (n >> 31));
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(VarInt));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static int DecodeZigZag32(uint n)
-	{
-		return (int) (n >> 1) ^ -(int) (n & 1);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static ulong EncodeZigZag64(long n)
-	{
-		return (ulong) ((n << 1) ^ (n >> 63));
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static long DecodeZigZag64(ulong n)
-	{
-		return (long) (n >> 1) ^ -(long) (n & 1);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static uint ReadRawVarInt32(Stream buf, int maxSize)
-	{
-		uint result = 0;
-		int j = 0;
-		int b0;
-
-		do
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static uint EncodeZigZag32(int n)
 		{
-			b0 = buf.ReadByte(); // -1 if EOS
-			if (b0 < 0) throw new EndOfStreamException("Not enough bytes for VarInt");
-
-			result |= (uint) (b0 & 0x7f) << (j++ * 7);
-
-			if (j > maxSize) throw new OverflowException("VarInt too big");
-		} while ((b0 & 0x80) == 0x80);
-
-		return result;
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static ulong ReadRawVarInt64(Stream buf, int maxSize, bool printBytes = false)
-	{
-		var bytes = new List<byte>();
-
-		ulong result = 0;
-		int j = 0;
-		int b0;
-
-		do
-		{
-			b0 = buf.ReadByte(); // -1 if EOS
-			bytes.Add((byte) b0);
-			if (b0 < 0) throw new EndOfStreamException("Not enough bytes for VarInt");
-
-			result |= (ulong) (b0 & 0x7f) << (j++ * 7);
-
-			if (j > maxSize) throw new OverflowException("VarInt too big");
-		} while ((b0 & 0x80) == 0x80);
-
-		byte[] byteArray = bytes.ToArray();
-
-		if (printBytes) Log.Debug($"Long bytes: {Packet.HexDump(byteArray)} ");
-
-		return result;
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void WriteRawVarInt32(Stream buf, uint value)
-	{
-		while ((value & -128) != 0)
-		{
-			buf.WriteByte((byte) ((value & 0x7F) | 0x80));
-			value >>= 7;
+			// Note:  the right-shift must be arithmetic
+			return (uint) ((n << 1) ^ (n >> 31));
 		}
 
-		buf.WriteByte((byte) value);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void WriteRawVarInt64(Stream buf, ulong value)
-	{
-		while ((value & 0xFFFFFFFFFFFFFF80) != 0)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int DecodeZigZag32(uint n)
 		{
-			buf.WriteByte((byte) ((value & 0x7F) | 0x80));
-			value >>= 7;
+			return (int) (n >> 1) ^ -(int) (n & 1);
 		}
 
-		buf.WriteByte((byte) value);
-	}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ulong EncodeZigZag64(long n)
+		{
+			return (ulong) ((n << 1) ^ (n >> 63));
+		}
 
-	// Int
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long DecodeZigZag64(ulong n)
+		{
+			return (long) (n >> 1) ^ -(long) (n & 1);
+		}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void WriteInt32(Stream stream, int value)
-	{
-		WriteRawVarInt32(stream, (uint) value);
-	}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static uint ReadRawVarInt32(Stream buf, int maxSize)
+		{
+			uint result = 0;
+			int j = 0;
+			int b0;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static int ReadInt32(Stream stream)
-	{
-		return (int) ReadRawVarInt32(stream, 5);
-	}
+			do
+			{
+				b0 = buf.ReadByte(); // -1 if EOS
+				if (b0 < 0) throw new EndOfStreamException("Not enough bytes for VarInt");
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void WriteSInt32(Stream stream, int value)
-	{
-		WriteRawVarInt32(stream, EncodeZigZag32(value));
-	}
+				result |= (uint) (b0 & 0x7f) << j++ * 7;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static int ReadSInt32(Stream stream)
-	{
-		return DecodeZigZag32(ReadRawVarInt32(stream, 5));
-	}
+				if (j > maxSize)
+				{
+					throw new OverflowException("VarInt too big");
+				}
+			} while ((b0 & 0x80) == 0x80);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void WriteUInt32(Stream stream, uint value)
-	{
-		WriteRawVarInt32(stream, value);
-	}
+			return result;
+		}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static uint ReadUInt32(Stream stream)
-	{
-		return ReadRawVarInt32(stream, 5);
-	}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static ulong ReadRawVarInt64(Stream buf, int maxSize, bool printBytes = false)
+		{
+			List<byte> bytes = new List<byte>();
 
-	// Long
+			ulong result = 0;
+			int j = 0;
+			int b0;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void WriteInt64(Stream stream, long value)
-	{
-		WriteRawVarInt64(stream, (ulong) value);
-	}
+			do
+			{
+				b0 = buf.ReadByte(); // -1 if EOS
+				bytes.Add((byte) b0);
+				if (b0 < 0) throw new EndOfStreamException("Not enough bytes for VarInt");
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static long ReadInt64(Stream stream, bool printBytes = false)
-	{
-		return (long) ReadRawVarInt64(stream, 10, printBytes);
-	}
+				result |= (ulong) (b0 & 0x7f) << j++ * 7;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void WriteSInt64(Stream stream, long value)
-	{
-		WriteRawVarInt64(stream, EncodeZigZag64(value));
-	}
+				if (j > maxSize)
+				{
+					throw new OverflowException("VarInt too big");
+				}
+			} while ((b0 & 0x80) == 0x80);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static long ReadSInt64(Stream stream)
-	{
-		return DecodeZigZag64(ReadRawVarInt64(stream, 10));
-	}
+			byte[] byteArray = bytes.ToArray();
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void WriteUInt64(Stream stream, ulong value)
-	{
-		WriteRawVarInt64(stream, value);
-	}
+			if (printBytes) Log.Debug($"Long bytes: {Packet.HexDump(byteArray)} ");
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static ulong ReadUInt64(Stream stream)
-	{
-		return ReadRawVarInt64(stream, 10);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void WriteRawVarInt32(Stream buf, uint value)
+		{
+			while ((value & -128) != 0)
+			{
+				buf.WriteByte((byte) ((value & 0x7F) | 0x80));
+				value >>= 7;
+			}
+
+			buf.WriteByte((byte) value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void WriteRawVarInt64(Stream buf, ulong value)
+		{
+			while ((value & 0xFFFFFFFFFFFFFF80) != 0)
+			{
+				buf.WriteByte((byte) ((value & 0x7F) | 0x80));
+				value >>= 7;
+			}
+
+			buf.WriteByte((byte) value);
+		}
+
+		// Int
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WriteInt32(Stream stream, int value)
+		{
+			WriteRawVarInt32(stream, (uint) value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ReadInt32(Stream stream)
+		{
+			return (int) ReadRawVarInt32(stream, 5);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WriteSInt32(Stream stream, int value)
+		{
+			WriteRawVarInt32(stream, EncodeZigZag32(value));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ReadSInt32(Stream stream)
+		{
+			return DecodeZigZag32(ReadRawVarInt32(stream, 5));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WriteUInt32(Stream stream, uint value)
+		{
+			WriteRawVarInt32(stream, value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static uint ReadUInt32(Stream stream)
+		{
+			return ReadRawVarInt32(stream, 5);
+		}
+
+		// Long
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WriteInt64(Stream stream, long value)
+		{
+			WriteRawVarInt64(stream, (ulong) value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ReadInt64(Stream stream, bool printBytes = false)
+		{
+			return (long) ReadRawVarInt64(stream, 10, printBytes);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WriteSInt64(Stream stream, long value)
+		{
+			WriteRawVarInt64(stream, EncodeZigZag64(value));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static long ReadSInt64(Stream stream)
+		{
+			return DecodeZigZag64(ReadRawVarInt64(stream, 10));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void WriteUInt64(Stream stream, ulong value)
+		{
+			WriteRawVarInt64(stream, value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ulong ReadUInt64(Stream stream)
+		{
+			return ReadRawVarInt64(stream, 10);
+		}
 	}
 }

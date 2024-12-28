@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Lava : Stationary
+namespace MiNET.Blocks
 {
-	public Lava() : base(11)
+	public partial class Lava : Stationary
 	{
-		LightLevel = 15;
-		BlastResistance = 500;
-		Hardness = 100;
+		public Lava() : base(11)
+		{
+			LightLevel = 15;
+			BlastResistance = 500;
+			Hardness = 100;
+		}
 	}
 }

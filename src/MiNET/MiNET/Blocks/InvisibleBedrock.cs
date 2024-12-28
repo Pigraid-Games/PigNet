@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class InvisibleBedrock : Block
+namespace MiNET.Blocks
 {
-	public InvisibleBedrock() : base(95)
+	public partial class InvisibleBedrock : Block
 	{
-		BlastResistance = 18000000;
-		Hardness = 60000;
+		public InvisibleBedrock() : base(95)
+		{
+			BlastResistance = 18000000;
+			Hardness = 60000;
+		}
 	}
 }

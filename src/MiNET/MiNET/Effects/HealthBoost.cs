@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class HealthBoost : Effect
+namespace MiNET.Effects
 {
-	public HealthBoost() : base(EffectType.HealthBoost)
+	public class HealthBoost : Effect
 	{
-		ParticleColor = Color.FromArgb(0xF8, 0x7D, 0x23);
+		public HealthBoost() : base(EffectType.HealthBoost)
+		{
+			ParticleColor = Color.FromArgb(0xF8, 0x7D, 0x23);
+		}
 	}
 }

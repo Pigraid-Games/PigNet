@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class QuartzStairs : BlockStairs
+namespace MiNET.Blocks
 {
-	public QuartzStairs() : base(156)
+	public partial class QuartzStairs : BlockStairs
 	{
-		BlastResistance = 4;
-		Hardness = 0.8f;
+		public QuartzStairs() : base(156)
+		{
+			BlastResistance = 4;
+			Hardness = 0.8f;
+		}
 	}
 }

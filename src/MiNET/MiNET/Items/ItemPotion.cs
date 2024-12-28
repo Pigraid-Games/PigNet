@@ -40,7 +40,10 @@ public class ItemPotion(short metadata) : Item("minecraft:potion", 373, metadata
 		{
 			List<Effect> effects = Effect.GetEffects(Metadata);
 
-			foreach (Effect effect in effects) player.SetEffect(effect);
+			foreach (Effect effect in effects)
+			{
+				player.SetEffect(effect);
+			}
 
 			if (player.GameMode is GameMode.Survival or GameMode.Adventure)
 			{

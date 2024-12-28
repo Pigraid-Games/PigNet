@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,18 +19,18 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2024 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
 namespace MiNET.Items.Food;
 
 public class ItemRabbitStew : FoodItem
 {
+
 	public ItemRabbitStew() : base("minecraft:rabbit_stew", 413, 0, 10, 12)
 	{
 		MaxStackSize = 1;
 	}
-
+	
 	protected override void Consume(Player player)
 	{
 		base.Consume(player);

@@ -25,18 +25,19 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Snow : Block
+namespace MiNET.Blocks
 {
-	public Snow() : base(80)
+	public partial class Snow : Block
 	{
-		BlastResistance = 1;
-		Hardness = 0.2f;
-	}
+		public Snow() : base(80)
+		{
+			BlastResistance = 1;
+			Hardness = 0.2f;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return [ItemFactory.GetItem("minecraft:snowball", count: 4)];
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {ItemFactory.GetItem(332, 0, 4)}; // Drop snowball
+		}
 	}
 }

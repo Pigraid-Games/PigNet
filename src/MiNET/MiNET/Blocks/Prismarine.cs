@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Prismarine : Block
+namespace MiNET.Blocks
 {
-	public Prismarine() : base(168)
+	public partial class Prismarine : Block
 	{
-		Hardness = 1.5f;
-		BlastResistance = 30;
+		public Prismarine() : base(168)
+		{
+			Hardness = 1.5f;
+			BlastResistance = 30;
+		}
 	}
 }

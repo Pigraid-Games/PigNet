@@ -23,15 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class MonsterEgg : Block
+namespace MiNET.Blocks
 {
-	public MonsterEgg() : base(97)
+	public partial class MonsterEgg : Block
 	{
-		BlastResistance = 3.75f;
-		Hardness = 0.75f;
+		public MonsterEgg() : base(97)
+		{
+			BlastResistance = 3.75f;
+			Hardness = 0.75f;
 
-		// Spawns silverfish on break.	
+			// Spawns silverfish on break.	
+		}
 	}
 }

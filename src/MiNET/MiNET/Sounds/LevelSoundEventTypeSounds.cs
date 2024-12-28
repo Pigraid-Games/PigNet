@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,7 +19,6 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2024 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
 using System.Numerics;
@@ -80,7 +78,6 @@ public class FallBigSound(Vector3 position, int pitch = 0) : Sound((short) Level
 public class FallSmallSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.FallSmall, position, pitch);
 
 public class SplashSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Splash, position, pitch);
-
 public class FlapSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Flap, position, pitch);
 
 public class SwimSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Swim, position, pitch);
@@ -126,7 +123,6 @@ public class ExplodeSound(Vector3 position, int pitch = 0) : Sound((short) Level
 public class FireSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Fire, position, pitch);
 
 public class IgniteSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Ignite, position, pitch);
-
 public class StareSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Stare, position, pitch);
 
 public class SpawnSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Spawn, position, pitch);
@@ -134,7 +130,6 @@ public class SpawnSound(Vector3 position, int pitch = 0) : Sound((short) LevelSo
 public class ShootSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Shoot, position, pitch);
 
 public class BreakBlockSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.BreakBlock, position, pitch);
-
 public class BlastSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Blast, position, pitch);
 
 public class LargeBlastSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.LargeBlast, position, pitch);
@@ -202,7 +197,6 @@ public class PrepareWololoSound(Vector3 position, int pitch = 0) : Sound((short)
 public class FangSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Fang, position, pitch);
 
 public class ChargeSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Charge, position, pitch);
-
 public class LeashknotPlaceSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.LeashknotPlace, position, pitch);
 
 public class LeashknotBreakSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.LeashknotBreak, position, pitch);
@@ -358,35 +352,21 @@ public class AmbientTameSound(Vector3 position, int pitch = 0) : Sound((short) L
 public class ScaredSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Scared, position, pitch);
 
 public class BlockScaffoldingClimbSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.BlockScaffoldingClimb, position, pitch);
-
 public class CrossbowLoadingStartSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowLoadingStart, position, pitch);
 
 public class CrossbowLoadingMiddleSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowLoadingMiddle, position, pitch);
-
 public class CrossbowLoadingEndSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowLoadingEnd, position, pitch);
-
 public class CrossbowShootSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowShoot, position, pitch);
-
 public class CrossbowQuickChargeStartSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowQuickChargeStart, position, pitch);
-
 public class CrossbowQuickChargeMiddleSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowQuickChargeMiddle, position, pitch);
-
 public class CrossbowQuickChargeEndSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CrossbowQuickChargeEnd, position, pitch);
-
 public class AmbientAggressiveSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.AmbientAggressive, position, pitch);
-
 public class AmbientWorriedSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.AmbientWorried, position, pitch);
-
 public class CantBreedSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.CantBreed, position, pitch);
-
 public class ItemShieldBlockSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.ItemShieldBlock, position, pitch);
-
 public class ItemBookPutSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.ItemBookPut, position, pitch);
-
 public class BlockGrindstoneUseSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.BlockGrindstoneUse, position, pitch);
-
 public class BlockBellHitSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.BlockBellHit, position, pitch);
-
 public class BlockCampfireCrackleSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.BlockCampfireCrackle, position, pitch);
 
 public class RoarSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Roar, position, pitch);

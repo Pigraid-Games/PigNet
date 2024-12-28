@@ -23,16 +23,17 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public class Border : Block
+namespace MiNET.Blocks
 {
-	//  "blockRuntimeId": 1856,
-	// podzol   "blockRuntimeId": 2111,
-
-
-	public Border() : base(212)
+	public class Border : Block
 	{
-		IsTransparent = true;
+		//  "blockRuntimeId": 1856,
+		// podzol   "blockRuntimeId": 2111,
+
+
+		public Border() : base(212)
+		{
+			IsTransparent = true;
+		}
 	}
 }

@@ -328,9 +328,9 @@ namespace MiNET
 		{
 			if (Log.IsDebugEnabled) Log.Debug($"Handled packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 
-			if (message.ResponseStatus == 2)
+			if (message.responseStatus == 2)
 			{
-				foreach (string packid in message.ResourcePackIds)
+				foreach (string packid in message.resourcepackids)
 				{
 					var uuid = packid.Substring(0, Math.Min(packid.Length, 36));
 					var content = File.ReadAllBytes(PlayerPackMap[uuid].pack);
@@ -350,7 +350,7 @@ namespace MiNET
 				}
 				return;
 			}
-			else if (message.ResponseStatus == 3)
+			else if (message.responseStatus == 3)
 			{
 				//if (_serverHaveResources)
 				{
@@ -362,7 +362,7 @@ namespace MiNET
 				//}
 				return;
 			}
-			else if (message.ResponseStatus == 4)
+			else if (message.responseStatus == 4)
 			{
 				//if (_serverHaveResources)
 				{
@@ -384,8 +384,8 @@ namespace MiNET
 				var packInfosB = new ResourcePackInfos();
 				var directory = Config.GetProperty("ResourceDirectory", "ResourcePacks");
 				var directoryB = Config.GetProperty("BehaviorDirectory", "BehaviorPacks");
-				packInfo.MustAccept = Config.GetProperty("ForceResourcePacks", false);
-				packInfo.TemplateUuid = new UUID(Guid.Empty.ToByteArray());
+				packInfo.mustAccept = Config.GetProperty("ForceResourcePacks", false);
+				packInfo.templateUUID = new UUID(Guid.Empty.ToByteArray());
 
 				if (Directory.Exists(directory))
 				{
@@ -484,7 +484,7 @@ namespace MiNET
 					}
 					PlayerPackDataB = packInfosB;
 				}
-				packInfo.TexturePacks = packInfos;
+				packInfo.texturepacks = packInfos;
 			}
 			SendPacket(packInfo);
 		}
@@ -656,7 +656,7 @@ namespace MiNET
 			McpeAnimate msg = McpeAnimate.CreateObject();
 			msg.runtimeEntityId = EntityId;
 			msg.actionId = message.actionId;
-			msg.UnknownFloat = message.UnknownFloat;
+			msg.unknownFloat = message.unknownFloat;
 
 			Level.RelayBroadcast(this, msg);
 		}
@@ -1241,8 +1241,20 @@ namespace MiNET
 
 		protected virtual void SendAvailableCommands()
 		{
+			//return;
+			//var settings = new JsonSerializerSettings();
+			//settings.NullValueHandling = NullValueHandling.Ignore;
+			//settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
+			//settings.MissingMemberHandling = MissingMemberHandling.Error;
+			//settings.Formatting = Formatting.Indented;
+			//settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+
+			//var content = JsonConvert.SerializeObject(Server.PluginManager.Commands, settings);
+
 			McpeAvailableCommands commands = McpeAvailableCommands.CreateObject();
 			commands.CommandSet = Server.PluginManager.Commands;
+			//commands.commands = content;
+			//commands.unknown = "{}";
 			SendPacket(commands);
 		}
 
@@ -1256,6 +1268,39 @@ namespace MiNET
 				string sRes = result as string;
 				SendMessage(sRes);
 			}
+
+			//var jsonSerializerSettings = new JsonSerializerSettings
+			//{
+			//	PreserveReferencesHandling = PreserveReferencesHandling.None,
+			//	Formatting = Formatting.Indented,
+			//};
+
+			//var commandJson = JsonConvert.DeserializeObject<dynamic>(message.commandInputJson);
+			//Log.Debug($"CommandJson\n{JsonConvert.SerializeObject(commandJson, jsonSerializerSettings)}");
+			//object result = Server.PluginManager.HandleCommand(this, message.commandName, message.commandOverload, commandJson);
+			//if (result != null)
+			//{
+			//	var settings = new JsonSerializerSettings();
+			//	settings.NullValueHandling = NullValueHandling.Ignore;
+			//	settings.DefaultValueHandling = DefaultValueHandling.Include;
+			//	settings.MissingMemberHandling = MissingMemberHandling.Error;
+			//	settings.Formatting = Formatting.Indented;
+			//	settings.StringEscapeHandling = StringEscapeHandling.EscapeNonAscii;
+			//	settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+
+			//	var content = JsonConvert.SerializeObject(result, settings);
+			//	McpeCommandRequest commandResult = McpeCommandRequest.CreateObject();
+			//	commandResult.commandName = message.commandName;
+			//	commandResult.commandOverload = message.commandOverload;
+			//	commandResult.isOutput = true;
+			//	commandResult.clientId = NetworkHandler.GetNetworkNetworkIdentifier();
+			//	commandResult.commandInputJson = "null\n";
+			//	commandResult.commandOutputJson = content;
+			//	commandResult.entityIdSelf = EntityId;
+			//	SendPackage(commandResult);
+
+			//	if (Log.IsDebugEnabled) Log.Debug($"NetworkId={commandResult.clientId}, Command Respone\n{Package.ToJson(commandResult)}\nJSON:\n{content}");
+			//}
 		}
 
 		public virtual void InitializePlayer()
@@ -2045,7 +2090,7 @@ namespace MiNET
 						if (sendDisconnect)
 						{
 							var disconnect = McpeDisconnect.CreateObject();
-							disconnect.Message = reason;
+							disconnect.message = reason;
 							NetworkHandler.SendPacket(disconnect);
 						}
 						NetworkHandler = null;
@@ -2731,7 +2776,7 @@ namespace MiNET
 
 				// open inventory
 
-				McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
+				var containerOpen = McpeContainerOpen.CreateObject();
 				containerOpen.windowId = inventory.WindowsId;
 				containerOpen.type = inventory.Type;
 				containerOpen.coordinates = inventoryCoord;
@@ -3327,7 +3372,7 @@ namespace MiNET
 				{
 					if (target == this)
 					{
-						McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
+						var containerOpen = McpeContainerOpen.CreateObject();
 						containerOpen.windowId = 0;
 						containerOpen.type = 255;
 						containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
@@ -3562,7 +3607,7 @@ namespace MiNET
 						var chunk = new McpeLevelChunk();
 						chunk.chunkX = chunkPosition.X + x;
 						chunk.chunkZ = chunkPosition.Z + z;
-						chunk.ChunkData = new byte[0];
+						chunk.chunkData = new byte[0];
 						SendPacket(chunk);
 					}
 				}
@@ -4212,24 +4257,24 @@ namespace MiNET
 		public override void SpawnToPlayers(Player[] players)
 		{
 			McpeAddPlayer mcpeAddPlayer = McpeAddPlayer.CreateObject();
-			mcpeAddPlayer.Uuid = ClientUuid;
-			mcpeAddPlayer.Username = Username;
-			mcpeAddPlayer.EntityIdSelf = EntityId;
-			mcpeAddPlayer.RuntimeEntityId = EntityId;
-			mcpeAddPlayer.X = KnownPosition.X;
-			mcpeAddPlayer.Y = KnownPosition.Y;
-			mcpeAddPlayer.Z = KnownPosition.Z;
-			mcpeAddPlayer.SpeedX = Velocity.X;
-			mcpeAddPlayer.SpeedY = Velocity.Y;
-			mcpeAddPlayer.SpeedZ = Velocity.Z;
-			mcpeAddPlayer.Yaw = KnownPosition.Yaw;
-			mcpeAddPlayer.HeadYaw = KnownPosition.HeadYaw;
-			mcpeAddPlayer.Pitch = KnownPosition.Pitch;
-			mcpeAddPlayer.Metadata = GetMetadata();
-			mcpeAddPlayer.DeviceId = PlayerInfo.DeviceId;
-			mcpeAddPlayer.DeviceOs = PlayerInfo.DeviceOS;
-			mcpeAddPlayer.GameType = (uint) GameMode;
-			mcpeAddPlayer.Layers = GetAbilities();
+			mcpeAddPlayer.uuid = ClientUuid;
+			mcpeAddPlayer.username = Username;
+			mcpeAddPlayer.entityIdSelf = EntityId;
+			mcpeAddPlayer.runtimeEntityId = EntityId;
+			mcpeAddPlayer.x = KnownPosition.X;
+			mcpeAddPlayer.y = KnownPosition.Y;
+			mcpeAddPlayer.z = KnownPosition.Z;
+			mcpeAddPlayer.speedX = Velocity.X;
+			mcpeAddPlayer.speedY = Velocity.Y;
+			mcpeAddPlayer.speedZ = Velocity.Z;
+			mcpeAddPlayer.yaw = KnownPosition.Yaw;
+			mcpeAddPlayer.headYaw = KnownPosition.HeadYaw;
+			mcpeAddPlayer.pitch = KnownPosition.Pitch;
+			mcpeAddPlayer.metadata = GetMetadata();
+			mcpeAddPlayer.deviceId = PlayerInfo.DeviceId;
+			mcpeAddPlayer.deviceOs = PlayerInfo.DeviceOS;
+			mcpeAddPlayer.gameType = (uint) GameMode;
+			mcpeAddPlayer.layers = GetAbilities();
 
 			int[] a = new int[5];
 
@@ -4306,7 +4351,7 @@ namespace MiNET
 		{
 			McpeCorrectPlayerMovement packet = McpeCorrectPlayerMovement.CreateObject();
 			packet.Type = (byte)(Vehicle == 0 ? 0 : 3);
-			packet.Position = KnownPosition;
+			packet.Postition = KnownPosition;
 			packet.Velocity = Velocity;
 			packet.OnGround = !IsGliding && IsOnGround;
 			packet.Tick = CurrentTick;
@@ -4402,7 +4447,7 @@ namespace MiNET
 		public virtual void HandleMcpeAnvilDamage(McpeAnvilDamage message)
 		{
 			//TODO handle this.
-			Log.Debug($"Damaged anvil at {message.Coordinates.X} {message.Coordinates.Y} {message.Coordinates.Z} Amount = {message.DamageAmount}");
+			Log.Debug($"Damaged anvil at {message.coordinates.X} {message.coordinates.Y} {message.coordinates.Z} Amount = {message.damageAmount}");
 		}
 
 		public void HandleMcpeServerboundLoadingScreen(McpeServerboundLoadingScreen message)

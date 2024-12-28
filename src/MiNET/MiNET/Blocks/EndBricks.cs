@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class EndBricks : Block
+namespace MiNET.Blocks
 {
-	public EndBricks() : base(206)
+	public partial class EndBricks : Block
 	{
-		BlastResistance = 4;
-		Hardness = 0.8f;
+		public EndBricks() : base(206)
+		{
+			BlastResistance = 4;
+			Hardness = 0.8f;
+		}
 	}
 }

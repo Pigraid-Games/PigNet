@@ -22,7 +22,6 @@
 // All Rights Reserved.
 
 #endregion
-
 using System;
 using System.Numerics;
 using MiNET.Items;
@@ -30,49 +29,58 @@ using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Wood : Block
+namespace MiNET.Blocks
 {
-	public Wood() : base(467)
+	public partial class Wood : Block
 	{
-		FuelEfficiency = 15;
-		BlastResistance = 10;
-		Hardness = 2;
-		IsFlammable = true;
-	}
-
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-		woodType = itemInHand.Metadata switch
+		public Wood() : base(467)
 		{
-			7 or 15 => "oak",
-			1 or 9 => "spruce",
-			2 or 10 => "birch",
-			3 or 11 => "jungle",
-			4 or 12 => "acacia",
-			5 or 13 => "dark_oak",
-			_ => throw new ArgumentOutOfRangeException()
-		};
+			FuelEfficiency = 15;
+			BlastResistance = 10;
+			Hardness = 2;
+			IsFlammable = true;
+		}
 
-		StrippedBit = itemInHand.Metadata switch
+		public override bool IsBestTool(Item item)
 		{
-			15 or 9 or 10 or 11 or 12 or 13 => true,
-			_ => false
-		};
-		PillarAxis = ItemBlock.GetPillarAxisFromFace(face) switch
+			return item is ItemAxe ? true : false;
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{
-			BlockAxis.X => "x",
-			BlockAxis.Y => "y",
-			BlockAxis.Z => "z",
-			_ => PillarAxis
-		};
-		return false;
+			var itemInHand = player.Inventory.GetItemInHand();
+			woodType = itemInHand.Metadata switch
+			{
+				7 or 15 => "oak",
+				1 or 9 => "spruce",
+				2 or 10 => "birch",
+				3 or 11 => "jungle",
+				4 or 12 => "acacia",
+				5 or 13 => "dark_oak",
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			StrippedBit = itemInHand.Metadata switch
+			{
+				15 or 9 or 10 or 11 or 12 or 13 => true,
+				_ => false
+			};
+			switch (ItemBlock.GetPillarAxisFromFace(face))
+			{
+				case BlockAxis.X:
+					PillarAxis = "x";
+					break;
+				case BlockAxis.Y:
+					PillarAxis = "y";
+					break;
+				case BlockAxis.Z:
+					PillarAxis = "z";
+					break;
+			}
+			return false;
+		}
+
+
+
 	}
 }

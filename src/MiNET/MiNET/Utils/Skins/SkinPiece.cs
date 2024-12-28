@@ -25,10 +25,11 @@
 
 using System.Collections.Generic;
 
-namespace MiNET.Utils.Skins;
-
-public class SkinPiece
+namespace MiNET.Utils.Skins
 {
-	public string PieceType { get; set; }
-	public List<string> Colors { get; set; } = new();
+	public class SkinPiece
+	{
+		public string PieceType { get; set; }
+		public List<string> Colors { get; set; } = new List<string>();
+	}
 }

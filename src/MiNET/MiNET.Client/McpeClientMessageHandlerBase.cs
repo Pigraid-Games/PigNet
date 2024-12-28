@@ -118,24 +118,24 @@ namespace MiNET.Client
 			//response.responseStatus = 3;
 			//SendPackage(response);
 
-			if (message.TexturePacks.Count != 0)
+			if (message.texturepacks.Count != 0)
 			{
 				var resourcePackIds = new ResourcePackIds();
 
-				foreach (ResourcePackInfo packInfo in message.TexturePacks)
+				foreach (ResourcePackInfo packInfo in message.texturepacks)
 				{
 					resourcePackIds.Add(packInfo.UUID.ToString());
 				}
 
 				var response = new McpeResourcePackClientResponse();
-				response.ResponseStatus = 2;
-				response.ResourcePackIds = resourcePackIds;
+				response.responseStatus = 2;
+				response.resourcepackids = resourcePackIds;
 				Client.SendPacket(response);
 			}
 			else
 			{
 				var response = new McpeResourcePackClientResponse();
-				response.ResponseStatus = 3;
+				response.responseStatus = 3;
 				Client.SendPacket(response);
 			}
 		}
@@ -152,7 +152,7 @@ namespace MiNET.Client
 			//else
 			{
 				var response = new McpeResourcePackClientResponse();
-				response.ResponseStatus = 4;
+				response.responseStatus = 4;
 				Client.SendPacket(response);
 			}
 		}
@@ -511,7 +511,7 @@ namespace MiNET.Client
 			if (_resourcePackDataInfos.Count == 0)
 			{
 				var response = new McpeResourcePackClientResponse();
-				response.ResponseStatus = 3;
+				response.responseStatus = 3;
 				Client.SendPacket(response);
 			}
 		}
@@ -796,7 +796,7 @@ namespace MiNET.Client
 
 		public virtual void HandleMcpeAnimateEntity(McpeAnimateEntity message)
 		{
-			Log.Warn($"Got entity animation {message.AnimationName}");
+			Log.Warn($"Got entity animation {message.animationName}");
 		}
 
 		public void HandleMcpeServerboundLoadingScreen(McpeServerboundLoadingScreen message)

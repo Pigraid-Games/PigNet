@@ -23,15 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class CoalBlock : Block
+namespace MiNET.Blocks
 {
-	public CoalBlock() : base(173)
+	public partial class CoalBlock : Block
 	{
-		FuelEfficiency = 800;
-		BlastResistance = 30;
-		Hardness = 5;
-		IsFlammable = true;
+		public CoalBlock() : base(173)
+		{
+			FuelEfficiency = 800;
+			BlastResistance = 30;
+			Hardness = 5;
+			IsFlammable = true;
+		}
 	}
 }

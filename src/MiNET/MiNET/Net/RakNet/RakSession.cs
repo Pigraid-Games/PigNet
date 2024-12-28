@@ -164,9 +164,9 @@ namespace MiNET.Net.RakNet
 			try
 			{
 				var connectedPing = ConnectedPing.CreateObject();
-				connectedPing.SendPingTime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+				connectedPing.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 
-				Log.Debug($"Sending ConnectedPing with time={connectedPing.SendPingTime}");
+				Log.Debug($"Sending ConnectedPing with time={connectedPing.sendpingtime}");
 				SendPacket(connectedPing);
 			}
 			catch (Exception ex)
@@ -423,19 +423,19 @@ namespace MiNET.Net.RakNet
 		private void HandleConnectedPong(ConnectedPong connectedPong)
 		{
 			var currentTime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-			if(currentTime < connectedPong.SendPingTime)
+			if(currentTime < connectedPong.sendpingtime)
 			{
-				Log.Warn($"Received invalid pong: timestamp is in the future by {connectedPong.SendPingTime - currentTime} ms");
+				Log.Warn($"Received invalid pong: timestamp is in the future by {connectedPong.sendpingtime - currentTime} ms");
 				return;
 			}
-			_lastPingMeasure = (currentTime - connectedPong.SendPingTime) - 20;
+			_lastPingMeasure = (currentTime - connectedPong.sendpingtime) - 20;
 		}
 
 		protected virtual void HandleConnectedPing(ConnectedPing message)
 		{
 			var packet = ConnectedPong.CreateObject();
-			packet.SendPingTime = message.SendPingTime;
-			packet.SendPongTime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			packet.sendpingtime = message.sendpingtime;
+			packet.sendpongtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 			SendPacket(packet);
 		}
 

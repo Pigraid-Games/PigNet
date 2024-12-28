@@ -23,31 +23,31 @@
 
 #endregion
 
-namespace MiNET.Net;
-
-public partial class McpeMovePlayer : Packet<McpeMovePlayer>
+namespace MiNET.Net
 {
-	public long tick;
-
-	partial void AfterDecode()
+	public partial class McpeMovePlayer : Packet<McpeMovePlayer>
 	{
-		if (mode == 2)
+		public long tick;
+		partial void AfterDecode()
 		{
-			ReadInt();
-			ReadInt();
+			if (mode == 2)
+			{
+				ReadInt();
+				ReadInt();
+			}
+
+			tick = ReadUnsignedVarLong();
 		}
 
-		tick = ReadUnsignedVarLong();
-	}
-
-	partial void AfterEncode()
-	{
-		if (mode == 2)
+		partial void AfterEncode()
 		{
-			Write((int) 0);
-			Write((int) 0);
-		}
+			if (mode == 2)
+			{
+				Write((int) 0);
+				Write((int) 0);
+			}
 
-		WriteUnsignedVarLong(tick);
+			WriteUnsignedVarLong(tick);
+		}
 	}
 }

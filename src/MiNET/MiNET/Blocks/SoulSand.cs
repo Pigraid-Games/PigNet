@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class SoulSand : Block
+namespace MiNET.Blocks
 {
-	public SoulSand() : base(88)
+	public partial class SoulSand : Block
 	{
-		BlastResistance = 2.5f;
-		Hardness = 0.5f;
+		public SoulSand() : base(88)
+		{
+			BlastResistance = 2.5f;
+			Hardness = 0.5f;
+		}
 	}
 }

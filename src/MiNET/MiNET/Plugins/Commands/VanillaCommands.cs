@@ -56,7 +56,7 @@ namespace MiNET.Plugins.Commands
 		[Command(Name = "about", Description = "About the server")]
 		public string About()
 		{
-			return $"This server is running on MiNET-Pigraid {FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(MiNetServer)).Location).ProductVersion} for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion} ({McpeProtocolInfo.ProtocolVersion}). https://github.com/CobwebSMP/MiNET ";
+			return $"This server is running on MiNET-CobwebSMP {FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(MiNetServer)).Location).ProductVersion} for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion} ({McpeProtocolInfo.ProtocolVersion}). https://github.com/CobwebSMP/MiNET ";
 		}
 
 		[Command(Name = "op", Description = "Make player an operator")]

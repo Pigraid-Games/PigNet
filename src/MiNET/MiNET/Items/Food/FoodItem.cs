@@ -44,7 +44,7 @@ public abstract class FoodItem(string name, short id, short metadata, int foodPo
 		{
 			Count--;
 			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, this);
-
+			
 			Consume(player);
 			_isUsing = false;
 			return;

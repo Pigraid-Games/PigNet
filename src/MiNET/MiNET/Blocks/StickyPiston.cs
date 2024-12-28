@@ -28,20 +28,21 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class StickyPiston : Block
+namespace MiNET.Blocks
 {
-	public StickyPiston() : base(29)
+	public partial class StickyPiston : Block
 	{
-		BlastResistance = 2.5f;
-		Hardness = 0.5f;
-	}
+		public StickyPiston() : base(29)
+		{
+			BlastResistance = 2.5f;
+			Hardness = 0.5f;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = ItemBlock.GetReverseFacingDirectionFromEntity(player);
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = ItemBlock.GetReverseFacingDirectionFromEntity(player);
 
-		return false;
+			return false;
+		}
 	}
 }

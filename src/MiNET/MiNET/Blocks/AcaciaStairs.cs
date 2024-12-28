@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class AcaciaStairs : BlockStairs
+namespace MiNET.Blocks
 {
-	public AcaciaStairs() : base(163)
+	public partial class AcaciaStairs : BlockStairs
 	{
-		BlastResistance = 15;
-		Hardness = 2;
-		IsFlammable = true;
+		public AcaciaStairs() : base(163)
+		{
+			BlastResistance = 15;
+			Hardness = 2;
+			IsFlammable = true;
+		}
 	}
 }

@@ -28,20 +28,24 @@ using MiNET.Entities.Vehicles;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items;
-
-public class ItemBoat(short metadata) : Item("minecraft:boat", 333, metadata)
+namespace MiNET.Items
 {
-	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	public class ItemBoat(short metadata) : Item("minecraft:boat", 333, metadata)
 	{
-		BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
+		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 
-		var entity = new Boat(world) { KnownPosition = coordinates };
-		entity.SpawnEntity();
+			var entity = new Boat(world)
+			{
+				KnownPosition = coordinates
+			};
+			entity.SpawnEntity();
 
-		if (player.GameMode != GameMode.Survival) return;
-		Item itemInHand = player.Inventory.GetItemInHand();
-		itemInHand.Count--;
-		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+			if (player.GameMode != GameMode.Survival) return;
+			Item itemInHand = player.Inventory.GetItemInHand();
+			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+		}
 	}
 }

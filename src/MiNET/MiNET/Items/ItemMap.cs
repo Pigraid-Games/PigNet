@@ -34,8 +34,11 @@ public class ItemMap : Item
 {
 	public long MapId
 	{
-		get => ExtraData == null ? 0 : ExtraData["map_uuid"].LongValue;
-		set => ExtraData = new NbtCompound("tag") { new NbtLong("map_uuid", value) };
+		get
+		{
+			return ExtraData == null ? 0 : ExtraData["map_uuid"].LongValue;
+		}
+		set { ExtraData = new NbtCompound("tag") {new NbtLong("map_uuid", value)}; }
 	}
 
 	public ItemMap(long mapId = 0, byte count = 1) : base("minecraft:filled_map", 358, 0, count)

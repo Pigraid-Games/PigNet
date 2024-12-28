@@ -32,43 +32,48 @@ using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class WallBanner() : Block(177)
+namespace MiNET.Blocks
 {
-	public int Base { get; set; }
-	public NbtCompound ExtraData { get; set; }
-
-	public override bool IsBestTool(Item item)
+	public partial class WallBanner : Block
 	{
-		return item is ItemAxe;
-	}
+		public int Base { get; set; }
+		public NbtCompound ExtraData { get; set; }
 
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		return world.GetBlock(blockCoordinates).IsReplaceable;
-	}
-
-	public override BoundingBox GetBoundingBox()
-	{
-		return new BoundingBox(Coordinates, Coordinates + new BlockCoordinates(1, 2, 1));
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-		Base = Convert.ToByte(itemInHand.Metadata);
-
-		FacingDirection = (int) face;
-
-		var bannerBlockEntity = new BannerBlockEntity
+		public WallBanner() : base(177)
 		{
-			Coordinates = Coordinates,
-			Base = Base
-		};
-		bannerBlockEntity.SetCompound(ExtraData);
-		world.SetBlockEntity(bannerBlockEntity);
+		}
 
-		return false;
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
+
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+		{
+			return world.GetBlock(blockCoordinates).IsReplaceable;
+		}
+
+		public override BoundingBox GetBoundingBox()
+		{
+			return new BoundingBox(Coordinates, Coordinates + new BlockCoordinates(1, 2, 1));
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+			Base = Convert.ToByte(itemInHand.Metadata);
+
+			FacingDirection = (int) face;
+
+			var bannerBlockEntity = new BannerBlockEntity
+			{
+				Coordinates = Coordinates,
+				Base = Base,
+			};
+			bannerBlockEntity.SetCompound(ExtraData);
+			world.SetBlockEntity(bannerBlockEntity);
+
+			return false;
+		}
 	}
 }

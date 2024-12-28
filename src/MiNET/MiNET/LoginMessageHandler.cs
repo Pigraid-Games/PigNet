@@ -103,21 +103,21 @@ namespace MiNET
 				_session.Username = string.Empty;
 			}
 
-			_playerInfo.ProtocolVersion = message.ProtocolVersion;
+			_playerInfo.ProtocolVersion = message.protocolVersion;
 			DecodeCert(message);
 		}
 
 		public void DecodeCert(McpeLogin message)
 		{
-			byte[] buffer = message.Payload;
+			byte[] buffer = message.payload;
 
-			if (message.Payload.Length != buffer.Length)
+			if (message.payload.Length != buffer.Length)
 			{
-				Log.Debug($"Wrong lenght {message.Payload.Length} != {message.Payload.Length}");
-				throw new Exception($"Wrong lenght {message.Payload.Length} != {message.Payload.Length}");
+				Log.Debug($"Wrong lenght {message.payload.Length} != {message.payload.Length}");
+				throw new Exception($"Wrong lenght {message.payload.Length} != {message.payload.Length}");
 			}
 
-			if (Log.IsDebugEnabled) Log.Debug("Lenght: " + message.Payload.Length + ", Message: " + buffer.EncodeBase64());
+			if (Log.IsDebugEnabled) Log.Debug("Lenght: " + message.payload.Length + ", Message: " + buffer.EncodeBase64());
 
 			string certificateChain;
 			string skinData;

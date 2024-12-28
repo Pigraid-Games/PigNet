@@ -26,87 +26,88 @@
 using System;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Utils;
-
-public class MapInfo : ICloneable
+namespace MiNET.Utils
 {
-	public long MapId;
-	public byte UpdateType;
-	public BlockCoordinates Origin = new();
-	public MapDecorator[] Decorators = new MapDecorator[0];
-	public MapTrackedObject[] TrackedObjects = new MapTrackedObject[0];
-	public byte X;
-	public byte Z;
-	public int Scale;
-	public int Col;
-	public int Row;
-	public int XOffset;
-	public int ZOffset;
-	public byte[] Data;
-
-	public override string ToString()
+	public class MapInfo : ICloneable
 	{
-		return $"MapId: {MapId}, UpdateType: {UpdateType}, X: {X}, Z: {Z}, Col: {Col}, Row: {Row}, X-offset: {XOffset}, Z-offset: {ZOffset}, Data: {Data?.Length}";
+		public long MapId;
+		public byte UpdateType;
+		public BlockCoordinates Origin = new BlockCoordinates();
+		public MapDecorator[] Decorators = new MapDecorator[0];
+		public MapTrackedObject[] TrackedObjects = new MapTrackedObject[0];
+		public byte X;
+		public byte Z;
+		public int Scale;
+		public int Col;
+		public int Row;
+		public int XOffset;
+		public int ZOffset;
+		public byte[] Data;
+
+		public override string ToString()
+		{
+			return $"MapId: {MapId}, UpdateType: {UpdateType}, X: {X}, Z: {Z}, Col: {Col}, Row: {Row}, X-offset: {XOffset}, Z-offset: {ZOffset}, Data: {Data?.Length}";
+		}
+
+		public object Clone()
+		{
+			return MemberwiseClone();
+		}
 	}
 
-	public object Clone()
+	public class MapDecorator
 	{
-		return MemberwiseClone();
+		protected int Type;
+		public byte Rotation;
+		public byte Icon;
+		public byte X;
+		public byte Z;
+		public string Label;
+		public uint Color;
 	}
-}
 
-public class MapDecorator
-{
-	protected int Type;
-	public byte Rotation;
-	public byte Icon;
-	public byte X;
-	public byte Z;
-	public string Label;
-	public uint Color;
-}
-
-public class BlockMapDecorator : MapDecorator
-{
-	public BlockCoordinates Coordinates;
-
-	public BlockMapDecorator()
+	public class BlockMapDecorator : MapDecorator
 	{
-		Type = 1;
+		public BlockCoordinates Coordinates;
+
+		public BlockMapDecorator()
+		{
+			Type = 1;
+		}
 	}
-}
 
-public class EntityMapDecorator : MapDecorator
-{
-	public long EntityId;
-
-	public EntityMapDecorator()
+	public class EntityMapDecorator : MapDecorator
 	{
-		Type = 0;
+		public long EntityId;
+
+		public EntityMapDecorator()
+		{
+			Type = 0;
+		}
 	}
-}
 
-public class MapTrackedObject
-{
-	protected int Type;
-}
-
-public class EntityMapTrackedObject : MapTrackedObject
-{
-	public long EntityId;
-
-	public EntityMapTrackedObject()
+	public class MapTrackedObject
 	{
-		Type = 0;
+		protected int Type;
 	}
-}
 
-public class BlockMapTrackedObject : MapTrackedObject
-{
-	public BlockCoordinates Coordinates;
-
-	public BlockMapTrackedObject()
+	public class EntityMapTrackedObject : MapTrackedObject
 	{
-		Type = 1;
+		public long EntityId;
+
+		public EntityMapTrackedObject()
+		{
+			Type = 0;
+		}
+	}
+
+	public class BlockMapTrackedObject : MapTrackedObject
+	{
+		public BlockCoordinates Coordinates;
+
+		public BlockMapTrackedObject()
+		{
+			Type = 1;
+		}
 	}
 }

@@ -23,15 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class DetectorRail : Block
+namespace MiNET.Blocks
 {
-	public DetectorRail() : base(28)
+	public partial class DetectorRail : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
-		BlastResistance = 3.5f;
-		Hardness = 0.7f;
+		public DetectorRail() : base(28)
+		{
+			IsSolid = false;
+			IsTransparent = true;
+			BlastResistance = 3.5f;
+			Hardness = 0.7f;
+		}
 	}
 }

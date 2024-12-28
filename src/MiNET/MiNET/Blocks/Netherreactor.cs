@@ -23,12 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Netherreactor : Block
+namespace MiNET.Blocks
 {
-	public Netherreactor() : base(247)
+	public partial class Netherreactor : Block
 	{
-		BlastResistance = 30;
+		public Netherreactor() : base(247)
+		{
+			BlastResistance = 30;
+		}
 	}
 }

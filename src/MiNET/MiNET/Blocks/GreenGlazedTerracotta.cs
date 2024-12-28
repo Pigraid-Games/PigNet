@@ -23,11 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class GreenGlazedTerracotta : GlazedTerracotta
+namespace MiNET.Blocks
 {
-	public GreenGlazedTerracotta() : base(233)
+	public partial class GreenGlazedTerracotta : GlazedTerracotta
 	{
+		public GreenGlazedTerracotta() : base(233)
+		{
+		}
 	}
 }

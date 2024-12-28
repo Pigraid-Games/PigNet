@@ -25,17 +25,18 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class LitFurnace : FurnaceBase
+namespace MiNET.Blocks
 {
-	public LitFurnace() : base(62)
+	public partial class LitFurnace : FurnaceBase
 	{
-		LightLevel = 13;
-	}
+		public LitFurnace() : base(62)
+		{
+			LightLevel = 13;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return new[] { new ItemBlock(new Furnace(), 0) };
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {new ItemBlock(new Furnace(), 0)};
+		}
 	}
 }

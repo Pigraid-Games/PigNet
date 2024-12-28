@@ -32,43 +32,48 @@ using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class StandingBanner() : Block(176)
+namespace MiNET.Blocks
 {
-	public int Base { get; set; }
-	public NbtCompound ExtraData { get; set; }
-
-	public override bool IsBestTool(Item item)
+	public partial class StandingBanner : Block
 	{
-		return item is ItemAxe;
-	}
+		public int Base { get; set; }
+		public NbtCompound ExtraData { get; set; }
 
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		return world.GetBlock(blockCoordinates).IsReplaceable;
-	}
-
-	public override BoundingBox GetBoundingBox()
-	{
-		return new BoundingBox(Coordinates, Coordinates + new BlockCoordinates(1, 2, 1));
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-		Base = Convert.ToByte(itemInHand.Metadata);
-		// metadata for banner is a value 0-15 that signify the orientation of the banner. Same as PC metadata.
-		GroundSignDirection = (byte) ((int) (Math.Floor((player.KnownPosition.Yaw + 180) * 16 / 360) + 0.5) & 0x0f);
-
-		var bannerBlockEntity = new BannerBlockEntity
+		public StandingBanner() : base(176)
 		{
-			Coordinates = Coordinates,
-			Base = Base
-		};
-		bannerBlockEntity.SetCompound(ExtraData);
-		world.SetBlockEntity(bannerBlockEntity);
+		}
 
-		return false;
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
+
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+		{
+			return world.GetBlock(blockCoordinates).IsReplaceable;
+		}
+
+		public override BoundingBox GetBoundingBox()
+		{
+			return new BoundingBox(Coordinates, Coordinates + new BlockCoordinates(1, 2, 1));
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+			Base = Convert.ToByte(itemInHand.Metadata);
+			// metadata for banner is a value 0-15 that signify the orientation of the banner. Same as PC metadata.
+			GroundSignDirection = (byte) ((int) (Math.Floor((player.KnownPosition.Yaw + 180) * 16 / 360) + 0.5) & 0x0f);
+
+			var bannerBlockEntity = new BannerBlockEntity
+			{
+				Coordinates = Coordinates,
+				Base = Base,
+			};
+			bannerBlockEntity.SetCompound(ExtraData);
+			world.SetBlockEntity(bannerBlockEntity);
+
+			return false;
+		}
 	}
 }

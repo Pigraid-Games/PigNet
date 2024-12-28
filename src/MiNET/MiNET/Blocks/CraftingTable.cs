@@ -24,30 +24,42 @@
 #endregion
 
 using System.Numerics;
+using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class CraftingTable : Block
+namespace MiNET.Blocks
 {
-	public CraftingTable() : base(58)
+	public partial class CraftingTable : Block
 	{
-		FuelEfficiency = 15;
-		BlastResistance = 12.5f;
-		Hardness = 2.5f;
-	}
+		public CraftingTable() : base(58)
+		{
+			FuelEfficiency = 15;
+			BlastResistance = 12.5f;
+			Hardness = 2.5f;
+			//IsFlammable = true; // Only from lava.
+		}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-		containerOpen.windowId = 13;
-		containerOpen.type = (byte) ContainerType.Workbench;
-		containerOpen.coordinates = Coordinates;
-		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
-		player.SendPacket(containerOpen);
-		return true;
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			var containerOpen = McpeContainerOpen.CreateObject();
+			containerOpen.windowId = 13;
+			containerOpen.type = 1;
+			containerOpen.coordinates = Coordinates;
+			containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+			player.SendPacket(containerOpen);
+
+			//var sendSlot = McpeInventorySlot.CreateObject();
+			//sendSlot.inventoryId = 124;
+			//sendSlot.slot = 32;
+			//sendSlot.uniqueid = 1;
+			//sendSlot.item = new ItemBlock(new Planks());
+			//player.SendPacket(sendSlot);
+
+
+			return true;
+		}
 	}
 }

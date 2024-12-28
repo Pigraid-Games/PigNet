@@ -32,54 +32,60 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class MobSpawner : Block
+namespace MiNET.Blocks
 {
-	public MobSpawner() : base(52)
+	public partial class MobSpawner : Block
 	{
-		IsTransparent = true; // Doesn't block light
-		LightLevel = 1;
-		BlastResistance = 25;
-		Hardness = 5;
-	}
+		public MobSpawner() : base(52)
+		{
+			IsTransparent = true; // Doesn't block light
+			LightLevel = 1;
+			BlastResistance = 25;
+			Hardness = 5;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return new Item[0];
-	}
+		public override Item[] GetDrops(Item tool)
+		{
+			return new Item[0];
+		}
 
-	public override float GetExperiencePoints()
-	{
-		var random = new Random();
-		return random.Next(15, 44);
-	}
+		public override float GetExperiencePoints()
+		{
+			Random random = new Random();
+			return random.Next(15, 44);
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		var blockEntity = new MobSpawnerBlockEntity() { Coordinates = Coordinates };
-		world.SetBlockEntity(blockEntity);
-
-		return false;
-	}
-
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		if (player.Inventory.GetItemInHand() is ItemSpawnEgg monsterEgg)
-			if (world.GetBlockEntity(Coordinates) is MobSpawnerBlockEntity blockEntity)
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			MobSpawnerBlockEntity blockEntity = new MobSpawnerBlockEntity()
 			{
-				Entity entity = monsterEgg.Metadata.CreateEntity(world);
-				if (entity != null)
-				{
-					blockEntity.EntityTypeId = (int) EntityHelpers.ToEntityType(entity.EntityTypeId);
-					blockEntity.DisplayEntityHeight = (float) entity.Height;
-					blockEntity.DisplayEntityWidth = (float) entity.Width;
-					blockEntity.DisplayEntityScale = (float) entity.Scale;
+				Coordinates = Coordinates
+			};
+			world.SetBlockEntity(blockEntity);
 
-					world.SetBlockEntity(blockEntity);
+			return false;
+		}
+
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			if (player.Inventory.GetItemInHand() is ItemSpawnEgg monsterEgg)
+			{
+				if (world.GetBlockEntity(Coordinates) is MobSpawnerBlockEntity blockEntity)
+				{
+					Entity entity = monsterEgg.Metadata.CreateEntity(world);
+					if (entity != null)
+					{
+						blockEntity.EntityTypeId = (int)EntityHelpers.ToEntityType(entity.EntityTypeId);
+						blockEntity.DisplayEntityHeight = (float) entity.Height;
+						blockEntity.DisplayEntityWidth = (float) entity.Width;
+						blockEntity.DisplayEntityScale = (float) entity.Scale;
+
+						world.SetBlockEntity(blockEntity);
+					}
 				}
 			}
 
-		return true;
+			return true;
+		}
 	}
 }

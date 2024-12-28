@@ -29,36 +29,39 @@ using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class ShulkerBox : Block
+namespace MiNET.Blocks
 {
-	public ShulkerBox() : base(218)
+	public partial class ShulkerBox : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 30f;
-		Hardness = 6f;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
-
-		var shulkerBoxBlockEntity = new ShulkerBoxBlockEntity
+		public ShulkerBox() : base(218)
 		{
-			Coordinates = Coordinates,
-			Facing = (byte) face
-		};
+			IsTransparent = true;
+			BlastResistance = 30f;
+			Hardness = 6f;
+		}
 
-		world.SetBlockEntity(shulkerBoxBlockEntity);
-		return false;
-	}
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
+
+			var shulkerBoxBlockEntity = new ShulkerBoxBlockEntity
+			{
+				Coordinates = Coordinates,
+				Facing = (byte) face
+			};
+
+			world.SetBlockEntity(shulkerBoxBlockEntity);
+
+			return false;
+		}
 
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		player.OpenInventory(blockCoordinates);
-		world.BroadcastSound(blockCoordinates, LevelSoundEventType.ShulkerboxOpen);
-		return true;
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			player.OpenInventory(blockCoordinates);
+			world.BroadcastSound(blockCoordinates, LevelSoundEventType.ShulkerboxOpen);
+
+			return true;
+		}
 	}
 }

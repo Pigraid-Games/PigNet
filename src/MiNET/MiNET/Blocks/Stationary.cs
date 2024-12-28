@@ -23,73 +23,98 @@
 
 #endregion
 
+using log4net;
+using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public class Stationary : Block
+namespace MiNET.Blocks
 {
-	[StateRange(0, 15)] public virtual int LiquidDepth { get; set; } = 0;
-
-	internal Stationary(byte id) : base(id)
+	public class Stationary : Block
 	{
-		IsSolid = false;
-		IsBuildable = false;
-		IsReplaceable = true;
-		IsTransparent = true;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Stationary));
 
-	public override void DoPhysics(Level level)
-	{
-		CheckForHarden(level, Coordinates);
+		[StateRange(0, 15)] public virtual int LiquidDepth { get; set; } = 0;
 
-		if (level.GetBlock(Coordinates).Id == Id) // Isn't this always true?
-			SetToFlowing(level);
-	}
-
-	private void SetToFlowing(Level world)
-	{
-		var flowingBlock = (Flowing) BlockFactory.GetBlockById((byte) (Id - 1));
-		flowingBlock.LiquidDepth = LiquidDepth;
-		flowingBlock.Coordinates = Coordinates;
-		world.SetBlock(flowingBlock, applyPhysics: false);
-		world.ScheduleBlockTick(flowingBlock, 5);
-	}
-
-	private void CheckForHarden(Level world, BlockCoordinates coord)
-	{
-		var block = world.GetBlock(coord) as Stationary; // this
-
-		bool harden = false;
-		if ( /*block is FlowingLava || */block is not Lava) return; // this is lava, can not be flowing lava
-		if (IsWater(world, coord + BlockCoordinates.Backwards)) harden = true;
-
-		if (harden || IsWater(world, coord + BlockCoordinates.Forwards)) harden = true;
-
-		if (harden || IsWater(world, coord + BlockCoordinates.Left)) harden = true;
-
-		if (harden || IsWater(world, coord + BlockCoordinates.Right)) harden = true;
-
-		if (harden || IsWater(world, coord + BlockCoordinates.Up)) harden = true;
-
-		if (!harden) return;
-		int liquidDepth = block.LiquidDepth;
-
-		switch (liquidDepth)
+		internal Stationary(byte id) : base(id)
 		{
-			case 0:
-				world.SetBlock(new Obsidian { Coordinates = new BlockCoordinates(coord) }, true, false);
-				break;
-			case <= 4:
-				world.SetBlock(new Cobblestone { Coordinates = new BlockCoordinates(coord) }, true, false);
-				break;
+			IsSolid = false;
+			IsBuildable = false;
+			IsReplaceable = true;
+			IsTransparent = true;
 		}
-	}
 
-	private bool IsWater(Level world, BlockCoordinates coord)
-	{
-		Block block = world.GetBlock(coord);
-		return block is FlowingWater or Water;
+		public override void DoPhysics(Level level)
+		{
+			CheckForHarden(level, Coordinates);
+
+			if (level.GetBlock(Coordinates).Id == Id) // Isn't this always true?
+			{
+				SetToFlowing(level);
+			}
+		}
+
+		private void SetToFlowing(Level world)
+		{
+			var flowingBlock = (Flowing) BlockFactory.GetBlockById((byte) (Id - 1));
+			flowingBlock.LiquidDepth = LiquidDepth;
+			flowingBlock.Coordinates = Coordinates;
+			world.SetBlock(flowingBlock, applyPhysics: false);
+			world.ScheduleBlockTick(flowingBlock, 5);
+		}
+
+		private void CheckForHarden(Level world, BlockCoordinates coord)
+		{
+			var block = world.GetBlock(coord) as Stationary; // this
+
+			bool harden = false;
+			if ( /*block is FlowingLava || */block is Lava) // this is lava, can not be flowing lava
+			{
+				if (IsWater(world, coord + BlockCoordinates.Backwards))
+				{
+					harden = true;
+				}
+
+				if (harden || IsWater(world, coord + BlockCoordinates.Forwards))
+				{
+					harden = true;
+				}
+
+				if (harden || IsWater(world, coord + BlockCoordinates.Left))
+				{
+					harden = true;
+				}
+
+				if (harden || IsWater(world, coord + BlockCoordinates.Right))
+				{
+					harden = true;
+				}
+
+				if (harden || IsWater(world, coord + BlockCoordinates.Up))
+				{
+					harden = true;
+				}
+
+				if (harden)
+				{
+					int liquidDepth = block.LiquidDepth;
+
+					if (liquidDepth == 0)
+					{
+						world.SetBlock(new Obsidian {Coordinates = new BlockCoordinates(coord)}, true, false);
+					}
+					else if (liquidDepth <= 4)
+					{
+						world.SetBlock(new Cobblestone {Coordinates = new BlockCoordinates(coord)}, true, false);
+					}
+				}
+			}
+		}
+
+		private bool IsWater(Level world, BlockCoordinates coord)
+		{
+			Block block = world.GetBlock(coord);
+			return block is FlowingWater || block is Water;
+		}
 	}
 }

@@ -25,19 +25,21 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Cake : Block
+namespace MiNET.Blocks
 {
-	public Cake() : base(92)
+	public partial class Cake : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 2.5f;
-		Hardness = 0.5f;
-	}
+		public Cake() : base(92)
+		{
+			IsTransparent = true;
+			BlastResistance = 2.5f;
+			Hardness = 0.5f;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return BiteCounter == 0 ? [ItemFactory.GetItem("minecraft:cake")] : [];
+		public override Item[] GetDrops(Item tool)
+		{
+			if (BiteCounter == 0) return new Item[] {ItemFactory.GetItem(354, 0, 1)};
+			return new Item[0];
+		}
 	}
 }

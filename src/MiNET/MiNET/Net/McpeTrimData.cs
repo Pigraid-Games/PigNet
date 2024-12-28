@@ -27,52 +27,53 @@ using System;
 using System.Collections.Generic;
 using MiNET.Crafting;
 
-namespace MiNET.Net;
-
-public partial class McpeTrimData : Packet<McpeTrimData>
+namespace MiNET.Net
 {
-	public List<TrimPattern> Patterns;
-	public List<TrimMaterial> Materials;
-
-	partial void AfterEncode()
+	public partial class McpeTrimData : Packet<McpeTrimData>
 	{
-		WriteUnsignedVarInt((uint) Patterns.Count);
-		foreach (TrimPattern pattern in Patterns)
+		public List<TrimPattern> Patterns;
+		public List<TrimMaterial> Materials;
+
+		partial void AfterEncode()
 		{
-			Write(pattern.ItemId);
-			Write(pattern.PatternId);
+			WriteUnsignedVarInt((uint) Patterns.Count);
+			foreach (var pattern in Patterns)
+			{
+				Write(pattern.ItemId);
+				Write(pattern.PatternId);
+			}
+
+			WriteUnsignedVarInt((uint) Materials.Count);
+			foreach (var material in Materials)
+			{
+				Write(material.MaterialId);
+				Write(material.Color);
+				Write(material.ItemId);
+			}
 		}
 
-		WriteUnsignedVarInt((uint) Materials.Count);
-		foreach (TrimMaterial material in Materials)
+		partial void AfterDecode()
 		{
-			Write(material.MaterialId);
-			Write(material.Color);
-			Write(material.ItemId);
-		}
-	}
+			Patterns = new List<TrimPattern>();
+			int countPattern = (int) ReadUnsignedVarInt();
+			for (int i = 0; i < countPattern; i++)
+			{
+				TrimPattern pattern = new TrimPattern();
+				pattern.ItemId = ReadString();
+				pattern.PatternId = ReadString();
+				Patterns.Add(pattern);
+			}
 
-	partial void AfterDecode()
-	{
-		Patterns = new List<TrimPattern>();
-		int countPattern = (int) ReadUnsignedVarInt();
-		for (int i = 0; i < countPattern; i++)
-		{
-			var pattern = new TrimPattern();
-			pattern.ItemId = ReadString();
-			pattern.PatternId = ReadString();
-			Patterns.Add(pattern);
-		}
-
-		Materials = new List<TrimMaterial>();
-		int countMaterial = (int) ReadUnsignedVarInt();
-		for (int i = 0; i < countMaterial; i++)
-		{
-			var material = new TrimMaterial();
-			material.MaterialId = ReadString();
-			material.Color = ReadString();
-			material.ItemId = ReadString();
-			Materials.Add(material);
+			Materials = new List<TrimMaterial>();
+			int countMaterial = (int) ReadUnsignedVarInt();
+			for (int i = 0; i < countMaterial; i++)
+			{
+				TrimMaterial material = new TrimMaterial();
+				material.MaterialId = ReadString();
+				material.Color = ReadString();
+				material.ItemId = ReadString();
+				Materials.Add(material);
+			}
 		}
 	}
 }

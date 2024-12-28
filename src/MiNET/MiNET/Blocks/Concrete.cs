@@ -22,25 +22,25 @@
 // All Rights Reserved.
 
 #endregion
-
 using System.Numerics;
 using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Concrete : Block
+namespace MiNET.Blocks
 {
-	public Concrete() : base(236)
+	public partial class Concrete : Block
 	{
-		BlastResistance = 15;
-		Hardness = 3;
-	}
+		public Concrete() : base(236)
+		{
+			BlastResistance = 15;
+			Hardness = 3;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
+			return false;
+		}
 	}
 }

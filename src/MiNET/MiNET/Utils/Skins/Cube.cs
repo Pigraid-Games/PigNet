@@ -28,61 +28,69 @@ using System.Collections.Generic;
 using System.Numerics;
 using Newtonsoft.Json;
 
-namespace MiNET.Utils.Skins;
-
-public enum Face
+namespace MiNET.Utils.Skins
 {
-	None,
-	Inside,
-	Top,
-	Bottom,
-	Right,
-	Front,
-	Left,
-	Back
-}
-
-public class FaceUv
-{
-	[JsonProperty("uv")] public float[] Uv { get; set; } = new float[2];
-
-	[JsonProperty("uv_size")] public float[] UvSize { get; set; } = new float[2];
-}
-
-public class Cube : ICloneable
-{
-	public float[] Origin { get; set; } = new float[3];
-	public float[] Size { get; set; } = new float[3];
-
-	[JsonConverter(typeof(UvConverter))] public Dictionary<string, FaceUv> Uv { get; set; } = new();
-
-	public float Inflate { get; set; }
-	public bool Mirror { get; set; }
-
-	public float[] Pivot { get; set; } = new float[3];
-
-	public float[] Rotation { get; set; } = new float[3];
-
-	[JsonIgnore] public Vector3 Velocity { get; set; } = Vector3.Zero;
-
-	[JsonIgnore] public Face Face { get; set; } = Face.None;
-
-	public object Clone()
+	public enum Face
 	{
-		var cube = (Cube) MemberwiseClone();
-		cube.Origin = (float[]) Origin?.Clone();
-		cube.Size = (float[]) Size?.Clone();
-		cube.Pivot = (float[]) Pivot?.Clone();
-		cube.Rotation = (float[]) Rotation?.Clone();
-
-		cube.Uv = new Dictionary<string, FaceUv>();
-		foreach (KeyValuePair<string, FaceUv> kvp in Uv)
-			cube.Uv[kvp.Key] = new FaceUv
-			{
-				Uv = (float[]) kvp.Value.Uv?.Clone(),
-				UvSize = (float[]) kvp.Value.UvSize?.Clone()
-			};
-
-		return cube;
+		None,
+		Inside,
+		Top,
+		Bottom,
+		Right,
+		Front,
+		Left,
+		Back,
 	}
+
+	public class FaceUv
+	{
+		[JsonProperty("uv")]
+		public float[] Uv { get; set; } = new float[2];
+
+		[JsonProperty("uv_size")]
+		public float[] UvSize { get; set; } = new float[2];
+	}
+	public class Cube : ICloneable
+	{
+		public float[] Origin { get; set; } = new float[3];
+		public float[] Size { get; set; } = new float[3];
+
+		[JsonConverter(typeof(UvConverter))]
+		public Dictionary<string, FaceUv> Uv { get; set; } = new Dictionary<string, FaceUv>();
+
+		public float Inflate { get; set; }
+		public bool Mirror { get; set; }
+		
+		public float[] Pivot { get; set; } = new float[3];
+		
+		public float[] Rotation { get; set; } = new float[3];
+
+		[JsonIgnore]
+		public Vector3 Velocity { get; set; } = Vector3.Zero;
+
+		[JsonIgnore]
+		public Face Face { get; set; } = Face.None;
+
+		public object Clone()
+		{
+			var cube = (Cube) MemberwiseClone();
+			cube.Origin = (float[]) Origin?.Clone();
+			cube.Size = (float[]) Size?.Clone();
+			cube.Pivot = (float[]) Pivot?.Clone();
+			cube.Rotation = (float[]) Rotation?.Clone();
+			
+			cube.Uv = new Dictionary<string, FaceUv>();
+			foreach (var kvp in Uv)
+			{
+				cube.Uv[kvp.Key] = new FaceUv
+				{
+					Uv = (float[]) kvp.Value.Uv?.Clone(),
+					UvSize = (float[]) kvp.Value.UvSize?.Clone()
+				};
+			}
+
+			return cube;
+		}
+	}
+
 }

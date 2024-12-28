@@ -28,58 +28,65 @@ using System.IO;
 using System.Text;
 using log4net;
 
-namespace MiNET.Utils.Metadata;
-
-public class MetadataString : MetadataEntry
+namespace MiNET.Utils.Metadata
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(MetadataString));
-
-	public override byte Identifier => 4;
-
-	public override string FriendlyName => "string";
-
-	public string Value { get; set; }
-
-	public static implicit operator MetadataString(string value)
+	public class MetadataString : MetadataEntry
 	{
-		return new MetadataString(value);
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(MetadataString));
 
-	public MetadataString()
-	{
-	}
-
-	public MetadataString(string value)
-	{
-		Value = value;
-	}
-
-	public override void FromStream(BinaryReader reader)
-	{
-		try
+		public override byte Identifier
 		{
-			int len = VarInt.ReadInt32(reader.BaseStream);
-
-			byte[] bytes = new byte[len];
-			reader.BaseStream.Read(bytes, 0, len);
-			Value = Encoding.UTF8.GetString(bytes);
+			get { return 4; }
 		}
-		catch (Exception e)
+
+		public override string FriendlyName
 		{
-			Log.Error(e);
+			get { return "string"; }
 		}
-	}
 
-	public override void WriteTo(BinaryWriter stream)
-	{
-		byte[] bytes = Encoding.UTF8.GetBytes(Value);
-		VarInt.WriteInt32(stream.BaseStream, bytes.Length);
+		public string Value { get; set; }
 
-		stream.Write(bytes);
-	}
+		public static implicit operator MetadataString(string value)
+		{
+			return new MetadataString(value);
+		}
 
-	public override string ToString()
-	{
-		return string.Format("({0}) '{2}'", FriendlyName, Identifier, Value);
+		public MetadataString()
+		{
+		}
+
+		public MetadataString(string value)
+		{
+			Value = value;
+		}
+
+		public override void FromStream(BinaryReader reader)
+		{
+			try
+			{
+				var len = VarInt.ReadInt32(reader.BaseStream);
+
+				byte[] bytes = new byte[len];
+				reader.BaseStream.Read(bytes, 0, len);
+				Value = Encoding.UTF8.GetString(bytes);
+			}
+			catch (Exception e)
+			{
+				Log.Error(e);
+			}
+		}
+
+		public override void WriteTo(BinaryWriter stream)
+		{
+			byte[] bytes = Encoding.UTF8.GetBytes(Value);
+			VarInt.WriteInt32(stream.BaseStream, bytes.Length);
+
+			stream.Write(bytes);
+		}
+
+		public override string ToString()
+		{
+			return string.Format("({0}) '{2}'", FriendlyName, Identifier, Value);
+		}
 	}
 }

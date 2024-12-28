@@ -1,18 +1,20 @@
 ﻿using System.Collections.Generic;
 
-namespace MiNET.Net;
-
-public class Experiments : List<Experiments.Experiment>
+namespace MiNET.Net
 {
-	public class Experiment
+	public class Experiments : List<Experiments.Experiment>
 	{
-		public string Name { get; }
-		public bool Enabled { get; }
-
-		public Experiment(string name, bool enabled)
+		
+		public class Experiment
 		{
-			Name = name;
-			Enabled = enabled;
+			public string Name { get; }
+			public bool Enabled { get; }
+
+			public Experiment(string name, bool enabled)
+			{
+				Name = name;
+				Enabled = enabled;
+			}
 		}
 	}
 }

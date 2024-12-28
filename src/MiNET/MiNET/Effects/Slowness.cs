@@ -25,38 +25,39 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Slowness : Effect
+namespace MiNET.Effects
 {
-	private double _multiplier = 0.015;
-
-	public Slowness() : base(EffectType.Slowness)
+	public class Slowness : Effect
 	{
-		ParticleColor = Color.FromArgb(0x8b, 0xaf, 0xe0);
-	}
+		private double _multiplier = 0.015;
 
-	public override void SendAdd(Player player)
-	{
-		player.MovementSpeed = (float) (0.1 - ((Level + 1) * _multiplier));
-		player.SendUpdateAttributes();
+		public Slowness() : base(EffectType.Slowness)
+		{
+			ParticleColor = Color.FromArgb(0x8b, 0xaf, 0xe0);
+		}
 
-		base.SendAdd(player);
-	}
+		public override void SendAdd(Player player)
+		{
+			player.MovementSpeed = (float) (0.1 - (Level + 1) * _multiplier);
+			player.SendUpdateAttributes();
 
-	public override void SendUpdate(Player player)
-	{
-		player.MovementSpeed = (float) (0.1 - ((Level + 1) * _multiplier));
-		player.SendUpdateAttributes();
+			base.SendAdd(player);
+		}
 
-		base.SendUpdate(player);
-	}
+		public override void SendUpdate(Player player)
+		{
+			player.MovementSpeed = (float) (0.1 - (Level + 1) * _multiplier);
+			player.SendUpdateAttributes();
 
-	public override void SendRemove(Player player)
-	{
-		player.MovementSpeed = 0.1f;
-		player.SendUpdateAttributes();
+			base.SendUpdate(player);
+		}
 
-		base.SendRemove(player);
+		public override void SendRemove(Player player)
+		{
+			player.MovementSpeed = 0.1f;
+			player.SendUpdateAttributes();
+
+			base.SendRemove(player);
+		}
 	}
 }

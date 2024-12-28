@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class NetherBrickStairs : BlockStairs
+namespace MiNET.Blocks
 {
-	public NetherBrickStairs() : base(114)
+	public partial class NetherBrickStairs : BlockStairs
 	{
-		BlastResistance = 30;
-		Hardness = 2;
+		public NetherBrickStairs() : base(114)
+		{
+			BlastResistance = 30;
+			Hardness = 2;
+		}
 	}
 }

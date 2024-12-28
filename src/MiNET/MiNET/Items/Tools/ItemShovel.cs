@@ -45,7 +45,10 @@ public class ItemShovel : Item
 	{
 		Block block = world.GetBlock(blockCoordinates);
 		if (block is not Grass) return;
-		var grassPath = new GrassPath { Coordinates = blockCoordinates };
+		var grassPath = new GrassPath
+		{
+			Coordinates = blockCoordinates,
+		};
 		world.SetBlock(grassPath);
 		player.Inventory.DamageItemInHand(ItemDamageReason.BlockInteract, null, block);
 	}

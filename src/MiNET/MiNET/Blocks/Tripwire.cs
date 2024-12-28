@@ -25,18 +25,19 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class TripWire : Block
+namespace MiNET.Blocks
 {
-	public TripWire() : base(132)
+	public partial class TripWire : Block
 	{
-		IsTransparent = true;
-		IsSolid = false;
-	}
+		public TripWire() : base(132)
+		{
+			IsTransparent = true;
+			IsSolid = false;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return [ItemFactory.GetItem("minecraft:string")];
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {ItemFactory.GetItem(287, 0, 1)};
+		}
 	}
 }

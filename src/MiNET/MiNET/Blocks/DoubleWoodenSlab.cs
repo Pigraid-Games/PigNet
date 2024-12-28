@@ -26,26 +26,27 @@
 using MiNET.Items;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks;
-
-public partial class DoubleWoodenSlab : Block
+namespace MiNET.Blocks
 {
-	public DoubleWoodenSlab() : base(157)
+	public partial class DoubleWoodenSlab : Block
 	{
-		BlastResistance = 15;
-		Hardness = 2;
-		IsFlammable = true;
-	}
+		public DoubleWoodenSlab() : base(157)
+		{
+			BlastResistance = 15;
+			Hardness = 2;
+			IsFlammable = true;
+		}
 
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe ? true : false;
-	}
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		Item[] items = base.GetDrops(tool);
-		items[0].Count = 2;
-		return items;
+		public override Item[] GetDrops(Item tool)
+		{
+			var items = base.GetDrops(tool);
+			items[0].Count = 2;
+			return items;
+		}
 	}
 }

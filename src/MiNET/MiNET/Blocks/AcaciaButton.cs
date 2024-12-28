@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,15 +19,15 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
-
-namespace MiNET.Blocks;
-
-public partial class AcaciaButton : Button
+namespace MiNET.Blocks
 {
-	public AcaciaButton() : base(395)
+	public partial class AcaciaButton: Button
 	{
-		TickRate = 30;
+		public AcaciaButton() : base(395)
+		{
+			TickRate = 30;
+		}
+
 	}
 }

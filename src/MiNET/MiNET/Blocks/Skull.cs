@@ -23,16 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public abstract class SkullBase : Block
+namespace MiNET.Blocks
 {
-	[StateRange(0, 5)] public virtual int FacingDirection { get; set; }
-
-	protected SkullBase(int id) : base(id)
+	public abstract class SkullBase : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 5;
-		Hardness = 1;
+		[StateRange(0, 5)] public virtual int FacingDirection { get; set; }
+		public SkullBase(int id) : base(id)
+		{
+			IsTransparent = true;
+			BlastResistance = 5;
+			Hardness = 1;
+		}
 	}
 }

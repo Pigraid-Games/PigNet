@@ -27,61 +27,62 @@ using System;
 using log4net;
 using log4net.Core;
 
-namespace MiNET.Utils;
-
-public static class LogHelpers
+namespace MiNET.Utils
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(LogHelpers));
-
-	// These are all the levels built into log4net
-	//public static readonly Level Off = new Level(int.MaxValue, "OFF");
-	//public static readonly Level Log4Net_Debug = new Level(120000, "log4net:DEBUG");
-	//public static readonly Level Emergency = new Level(120000, "EMERGENCY");
-	//public static readonly Level Fatal = new Level(110000, "FATAL");
-	//public static readonly Level Alert = new Level(100000, "ALERT");
-	//public static readonly Level Critical = new Level(90000, "CRITICAL");
-	//public static readonly Level Severe = new Level(80000, "SEVERE");
-	//public static readonly Level Error = new Level(70000, "ERROR");
-	//public static readonly Level Warn = new Level(60000, "WARN");
-	//public static readonly Level Notice = new Level(50000, "NOTICE");
-	//public static readonly Level Info = new Level(40000, "INFO");
-	//public static readonly Level Debug = new Level(30000, "DEBUG");
-	//public static readonly Level Fine = new Level(30000, "FINE");
-	//public static readonly Level Trace = new Level(20000, "TRACE");
-	//public static readonly Level Finer = new Level(20000, "FINER");
-	//public static readonly Level Verbose = new Level(10000, "VERBOSE");
-	//public static readonly Level Finest = new Level(10000, "FINEST");
-	//public static readonly Level All = new Level(int.MinValue, "ALL");
-
-	private static readonly Type _declaringType = typeof(LogHelpers);
-
-	public static bool IsTraceEnabled(this ILog log)
+	public static class LogHelpers
 	{
-		return log.Logger.IsEnabledFor(Level.Trace);
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(LogHelpers));
 
-	public static void Trace(this ILog log, string message, Exception exception)
-	{
-		log.Logger.Log(_declaringType, Level.Trace, message, exception);
-	}
+		// These are all the levels built into log4net
+		//public static readonly Level Off = new Level(int.MaxValue, "OFF");
+		//public static readonly Level Log4Net_Debug = new Level(120000, "log4net:DEBUG");
+		//public static readonly Level Emergency = new Level(120000, "EMERGENCY");
+		//public static readonly Level Fatal = new Level(110000, "FATAL");
+		//public static readonly Level Alert = new Level(100000, "ALERT");
+		//public static readonly Level Critical = new Level(90000, "CRITICAL");
+		//public static readonly Level Severe = new Level(80000, "SEVERE");
+		//public static readonly Level Error = new Level(70000, "ERROR");
+		//public static readonly Level Warn = new Level(60000, "WARN");
+		//public static readonly Level Notice = new Level(50000, "NOTICE");
+		//public static readonly Level Info = new Level(40000, "INFO");
+		//public static readonly Level Debug = new Level(30000, "DEBUG");
+		//public static readonly Level Fine = new Level(30000, "FINE");
+		//public static readonly Level Trace = new Level(20000, "TRACE");
+		//public static readonly Level Finer = new Level(20000, "FINER");
+		//public static readonly Level Verbose = new Level(10000, "VERBOSE");
+		//public static readonly Level Finest = new Level(10000, "FINEST");
+		//public static readonly Level All = new Level(int.MinValue, "ALL");
 
-	public static void Trace(this ILog log, string message)
-	{
-		log.Trace(message, null);
-	}
+		private static readonly Type _declaringType = typeof(LogHelpers);
 
-	public static bool IsVerboseEnabled(this ILog log)
-	{
-		return log.Logger.IsEnabledFor(Level.Verbose);
-	}
+		public static bool IsTraceEnabled(this ILog log)
+		{
+			return log.Logger.IsEnabledFor(Level.Trace);
+		}
 
-	public static void Verbose(this ILog log, string message, Exception exception)
-	{
-		log.Logger.Log(_declaringType, Level.Verbose, message, exception);
-	}
+		public static void Trace(this ILog log, string message, Exception exception)
+		{
+			log.Logger.Log(_declaringType, Level.Trace, message, exception);
+		}
 
-	public static void Verbose(this ILog log, string message)
-	{
-		log.Verbose(message, null);
+		public static void Trace(this ILog log, string message)
+		{
+			log.Trace(message, null);
+		}
+
+		public static bool IsVerboseEnabled(this ILog log)
+		{
+			return log.Logger.IsEnabledFor(Level.Verbose);
+		}
+
+		public static void Verbose(this ILog log, string message, Exception exception)
+		{
+			log.Logger.Log(_declaringType, Level.Verbose, message, exception);
+		}
+
+		public static void Verbose(this ILog log, string message)
+		{
+			log.Verbose(message, null);
+		}
 	}
 }

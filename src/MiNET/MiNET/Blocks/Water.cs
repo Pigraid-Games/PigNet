@@ -23,6 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Water() : Stationary(9);
+namespace MiNET.Blocks
+{
+	public partial class Water : Stationary
+	{
+		public Water() : base(9)
+		{
+		}
+	}
+}

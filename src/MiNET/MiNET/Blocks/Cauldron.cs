@@ -24,57 +24,59 @@
 #endregion
 
 using System.Numerics;
+using log4net;
 using MiNET.Items;
+using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Cauldron
+namespace MiNET.Blocks
 {
-	public Cauldron() : base(118)
+	public partial class Cauldron : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 10;
-		Hardness = 2;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Cauldron));
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-
-		if (itemInHand is not ItemBucket) return true; // Handled
-		switch (itemInHand.Metadata)
+		public Cauldron() : base(118)
 		{
-			case 8:
-			{
-				if (FillLevel < 8)
-				{
-					FillLevel = 8;
-					world.SetBlock(this, applyPhysics: false);
-					itemInHand.Metadata = 0;
-					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-				}
-				break;
-			}
-			case 0:
-			{
-				if (FillLevel > 0)
-				{
-					FillLevel = 0;
-					world.SetBlock(this, applyPhysics: false);
-					itemInHand.Metadata = 8;
-					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-				}
-				break;
-			}
+			IsTransparent = true;
+			BlastResistance = 10;
+			Hardness = 2;
 		}
 
-		return true; // Handled
-	}
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return [ItemFactory.GetItem("minecraft:cauldron")];
+			if (itemInHand is ItemBucket)
+			{
+				if (itemInHand.Metadata == 8)
+				{
+					if (FillLevel < 8)
+					{
+						FillLevel = 8;
+						world.SetBlock(this, applyPhysics: false);
+						itemInHand.Metadata = 0;
+						player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+					}
+				}
+				else if (itemInHand.Metadata == 0)
+				{
+					if (FillLevel > 0)
+					{
+						FillLevel = 0;
+						world.SetBlock(this, applyPhysics: false);
+						itemInHand.Metadata = 8;
+						player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+					}
+				}
+			}
+
+			return true; // Handled
+		}
+
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {ItemFactory.GetItem(380)};
+		}
 	}
 }

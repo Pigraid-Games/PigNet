@@ -26,20 +26,21 @@
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Worlds;
-
-public class AirWorldGenerator : IWorldGenerator
+namespace MiNET.Worlds
 {
-	public void Initialize(IWorldProvider worldProvider)
+	public class AirWorldGenerator : IWorldGenerator
 	{
-	}
-
-	public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
-	{
-		return new ChunkColumn()
+		public void Initialize(IWorldProvider worldProvider)
 		{
-			X = chunkCoordinates.X,
-			Z = chunkCoordinates.Z
-		};
+		}
+
+		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		{
+			return new ChunkColumn()
+			{
+				X = chunkCoordinates.X,
+				Z = chunkCoordinates.Z
+			};
+		}
 	}
 }

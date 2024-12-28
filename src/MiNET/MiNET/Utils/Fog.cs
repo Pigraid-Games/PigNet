@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 
-namespace MiNET.Utils;
-
-public class fogStack
+namespace MiNET.Utils
 {
-	public List<string> fogList = new();
-
-	public fogStack(params string[] efects)
+	public class fogStack
 	{
-		fogList.AddRange(efects);
+		public List<string> fogList = new List<string>();
+
+		public fogStack(params string[] efects)
+		{
+			fogList.AddRange(efects);
+		}
 	}
 }

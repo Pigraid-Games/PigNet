@@ -31,38 +31,40 @@ using System.Numerics;
 using MiNET.Items.Tools;
 using MiNET.Sounds;
 
-namespace MiNET.Blocks;
-
-public partial class Barrel : Block
+namespace MiNET.Blocks
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
-
-	public Barrel() : base(458)
+	public partial class Barrel : Block
 	{
-		FuelEfficiency = 15;
-		BlastResistance = 12.5f;
-		Hardness = 2.5f;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
 
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe;
-	}
+		public Barrel() : base(458)
+		{
+			FuelEfficiency = 15;
+			BlastResistance = 12.5f;
+			Hardness = 2.5f;
+		}
 
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
-
-		//TODO Barrel entity
-
-		return false;
-	}
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
 
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		world.BroadcastSound(new BlockBarrelOpenSound(blockCoordinates));
-		return true;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+
+			//TODO Berrel entity
+
+			return false;
+		}
+
+
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			Log.Debug($"Opening barrel {blockCoordinates}");
+			world.BroadcastSound(new BlockBarrelOpenSound(blockCoordinates));
+			return true;
+		}
 	}
 }

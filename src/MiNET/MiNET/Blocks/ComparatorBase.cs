@@ -23,12 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class ComparatorBase : Block
+namespace MiNET.Blocks
 {
-	public ComparatorBase(byte id) : base(id)
+	public partial class ComparatorBase : Block
 	{
-		IsTransparent = true;
+		public ComparatorBase(byte id) : base(id)
+		{
+			IsTransparent = true;
+		}
 	}
 }

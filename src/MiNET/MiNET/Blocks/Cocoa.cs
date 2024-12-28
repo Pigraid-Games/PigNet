@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Cocoa : Block
+namespace MiNET.Blocks
 {
-	public Cocoa() : base(127)
+	public partial class Cocoa : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 15;
-		Hardness = 0.2f;
+		public Cocoa() : base(127)
+		{
+			IsTransparent = true;
+			BlastResistance = 15;
+			Hardness = 0.2f;
+		}
 	}
 }

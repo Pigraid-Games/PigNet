@@ -3,21 +3,22 @@ using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Coral : Block
+namespace MiNET.Blocks
 {
-	public Coral() : base(386)
+	public partial class Coral : Block
 	{
-		BlastResistance = 0;
-		Hardness = 0;
-		IsFlammable = false;
-	}
+		public Coral() : base(386)
+		{
+			BlastResistance = 0;
+			Hardness = 0;
+			IsFlammable = false;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-		//blockName = ItemFactory.Translator.GetNameByMeta("minecraft:coral", itemInHand.Metadata);
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+			//blockName = ItemFactory.Translator.GetNameByMeta("minecraft:coral", itemInHand.Metadata);
+			return false;
+		}
 	}
 }

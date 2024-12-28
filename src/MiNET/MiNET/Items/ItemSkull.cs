@@ -44,7 +44,10 @@ public class ItemSkull : Item
 		BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 		Item itemInHand = player.Inventory.GetItemInHand();
 		var skull = (SkullBase) BlockFactory.GetBlockById(144);
-		if (itemInHand.Metadata > 0) skull = (SkullBase) BlockFactory.GetBlockById(1219 + itemInHand.Metadata);
+		if (itemInHand.Metadata > 0)
+		{
+			skull = (SkullBase) BlockFactory.GetBlockById(1219 + itemInHand.Metadata);
+		}
 		if (face == BlockFace.Up) // On top of block
 		{
 			skull.Coordinates = coordinates;
@@ -52,8 +55,10 @@ public class ItemSkull : Item
 			world.SetBlock(skull);
 		}
 		else if (face == BlockFace.Down) // At the bottom of block
+		{
 			// Doesn't work, ignore if that happen. 
 			return;
+		}
 		else
 		{
 			skull.Coordinates = coordinates;
@@ -66,7 +71,7 @@ public class ItemSkull : Item
 		var skullBlockEntity = new SkullBlockEntity
 		{
 			Coordinates = coordinates,
-			Rotation = (byte) ((int) (Math.Floor(player.KnownPosition.Yaw * 16 / 360) + 0.5) & 0x0f),
+			Rotation = (byte) ((int) (Math.Floor(((player.KnownPosition.Yaw)) * 16 / 360) + 0.5) & 0x0f),
 			SkullType = (byte) Metadata
 		};
 

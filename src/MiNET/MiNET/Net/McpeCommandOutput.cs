@@ -22,92 +22,91 @@
 #endregion
 
 using System;
-using MiNET.Utils;
 
-namespace MiNET.Net;
-
-public class CommandOutputMessage
+namespace MiNET.Net
 {
-	public bool IsInternal { get; set; }
-	public string MessageId { get; set; }
-	public string[] Parameters { get; set; }
-
-	/// <inheritdoc />
-	public override string ToString()
+	public class CommandOutputMessage
 	{
-		return MessageId switch
-		{
-			"commands.generic.unknown" => $"Unknown command: {Parameters[0]}",
-			_ => $"{{MessageId={MessageId}, IsInternal={IsInternal}, Parameters={String.Join(',', Parameters)}}}"
-		};
-	}
-}
+		public bool IsInternal { get; set; }
+		public string MessageId { get; set; }
+		public string[] Parameters { get; set; }
 
-public enum CommandOutputType
-{
-	Last = 1,
-	Silent = 2,
-	All = 3,
-	DataSet = 4,
-}
+		/// <inheritdoc />
+		public override string ToString()
+		{
+			switch (MessageId)
+			{
+				case "commands.generic.unknown":
+					return $"Unknown command: {Parameters[0]}";
+			}
+			return $"{{MessageId={MessageId}, IsInternal={IsInternal}, Parameters={String.Join(',', Parameters)}}}";
+		}
+	}
+
+	public enum CommandOutputType
+	{
+		Last = 1,
+		Silent = 2,
+		All = 3,
+		DataSet = 4,
+	}
 	
-public partial class McpeCommandOutput
-{
-	public CommandOriginData OriginData { get; set; }
-	public CommandOutputType OutputType { get; set; }
-	public uint SuccessCount { get; set; }
-	public CommandOutputMessage[] Messages { get; set; }
-	public string UnknownString { get; set; }
-	partial void AfterDecode()
+	public partial class McpeCommandOutput
 	{
-		OriginData = ReadOriginData();
-		OutputType = (CommandOutputType)ReadByte();
-		SuccessCount = ReadUnsignedVarInt();
-
-		uint messageCount = ReadUnsignedVarInt();
-		Messages = new CommandOutputMessage[messageCount];
-
-		for (int i = 0; i < Messages.Length; i++)
+		public CommandOriginData OriginData { get; set; }
+		public CommandOutputType OutputType { get; set; }
+		public uint SuccessCount { get; set; }
+		public CommandOutputMessage[] Messages { get; set; }
+		public string UnknownString { get; set; }
+		partial void AfterDecode()
 		{
-			Messages[i] = ReadCommandOutputMessage();
+			OriginData = ReadOriginData();
+			OutputType = (CommandOutputType)ReadByte();
+			SuccessCount = ReadUnsignedVarInt();
+
+			var messageCount = ReadUnsignedVarInt();
+			Messages = new CommandOutputMessage[messageCount];
+
+			for (int i = 0; i < Messages.Length; i++)
+			{
+				Messages[i] = ReadCommandOutputMessage();
+			}
+
+			if (OutputType == CommandOutputType.DataSet)
+			{
+				UnknownString = ReadString();
+			}
 		}
 
-		if (OutputType == CommandOutputType.DataSet)
+		private CommandOriginData ReadOriginData()
 		{
-			UnknownString = ReadString();
-		}
-	}
+			var type = (CommandOriginType)ReadUnsignedVarInt();
+			var uuid = ReadUUID();
+			var requestId = ReadString();
+			var entityId = 0L;
+			if (type == CommandOriginType.DevConsole || type == CommandOriginType.Test)
+			{
+				entityId = ReadVarLong();
+			}
 
-	private CommandOriginData ReadOriginData()
-	{
-		var type = (CommandOriginType)ReadUnsignedVarInt();
-		UUID uuid = ReadUUID();
-		string requestId = ReadString();
-		long entityId = 0L;
-		if (type == CommandOriginType.DevConsole || type == CommandOriginType.Test)
-		{
-			entityId = ReadVarLong();
+			return new CommandOriginData(type, uuid, requestId, entityId);
 		}
-
-		return new CommandOriginData(type, uuid, requestId, entityId);
-	}
 		
-	private CommandOutputMessage ReadCommandOutputMessage()
-	{
-		var result = new CommandOutputMessage
+		private CommandOutputMessage ReadCommandOutputMessage()
 		{
-			IsInternal = ReadBool(),
-			MessageId = ReadString()
-		};
+			CommandOutputMessage result = new CommandOutputMessage();
+			result.IsInternal = ReadBool();
+			result.MessageId = ReadString();
 
-		uint count = ReadUnsignedVarInt();
-		result.Parameters = new string[count];
+			var count = ReadUnsignedVarInt();
+			result.Parameters = new string[count];
 
-		for (int i = 0; i < result.Parameters.Length; i++)
-		{
-			result.Parameters[i] = ReadString();
+			for (int i = 0; i < result.Parameters.Length; i++)
+			{
+				result.Parameters[i] = ReadString();
+			}
+
+			return result;
 		}
-
-		return result;
 	}
 }

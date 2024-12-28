@@ -23,96 +23,105 @@
 
 #endregion
 
-namespace MiNET.Net;
-
-public partial class McpeText : Packet<McpeText>
+namespace MiNET.Net
 {
-	public bool needsTranslation; // = null
-	public string source; // = null;
-	public string message; // = null;
-	public string xuid; // = null
-	public string platformChatId; // = null
-	public string[] parameters; // = null
-	public string filteredMessage; // = null
-
-	partial void AfterEncode()
+	public partial class McpeText : Packet<McpeText>
 	{
-		Write(needsTranslation);
-		var chatType = (ChatTypes) type;
-		switch (chatType)
+		public bool needsTranslation; // = null
+		public string source; // = null;
+		public string message; // = null;
+		public string xuid; // = null
+		public string platformChatId; // = null
+		public string[] parameters; // = null
+		public string filteredMessage; // = null
+
+		partial void AfterEncode()
 		{
-			case ChatTypes.Chat:
-			case ChatTypes.Whisper:
-			case ChatTypes.Announcement:
-				Write(source);
-				goto case ChatTypes.Raw;
-			case ChatTypes.Raw:
-			case ChatTypes.Tip:
-			case ChatTypes.System:
-			case ChatTypes.Json:
-				Write(message);
-				break;
-			case ChatTypes.Popup:
-			case ChatTypes.Translation:
-			case ChatTypes.Jukeboxpopup:
-				Write(message);
-				if (parameters == null)
-					WriteUnsignedVarInt(0);
-				else
-				{
-					WriteUnsignedVarInt((uint) parameters.Length);
-					foreach (string parameter in parameters) Write(parameter);
-				}
-				break;
+			Write(needsTranslation);
+			ChatTypes chatType = (ChatTypes) type;
+			switch (chatType)
+			{
+				case ChatTypes.Chat:
+				case ChatTypes.Whisper:
+				case ChatTypes.Announcement:
+					Write(source);
+					goto case ChatTypes.Raw;
+				case ChatTypes.Raw:
+				case ChatTypes.Tip:
+				case ChatTypes.System:
+				case ChatTypes.Json:
+					Write(message);
+					break;
+				case ChatTypes.Popup:
+				case ChatTypes.Translation:
+				case ChatTypes.Jukeboxpopup:
+					Write(message);
+					if (parameters == null)
+					{
+						WriteUnsignedVarInt(0);
+					}
+					else
+					{
+						WriteUnsignedVarInt((uint) parameters.Length);
+						foreach (var parameter in parameters)
+						{
+							Write(parameter);
+						}
+					}
+					break;
+			}
+
+			Write(xuid);
+			Write(platformChatId);
+			Write(filteredMessage);
 		}
 
-		Write(xuid);
-		Write(platformChatId);
-		Write(filteredMessage);
-	}
-
-	public override void Reset()
-	{
-		type = 0;
-		source = null;
-		message = null;
-
-		base.Reset();
-	}
-
-	partial void AfterDecode()
-	{
-		needsTranslation = ReadBool();
-
-		var chatType = (ChatTypes) type;
-		switch (chatType)
+		public override void Reset()
 		{
-			case ChatTypes.Chat:
-			case ChatTypes.Whisper:
-			case ChatTypes.Announcement:
-				source = ReadString();
-				message = ReadString();
-				break;
-			case ChatTypes.Raw:
-			case ChatTypes.Tip:
-			case ChatTypes.System:
-			case ChatTypes.Json:
-			case ChatTypes.Jsonwhisper:
-			case ChatTypes.Jsonannouncement:
-				message = ReadString();
-				break;
+			type = 0;
+			source = null;
+			message = null;
 
-			case ChatTypes.Popup:
-			case ChatTypes.Translation:
-			case ChatTypes.Jukeboxpopup:
-				message = ReadString();
-				parameters = new string[ReadUnsignedVarInt()];
-				for (int i = 0; i < parameters.Length; ++i) parameters[i] = ReadString();
-				break;
+			base.Reset();
 		}
 
-		xuid = ReadString();
-		platformChatId = ReadString();
-		filteredMessage = ReadString();
+		partial void AfterDecode()
+		{
+			needsTranslation = ReadBool();
+
+			ChatTypes chatType = (ChatTypes) type;
+			switch (chatType)
+			{
+				case ChatTypes.Chat:
+				case ChatTypes.Whisper:
+				case ChatTypes.Announcement:
+					source = ReadString();
+					message = ReadString();
+					break;
+				case ChatTypes.Raw:
+				case ChatTypes.Tip:
+				case ChatTypes.System:
+				case ChatTypes.Json:
+				case ChatTypes.Jsonwhisper:
+				case ChatTypes.Jsonannouncement:
+					message = ReadString();
+					break;
+
+				case ChatTypes.Popup:
+				case ChatTypes.Translation:
+				case ChatTypes.Jukeboxpopup:
+					message = ReadString();
+					parameters = new string[ReadUnsignedVarInt()];
+					for (var i = 0; i < parameters.Length; ++i)
+					{
+						parameters[i] = ReadString();
+					}
+					break;
+			}
+
+			xuid = ReadString();
+			platformChatId = ReadString();
+			filteredMessage = ReadString();
+		}
 	}
 }

@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Worlds;
-
-public enum Difficulty
+namespace MiNET.Worlds
 {
-	Peaceful,
-	Easy,
-	Normal,
-	Hard,
-	Hardcore
+	public enum Difficulty
+	{
+		Peaceful,
+		Easy,
+		Normal,
+		Hard,
+		Hardcore
+	}
 }

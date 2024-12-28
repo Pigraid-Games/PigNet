@@ -29,74 +29,92 @@ using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class RedstoneWire : Block
+namespace MiNET.Blocks
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(RedstoneWire));
-
-	public RedstoneWire() : base(55)
+	public partial class RedstoneWire : Block
 	{
-		IsTransparent = true;
-	}
-
-	public override void OnTick(Level level, bool isRandom)
-	{
-		if (isRandom) return;
-		BlockCoordinates[] cord = { Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockUp(), Coordinates.BlockDown() };
-		int currentSignal = 0;
-		foreach (BlockCoordinates bCord in cord)
+		private static readonly ILog Log = LogManager.GetLogger(typeof(RedstoneWire));
+		public RedstoneWire() : base(55)
 		{
-			Block blockk = level.GetBlock(bCord);
-			if (blockk is Lever)
-			{
-				var lever = blockk as Lever;
-				if (lever.OpenBit == true) currentSignal = 15;
-			}
-			if (blockk is Button button1)
-				if (button1.ButtonPressedBit == true)
-					currentSignal = 15;
-			if (blockk is RedstoneTorch)
-			{
-				var button = blockk as RedstoneTorch;
-				currentSignal = 15;
-			}
-			else if (blockk is RedstoneWire)
-			{
-				var wire = blockk as RedstoneWire;
-				if (wire.RedstoneSignal - RedstoneSignal == wire.RedstoneSignal)
-					currentSignal = wire.RedstoneSignal - 1;
-				else if (wire.RedstoneSignal - RedstoneSignal == 1) currentSignal = RedstoneSignal;
-				if (!level.BlockWithTicks.TryGetValue(blockk.Coordinates, out long value)) level.ScheduleBlockTick(blockk, 10);
-			}
-			else
-			{
-				if (RedstoneSignal > 0)
-					RedstoneController.signal(level, bCord, true);
-				else
-					RedstoneController.signal(level, bCord, false);
-			}
-			level.SetBlock(new RedstoneWire
-			{
-				Coordinates = new BlockCoordinates(Coordinates),
-				RedstoneSignal = currentSignal == -1 ? 0 : currentSignal
-			});
+			IsTransparent = true;
 		}
-	}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		if (player.Inventory.GetItemInHand() is ItemRedstone) return true;
-		return false;
-	}
+		public override void OnTick(Level level, bool isRandom)
+		{
+			if (isRandom) { return; }
+			BlockCoordinates[] cord = { Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockUp(), Coordinates.BlockDown() };
+			int currentSignal = 0;
+			foreach (BlockCoordinates bCord in cord)
+			{
+				var blockk = level.GetBlock(bCord);
+				if (blockk is Lever)
+				{
+					var lever = blockk as Lever;
+					if (lever.OpenBit == true)
+					{
+						currentSignal = 15;
+					}
+				}
+				if (blockk is Button)
+				{
+					var button = blockk as Button;
+					if (button.ButtonPressedBit == true)
+					{
+						currentSignal = 15;
+					}
+				}
+				if (blockk is RedstoneTorch)
+				{
+					var button = blockk as RedstoneTorch;
+					currentSignal = 15;
+				}
+				else if (blockk is RedstoneWire)
+				{
+					var wire = blockk as RedstoneWire;
+					if (wire.RedstoneSignal - RedstoneSignal == wire.RedstoneSignal)
+					{
+						currentSignal = wire.RedstoneSignal - 1;
+					}
+					else if (wire.RedstoneSignal - RedstoneSignal == 1) 
+					{
+						currentSignal = RedstoneSignal;
+					}
+					if (!level.BlockWithTicks.TryGetValue(blockk.Coordinates, out long value))
+					{
+						level.ScheduleBlockTick(blockk, 10);
+					}
+				}
+				else
+				{
+					if ( RedstoneSignal > 0)
+					{
+						RedstoneController.signal(level, bCord, true);
+					}
+					else
+					{
+						RedstoneController.signal(level, bCord, false);
+					}
+				}
+				level.SetBlock(new RedstoneWire { Coordinates = new BlockCoordinates(Coordinates), RedstoneSignal = currentSignal == -1 ? 0 : currentSignal });
+			}
+		}
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			if (player.Inventory.GetItemInHand() is ItemRedstone)
+			{
+				return true;
+			}
+			return false;
+		}
 
-	public override void BlockAdded(Level level)
-	{
-		if (level.RedstoneEnabled) level.ScheduleBlockTick(this, 10);
-	}
+		public override void BlockAdded(Level level)
+		{
+			if (level.RedstoneEnabled) { level.ScheduleBlockTick(this, 10); }
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return new[] { ItemFactory.GetItem(331) };
+		public override Item[] GetDrops(Item tool)
+		{
+			return new[] {ItemFactory.GetItem(331)};
+		}
 	}
 }

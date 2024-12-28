@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Resistance : Effect
+namespace MiNET.Effects
 {
-	public Resistance() : base(EffectType.Resistance)
+	public class Resistance : Effect
 	{
-		ParticleColor = Color.FromArgb(0x99, 0x45, 0x3A);
+		public Resistance() : base(EffectType.Resistance)
+		{
+			ParticleColor = Color.FromArgb(0x99, 0x45, 0x3A);
+		}
 	}
 }

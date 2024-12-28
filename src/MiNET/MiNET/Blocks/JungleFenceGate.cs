@@ -23,11 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class JungleFenceGate : FenceGateBlocks
+namespace MiNET.Blocks
 {
-	public JungleFenceGate() : base(185)
+	public partial class JungleFenceGate : FenceGateBlocks
 	{
+		public JungleFenceGate() : base(185)
+		{
+		}
 	}
 }

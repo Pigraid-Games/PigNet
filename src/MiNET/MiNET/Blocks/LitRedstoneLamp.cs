@@ -23,12 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class LitRedstoneLamp : RedstoneLamp
+namespace MiNET.Blocks
 {
-	public LitRedstoneLamp() : base(124)
+	public partial class LitRedstoneLamp : RedstoneLamp
 	{
-		LightLevel = 15;
+		public LitRedstoneLamp() : base(124)
+		{
+			LightLevel = 15;
+		}
 	}
 }

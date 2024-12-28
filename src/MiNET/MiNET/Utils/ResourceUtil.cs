@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,7 +19,6 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2021 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
 using System;
@@ -28,21 +26,27 @@ using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
 
-namespace MiNET.Utils;
-
-public static class ResourceUtil
+namespace MiNET.Utils
 {
-	public static T ReadResource<T>(string filename, Type namespaceProvider = null, string subFolder = null)
+	public static class ResourceUtil
 	{
-		if (namespaceProvider == null)
-			namespaceProvider = typeof(T);
+		public static T ReadResource<T>(string filename, Type namespaceProvider = null, string subFolder = null)
+		{
+			if (namespaceProvider == null)
+				namespaceProvider = typeof(T);
+			
+			var assembly = Assembly.GetAssembly(namespaceProvider);
+			string ns = "MiNET.Resources";
 
-		var assembly = Assembly.GetAssembly(namespaceProvider);
-		string ns = "MiNET.Resources";
-
-		if (!string.IsNullOrWhiteSpace(subFolder)) ns += $".{subFolder}";
-		using (Stream stream = assembly.GetManifestResourceStream(ns + $".{filename}"))
-		using (var reader = new StreamReader(stream))
-			return JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
+			if (!string.IsNullOrWhiteSpace(subFolder))
+			{
+				ns += $".{subFolder}";
+			}
+			using (var stream = assembly.GetManifestResourceStream(ns + $".{filename}"))
+			using (var reader = new StreamReader(stream))
+			{
+				return JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
+			}
+		}
 	}
 }

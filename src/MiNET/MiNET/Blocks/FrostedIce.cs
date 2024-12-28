@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class FrostedIce : Block
+namespace MiNET.Blocks
 {
-	public FrostedIce() : base(207)
+	public partial class FrostedIce : Block
 	{
-		BlastResistance = 2.5f;
-		Hardness = 0.5f;
+		public FrostedIce() : base(207)
+		{
+			BlastResistance = 2.5f;
+			Hardness = 0.5f;
+		}
 	}
 }

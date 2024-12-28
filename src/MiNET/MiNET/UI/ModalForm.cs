@@ -47,15 +47,18 @@ public class ModalForm : Form
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented
+			Formatting = Formatting.Indented,
 		};
 
-		bool? parsedResult = JsonConvert.DeserializeObject<bool?>(json);
+		var parsedResult = JsonConvert.DeserializeObject<bool?>(json);
 		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
 
 		if (!parsedResult.HasValue) return;
 
-		if (parsedResult.Value) Execute(player);
+		if (parsedResult.Value)
+		{
+			Execute(player);
+		}
 	}
 
 	[JsonIgnore] public Action<Player, ModalForm> ExecuteAction { get; set; }

@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Dirt : Block
+namespace MiNET.Blocks
 {
-	public Dirt() : base(3)
+	public partial class Dirt : Block
 	{
-		BlastResistance = 2.5f;
-		Hardness = 0.5f;
-		DirtType = "normal";
+		public Dirt() : base(3)
+		{
+			BlastResistance = 2.5f;
+			Hardness = 0.5f;
+			DirtType = "normal";
+		}
 	}
 }

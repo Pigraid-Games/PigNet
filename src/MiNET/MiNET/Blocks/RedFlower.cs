@@ -27,33 +27,34 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class RedFlower : Block
+namespace MiNET.Blocks
 {
-	public RedFlower() : base(38)
+	public partial class RedFlower : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
-	}
-
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
+		public RedFlower() : base(38)
 		{
-			Block under = world.GetBlock(Coordinates.BlockDown());
-			return under is Grass || under is Dirt;
+			IsSolid = false;
+			IsTransparent = true;
 		}
 
-		return false;
-	}
-
-	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
-	{
-		if (Coordinates.BlockDown() == blockCoordinates)
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 		{
-			level.SetAir(Coordinates);
-			UpdateBlocks(level);
+			if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
+			{
+				Block under = world.GetBlock(Coordinates.BlockDown());
+				return under is Grass || under is Dirt;
+			}
+
+			return false;
+		}
+
+		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+		{
+			if (Coordinates.BlockDown() == blockCoordinates)
+			{
+				level.SetAir(Coordinates);
+				UpdateBlocks(level);
+			}
 		}
 	}
 }

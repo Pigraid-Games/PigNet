@@ -7,6 +7,7 @@ public class EducationUriResource
 
 	public EducationUriResource()
 	{
+		
 	}
 
 	public EducationUriResource(string buttonName, string linkUri)

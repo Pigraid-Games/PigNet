@@ -26,22 +26,23 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Potatoes : Crops
+namespace MiNET.Blocks
 {
-	public Potatoes() : base(142)
+	public partial class Potatoes : Crops
 	{
-	}
-
-	public override Item[] GetDrops(Item tool)
-	{
-		if (Growth == 7)
+		public Potatoes() : base(142)
 		{
-			var random = new Random();
-			return new[] { ItemFactory.GetItem(392, 0, (byte) random.Next(1, 5)) };
 		}
 
-		return new[] { ItemFactory.GetItem(392, 0, 1) };
+		public override Item[] GetDrops(Item tool)
+		{
+			if (Growth == 7)
+			{
+				Random random = new Random();
+				return new[] {ItemFactory.GetItem(392, 0, (byte) random.Next(1, 5))};
+			}
+
+			return new[] {ItemFactory.GetItem(392, 0, 1)};
+		}
 	}
 }

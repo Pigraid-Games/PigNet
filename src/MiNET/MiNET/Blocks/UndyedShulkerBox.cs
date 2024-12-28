@@ -28,35 +28,37 @@ using MiNET.BlockEntities;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class UndyedShulkerBox : Block
+namespace MiNET.Blocks
 {
-	public UndyedShulkerBox() : base(205)
+	public partial class UndyedShulkerBox : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 30f;
-		Hardness = 6f;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		var shulkerBoxBlockEntity = new ShulkerBoxBlockEntity
+		public UndyedShulkerBox() : base(205)
 		{
-			Coordinates = Coordinates,
-			Facing = (byte) face
-		};
+			IsTransparent = true;
+			BlastResistance = 30f;
+			Hardness = 6f;
+		}
 
-		world.SetBlockEntity(shulkerBoxBlockEntity);
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			var shulkerBoxBlockEntity = new ShulkerBoxBlockEntity
+			{
+				Coordinates = Coordinates,
+				Facing = (byte) face
+			};
 
-		return false;
-	}
+			world.SetBlockEntity(shulkerBoxBlockEntity);
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		player.OpenInventory(blockCoordinates);
-		world.BroadcastSound(blockCoordinates, LevelSoundEventType.ShulkerboxOpen);
+			return false;
+		}
 
-		return true;
+
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			player.OpenInventory(blockCoordinates);
+			world.BroadcastSound(blockCoordinates, LevelSoundEventType.ShulkerboxOpen);
+
+			return true;
+		}
 	}
 }

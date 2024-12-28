@@ -28,36 +28,40 @@ using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class QuartzBlock : Block
+namespace MiNET.Blocks
 {
-	public QuartzBlock() : base(155)
+	public partial class QuartzBlock : Block
 	{
-		BlastResistance = 4;
-		Hardness = 0.8f;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		switch (ItemBlock.GetPillarAxisFromFace(face))
+		public QuartzBlock() : base(155)
 		{
-			case BlockAxis.X:
-				PillarAxis = "x";
-				break;
-			case BlockAxis.Y:
-				PillarAxis = "y";
-				break;
-			case BlockAxis.Z:
-				PillarAxis = "z";
-				break;
+			BlastResistance = 4;
+			Hardness = 0.8f;
 		}
-		return false;
-	}
 
-	public override Item GetSmelt()
-	{
-		if (ChiselType == "default") return ItemFactory.GetItem(155, 3);
-		return null;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			switch (ItemBlock.GetPillarAxisFromFace(face))
+			{
+				case BlockAxis.X:
+					PillarAxis = "x";
+					break;
+				case BlockAxis.Y:
+					PillarAxis = "y";
+					break;
+				case BlockAxis.Z:
+					PillarAxis = "z";
+					break;
+			}
+			return false;
+		}
+
+		public override Item GetSmelt()
+		{
+			if (ChiselType == "default")
+			{
+				return ItemFactory.GetItem(155, 3);
+			}
+			return null;
+		}
 	}
 }

@@ -25,55 +25,55 @@
 
 using System;
 using System.Numerics;
-using MiNET.Items;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class StoneSlab3 : Block
+namespace MiNET.Blocks
 {
-	public StoneSlab3() : base(417)
+	public partial class StoneSlab3 : Block
 	{
-		BlastResistance = 30;
-		Hardness = 2;
-		IsTransparent = true; // Partial - blocks light.
-		IsBlockingSkylight = false; // Partial - blocks light.
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-
-		TopSlotBit = faceCoords.Y > 0.5 && face != BlockFace.Up;
-
-		StoneSlabType3 = itemInHand.Metadata switch
+		public StoneSlab3() : base(417)
 		{
-			0 => "end_stone_brick",
-			1 => "smooth_red_sandstone",
-			2 => "polished_andesite",
-			3 => "andesite",
-			4 => "diorite",
-			5 => "polished_diorite",
-			6 => "granite",
-			7 => "polished_granite",
-			_ => throw new ArgumentOutOfRangeException()
-		};
-
-		var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
-
-		foreach (IBlockState state in world.GetBlock(slabcoordinates).GetState().States)
-		{
-			if (state is not BlockStateString { Name: "stone_slab_type_3" } s) continue;
-			if (world.GetBlock(slabcoordinates).Name != "minecraft:stone_slab3" || s.Value != StoneSlabType3) continue;
-			world.SetBlock(new DoubleStoneSlab3
-			{
-				StoneSlabType3 = StoneSlabType3,
-				TopSlotBit = true
-			});
-			return true;
+			BlastResistance = 30;
+			Hardness = 2;
+			IsTransparent = true; // Partial - blocks light.
+			IsBlockingSkylight = false; // Partial - blocks light.
 		}
-		return false;
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			var itemInHand = player.Inventory.GetItemInHand();
+
+			TopSlotBit = (faceCoords.Y > 0.5 && face != BlockFace.Up);
+
+			StoneSlabType3 = itemInHand.Metadata switch
+			{
+				0 => "end_stone_brick",
+				1 => "smooth_red_sandstone",
+				2 => "polished_andesite",
+				3 => "andesite",
+				4 => "diorite",
+				5 => "polished_diorite",
+				6 => "granite",
+				7 => "polished_granite",
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
+
+			foreach (var state in world.GetBlock(slabcoordinates).GetState().States)
+			{
+				if (state is BlockStateString s && s.Name == "stone_slab_type_3")
+				{
+					if (world.GetBlock(slabcoordinates).Name == "minecraft:stone_slab3" && s.Value == StoneSlabType3)
+					{
+						world.SetBlock(new DoubleStoneSlab3 { StoneSlabType3 = StoneSlabType3, TopSlotBit = true });
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
 }

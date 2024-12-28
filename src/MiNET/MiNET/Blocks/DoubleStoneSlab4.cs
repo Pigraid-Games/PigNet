@@ -25,20 +25,21 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class DoubleStoneSlab4 : Block
+namespace MiNET.Blocks
 {
-	public DoubleStoneSlab4() : base(423)
+	public partial class DoubleStoneSlab4 : Block
 	{
-		BlastResistance = 30;
-		Hardness = 2;
-	}
+		public DoubleStoneSlab4() : base(423)
+		{
+			BlastResistance = 30;
+			Hardness = 2;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		Item[] items = base.GetDrops(tool);
-		items[0].Count = 2;
-		return items;
+		public override Item[] GetDrops(Item tool)
+		{
+			var items = base.GetDrops(tool);
+			items[0].Count = 2;
+			return items;
+		}
 	}
 }

@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class Hopper : Block
+namespace MiNET.Blocks
 {
-	public Hopper() : base(154)
+	public partial class Hopper : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 15;
-		Hardness = 3;
+		public Hopper() : base(154)
+		{
+			IsTransparent = true;
+			BlastResistance = 15;
+			Hardness = 3;
+		}
 	}
 }

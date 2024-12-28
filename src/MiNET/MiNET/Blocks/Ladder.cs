@@ -29,30 +29,31 @@ using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Ladder : Block
+namespace MiNET.Blocks
 {
-	public Ladder() : base(65)
+	public partial class Ladder : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 2;
-		Hardness = 0.4f;
-	}
+		public Ladder() : base(65)
+		{
+			IsTransparent = true;
+			BlastResistance = 2;
+			Hardness = 0.4f;
+		}
 
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe ? true : false;
-	}
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
 
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		return !world.GetBlock(targetCoordinates).IsTransparent && face != BlockFace.Down && face != BlockFace.Up;
-	}
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+		{
+			return !world.GetBlock(targetCoordinates).IsTransparent && face != BlockFace.Down && face != BlockFace.Up;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = (int) face;
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = (int) face;
+			return false;
+		}
 	}
 }

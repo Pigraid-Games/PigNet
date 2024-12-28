@@ -34,7 +34,7 @@ public class ItemEnderPearl : Item
 		StartCooldown(player);
 
 		const float Force = 1.5f;
-
+			
 		var enderPearl = new Enderpearl(player, world)
 		{
 			KnownPosition = (PlayerLocation) player.KnownPosition.Clone(),
@@ -42,7 +42,7 @@ public class ItemEnderPearl : Item
 		};
 		enderPearl.KnownPosition.Y += 1.62f;
 		enderPearl.SpawnEntity();
-
+		
 		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
 		if (player.GameMode == GameMode.Creative) return;
 		Item itemInHand = player.Inventory.GetItemInHand();
@@ -50,15 +50,12 @@ public class ItemEnderPearl : Item
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);
 	}
 
-	private static bool IsInCooldown(Player player)
-	{
-		return Cooldowns.ContainsKey(player);
-	}
+	private static bool IsInCooldown(Player player) => Cooldowns.ContainsKey(player);
 
 	private static void StartCooldown(Player player)
 	{
 		Cooldowns[player] = true;
-
+			
 		Task.Run(async () =>
 		{
 			await Task.Delay(1000);

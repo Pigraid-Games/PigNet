@@ -23,7 +23,10 @@ public class ItemExperienceBottle : Item
 
 		const float Force = 1.5f;
 
-		var experienceBottle = new ExperienceBottle(player, world) { KnownPosition = (PlayerLocation) player.KnownPosition.Clone() };
+		var experienceBottle = new ExperienceBottle(player, world)
+		{
+			KnownPosition = (PlayerLocation) player.KnownPosition.Clone()
+		};
 		experienceBottle.KnownPosition.Y += 1.62f;
 		experienceBottle.Velocity = experienceBottle.KnownPosition.GetDirection().Normalize() * Force;
 		experienceBottle.SpawnEntity();

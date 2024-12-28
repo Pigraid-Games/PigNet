@@ -26,12 +26,17 @@
 using MiNET.Items;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks;
-
-public partial class WoodenDoor() : DoorBase(64)
+namespace MiNET.Blocks
 {
-	public override bool IsBestTool(Item item)
+	public partial class WoodenDoor : DoorBase
 	{
-		return item is ItemAxe;
+		public WoodenDoor() : base(64)
+		{
+		}
+
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
 	}
 }

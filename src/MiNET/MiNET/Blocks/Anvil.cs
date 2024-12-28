@@ -27,36 +27,43 @@ using MiNET.Net;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
-using MiNET.Utils;
 
-namespace MiNET.Blocks;
-
-public partial class Anvil : Block
+namespace MiNET.Blocks
 {
-	public Anvil() : base(145)
+	public partial class Anvil : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 6000;
-		Hardness = 5;
-		Damage = "undamaged";
-	}
+		public Anvil() : base(145)
+		{
+			IsTransparent = true;
+			BlastResistance = 6000;
+			Hardness = 5;
+			Damage = "undamaged";
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Direction = player.GetProperDirection();
-		return false;
-	}
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetProperDirection();
+			return false;
+		}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		player.UsingAnvil = true;
-		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-		containerOpen.windowId = 14;
-		containerOpen.type = (byte) ContainerType.Anvil;
-		containerOpen.coordinates = blockCoordinates;
-		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
-		player.SendPacket(containerOpen);
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			player.UsingAnvil = true;
+			var containerOpen = McpeContainerOpen.CreateObject();
+			containerOpen.windowId = 14;
+			containerOpen.type = 5;
+			containerOpen.coordinates = blockCoordinates;
+			containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+			player.SendPacket(containerOpen);
 
-		return true;
+			//var sendSlot = McpeInventorySlot.CreateObject();
+			//sendSlot.inventoryId = 14;
+			//sendSlot.slot = (uint) 1;
+			//sendSlot.uniqueid = 1;
+			//sendSlot.item = new ItemIronShovel();
+			//player.SendPacket(sendSlot);
+
+			return true;
+		}
 	}
 }

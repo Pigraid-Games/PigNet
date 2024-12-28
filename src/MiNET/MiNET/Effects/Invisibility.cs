@@ -25,39 +25,40 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Invisibility : Effect
+namespace MiNET.Effects
 {
-	public Invisibility() : base(EffectType.Invisibility)
+	public class Invisibility : Effect
 	{
-		ParticleColor = Color.FromArgb(0xf6, 0xf6, 0xf6);
-	}
+		public Invisibility() : base(EffectType.Invisibility)
+		{
+			ParticleColor = Color.FromArgb(0xf6, 0xf6, 0xf6);
+		}
 
-	public override void SendAdd(Player player)
-	{
-		player.IsInvisible = true;
-		player.HideNameTag = true;
-		player.BroadcastSetEntityData();
+		public override void SendAdd(Player player)
+		{
+			player.IsInvisible = true;
+			player.HideNameTag = true;
+			player.BroadcastSetEntityData();
 
-		base.SendAdd(player);
-	}
+			base.SendAdd(player);
+		}
 
-	public override void SendUpdate(Player player)
-	{
-		player.IsInvisible = true;
-		player.HideNameTag = true;
-		player.BroadcastSetEntityData();
+		public override void SendUpdate(Player player)
+		{
+			player.IsInvisible = true;
+			player.HideNameTag = true;
+			player.BroadcastSetEntityData();
 
-		base.SendUpdate(player);
-	}
+			base.SendUpdate(player);
+		}
 
-	public override void SendRemove(Player player)
-	{
-		player.IsInvisible = false;
-		player.HideNameTag = false;
-		player.BroadcastSetEntityData();
+		public override void SendRemove(Player player)
+		{
+			player.IsInvisible = false;
+			player.HideNameTag = false;
+			player.BroadcastSetEntityData();
 
-		base.SendRemove(player);
+			base.SendRemove(player);
+		}
 	}
 }

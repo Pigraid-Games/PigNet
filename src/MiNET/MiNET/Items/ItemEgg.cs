@@ -39,6 +39,7 @@ public class ItemEgg : Item
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
+
 		// Trigger the PlayerShootEvent
 		if (player.OnPlayerShoot(player, this))
 		{
@@ -47,9 +48,12 @@ public class ItemEgg : Item
 		}
 		const float Force = 1.5f;
 
-		var egg = new Egg(player, world) { KnownPosition = (PlayerLocation) player.KnownPosition.Clone() };
+		var egg = new Egg(player, world)
+		{
+			KnownPosition = (PlayerLocation) player.KnownPosition.Clone()
+		};
 		egg.KnownPosition.Y += 1.62f;
-		egg.Velocity = egg.KnownPosition.GetDirection().Normalize() * Force;
+		egg.Velocity = egg.KnownPosition.GetDirection().Normalize() * (Force);
 		egg.SpawnEntity();
 		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
 

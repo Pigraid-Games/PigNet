@@ -36,5 +36,5 @@ public class Dropdown : CustomElement
 	}
 
 	[JsonProperty("default")] public int Value { get; set; }
-	public List<string> Options { get; set; } = new();
+	public List<string> Options { get; set; } = new List<string>();
 }

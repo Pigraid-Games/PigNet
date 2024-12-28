@@ -25,19 +25,20 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class Bedrock : Block
+namespace MiNET.Blocks
 {
-	public Bedrock() : base(7)
+	public partial class Bedrock : Block
 	{
-		Hardness = 60000;
-		BlastResistance = 18000000;
-	}
+		public Bedrock() : base(7)
+		{
+			Hardness = 60000;
+			BlastResistance = 18000000;
+		}
 
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return []; //Drop nothing
+		public override Item[] GetDrops(Item tool)
+		{
+			return new Item[0]; //Drop nothing
+		}
 	}
 }

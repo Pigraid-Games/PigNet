@@ -31,55 +31,59 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Gravel : Block
+namespace MiNET.Blocks
 {
-	private int _tickRate = 1;
-
-	public Gravel() : base(13)
+	public partial class Gravel : Block
 	{
-		BlastResistance = 3;
-		Hardness = 0.6f;
-	}
+		private int _tickRate = 1;
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		world.ScheduleBlockTick(this, _tickRate);
-		return false;
-	}
-
-	public override void BlockUpdate(Level world, BlockCoordinates blockCoordinates)
-	{
-		world.ScheduleBlockTick(this, _tickRate);
-	}
-
-	public override void DoPhysics(Level level)
-	{
-		level.ScheduleBlockTick(this, _tickRate);
-	}
-
-	public override void OnTick(Level level, bool isRandom)
-	{
-		if (isRandom) return;
-
-		if (!level.GetBlock(Coordinates + Level.Down).IsSolid)
+		public Gravel() : base(13)
 		{
-			level.SetAir(Coordinates);
-
-			BoundingBox bbox = GetBoundingBox();
-			Vector3 d = (bbox.Max - bbox.Min) / 2;
-
-			new FallingBlock(level, GetRuntimeId()) { KnownPosition = new PlayerLocation(Coordinates.X + d.X, Coordinates.Y - 0.03f, Coordinates.Z + d.Z) }.SpawnEntity();
+			BlastResistance = 3;
+			Hardness = 0.6f;
 		}
-	}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			world.ScheduleBlockTick(this, _tickRate);
+			return false;
+		}
+
+		public override void BlockUpdate(Level world, BlockCoordinates blockCoordinates)
+		{
+			world.ScheduleBlockTick(this, _tickRate);
+		}
+
+		public override void DoPhysics(Level level)
+		{
+			level.ScheduleBlockTick(this, _tickRate);
+		}
+
+		public override void OnTick(Level level, bool isRandom)
+		{
+			if (isRandom) return;
+
+			if (!level.GetBlock(Coordinates + Level.Down).IsSolid)
+			{
+				level.SetAir(Coordinates);
+
+				var bbox = GetBoundingBox();
+				var d = (bbox.Max - bbox.Min) / 2;
+
+				new FallingBlock(level, GetRuntimeId()) {KnownPosition = new PlayerLocation(Coordinates.X + d.X, Coordinates.Y - 0.03f, Coordinates.Z + d.Z)}.SpawnEntity();
+			}
+		}
 
 
-	public override Item[] GetDrops(Item tool)
-	{
-		var rnd = new Random();
-		if (rnd.NextDouble() <= 0.1) return new[] { ItemFactory.GetItem(318) };
+		public override Item[] GetDrops(Item tool)
+		{
+			var rnd = new Random();
+			if (rnd.NextDouble() <= 0.1)
+			{
+				return new[] {ItemFactory.GetItem(318)};
+			}
 
-		return base.GetDrops(tool);
+			return base.GetDrops(tool);
+		}
 	}
 }

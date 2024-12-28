@@ -434,13 +434,13 @@ public class ItemFactory
 		{ 1058, (_, _) => new ItemBambooSign() },
 		{ 1059, (_, _) => new ItemSkeletonHead() },
 		{ 1060, (_, _) => new ItemPiglinHead() },
-		{ 1061, (_, _) => new ItemCharcoal() },
+		{ 1061, (_, _) =>  new ItemCharcoal() },
 		{ 1062, (_, _) => new ItemCopperIngot() },
 		{ 1063, (_, _) => new ItemNetherQuartz() },
-		{ 1064, (_, _) => new ItemResinBrick() },
+		{ 1064, (_, _) =>  new ItemResinBrick() },
 		{ 1065, (_, _) => new ItemTurtleScute() },
 		{ 1066, (_, _) => new ItemArmadilloScute() },
-		{ 1067, (_, _) => new ItemBreezeRod() },
+		{ 1067, (_, _) =>  new ItemBreezeRod() },
 		{ 1068, (_, _) => new ItemHeavyCore() },
 		{ 1069, (_, _) => new ItemFlowBannerPattern() },
 		{ 1070, (_, _) => new ItemGusterBannerPattern() },
@@ -512,7 +512,7 @@ public class ItemFactory
 			}
 
 			item.Metadata = metadata;
-			item.Count = (byte) count;
+			item.Count = (byte)count;
 
 			if (string.IsNullOrWhiteSpace(item.Name)) return item;
 			Itemstate result = Itemstates?.FirstOrDefault(x => x.Name.Equals(item.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -530,7 +530,7 @@ public class ItemFactory
 
 	private static ItemBlock CreateBlockItem(short id, short metadata, int count)
 	{
-		int blockId = id < 0 ? (short) (Math.Abs(id) + 255) : id;
+		int blockId = id < 0 ? (short)(Math.Abs(id) + 255) : id;
 
 		Block block = BlockFactory.GetBlockById(blockId);
 		if (block == null)
@@ -539,8 +539,8 @@ public class ItemFactory
 			return null;
 		}
 
-		uint runtimeId = BlockFactory.GetRuntimeId(blockId, (byte) metadata);
-		if (!BlockFactory.BlockPalette.TryGetValue((int) runtimeId, out BlockStateContainer blockState))
+		uint runtimeId = BlockFactory.GetRuntimeId(blockId, (byte)metadata);
+		if (!BlockFactory.BlockPalette.TryGetValue((int)runtimeId, out BlockStateContainer blockState))
 		{
 			Log.Warn($"Runtime ID {runtimeId} for Block ID {blockId} with metadata {metadata} not found in BlockPalette. Using default block state.");
 			return CustomBlockItemFactory != null
@@ -572,7 +572,7 @@ public class ItemComparator() : Item("minecraft:comparator", 404);
 
 public class ItemRabbitFoot() : Item("minecraft:rabbit_foot", 414);
 
-public class ItemLingeringPotion(short metadata = 0) : Item("minecraft:lingering_potion", 441, metadata);
+public class ItemLingeringPotion(short metadata = 0) : Item("minecraft:lingering_potion", 441, metadata: metadata);
 
 public class ItemCampfire() : Item("minecraft:campfire", 720);
 
@@ -631,7 +631,7 @@ public class ItemChestMinecart() : Item("minecraft:chest_minecart", 342);
 public class ItemFishingRod() : Item("minecraft:fishing_rod", 346);
 
 public class ItemClock() : Item("minecraft:clock", 347);
-
+	
 public class ItemGlowstoneDust() : Item("minecraft:glowstone_dust", 348);
 
 public class ItemNameTag() : Item("minecraft:name_tag", 421);
@@ -782,7 +782,7 @@ public class ItemRecoveryCompass() : Item("minecraft:recovery_compass", 778);
 
 public class ItemEchoShard() : Item("minecraft:echo_shard", 779);
 
-public class ItemOminousBottle(short metadata = 0) : Item("minecraft:ominous_bottle", 1048, metadata);
+public class ItemOminousBottle(short metadata = 0) : Item("minecraft:ominous_bottle", 1048, metadata: metadata);
 
 public class ItemOminousTrialKey() : Item("minecraft:ominous_trial_key", 1049);
 

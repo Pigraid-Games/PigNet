@@ -26,19 +26,20 @@
 using MiNET.Items;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks;
-
-public partial class DaylightDetector : Block
+namespace MiNET.Blocks
 {
-	public DaylightDetector() : base(151)
+	public partial class DaylightDetector : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 1;
-		Hardness = 0.2f;
-	}
+		public DaylightDetector() : base(151)
+		{
+			IsTransparent = true;
+			BlastResistance = 1;
+			Hardness = 0.2f;
+		}
 
-	public override bool IsBestTool(Item item)
-	{
-		return item is ItemAxe ? true : false;
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
 	}
 }

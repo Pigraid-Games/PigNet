@@ -23,15 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class ActivatorRail : Block
+namespace MiNET.Blocks
 {
-	public ActivatorRail() : base(126)
+	public partial class ActivatorRail : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
-		BlastResistance = 3.5f;
-		Hardness = 0.7f;
+		public ActivatorRail() : base(126)
+		{
+			IsSolid = false;
+			IsTransparent = true;
+			BlastResistance = 3.5f;
+			Hardness = 0.7f;
+		}
 	}
 }

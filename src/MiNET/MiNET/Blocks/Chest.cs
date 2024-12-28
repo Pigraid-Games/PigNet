@@ -30,21 +30,27 @@ using MiNET.Worlds;
 using System.Numerics;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks;
-
-public partial class Chest() : ChestBase(54)
+namespace MiNET.Blocks
 {
-	public override bool IsBestTool(Item item)
+	public partial class Chest : ChestBase
 	{
-		return item is ItemAxe;
-	}
+		public Chest() : base(54)
+		{
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+		public override bool IsBestTool(Item item)
+		{
+			return item is ItemAxe ? true : false;
+		}
 
-		var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
-		world.SetBlockEntity(chestBlockEntity);
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+
+			var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
+			world.SetBlockEntity(chestBlockEntity);
+			return false;
+		}
+
 	}
 }

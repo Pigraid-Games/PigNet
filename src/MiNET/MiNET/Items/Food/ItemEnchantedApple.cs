@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -20,7 +19,6 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2024 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
 using System;
@@ -33,14 +31,14 @@ namespace MiNET.Items.Food;
 public class ItemEnchantedApple() : FoodItem("minecraft:enchanted_golden_apple", 466, 0, 4, 9.6)
 {
 	private bool _isUsing;
-
+	
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
 		if (_isUsing)
 		{
 			Count--;
 			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, this);
-
+			
 			Consume(player);
 			_isUsing = false;
 			return;
@@ -75,7 +73,7 @@ public class ItemEnchantedApple() : FoodItem("minecraft:enchanted_golden_apple",
 			EffectId = EffectType.Resistance,
 			Level = 1
 		};
-
+		
 		player.SetEffect(absorptionEffect);
 		player.SetEffect(regenerationEffect);
 		player.SetEffect(fireResistanceEffect);

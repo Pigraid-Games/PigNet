@@ -34,8 +34,7 @@ using MiNET.Worlds;
 namespace MiNET.Items;
 
 public class ItemSpawnEgg : Item
-{
-	public ItemSpawnEgg(EntityType type) : this((short) type)
+{ public ItemSpawnEgg(EntityType type) : this((short) type)
 	{
 	}
 
@@ -66,11 +65,7 @@ public class ItemSpawnEgg : Item
 				mob = new Sheep(world);
 				break;
 			case EntityType.Wolf:
-				mob = new Wolf(world)
-				{
-					Owner = player,
-					IsBaby = GetRandomBool()
-				};
+				mob = new Wolf(world) {Owner = player, IsBaby = GetRandomBool()};
 				break;
 			case EntityType.Villager:
 				mob = new Villager(world);

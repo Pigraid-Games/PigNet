@@ -33,141 +33,191 @@ using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.IO;
 
-namespace MiNET.Net;
-
-public abstract class BedrockMessageHandlerBase : ICustomMessageHandler
+namespace MiNET.Net
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(BedrockMessageHandlerBase));
-
-	private protected readonly RakSession _session;
-
-	public CryptoContext CryptoContext { get; set; }
-
-	protected BedrockMessageHandlerBase(RakSession session)
+	public abstract class BedrockMessageHandlerBase : ICustomMessageHandler
 	{
-		_session = session;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(BedrockMessageHandlerBase));
 
-	public abstract void Connected();
-	public abstract void Disconnect(string reason, bool sendDisconnect = true);
+		private protected readonly RakSession _session;
 
-	public List<Packet> PrepareSend(List<Packet> packetsToSend)
-	{
-		var sendList = new List<Packet>();
-		var sendInBatch = new List<Packet>();
-		foreach (Packet packet in packetsToSend)
+		public CryptoContext CryptoContext { get; set; }
+
+		protected BedrockMessageHandlerBase(RakSession session)
 		{
-			// We must send forced clear messages in single message batch because
-			// we can't mix them with un-encrypted messages for obvious reasons.
-			// If need be, we could put these in a batch of it's own, but too rare 
-			// to bother.
-			if (packet.ForceClear)
-			{
-				McpeWrapper wrapper = McpeWrapper.CreateObject();
-				wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-				wrapper.ForceClear = true;
-				wrapper.payload = Compression.CompressPacketsForWrapper(new List<Packet> { packet }, _session.EnableCompression ? CompressionLevel.Fastest : CompressionLevel.NoCompression, _session.EnableCompression);
-				wrapper.Encode(); // prepare
-				packet.PutPool();
-				sendList.Add(wrapper);
-				continue;
-			}
+			_session = session;
+		}
 
-			if (packet is McpeWrapper)
+		public abstract void Connected();
+		public abstract void Disconnect(string reason, bool sendDisconnect = true);
+
+		public List<Packet> PrepareSend(List<Packet> packetsToSend)
+		{
+			var sendList = new List<Packet>();
+			var sendInBatch = new List<Packet>();
+			foreach (Packet packet in packetsToSend)
 			{
+				// We must send forced clear messages in single message batch because
+				// we can't mix them with un-encrypted messages for obvious reasons.
+				// If need be, we could put these in a batch of it's own, but too rare 
+				// to bother.
+				if (packet.ForceClear)
+				{
+					var wrapper = McpeWrapper.CreateObject();
+					wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
+					wrapper.ForceClear = true;
+					wrapper.payload = Compression.CompressPacketsForWrapper(new List<Packet> {packet}, _session.EnableCompression ? CompressionLevel.Fastest : CompressionLevel.NoCompression, _session.EnableCompression);
+					wrapper.Encode(); // prepare
+					packet.PutPool();
+					sendList.Add(wrapper);
+					continue;
+				}
+
+				if (packet is McpeWrapper)
+				{
+					packet.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
+					sendList.Add(packet);
+					continue;
+				}
+
+				if (!packet.IsMcpe)
+				{
+					packet.ReliabilityHeader.Reliability = packet.ReliabilityHeader.Reliability != Reliability.Undefined ? packet.ReliabilityHeader.Reliability : Reliability.Reliable;
+					sendList.Add(packet);
+					continue;
+				}
+
 				packet.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-				sendList.Add(packet);
-				continue;
+
+				sendInBatch.Add(OnSendCustomPacket(packet));
 			}
 
-			if (!packet.IsMcpe)
+			if (sendInBatch.Count > 0)
 			{
-				packet.ReliabilityHeader.Reliability = packet.ReliabilityHeader.Reliability != Reliability.Undefined ? packet.ReliabilityHeader.Reliability : Reliability.Reliable;
-				sendList.Add(packet);
-				continue;
+				var compress = CompressionLevel.NoCompression;
+				var batch = McpeWrapper.CreateObject();
+				batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
+				var initCompression = false;
+				if (_session != null && _session.EnableCompression)
+				{ 
+					compress = CompressionLevel.Fastest;
+					initCompression = _session.EnableCompression;
+				}
+				else
+				{
+					initCompression = false;
+				}
+				batch.payload = Compression.CompressPacketsForWrapper(sendInBatch, compress, initCompression);
+				batch.Encode(); // prepare
+				sendList.Add(batch);
 			}
 
-			packet.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-
-			sendInBatch.Add(OnSendCustomPacket(packet));
+			return sendList;
 		}
 
-		if (sendInBatch.Count > 0)
+		public Packet HandleOrderedSend(Packet packet)
 		{
-			CompressionLevel compress = CompressionLevel.NoCompression;
-			McpeWrapper batch = McpeWrapper.CreateObject();
-			batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-			bool initCompression = false;
-			if (_session != null && _session.EnableCompression)
+			if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption && packet is McpeWrapper wrapper)
 			{
-				compress = CompressionLevel.Fastest;
-				initCompression = _session.EnableCompression;
+				var encryptedWrapper = McpeWrapper.CreateObject();
+				encryptedWrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
+				encryptedWrapper.payload = CryptoUtils.Encrypt(wrapper.payload, CryptoContext);
+				encryptedWrapper.Encode();
+
+				return encryptedWrapper;
 			}
-			else
-				initCompression = false;
-			batch.payload = Compression.CompressPacketsForWrapper(sendInBatch, compress, initCompression);
-			batch.Encode(); // prepare
-			sendList.Add(batch);
+
+			return packet;
 		}
 
-		return sendList;
-	}
-
-	public Packet HandleOrderedSend(Packet packet)
-	{
-		if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption && packet is McpeWrapper wrapper)
+		public void HandlePacket(Packet message)
 		{
-			McpeWrapper encryptedWrapper = McpeWrapper.CreateObject();
-			encryptedWrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-			encryptedWrapper.payload = CryptoUtils.Encrypt(wrapper.payload, CryptoContext);
-			encryptedWrapper.Encode();
+			if (message == null) throw new NullReferenceException();
 
-			return encryptedWrapper;
-		}
-
-		return packet;
-	}
-
-	public void HandlePacket(Packet message)
-	{
-		if (message == null) throw new NullReferenceException();
-
-		if (message is McpeWrapper wrapper)
-		{
-			var messages = new List<Packet>();
-
-			// Get bytes to process
-			ReadOnlyMemory<byte> payload = wrapper.payload;
-
-			// Decrypt bytes
-
-			if (CryptoContext != null && CryptoContext.UseEncryption)
-				// This call copies the entire buffer, but what can we do? It is kind of compensated by not
-				// creating a new buffer when parsing the packet (only a mem-slice)
-				payload = CryptoUtils.Decrypt(payload, CryptoContext);
-
-			// Decompress bytes
-
-			//var stream = new MemoryStreamReader(payload.Slice(0, payload.Length - 4)); // slice away adler
-			//if (stream.ReadByte() != 0x78)
-			//{
-			//	if (Log.IsDebugEnabled) Log.Error($"Incorrect ZLib header. Expected 0x78 0x9C 0x{wrapper.Id:X2}\n{Packet.HexDump(wrapper.payload)}");
-			//	if (Log.IsDebugEnabled) Log.Error($"Incorrect ZLib header. Decrypted 0x{wrapper.Id:X2}\n{Packet.HexDump(payload)}");
-			//	throw new InvalidDataException("Incorrect ZLib header. Expected 0x78 0x9C");
-			//}
-			//stream.ReadByte();
-			var stream = new MemoryStreamReader(payload);
-			int сompress = 0xff;
-			bool initCompression = false;
-			if (_session != null) initCompression = _session.EnableCompression;
-			if (initCompression) сompress = stream.ReadByte();
-			try
+			if (message is McpeWrapper wrapper)
 			{
-				if (сompress == 0x00)
-					using (var deflateStream = new DeflateStream(stream, CompressionMode.Decompress, false))
+				var messages = new List<Packet>();
+
+				// Get bytes to process
+				ReadOnlyMemory<byte> payload = wrapper.payload;
+
+				// Decrypt bytes
+
+				if (CryptoContext != null && CryptoContext.UseEncryption)
+				{
+					// This call copies the entire buffer, but what can we do? It is kind of compensated by not
+					// creating a new buffer when parsing the packet (only a mem-slice)
+					payload = CryptoUtils.Decrypt(payload, CryptoContext);
+				}
+
+				// Decompress bytes
+
+				//var stream = new MemoryStreamReader(payload.Slice(0, payload.Length - 4)); // slice away adler
+				//if (stream.ReadByte() != 0x78)
+				//{
+				//	if (Log.IsDebugEnabled) Log.Error($"Incorrect ZLib header. Expected 0x78 0x9C 0x{wrapper.Id:X2}\n{Packet.HexDump(wrapper.payload)}");
+				//	if (Log.IsDebugEnabled) Log.Error($"Incorrect ZLib header. Decrypted 0x{wrapper.Id:X2}\n{Packet.HexDump(payload)}");
+				//	throw new InvalidDataException("Incorrect ZLib header. Expected 0x78 0x9C");
+				//}
+				//stream.ReadByte();
+				var stream = new MemoryStreamReader(payload);
+				int сompress = 0xff;
+				var initCompression = false;
+				if (_session != null)
+				{
+					initCompression = _session.EnableCompression;
+				}
+				if (initCompression)
+				{
+					сompress = stream.ReadByte();
+				}
+				try
+				{
+					if (сompress == 0x00)
+					{
+						using (var deflateStream = new DeflateStream(stream, CompressionMode.Decompress, false))
+						{
+							using var s = new MemoryStream();
+							deflateStream.CopyTo(s);
+							s.Position = 0;
+
+							int count = 0;
+							// Get actual packet out of bytes
+							while (s.Position < s.Length)
+							{
+								count++;
+
+								uint len = VarInt.ReadUInt32(s);
+								long pos = s.Position;
+								ReadOnlyMemory<byte> internalBuffer = s.GetBuffer().AsMemory((int) s.Position, (int) len);
+								int id = VarInt.ReadInt32(s);
+								try
+								{
+									//if (Log.IsDebugEnabled)
+									//	Log.Debug($"0x{internalBuffer[0]:x2}\n{Packet.HexDump(internalBuffer)}");
+
+									messages.Add(PacketFactory.Create((short) id, internalBuffer, "mcpe") ??
+												new UnknownPacket((byte) id, internalBuffer));
+								}
+								catch (Exception e)
+								{
+									if (Log.IsDebugEnabled)
+										Log.Warn($"Error parsing bedrock message #{count} id={id}\n{Packet.HexDump(internalBuffer)}", e);
+									//throw;
+									return; // Exit, but don't crash.
+								}
+
+								s.Position = pos + len;
+							}
+
+							if (s.Length > s.Position)
+								throw new Exception("Have more data");
+						}
+					}
+					else
 					{
 						using var s = new MemoryStream();
-						deflateStream.CopyTo(s);
+						stream.CopyTo(s);
 						s.Position = 0;
 
 						int count = 0;
@@ -184,6 +234,7 @@ public abstract class BedrockMessageHandlerBase : ICustomMessageHandler
 							{
 								//if (Log.IsDebugEnabled)
 								//	Log.Debug($"0x{internalBuffer[0]:x2}\n{Packet.HexDump(internalBuffer)}");
+
 								messages.Add(PacketFactory.Create((short) id, internalBuffer, "mcpe") ??
 											new UnknownPacket((byte) id, internalBuffer));
 							}
@@ -201,92 +252,55 @@ public abstract class BedrockMessageHandlerBase : ICustomMessageHandler
 						if (s.Length > s.Position)
 							throw new Exception("Have more data");
 					}
-				else
-				{
-					using var s = new MemoryStream();
-					stream.CopyTo(s);
-					s.Position = 0;
-
-					int count = 0;
-					// Get actual packet out of bytes
-					while (s.Position < s.Length)
-					{
-						count++;
-
-						uint len = VarInt.ReadUInt32(s);
-						long pos = s.Position;
-						ReadOnlyMemory<byte> internalBuffer = s.GetBuffer().AsMemory((int) s.Position, (int) len);
-						int id = VarInt.ReadInt32(s);
-						try
-						{
-							//if (Log.IsDebugEnabled)
-							//	Log.Debug($"0x{internalBuffer[0]:x2}\n{Packet.HexDump(internalBuffer)}");
-
-							messages.Add(PacketFactory.Create((short) id, internalBuffer, "mcpe") ??
-										new UnknownPacket((byte) id, internalBuffer));
-						}
-						catch (Exception e)
-						{
-							if (Log.IsDebugEnabled)
-								Log.Warn($"Error parsing bedrock message #{count} id={id}\n{Packet.HexDump(internalBuffer)}", e);
-							//throw;
-							return; // Exit, but don't crash.
-						}
-
-						s.Position = pos + len;
-					}
-
-					if (s.Length > s.Position)
-						throw new Exception("Have more data");
-				}
-			}
-			catch (Exception e)
-			{
-				if (Log.IsDebugEnabled) Log.Warn($"Error parsing bedrock message \n{Packet.HexDump(payload)}", e);
-				throw;
-			}
-
-			foreach (Packet msg in messages)
-			{
-				// Temp fix for performance, take 1.
-				//var interact = msg as McpeInteract;
-				//if (interact?.actionId == 4 && interact.targetRuntimeEntityId == 0) continue;
-
-				msg.ReliabilityHeader = new ReliabilityHeader()
-				{
-					Reliability = wrapper.ReliabilityHeader.Reliability,
-					ReliableMessageNumber = wrapper.ReliabilityHeader.ReliableMessageNumber,
-					OrderingChannel = wrapper.ReliabilityHeader.OrderingChannel,
-					OrderingIndex = wrapper.ReliabilityHeader.OrderingIndex
-				};
-
-				RakOfflineHandler.TraceReceive(Log, msg);
-				try
-				{
-					HandleCustomPacket(msg);
 				}
 				catch (Exception e)
 				{
-					Log.Warn($"Bedrock message handler error", e);
+					if (Log.IsDebugEnabled) Log.Warn($"Error parsing bedrock message \n{Packet.HexDump(payload)}", e);
+					throw;
 				}
+
+				foreach (Packet msg in messages)
+				{
+					// Temp fix for performance, take 1.
+					//var interact = msg as McpeInteract;
+					//if (interact?.actionId == 4 && interact.targetRuntimeEntityId == 0) continue;
+
+					msg.ReliabilityHeader = new ReliabilityHeader()
+					{
+						Reliability = wrapper.ReliabilityHeader.Reliability,
+						ReliableMessageNumber = wrapper.ReliabilityHeader.ReliableMessageNumber,
+						OrderingChannel = wrapper.ReliabilityHeader.OrderingChannel,
+						OrderingIndex = wrapper.ReliabilityHeader.OrderingIndex,
+					};
+
+					RakOfflineHandler.TraceReceive(Log, msg);
+					try
+					{
+						HandleCustomPacket(msg);
+					}
+					catch (Exception e)
+					{
+						Log.Warn($"Bedrock message handler error", e);
+					}
+				}
+
+				wrapper.PutPool();
 			}
+			else if (message is UnknownPacket unknownPacket)
+			{
+				if (Log.IsDebugEnabled) Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
 
-			wrapper.PutPool();
+				unknownPacket.PutPool();
+			}
+			else
+			{
+				Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2} for user: {_session.Username}, IP {_session.EndPoint.Address}");
+				if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
+			}
 		}
-		else if (message is UnknownPacket unknownPacket)
-		{
-			if (Log.IsDebugEnabled) Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
 
-			unknownPacket.PutPool();
-		}
-		else
-		{
-			Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2} for user: {_session.Username}, IP {_session.EndPoint.Address}");
-			if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
-		}
+		public abstract Packet OnSendCustomPacket(Packet message);
+
+		public abstract void HandleCustomPacket(Packet message);
 	}
-
-	public abstract Packet OnSendCustomPacket(Packet message);
-
-	public abstract void HandleCustomPacket(Packet message);
 }

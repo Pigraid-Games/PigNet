@@ -25,27 +25,28 @@
 
 using System.IO;
 
-namespace MiNET.Utils.Metadata;
-
-public class MetadataInts : MetadataDictionary
+namespace MiNET.Utils.Metadata
 {
-	public static new MetadataInts FromStream(BinaryReader stream)
+	public class MetadataInts : MetadataDictionary
 	{
-		var value = new MetadataInts();
-		while (true)
+		public static new MetadataInts FromStream(BinaryReader stream)
 		{
-			byte key = stream.ReadByte();
-			if (key == 127) break;
+			var value = new MetadataInts();
+			while (true)
+			{
+				byte key = stream.ReadByte();
+				if (key == 127) break;
 
-			byte type = (byte) ((key & 0xE0) >> 5);
-			byte index = (byte) (key & 0x1F);
+				byte type = (byte) ((key & 0xE0) >> 5);
+				byte index = (byte) (key & 0x1F);
 
-			MetadataEntry entry = EntryTypes[type]();
-			entry.FromStream(stream);
-			entry.Index = index;
+				var entry = EntryTypes[type]();
+				entry.FromStream(stream);
+				entry.Index = index;
 
-			value[index] = entry;
+				value[index] = entry;
+			}
+			return value;
 		}
-		return value;
 	}
 }

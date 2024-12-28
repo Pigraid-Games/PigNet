@@ -32,116 +32,126 @@ using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks;
-
-public partial class Bed : Block
+namespace MiNET.Blocks
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Bed));
-
-	public byte Color { get; set; }
-
-	public Bed() : base(26)
+	public partial class Bed : Block
 	{
-		BlastResistance = 1;
-		Hardness = 0.2f;
-		IsTransparent = true;
-	}
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Bed));
 
-	public override Item[] GetDrops(Item tool)
-	{
-		return [ItemFactory.GetItem("minecraft:bed", Color)];
-	}
+		public byte Color { get; set; }
 
-	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-	{
-		Item itemInHand = player.Inventory.GetItemInHand();
-		Color = Convert.ToByte(itemInHand.Metadata);
-		Direction = player.GetDirectionEmum() switch
+		public Bed() : base(26)
 		{
-			Entity.Direction.West => 0,
-			Entity.Direction.North => 1,
-			Entity.Direction.East => 2,
-			Entity.Direction.South => 3,
-			_ => throw new ArgumentOutOfRangeException()
-		};
+			BlastResistance = 1;
+			Hardness = 0.2f;
+			IsTransparent = true;
+			//IsFlammable = true; // It can catch fire from lava, but not other means.
+		}
 
-		return world.GetBlock(blockCoordinates).IsReplaceable && world.GetBlock(GetOtherPart()).IsReplaceable;
-	}
-
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		HeadPieceBit = false;
-		world.SetBlockEntity(new BedBlockEntity
+		public override Item[] GetDrops(Item tool)
 		{
-			Coordinates = Coordinates,
-			Color = Color
-		});
+			return new[] {ItemFactory.GetItem(355, Color)};
+		}
 
-		BlockCoordinates otherCoord = GetOtherPart();
-		var blockOther = new Bed
+		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 		{
-			Coordinates = otherCoord,
-			Direction = Direction,
-			HeadPieceBit = true
-		};
-		world.SetBlock(blockOther);
-		world.SetBlockEntity(new BedBlockEntity
+			var itemInHand = player.Inventory.GetItemInHand();
+			Color = Convert.ToByte(itemInHand.Metadata);
+			Direction = player.GetDirectionEmum() switch
+			{
+				Entity.Direction.West => 0,
+				Entity.Direction.North => 1,
+				Entity.Direction.East => 2,
+				Entity.Direction.South => 3,
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			return world.GetBlock(blockCoordinates).IsReplaceable && world.GetBlock(GetOtherPart()).IsReplaceable;
+		}
+
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{
-			Coordinates = blockOther.Coordinates,
-			Color = Color
-		});
+			HeadPieceBit = false;
+			world.SetBlockEntity(new BedBlockEntity
+			{
+				Coordinates = Coordinates,
+				Color = Color
+			});
 
-		return false;
-	}
+			var otherCoord = GetOtherPart();
+			Bed blockOther = new Bed
+			{
+				Coordinates = otherCoord,
+				Direction = Direction,
+				HeadPieceBit = true,
+			};
+			world.SetBlock(blockOther);
+			world.SetBlockEntity(new BedBlockEntity
+			{
+				Coordinates = blockOther.Coordinates,
+				Color = Color
+			});
 
-	public override void BreakBlock(Level level, BlockFace face, bool silent = false)
-	{
-		if (level.GetBlockEntity(Coordinates) is BedBlockEntity blockEntiy) Color = blockEntiy.Color;
+			return false;
+		}
 
-		base.BreakBlock(level, face, silent);
-
-		BlockCoordinates other = GetOtherPart();
-		level.SetAir(other);
-		level.RemoveBlockEntity(other);
-	}
-
-	private BlockCoordinates GetOtherPart()
-	{
-		BlockCoordinates direction = Direction switch
+		public override void BreakBlock(Level level, BlockFace face, bool silent = false)
 		{
-			0 => Level.North,
-			1 => Level.East,
-			2 => Level.South,
-			3 => Level.West,
-			_ => throw new ArgumentOutOfRangeException()
-		};
+			if (level.GetBlockEntity(Coordinates) is BedBlockEntity blockEntiy)
+			{
+				Color = blockEntiy.Color;
+			}
 
-		if (!HeadPieceBit) direction *= -1;
+			base.BreakBlock(level, face, silent);
 
-		return Coordinates + direction;
-	}
+			var other = GetOtherPart();
+			level.SetAir(other);
+			level.RemoveBlockEntity(other);
+		}
 
-	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-	{
-		if (OccupiedBit)
+		private BlockCoordinates GetOtherPart()
 		{
-			Log.Debug($"Bed at {Coordinates} is already occupied"); // Send proper message to player
+			var direction = Direction switch
+			{
+				0 => Level.North,
+				1 => Level.East,
+				2 => Level.South,
+				3 => Level.West,
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			if (!HeadPieceBit)
+			{
+				direction = direction * -1;
+			}
+
+			return Coordinates + direction;
+		}
+
+		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+		{
+			if (OccupiedBit)
+			{
+				Log.Debug($"Bed at {Coordinates} is already occupied"); // Send proper message to player
+				return true;
+			}
+
+			SetOccupied(world, true);
+			player.IsSleeping = true;
+			player.SpawnPosition = blockCoordinates;
+			player.BroadcastSetEntityData();
 			return true;
 		}
 
-		SetOccupied(world, true);
-		player.IsSleeping = true;
-		player.SpawnPosition = blockCoordinates;
-		player.BroadcastSetEntityData();
-		return true;
-	}
+		public void SetOccupied(Level world, bool isOccupied)
+		{
+			Bed other = world.GetBlock(GetOtherPart()) as Bed;
+			if (other == null) return;
 
-	public void SetOccupied(Level world, bool isOccupied)
-	{
-		if (world.GetBlock(GetOtherPart()) is not Bed other) return;
-		OccupiedBit = isOccupied;
-		other.OccupiedBit = isOccupied;
-		world.SetBlock(this);
-		world.SetBlock(other);
+			OccupiedBit = isOccupied;
+			other.OccupiedBit = isOccupied;
+			world.SetBlock(this);
+			world.SetBlock(other);
+		}
 	}
 }

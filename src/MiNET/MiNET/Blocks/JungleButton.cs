@@ -23,12 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class JungleButton : Button
+namespace MiNET.Blocks
 {
-	public JungleButton() : base(398)
+	public partial class JungleButton : Button
 	{
-		TickRate = 30;
+		public JungleButton() : base(398)
+		{
+			TickRate = 30;
+		}
 	}
 }

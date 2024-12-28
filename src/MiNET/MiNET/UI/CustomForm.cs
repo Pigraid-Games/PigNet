@@ -46,10 +46,10 @@ public class CustomForm : Form
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented
+			Formatting = Formatting.Indented,
 		};
 
-		List<object> parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
+		var parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
 		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
 
 		if (parsedResult == null) return; // Pressed [x]

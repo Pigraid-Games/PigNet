@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 
-namespace MiNET.Utils;
-
-public class pixelList
+namespace MiNET.Utils
 {
-	public List<pixelsData> mapData = new();
-}
-
-public class pixelsData
-{
-	public uint pixel;
-	public short index;
+	public class pixelList
+	{
+		public List<pixelsData> mapData = new List<pixelsData>();
+	}
+	public class pixelsData
+	{
+		public uint pixel;
+		public short index;
+	}
 }

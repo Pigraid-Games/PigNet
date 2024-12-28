@@ -25,12 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects;
-
-public class Strength : Effect
+namespace MiNET.Effects
 {
-	public Strength() : base(EffectType.Strength)
+	public class Strength : Effect
 	{
-		ParticleColor = Color.FromArgb(0xff, 0xc7, 0x00);
+		public Strength() : base(EffectType.Strength)
+		{
+			ParticleColor = Color.FromArgb(0xff, 0xc7, 0x00);
+		}
 	}
 }

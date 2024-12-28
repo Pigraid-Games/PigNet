@@ -1,10 +1,11 @@
-﻿namespace MiNET.Blocks;
-
-public partial class Deny : Block
+﻿namespace MiNET.Blocks
 {
-	public Deny() : base(211)
+	public partial class Deny : Block
 	{
-		Hardness = 60000;
-		BlastResistance = 18000000;
+		public Deny() : base(211)
+		{
+			Hardness = 60000;
+			BlastResistance = 18000000;
+		}
 	}
 }

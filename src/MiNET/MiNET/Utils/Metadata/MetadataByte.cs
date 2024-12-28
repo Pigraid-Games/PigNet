@@ -25,47 +25,54 @@
 
 using System.IO;
 
-namespace MiNET.Utils.Metadata;
-
-public class MetadataByte : MetadataEntry
+namespace MiNET.Utils.Metadata
 {
-	public override byte Identifier => 0;
-
-	public override string FriendlyName => "byte";
-
-	public byte Value { get; set; }
-
-	public static implicit operator MetadataByte(byte value)
+	public class MetadataByte : MetadataEntry
 	{
-		return new MetadataByte(value);
-	}
+		public override byte Identifier
+		{
+			get { return 0; }
+		}
 
-	public MetadataByte()
-	{
-	}
+		public override string FriendlyName
+		{
+			get { return "byte"; }
+		}
 
-	public MetadataByte(bool value)
-	{
-		Value = (byte) (value ? 1 : 0);
-	}
+		public byte Value { get; set; }
 
-	public MetadataByte(byte value)
-	{
-		Value = value;
-	}
+		public static implicit operator MetadataByte(byte value)
+		{
+			return new MetadataByte(value);
+		}
 
-	public override void FromStream(BinaryReader reader)
-	{
-		Value = reader.ReadByte();
-	}
+		public MetadataByte()
+		{
+		}
 
-	public override void WriteTo(BinaryWriter stream)
-	{
-		stream.Write(Value);
-	}
+		public MetadataByte(bool value)
+		{
+			Value = (byte) (value ? 1 : 0);
+		}
 
-	public override string ToString()
-	{
-		return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
+		public MetadataByte(byte value)
+		{
+			Value = value;
+		}
+
+		public override void FromStream(BinaryReader reader)
+		{
+			Value = reader.ReadByte();
+		}
+
+		public override void WriteTo(BinaryWriter stream)
+		{
+			stream.Write(Value);
+		}
+
+		public override string ToString()
+		{
+			return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
+		}
 	}
 }

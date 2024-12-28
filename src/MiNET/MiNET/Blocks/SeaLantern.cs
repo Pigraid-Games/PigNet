@@ -26,20 +26,21 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks;
-
-public partial class SeaLantern : Block
+namespace MiNET.Blocks
 {
-	public SeaLantern() : base(169)
+	public partial class SeaLantern : Block
 	{
-		LightLevel = 15;
-		BlastResistance = 1.5f;
-		Hardness = 0.3f;
-	}
+		public SeaLantern() : base(169)
+		{
+			LightLevel = 15;
+			BlastResistance = 1.5f;
+			Hardness = 0.3f;
+		}
 
-	public override Item[] GetDrops(Item tool)
-	{
-		var rnd = new Random();
-		return [ItemFactory.GetItem("minecraft:prismarine_shard", count: (byte) rnd.Next(2, 3))];
+		public override Item[] GetDrops(Item tool)
+		{
+			var rnd = new Random();
+			return [ItemFactory.GetItem(409, 0, (byte) (rnd.Next(2, 3)))]; //drop prismarine_shard
+		}
 	}
 }

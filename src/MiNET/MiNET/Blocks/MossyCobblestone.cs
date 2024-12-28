@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class MossyCobblestone : Block
+namespace MiNET.Blocks
 {
-	public MossyCobblestone() : base(48)
+	public partial class MossyCobblestone : Block
 	{
-		BlastResistance = 30;
-		Hardness = 2;
+		public MossyCobblestone() : base(48)
+		{
+			BlastResistance = 30;
+			Hardness = 2;
+		}
 	}
 }

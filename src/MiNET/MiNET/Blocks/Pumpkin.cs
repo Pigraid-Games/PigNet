@@ -27,19 +27,20 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class Pumpkin : Block
+namespace MiNET.Blocks
 {
-	public Pumpkin() : base(86)
+	public partial class Pumpkin : Block
 	{
-		BlastResistance = 5;
-		Hardness = 1;
-	}
+		public Pumpkin() : base(86)
+		{
+			BlastResistance = 5;
+			Hardness = 1;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Direction = player.GetCardinalDirection();
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetCardinalDirection();
+			return false;
+		}
 	}
 }

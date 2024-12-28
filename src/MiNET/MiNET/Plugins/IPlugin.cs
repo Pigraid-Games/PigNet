@@ -23,17 +23,18 @@
 
 #endregion
 
-namespace MiNET.Plugins;
-
-public interface IPlugin
+namespace MiNET.Plugins
 {
-	/// <summary>
-	///     This function will be called on plugin initialization.
-	/// </summary>
-	void OnEnable(PluginContext context);
+	public interface IPlugin
+	{
+		/// <summary>
+		///     This function will be called on plugin initialization.
+		/// </summary>
+		void OnEnable(PluginContext context);
 
-	/// <summary>
-	///     This function will be called when the plugin will be disabled.s
-	/// </summary>
-	void OnDisable();
+		/// <summary>
+		///     This function will be called when the plugin will be disabled.s
+		/// </summary>
+		void OnDisable();
+	}
 }

@@ -27,20 +27,21 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class LitPumpkin : Block
+namespace MiNET.Blocks
 {
-	public LitPumpkin() : base(91)
+	public partial class LitPumpkin : Block
 	{
-		LightLevel = 15;
-		BlastResistance = 5;
-		Hardness = 1;
-	}
+		public LitPumpkin() : base(91)
+		{
+			LightLevel = 15;
+			BlastResistance = 5;
+			Hardness = 1;
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Direction = player.GetCardinalDirection();
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetCardinalDirection();
+			return false;
+		}
 	}
 }

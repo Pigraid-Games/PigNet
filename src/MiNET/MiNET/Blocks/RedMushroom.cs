@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class RedMushroom : Block
+namespace MiNET.Blocks
 {
-	public RedMushroom() : base(40)
+	public partial class RedMushroom : Block
 	{
-		IsSolid = false;
-		IsTransparent = true;
+		public RedMushroom() : base(40)
+		{
+			IsSolid = false;
+			IsTransparent = true;
+		}
 	}
 }

@@ -27,17 +27,18 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks;
-
-public partial class PoweredRepeater : RepeaterBase
+namespace MiNET.Blocks
 {
-	public PoweredRepeater() : base(94)
+	public partial class PoweredRepeater : RepeaterBase
 	{
-	}
+		public PoweredRepeater() : base(94)
+		{
+		}
 
-	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-	{
-		Direction = player.GetCardinalDirection();
-		return false;
+		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		{
+			Direction = player.GetCardinalDirection();
+			return false;
+		}
 	}
 }

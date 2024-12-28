@@ -25,12 +25,13 @@
 
 using MiNET.Worlds;
 
-namespace MiNET.Particles;
-
-public class CriticalParticle : LegacyParticle
+namespace MiNET.Particles
 {
-	public CriticalParticle(Level level, int scale = 2) : base(ParticleType.Critical, level)
+	public class CriticalParticle : LegacyParticle
 	{
-		Data = scale;
+		public CriticalParticle(Level level, int scale = 2) : base(ParticleType.Critical, level)
+		{
+			Data = scale;
+		}
 	}
 }

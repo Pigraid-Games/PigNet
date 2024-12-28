@@ -23,13 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class FlowingWater : Flowing
+namespace MiNET.Blocks
 {
-	public FlowingWater() : base(8)
+	public partial class FlowingWater : Flowing
 	{
-		BlastResistance = 500;
-		Hardness = 100;
+		public FlowingWater() : base(8)
+		{
+			BlastResistance = 500;
+			Hardness = 100;
+		}
 	}
 }

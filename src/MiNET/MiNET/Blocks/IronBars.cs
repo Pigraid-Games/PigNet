@@ -23,14 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks;
-
-public partial class IronBars : Block
+namespace MiNET.Blocks
 {
-	public IronBars() : base(101)
+	public partial class IronBars : Block
 	{
-		IsTransparent = true;
-		BlastResistance = 30;
-		Hardness = 5;
+		public IronBars() : base(101)
+		{
+			IsTransparent = true;
+			BlastResistance = 30;
+			Hardness = 5;
+		}
 	}
 }
