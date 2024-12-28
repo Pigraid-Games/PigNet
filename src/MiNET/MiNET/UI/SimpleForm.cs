@@ -34,7 +34,7 @@ public class SimpleForm : Form
 	private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
 
 	public string Content { get; set; }
-	public List<Button> Buttons { get; set; } = new List<Button>();
+	public List<Button> Buttons { get; set; } = new();
 
 	public SimpleForm()
 	{
@@ -46,7 +46,7 @@ public class SimpleForm : Form
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented,
+			Formatting = Formatting.Indented
 		};
 
 		int? parsedResult = JsonConvert.DeserializeObject<int?>(json);

@@ -45,7 +45,7 @@ public abstract class Form
 		settings.Formatting = Formatting.Indented;
 		settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
-		var content = JsonConvert.SerializeObject(this, settings);
+		string content = JsonConvert.SerializeObject(this, settings);
 
 		return content;
 	}

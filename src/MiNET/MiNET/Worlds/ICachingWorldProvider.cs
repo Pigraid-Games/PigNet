@@ -26,14 +26,13 @@
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Worlds
+namespace MiNET.Worlds;
+
+public interface ICachingWorldProvider
 {
-	public interface ICachingWorldProvider
-	{
-		ChunkColumn[] GetCachedChunks();
+	ChunkColumn[] GetCachedChunks();
 
-		void ClearCachedChunks();
+	void ClearCachedChunks();
 
-		int UnloadChunks(Player[] players, ChunkCoordinates spawn, double maxViewDistance);
-	}
+	int UnloadChunks(Player[] players, ChunkCoordinates spawn, double maxViewDistance);
 }

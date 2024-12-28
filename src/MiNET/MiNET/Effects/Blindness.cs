@@ -25,13 +25,12 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class Blindness : Effect
 {
-	public class Blindness : Effect
+	public Blindness() : base(EffectType.Blindness)
 	{
-		public Blindness() : base(EffectType.Blindness)
-		{
-			ParticleColor = Color.FromArgb(0x1F, 0x1F, 0x23);
-		}
+		ParticleColor = Color.FromArgb(0x1F, 0x1F, 0x23);
 	}
 }

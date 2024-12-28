@@ -28,78 +28,71 @@ using MiNET.Blocks;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+public class ItemBucket : Item
 {
-	public class ItemBucket : Item
+	private bool _isUsing;
+
+	public ItemBucket(short metadata) : base("minecraft:bucket", 325, metadata)
 	{
-		private bool _isUsing;
-		public ItemBucket(short metadata) : base("minecraft:bucket", 325, metadata)
+		MaxStackSize = 1;
+		FuelEfficiency = (short) (Metadata == 10 ? 1000 : 0);
+	}
+
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		if (_isUsing)
 		{
-			MaxStackSize = 1;
-			FuelEfficiency = (short) (Metadata == 10 ? 1000 : 0);
-		}
+			player.RemoveAllEffects();
 
-		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-		{
-			if (_isUsing)
-			{
-				player.RemoveAllEffects();
-
-				if (player.GameMode == GameMode.Survival || player.GameMode == GameMode.Adventure)
-				{
-					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, ItemFactory.GetItem(325), true);
-				}
-				_isUsing = false;
-				return;
-			}
-
-			_isUsing = true;
-		}
-
-		public override void Release(Level world, Player player, BlockCoordinates blockCoordinates)
-		{
+			if (player.GameMode == GameMode.Survival || player.GameMode == GameMode.Adventure) player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, ItemFactory.GetItem(325), true);
 			_isUsing = false;
+			return;
 		}
 
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+		_isUsing = true;
+	}
+
+	public override void Release(Level world, Player player, BlockCoordinates blockCoordinates)
+	{
+		_isUsing = false;
+	}
+
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		switch (Metadata)
 		{
-			switch (Metadata)
+			//Prevent some kind of cheating...
+			case 8 or 10:
 			{
-				//Prevent some kind of cheating...
-				case 8 or 10:
-				{
-					var itemBlock = new ItemBlock(BlockFactory.GetBlockById((byte) Metadata));
-					itemBlock.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
-					break;
-				}
-				// Empty bucket
-				case 0:
-				{
-					// Pick up water/lava
-					Block block = world.GetBlock(blockCoordinates);
-					switch (block)
-					{
-						case Stationary fluid:
-						{
-							if (fluid.LiquidDepth == 0) // Only source blocks
-							{
-								world.SetAir(blockCoordinates);
-							}
-							break;
-						}
-						case Flowing fluid:
-						{
-							if (fluid.LiquidDepth == 0) // Only source blocks
-							{
-								world.SetAir(blockCoordinates);
-							}
-							break;
-						}
-					}
-					break;
-				}
+				var itemBlock = new ItemBlock(BlockFactory.GetBlockById((byte) Metadata));
+				itemBlock.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
+				break;
 			}
-			FuelEfficiency = (short) (Metadata == 10 ? 1000 : 0);
+			// Empty bucket
+			case 0:
+			{
+				// Pick up water/lava
+				Block block = world.GetBlock(blockCoordinates);
+				switch (block)
+				{
+					case Stationary fluid:
+					{
+						if (fluid.LiquidDepth == 0) // Only source blocks
+							world.SetAir(blockCoordinates);
+						break;
+					}
+					case Flowing fluid:
+					{
+						if (fluid.LiquidDepth == 0) // Only source blocks
+							world.SetAir(blockCoordinates);
+						break;
+					}
+				}
+				break;
+			}
 		}
+		FuelEfficiency = (short) (Metadata == 10 ? 1000 : 0);
 	}
 }

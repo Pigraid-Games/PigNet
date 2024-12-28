@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Blocks
-{
-	public partial class SpruceDoor : DoorBase
-	{
-		public SpruceDoor() : base(193)
-		{
-		}
-	}
-}
+namespace MiNET.Blocks;
+
+public partial class SpruceDoor() : DoorBase(193);

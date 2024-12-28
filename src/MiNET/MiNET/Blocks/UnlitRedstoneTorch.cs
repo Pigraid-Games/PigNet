@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Blocks
-{
-	public partial class UnlitRedstoneTorch : Block
-	{
-		public UnlitRedstoneTorch() : base(75)
-		{
-		}
-	}
-}
+namespace MiNET.Blocks;
+
+public partial class UnlitRedstoneTorch() : Block(75);

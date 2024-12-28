@@ -28,29 +28,28 @@ using MiNET.BlockEntities;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public abstract class FurnaceBase : Block
 {
-	public abstract class FurnaceBase : Block
+	protected FurnaceBase(byte id) : base(id)
 	{
-		protected FurnaceBase(byte id) : base(id)
-		{
-			BlastResistance = 17.5f;
-			Hardness = 3.5f;
-		}
+		BlastResistance = 17.5f;
+		Hardness = 3.5f;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var furnaceBlockEntity = new FurnaceBlockEntity {Coordinates = Coordinates};
-			world.SetBlockEntity(furnaceBlockEntity);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		var furnaceBlockEntity = new FurnaceBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(furnaceBlockEntity);
 
-			return false;
-		}
+		return false;
+	}
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			player.OpenInventory(blockCoordinates);
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		player.OpenInventory(blockCoordinates);
 
-			return true;
-		}
+		return true;
 	}
 }

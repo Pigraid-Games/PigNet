@@ -134,18 +134,18 @@ namespace MiNET.Entities
 		public override void SpawnToPlayers(Player[] players)
 		{
 				var message = McpeAddPlayer.CreateObject();
-				message.uuid = ClientUuid;
-				message.username = NameTag;
-				message.entityIdSelf = EntityId;
-				message.runtimeEntityId = EntityId;
-				message.x = KnownPosition.X;
-				message.y = KnownPosition.Y;
-				message.z = KnownPosition.Z;
-				message.yaw = KnownPosition.Yaw;
-				message.headYaw = KnownPosition.HeadYaw;
-				message.pitch = KnownPosition.Pitch;
-				message.metadata = GetMetadata();
-				message.layers = GetAbilities();
+				message.Uuid = ClientUuid;
+				message.Username = NameTag;
+				message.EntityIdSelf = EntityId;
+				message.RuntimeEntityId = EntityId;
+				message.X = KnownPosition.X;
+				message.Y = KnownPosition.Y;
+				message.Z = KnownPosition.Z;
+				message.Yaw = KnownPosition.Yaw;
+				message.HeadYaw = KnownPosition.HeadYaw;
+				message.Pitch = KnownPosition.Pitch;
+				message.Metadata = GetMetadata();
+				message.Layers = GetAbilities();
 				Level.RelayBroadcast(players, message);
 
 				var mobEquipment = McpeMobEquipment.CreateObject();

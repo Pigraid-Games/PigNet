@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class HardenedClay : Block
 {
-	public partial class HardenedClay : Block
+	public HardenedClay() : base(172)
 	{
-		public HardenedClay() : base(172)
-		{
-			BlastResistance = 30;
-			Hardness = 1.25f;
-		}
+		BlastResistance = 30;
+		Hardness = 1.25f;
 	}
 }

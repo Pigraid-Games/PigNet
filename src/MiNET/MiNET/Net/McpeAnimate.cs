@@ -23,26 +23,19 @@
 
 #endregion
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public partial class McpeAnimate
 {
-	public partial class McpeAnimate : Packet<McpeAnimate>
+	public float UnknownFloat;
+
+	partial void AfterDecode()
 	{
-		public float unknownFloat;
+		if (actionId is 0x80 or 0x81) UnknownFloat = ReadFloat();
+	}
 
-		partial void AfterDecode()
-		{
-			if (actionId == 0x80 || actionId == 0x81)
-			{
-				unknownFloat = ReadFloat();
-			}
-		}
-
-		partial void AfterEncode()
-		{
-			if (actionId == 0x80 || actionId == 0x81)
-			{
-				Write(unknownFloat);
-			}
-		}
+	partial void AfterEncode()
+	{
+		if (actionId is 0x80 or 0x81) Write(UnknownFloat);
 	}
 }

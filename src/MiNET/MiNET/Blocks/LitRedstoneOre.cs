@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class LitRedstoneOre : RedstoneOre
 {
-	public partial class LitRedstoneOre : RedstoneOre
+	public LitRedstoneOre() : base(74)
 	{
-		public LitRedstoneOre() : base(74)
-		{
-			LightLevel = 9;
-		}
+		LightLevel = 9;
 	}
 }

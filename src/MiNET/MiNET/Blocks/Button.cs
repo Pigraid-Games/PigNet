@@ -25,73 +25,68 @@
 
 using System.Numerics;
 using System.Threading.Tasks;
+using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public abstract class Button : Block
 {
-	public abstract class Button : Block
+	public int TickRate { get; set; }
+	public static int Direction { get; set; }
+	private BlockCoordinates[] _cord = [];
+	[StateBit] public virtual bool ButtonPressedBit { get; set; }
+	[StateRange(0, 5)] public virtual int FacingDirection { get; set; } = 2;
+
+	protected Button(int id) : base(id)
 	{
-		public int TickRate { get; set; }
-		public static int Direction { get; set; }
-		private BlockCoordinates[] cord = [];
-		[StateBit] public virtual bool ButtonPressedBit { get; set; } = false;
-		[StateRange(0, 5)] public virtual int FacingDirection { get; set; } = 2;
+		IsSolid = false;
+		IsTransparent = true;
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
+	}
 
-		protected Button(int id) : base(id)
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = (int) face;
+		FacingDirection = Direction;
+		world.SetBlock(this);
+		return true;
+	}
+
+	public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		level.BroadcastSound(new ButtonOnSound(Coordinates));
+		ButtonPressedBit = true;
+		FacingDirection = Direction;
+		level.SetBlock(this);
+		level.ScheduleBlockTick(this, TickRate);
+
+		if (!level.RedstoneEnabled) return true;
+
+		_cord = [Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockDown(), Coordinates.BlockNorthEast(), Coordinates.BlockNorthWest(), Coordinates.BlockSouthEast(), Coordinates.BlockSouthWest()];
+
+		if (!ButtonPressedBit) return true;
+		foreach (BlockCoordinates bCord in _cord)
 		{
-			IsSolid = false;
-			IsTransparent = true;
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
+			RedstoneController.signal(level, bCord, true);
+			TurnOff(level);
 		}
+		return true;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = (int) face;
-			FacingDirection = Direction;
-			world.SetBlock(this);
-			return true;
-		}
+	public override void OnTick(Level level, bool isRandom)
+	{
+		if (isRandom) return;
+		level.BroadcastSound(new ButtonOffSound(Coordinates));
+		ButtonPressedBit = false;
+		level.SetBlock(this);
+	}
 
-		public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			level.BroadcastSound(blockCoordinates, LevelSoundEventType.ButtonOn);
-			ButtonPressedBit = true;
-			FacingDirection = Direction;
-			level.SetBlock(this);
-			level.ScheduleBlockTick(this, TickRate);
-
-			if (!level.RedstoneEnabled) { return true; }
-
-			cord = [Coordinates.BlockNorth(), Coordinates.BlockSouth(), Coordinates.BlockEast(), Coordinates.BlockWest(), Coordinates.BlockDown(), Coordinates.BlockNorthEast(), Coordinates.BlockNorthWest(), Coordinates.BlockSouthEast(), Coordinates.BlockSouthWest()];
-
-			if (ButtonPressedBit)
-			{
-				foreach (BlockCoordinates bCord in cord)
-				{
-					RedstoneController.signal(level, bCord, true);
-					TurnOff(level);
-				}
-			}
-			return true;
-		}
-
-		public override void OnTick(Level level, bool isRandom)
-		{
-			if (isRandom) return;
-			level.BroadcastSound(Coordinates, LevelSoundEventType.ButtonOff);
-			ButtonPressedBit = false;
-			level.SetBlock(this);
-		}
-
-		private async void TurnOff(Level level)
-		{
-			await Task.Delay((TickRate / 2) * 100);
-			foreach (BlockCoordinates bCord in cord)
-			{
-				RedstoneController.signal(level, bCord, false);
-			}
-		}
+	private async void TurnOff(Level level)
+	{
+		await Task.Delay(TickRate / 2 * 100);
+		foreach (BlockCoordinates bCord in _cord) RedstoneController.signal(level, bCord, false);
 	}
 }

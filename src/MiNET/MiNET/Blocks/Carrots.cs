@@ -26,23 +26,14 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Carrots() : Crops(141)
 {
-	public partial class Carrots : Crops
+	public override Item[] GetDrops(Item tool)
 	{
-		public Carrots() : base(141)
-		{
-		}
-
-		public override Item[] GetDrops(Item tool)
-		{
-			if (Growth == 7)
-			{
-				var random = new Random();
-				return new[] {ItemFactory.GetItem(391, 0, (byte) random.Next(1, 5))};
-			}
-
-			return new[] {ItemFactory.GetItem(391, 0, 1)};
-		}
+		if (Growth != 7) return [ItemFactory.GetItem("minecraft:carrot")];
+		var random = new Random();
+		return [ItemFactory.GetItem("minecraft:carrot", count: (byte) random.Next(1, 5))];
 	}
 }

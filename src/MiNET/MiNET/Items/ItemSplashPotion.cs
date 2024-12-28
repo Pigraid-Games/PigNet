@@ -24,10 +24,7 @@ public class ItemSplashPotion : Item
 		}
 		const float Force = 1.5f;
 
-		var splashPotion = new SplashPotion(player, world, Metadata)
-		{
-			KnownPosition = (PlayerLocation) player.KnownPosition.Clone()
-		};
+		var splashPotion = new SplashPotion(player, world, Metadata) { KnownPosition = (PlayerLocation) player.KnownPosition.Clone() };
 		splashPotion.KnownPosition.Y += 1.62f;
 		splashPotion.Velocity = splashPotion.KnownPosition.GetDirection().Normalize() * Force;
 		splashPotion.SpawnEntity();
@@ -35,10 +32,15 @@ public class ItemSplashPotion : Item
 		Item itemInHand = player.Inventory.GetItemInHand();
 		if (itemInHand.Count != 0)
 		{
-			byte newCount = (byte)(itemInHand.Count - 1);
+			byte newCount = (byte) (itemInHand.Count - 1);
 			int slot = player.Inventory.InHandSlot;
-			player.Inventory.SetInventorySlot(slot, new ItemSplashPotion() { Count = newCount, Metadata = 21 });
-		} else
+			player.Inventory.SetInventorySlot(slot, new ItemSplashPotion()
+			{
+				Count = newCount,
+				Metadata = 21
+			});
+		}
+		else
 		{
 			itemInHand.Count--;
 			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);

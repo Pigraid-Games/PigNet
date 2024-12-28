@@ -29,39 +29,38 @@ using System.IO.Compression;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 
-namespace MiNET.Utils.IO
+namespace MiNET.Utils.IO;
+
+public class BatchUtils
 {
-	public class BatchUtils
+	public static McpeWrapper CreateBatchPacket(CompressionLevel compressionLevel, params Packet[] packets)
 	{
-		public static McpeWrapper CreateBatchPacket(CompressionLevel compressionLevel, params Packet[] packets)
+		using (var stream = new MemoryStream())
 		{
-			using (var stream = new MemoryStream())
+			foreach (Packet packet in packets)
 			{
-				foreach (Packet packet in packets)
-				{
-					byte[] bytes = packet.Encode();
-					WriteLength(stream, bytes.Length);
-					stream.Write(bytes, 0, bytes.Length);
-					packet.PutPool();
-				}
-
-				var buffer = new Memory<byte>(stream.GetBuffer(), 0, (int) stream.Length);
-				return CreateBatchPacket(buffer, compressionLevel, false);
+				byte[] bytes = packet.Encode();
+				WriteLength(stream, bytes.Length);
+				stream.Write(bytes, 0, bytes.Length);
+				packet.PutPool();
 			}
-		}
 
-		public static McpeWrapper CreateBatchPacket(Memory<byte> input, CompressionLevel compressionLevel, bool writeLen)
-		{
-			var batch = McpeWrapper.CreateObject();
-			batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-			batch.payload = Compression.Compress(input, writeLen, input.Length > 1000 ? compressionLevel : CompressionLevel.NoCompression);
-			batch.Encode(); // prepare
-			return batch;
+			var buffer = new Memory<byte>(stream.GetBuffer(), 0, (int) stream.Length);
+			return CreateBatchPacket(buffer, compressionLevel, false);
 		}
+	}
 
-		public static void WriteLength(Stream stream, int length)
-		{
-			VarInt.WriteUInt32(stream, (uint) length);
-		}
+	public static McpeWrapper CreateBatchPacket(Memory<byte> input, CompressionLevel compressionLevel, bool writeLen)
+	{
+		McpeWrapper batch = McpeWrapper.CreateObject();
+		batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
+		batch.payload = Compression.Compress(input, writeLen, input.Length > 1000 ? compressionLevel : CompressionLevel.NoCompression);
+		batch.Encode(); // prepare
+		return batch;
+	}
+
+	public static void WriteLength(Stream stream, int length)
+	{
+		VarInt.WriteUInt32(stream, (uint) length);
 	}
 }

@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class RedstoneBlock : Block
 {
-	public partial class RedstoneBlock : Block
+	public RedstoneBlock() : base(152)
 	{
-		public RedstoneBlock() : base(152)
-		{
-			BlastResistance = 30;
-			Hardness = 5;
-		}
+		BlastResistance = 30;
+		Hardness = 5;
 	}
 }

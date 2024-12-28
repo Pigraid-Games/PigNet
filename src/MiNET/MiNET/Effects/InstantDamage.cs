@@ -25,26 +25,25 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class InstantDamage : Effect
 {
-	public class InstantDamage : Effect
+	public InstantDamage() : base(EffectType.InstantDamage)
 	{
-		public InstantDamage() : base(EffectType.InstantDamage)
-		{
-			ParticleColor = Color.FromArgb(0xa9, 0x65, 0x6a);
-		}
+		ParticleColor = Color.FromArgb(0xa9, 0x65, 0x6a);
+	}
 
-		public override void SendAdd(Player player)
-		{
-			player.HealthManager.TakeHit(null, 6 * (Level + 1), DamageCause.Magic);
-		}
+	public override void SendAdd(Player player)
+	{
+		player.HealthManager.TakeHit(null, 6 * (Level + 1), DamageCause.Magic);
+	}
 
-		public override void SendUpdate(Player player)
-		{
-		}
+	public override void SendUpdate(Player player)
+	{
+	}
 
-		public override void SendRemove(Player player)
-		{
-		}
+	public override void SendRemove(Player player)
+	{
 	}
 }

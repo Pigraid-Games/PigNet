@@ -23,172 +23,166 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
-using System.Net;
 using log4net;
-using MiNET.Blocks;
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public enum SubChunkRequestMode
 {
-	public enum SubChunkRequestMode
-	{
-		SubChunkRequestModeLegacy,
-		SubChunkRequestModeLimitless,
-		SubChunkRequestModeLimited
-	}
-	public partial class McpeLevelChunk : Packet<McpeLevelChunk>
-	{
-		public ulong[] blobHashes = null;
-		public byte[] chunkData = null;
-		public bool cacheEnabled;
-		//public bool subChunkRequestsEnabled;
-		public uint subChunkCount;
-		public uint count;
-		public SubChunkRequestMode subChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLegacy;
+	SubChunkRequestModeLegacy,
+	SubChunkRequestModeLimitless,
+	SubChunkRequestModeLimited
+}
+public partial class McpeLevelChunk
+{
+	public readonly ulong[] BlobHashes = null;
+	public byte[] ChunkData;
+	public bool CacheEnabled;
+	public uint SubChunkCount;
+	public uint Count;
+	public SubChunkRequestMode SubChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLegacy;
 
-		partial void AfterEncode()
+	partial void AfterEncode()
+	{
+		switch (SubChunkRequestMode)
 		{
-			switch (subChunkRequestMode)
+			case SubChunkRequestMode.SubChunkRequestModeLegacy:
 			{
-				case SubChunkRequestMode.SubChunkRequestModeLegacy:
-					{
-						WriteUnsignedVarInt(subChunkCount);
+				WriteUnsignedVarInt(SubChunkCount);
 
-						break;
-					}
-
-				case SubChunkRequestMode.SubChunkRequestModeLimitless:
-					{
-						WriteUnsignedVarInt(uint.MaxValue);
-						break;
-					}
-
-				case SubChunkRequestMode.SubChunkRequestModeLimited:
-					{
-						WriteUnsignedVarInt(uint.MaxValue - 1);
-						Write((ushort) subChunkCount);
-						break;
-					}
+				break;
 			}
 
-			Write(cacheEnabled);
-
-			if (cacheEnabled)
+			case SubChunkRequestMode.SubChunkRequestModeLimitless:
 			{
-				foreach (var blobHashe in blobHashes)
-				{
-					Write(blobHashe);
-				}
+				WriteUnsignedVarInt(uint.MaxValue);
+				break;
 			}
 
-			WriteByteArray(chunkData);
+			case SubChunkRequestMode.SubChunkRequestModeLimited:
+			{
+				WriteUnsignedVarInt(uint.MaxValue - 1);
+				Write((ushort) SubChunkCount);
+				break;
+			}
+			default:
+				throw new ArgumentOutOfRangeException();
 		}
 
-		partial void AfterDecode()
+		Write(CacheEnabled);
+
+		if (CacheEnabled)
 		{
-			var subChunkCountButNotReally = ReadUnsignedVarInt();
-
-			switch (subChunkCountButNotReally)
+			foreach (ulong blobHashe in BlobHashes)
 			{
-				case uint.MaxValue:
-					subChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLimitless;
-					break;
-				case uint.MaxValue -1:
-					subChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLimited;
-					subChunkCount = (uint) ReadUshort();
-					break;
-				default:
-					subChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLegacy;
-					subChunkCount = subChunkCountButNotReally;
-					break;
+				Write(blobHashe);
 			}
-
-			cacheEnabled = ReadBool();
-
-			if (cacheEnabled)
-			{
-				count = ReadUnsignedVarInt();
-				for (int i = 0; i < count; i++)
-				{
-					blobHashes[i] = ReadUlong();
-				}
-			}
-
-				chunkData = ReadByteArray();
 		}
+
+		WriteByteArray(ChunkData);
 	}
 
-	public partial class McpeClientCacheBlobStatus : Packet<McpeClientCacheBlobStatus>
+	partial void AfterDecode()
 	{
-		public ulong[] hashMisses; // = null;
-		public ulong[] hashHits; // = null;
+		uint subChunkCountButNotReally = ReadUnsignedVarInt();
 
-		partial void AfterEncode()
+		switch (subChunkCountButNotReally)
 		{
-			WriteUnsignedVarInt((uint) hashMisses.Length);
-			WriteUnsignedVarInt((uint) hashHits.Length);
-			WriteSpecial(hashMisses);
-			WriteSpecial(hashHits);
+			case uint.MaxValue:
+				SubChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLimitless;
+				break;
+			case uint.MaxValue -1:
+				SubChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLimited;
+				SubChunkCount = (uint) ReadUshort();
+				break;
+			default:
+				SubChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLegacy;
+				SubChunkCount = subChunkCountButNotReally;
+				break;
 		}
 
-		partial void AfterDecode()
+		CacheEnabled = ReadBool();
+
+		if (CacheEnabled)
 		{
-			var lenMisses = ReadUnsignedVarInt();
-			var lenHits = ReadUnsignedVarInt();
-
-			hashMisses = ReadUlongsSpecial(lenMisses);
-			hashHits = ReadUlongsSpecial(lenHits);
-		}
-
-		public void WriteSpecial(ulong[] values)
-		{
-			if (values == null) return;
-
-			if (values.Length == 0) return;
-			for (int i = 0; i < values.Length; i++)
+			Count = ReadUnsignedVarInt();
+			for (int i = 0; i < Count; i++)
 			{
-				ulong val = values[i];
-				Write(val);
+				BlobHashes[i] = ReadUlong();
 			}
 		}
 
-		public ulong[] ReadUlongsSpecial(uint len)
+		ChunkData = ReadByteArray();
+	}
+}
+
+public partial class McpeClientCacheBlobStatus : Packet<McpeClientCacheBlobStatus>
+{
+	public ulong[] hashMisses; // = null;
+	public ulong[] hashHits; // = null;
+
+	partial void AfterEncode()
+	{
+		WriteUnsignedVarInt((uint) hashMisses.Length);
+		WriteUnsignedVarInt((uint) hashHits.Length);
+		WriteSpecial(hashMisses);
+		WriteSpecial(hashHits);
+	}
+
+	partial void AfterDecode()
+	{
+		uint lenMisses = ReadUnsignedVarInt();
+		uint lenHits = ReadUnsignedVarInt();
+
+		hashMisses = ReadUlongsSpecial(lenMisses);
+		hashHits = ReadUlongsSpecial(lenHits);
+	}
+
+	public void WriteSpecial(ulong[] values)
+	{
+		if (values == null) return;
+
+		if (values.Length == 0) return;
+		foreach (ulong val in values)
 		{
-			var values = new ulong[len];
-			for (int i = 0; i < values.Length; i++)
-			{
-				values[i] = ReadUlong();
-			}
-			return values;
+			Write(val);
 		}
 	}
 
-	public partial class McpeClientCacheMissResponse : Packet<McpeClientCacheMissResponse>
+	public ulong[] ReadUlongsSpecial(uint len)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(McpeClientCacheMissResponse));
-
-		public Dictionary<ulong, byte[]> blobs;
-
-		partial void AfterEncode()
+		ulong[] values = new ulong[len];
+		for (int i = 0; i < values.Length; i++)
 		{
+			values[i] = ReadUlong();
 		}
+		return values;
+	}
+}
 
-		partial void AfterDecode()
+public partial class McpeClientCacheMissResponse : Packet<McpeClientCacheMissResponse>
+{
+	private static readonly ILog Log = LogManager.GetLogger(typeof(McpeClientCacheMissResponse));
+
+	public Dictionary<ulong, byte[]> Blobs;
+
+	partial void AfterEncode()
+	{
+	}
+
+	partial void AfterDecode()
+	{
+		Blobs = new Dictionary<ulong, byte[]>();
+		uint count = ReadUnsignedVarInt();
+		for (int i = 0; i < count; i++)
 		{
-			blobs = new Dictionary<ulong, byte[]>();
-			var count = ReadUnsignedVarInt();
-			for (int i = 0; i < count; i++)
+			ulong hash = ReadUlong();
+			byte[] blob = ReadByteArray();
+			if (!Blobs.TryAdd(hash, blob))
 			{
-				ulong hash = ReadUlong();
-				byte[] blob = ReadByteArray();
-				if (blobs.ContainsKey(hash))
-				{
-					Log.Warn($"Already had hash:{hash}. This is most likely air or water");
-				}
-				else
-				{
-					blobs.Add(hash, blob);
-				}
+				Log.Warn($"Already had hash:{hash}. This is most likely air or water");
 			}
 		}
 	}

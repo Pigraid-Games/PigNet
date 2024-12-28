@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class NetherBrick : Block
 {
-	public partial class NetherBrick : Block
+	public NetherBrick() : base(112)
 	{
-		public NetherBrick() : base(112)
-		{
-			BlastResistance = 30;
-			Hardness = 2;
-		}
+		BlastResistance = 30;
+		Hardness = 2;
 	}
 }

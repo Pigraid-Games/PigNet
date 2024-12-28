@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class StoneButton : Button
 {
-	public partial class StoneButton : Button
+	public StoneButton() : base(77)
 	{
-		public StoneButton() : base(77)
-		{
-			TickRate = 20;
-		}
+		TickRate = 20;
 	}
 }

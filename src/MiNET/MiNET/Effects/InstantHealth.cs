@@ -25,26 +25,25 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class InstantHealth : Effect
 {
-	public class InstantHealth : Effect
+	public InstantHealth() : base(EffectType.InstantHealth)
 	{
-		public InstantHealth() : base(EffectType.InstantHealth)
-		{
-			ParticleColor = Color.FromArgb(0xf8, 0x24, 0x23);
-		}
+		ParticleColor = Color.FromArgb(0xf8, 0x24, 0x23);
+	}
 
-		public override void SendAdd(Player player)
-		{
-			player.HealthManager.Regen(4 * (Level + 1));
-		}
+	public override void SendAdd(Player player)
+	{
+		player.HealthManager.Regen(4 * (Level + 1));
+	}
 
-		public override void SendUpdate(Player player)
-		{
-		}
+	public override void SendUpdate(Player player)
+	{
+	}
 
-		public override void SendRemove(Player player)
-		{
-		}
+	public override void SendRemove(Player player)
+	{
 	}
 }

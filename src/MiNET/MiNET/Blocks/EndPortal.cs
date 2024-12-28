@@ -23,17 +23,16 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class EndPortal : Block
 {
-	public partial class EndPortal : Block
+	public EndPortal() : base(119)
 	{
-		public EndPortal() : base(119)
-		{
-			IsSolid = false;
-			BlastResistance = 18000000;
-			Hardness = -1;
-			LightLevel = 15;
-			IsTransparent = true;
-		}
+		IsSolid = false;
+		BlastResistance = 18000000;
+		Hardness = -1;
+		LightLevel = 15;
+		IsTransparent = true;
 	}
 }

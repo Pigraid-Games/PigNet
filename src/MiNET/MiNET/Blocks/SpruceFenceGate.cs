@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Blocks
-{
-	public partial class SpruceFenceGate : FenceGateBlocks
-	{
-		public SpruceFenceGate() : base(183)
-		{
-		}
-	}
-}
+namespace MiNET.Blocks;
+
+public partial class SpruceFenceGate() : FenceGateBlocks(183);

@@ -25,40 +25,39 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class Speed : Effect
 {
-	public class Speed : Effect
+	private double _multiplier = 0.02;
+
+	public Speed() : base(EffectType.Speed)
 	{
-		private double _multiplier = 0.02;
+		Particles = false;
+		ParticleColor = Color.FromArgb(0x33, 0xeb, 0xff);
+	}
 
-		public Speed() : base(EffectType.Speed)
-		{
-			Particles = false;
-			ParticleColor = Color.FromArgb(0x33, 0xeb, 0xff);
-		}
+	public override void SendAdd(Player player)
+	{
+		player.MovementSpeed = (float) (0.1 + ((Level + 1) * _multiplier));
+		player.SendUpdateAttributes();
 
-		public override void SendAdd(Player player)
-		{
-			player.MovementSpeed = (float) (0.1 + (Level + 1) * _multiplier);
-			player.SendUpdateAttributes();
+		base.SendAdd(player);
+	}
 
-			base.SendAdd(player);
-		}
+	public override void SendUpdate(Player player)
+	{
+		player.MovementSpeed = (float) (0.1 + ((Level + 1) * _multiplier));
+		player.SendUpdateAttributes();
 
-		public override void SendUpdate(Player player)
-		{
-			player.MovementSpeed = (float) (0.1 + (Level + 1) * _multiplier);
-			player.SendUpdateAttributes();
+		base.SendUpdate(player);
+	}
 
-			base.SendUpdate(player);
-		}
+	public override void SendRemove(Player player)
+	{
+		player.MovementSpeed = 0.1f;
+		player.SendUpdateAttributes();
 
-		public override void SendRemove(Player player)
-		{
-			player.MovementSpeed = 0.1f;
-			player.SendUpdateAttributes();
-
-			base.SendRemove(player);
-		}
+		base.SendRemove(player);
 	}
 }

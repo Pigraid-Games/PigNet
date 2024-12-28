@@ -23,12 +23,6 @@
 
 #endregion
 
-namespace MiNET.Blocks
-{
-	public partial class BirchFenceGate : FenceGateBlocks
-	{
-		public BirchFenceGate() : base(184)
-		{
-		}
-	}
-}
+namespace MiNET.Blocks;
+
+public partial class BirchFenceGate() : FenceGateBlocks(184);

@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class DarkOakStairs : BlockStairs
 {
-	public partial class DarkOakStairs : BlockStairs
+	public DarkOakStairs() : base(164)
 	{
-		public DarkOakStairs() : base(164)
-		{
-			BlastResistance = 15;
-			Hardness = 2;
-			IsFlammable = true;
-		}
+		BlastResistance = 15;
+		Hardness = 2;
+		IsFlammable = true;
 	}
 }

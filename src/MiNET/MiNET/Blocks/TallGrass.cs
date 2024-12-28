@@ -25,59 +25,50 @@
 
 using System;
 using MiNET.Items;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Tallgrass : Block
 {
-	public partial class Tallgrass : Block
+	public enum TallGrassTypes
 	{
-		public enum TallGrassTypes
+		DeadShrub = 0,
+		TallGrass = 1,
+		Fern = 2
+	}
+
+	public Tallgrass() : base(31)
+	{
+		BlastResistance = 3;
+		Hardness = 0.6f;
+
+		IsSolid = false;
+		IsReplaceable = true;
+		IsTransparent = true;
+	}
+
+	public override void OnTick(Level level, bool isRandom)
+	{
+		base.OnTick(level, isRandom);
+
+		if (isRandom)
 		{
-			DeadShrub = 0,
-			TallGrass = 1,
-			Fern = 2
 		}
+	}
 
-		public Tallgrass() : base(31)
-		{
-			BlastResistance = 3;
-			Hardness = 0.6f;
+	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+	{
+		if (Coordinates.BlockDown() != blockCoordinates) return;
+		level.SetAir(Coordinates);
+		UpdateBlocks(level);
+	}
 
-			IsSolid = false;
-			IsReplaceable = true;
-			IsTransparent = true;
-		}
-
-		public override void OnTick(Level level, bool isRandom)
-		{
-			base.OnTick(level, isRandom);
-
-			if (isRandom)
-			{
-			}
-		}
-
-		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
-		{
-			if (Coordinates.BlockDown() == blockCoordinates)
-			{
-				level.SetAir(Coordinates);
-				UpdateBlocks(level);
-			}
-		}
-
-		public override Item[] GetDrops(Item tool)
-		{
-			// 50% chance to drop seeds.
-			var rnd = new Random();
-			if (rnd.NextDouble() > 0.5)
-			{
-				return new[] {ItemFactory.GetItem(295)};
-			}
-
-			return new Item[0];
-		}
+	public override Item[] GetDrops(Item tool)
+	{
+		// 50% chance to drop seeds.
+		var rnd = new Random();
+		return rnd.NextDouble() > 0.5 ? [ItemFactory.GetItem("minecraft:wheat_seeds")] : [];
 	}
 }

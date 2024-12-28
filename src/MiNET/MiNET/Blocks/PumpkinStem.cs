@@ -24,14 +24,13 @@
 #endregion
 
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class PumpkinStem : Block
 {
-	public partial class PumpkinStem : Block
+	public PumpkinStem() : base(104)
 	{
-		public PumpkinStem() : base(104)
-		{
-			IsSolid = false;
-			IsTransparent = true;
-		}
+		IsSolid = false;
+		IsTransparent = true;
 	}
 }

@@ -30,37 +30,36 @@ using System;
 using System.Numerics;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Planks : Block
 {
-	public partial class Planks : Block
+	public Planks() : base(5)
 	{
-		public Planks() : base(5)
-		{
-			FuelEfficiency = 15;
-			BlastResistance = 15;
-			Hardness = 2;
-			IsFlammable = true;
-		}
+		FuelEfficiency = 15;
+		BlastResistance = 15;
+		Hardness = 2;
+		IsFlammable = true;
+	}
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+		WoodType = itemInHand.Metadata switch
 		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			WoodType = itemInHand.Metadata switch
-			{
-				0 => "oak",
-				1 => "spruce",
-				2 => "birch",
-				3 => "jungle",
-				4 => "acacia",
-				5 => "dark_oak",
-				_ => throw new ArgumentOutOfRangeException()
-			};
-			return false;
-		}
+			0 => "oak",
+			1 => "spruce",
+			2 => "birch",
+			3 => "jungle",
+			4 => "acacia",
+			5 => "dark_oak",
+			_ => throw new ArgumentOutOfRangeException()
+		};
+		return false;
 	}
 }

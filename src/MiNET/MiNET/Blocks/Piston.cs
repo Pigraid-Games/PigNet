@@ -28,21 +28,20 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Piston : Block
 {
-	public partial class Piston : Block
+	public Piston() : base(33)
 	{
-		public Piston() : base(33)
-		{
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
-		}
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetReverseFacingDirectionFromEntity(player);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetReverseFacingDirectionFromEntity(player);
 
-			return false;
-		}
+		return false;
 	}
 }

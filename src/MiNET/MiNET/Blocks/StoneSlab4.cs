@@ -25,52 +25,52 @@
 
 using System;
 using System.Numerics;
+using MiNET.Items;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class StoneSlab4 : Block
 {
-	public partial class StoneSlab4 : Block
+	public StoneSlab4() : base(421)
 	{
-		public StoneSlab4() : base(421)
+		BlastResistance = 30;
+		Hardness = 2;
+		IsTransparent = true; // Partial - blocks light.
+		IsBlockingSkylight = false; // Partial - blocks light.
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+
+		TopSlotBit = faceCoords.Y > 0.5 && face != BlockFace.Up;
+
+		StoneSlabType4 = itemInHand.Metadata switch
 		{
-			BlastResistance = 30;
-			Hardness = 2;
-			IsTransparent = true; // Partial - blocks light.
-			IsBlockingSkylight = false; // Partial - blocks light.
-		}
+			0 => "mossy_stone_brick",
+			1 => "smooth_quartz",
+			2 => "stone",
+			3 => "cut_sandstone",
+			4 => "cut_red_sandstone",
+			_ => throw new ArgumentOutOfRangeException()
+		};
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+		var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
+
+		foreach (IBlockState state in world.GetBlock(slabcoordinates).GetState().States)
 		{
-			var itemInHand = player.Inventory.GetItemInHand();
-
-			TopSlotBit = (faceCoords.Y > 0.5 && face != BlockFace.Up);
-
-			StoneSlabType4 = itemInHand.Metadata switch
+			if (state is not BlockStateString { Name: "stone_slab_type_4" } s) continue;
+			if (world.GetBlock(slabcoordinates).Name != "minecraft:stone_slab4" || s.Value != StoneSlabType4) continue;
+			world.SetBlock(new DoubleStoneSlab4
 			{
-				0 => "mossy_stone_brick",
-				1 => "smooth_quartz",
-				2 => "stone",
-				3 => "cut_sandstone",
-				4 => "cut_red_sandstone",
-				_ => throw new ArgumentOutOfRangeException()
-			};
-
-			var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
-
-			foreach (var state in world.GetBlock(slabcoordinates).GetState().States)
-			{
-				if (state is BlockStateString s && s.Name == "stone_slab_type_4")
-				{
-					if (world.GetBlock(slabcoordinates).Name == "minecraft:stone_slab4" && s.Value == StoneSlabType4)
-					{
-						world.SetBlock(new DoubleStoneSlab4 { StoneSlabType4 = StoneSlabType4, TopSlotBit = true });
-						return true;
-					}
-				}
-			}
-			return false;
+				StoneSlabType4 = StoneSlabType4,
+				TopSlotBit = true
+			});
+			return true;
 		}
+		return false;
 	}
 }

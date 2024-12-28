@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class GlassPane : Block
 {
-	public partial class GlassPane : Block
+	public GlassPane() : base(102)
 	{
-		public GlassPane() : base(102)
-		{
-			IsTransparent = true;
-			BlastResistance = 1.5f;
-			Hardness = 0.3f;
-		}
+		IsTransparent = true;
+		BlastResistance = 1.5f;
+		Hardness = 0.3f;
 	}
 }

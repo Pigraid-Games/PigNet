@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class DiamondBlock : Block
 {
-	public partial class DiamondBlock : Block
+	public DiamondBlock() : base(57)
 	{
-		public DiamondBlock() : base(57)
-		{
-			BlastResistance = 30;
-			Hardness = 5;
-		}
+		BlastResistance = 30;
+		Hardness = 5;
 	}
 }

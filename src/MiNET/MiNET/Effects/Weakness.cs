@@ -25,13 +25,12 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class Weakness : Effect
 {
-	public class Weakness : Effect
+	public Weakness() : base(EffectType.Weakness)
 	{
-		public Weakness() : base(EffectType.Weakness)
-		{
-			ParticleColor = Color.FromArgb(0x48, 0x4d, 0x48);
-		}
+		ParticleColor = Color.FromArgb(0x48, 0x4d, 0x48);
 	}
 }

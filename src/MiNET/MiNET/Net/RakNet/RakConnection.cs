@@ -150,8 +150,8 @@ namespace MiNET.Net.RakNet
 		{
 			var packet = new UnconnectedPing
 			{
-				pingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
-				guid = _rakOfflineHandler.ClientGuid
+				PingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
+				Guid = _rakOfflineHandler.ClientGuid
 			};
 
 			var data = packet.Encode();

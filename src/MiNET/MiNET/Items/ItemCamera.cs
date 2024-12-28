@@ -37,7 +37,7 @@ public class ItemCamera(short metadata) : Item("minecraft:camera", 498, metadata
 	{
 		BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 
-		var entity = new Camera(world) {KnownPosition = coordinates};
+		var entity = new Camera(world) { KnownPosition = coordinates };
 		entity.SpawnEntity();
 	}
 }

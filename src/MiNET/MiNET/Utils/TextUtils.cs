@@ -28,174 +28,164 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MiNET.Utils
+namespace MiNET.Utils;
+
+public static class ChatColors
 {
-	public static class ChatColors
+	public const string Black = "§0";
+	public const string DarkBlue = "§1";
+	public const string DarkGreen = "§2";
+	public const string DarkAqua = "§3";
+	public const string DarkRed = "§4";
+	public const string DarkPurple = "§5";
+	public const string Gold = "§6";
+	public const string Gray = "§7";
+	public const string DarkGray = "§8";
+	public const string Blue = "§9";
+	public const string Green = "§a";
+	public const string Aqua = "§b";
+	public const string Red = "§c";
+	public const string LightPurple = "§d";
+	public const string Yellow = "§e";
+	public const string White = "§f";
+}
+
+public static class ChatFormatting
+{
+	public const string Obfuscated = "§k";
+	public const string Bold = "§l";
+	public const string Strikethrough = "§m";
+	public const string Underline = "§n";
+	public const string Italic = "§o";
+	public const string Reset = "§r";
+}
+
+public class TextUtils
+{
+	private const int LineLength = 30;
+	private const int CharWidth = 6;
+
+	private const char SpaceChar = ' ';
+
+	private static readonly Regex CleanAllFormattingFilter = new("(?:&|§)([0123456789abcdefklmnor])",
+		RegexOptions.Compiled & RegexOptions.IgnoreCase);
+
+	private static readonly Regex CleanColourFilter = new("(?:&|§)([0123456789abcdef])",
+		RegexOptions.Compiled & RegexOptions.IgnoreCase);
+
+	private static readonly Regex BoldTextRegex = new("(?:&|§)l(.+?)(?:[&|§]r|$)",
+		RegexOptions.Compiled & RegexOptions.IgnoreCase);
+
+	private static readonly IDictionary<char, int> CharWidths = new Dictionary<char, int>
 	{
-		public const string Black = "§0";
-		public const string DarkBlue = "§1";
-		public const string DarkGreen = "§2";
-		public const string DarkAqua = "§3";
-		public const string DarkRed = "§4";
-		public const string DarkPurple = "§5";
-		public const string Gold = "§6";
-		public const string Gray = "§7";
-		public const string DarkGray = "§8";
-		public const string Blue = "§9";
-		public const string Green = "§a";
-		public const string Aqua = "§b";
-		public const string Red = "§c";
-		public const string LightPurple = "§d";
-		public const string Yellow = "§e";
-		public const string White = "§f";
+		{ ' ', 4 },
+		{ '!', 2 },
+		{ '"', 5 },
+		{ '\'', 3 },
+		{ '(', 5 },
+		{ ')', 5 },
+		{ '*', 5 },
+		{ ',', 2 },
+		{ '.', 2 },
+		{ ':', 2 },
+		{ ';', 2 },
+		{ '<', 5 },
+		{ '>', 5 },
+		{ '@', 7 },
+		{ 'I', 4 },
+		{ '[', 4 },
+		{ ']', 4 },
+		{ 'f', 5 },
+		{ 'i', 2 },
+		{ 'k', 5 },
+		{ 'l', 3 },
+		{ 't', 4 },
+		{ '{', 5 },
+		{ '|', 2 },
+		{ '}', 5 },
+		{ '~', 7 },
+		{ '█', 9 },
+		{ '░', 8 },
+		{ '▒', 9 },
+		{ '▓', 9 },
+		{ '▌', 5 },
+		{ '─', 9 }
+		//{'-', 9},
+	};
+
+	public static string CenterLine(string input)
+	{
+		return Center(input, LineLength * CharWidth);
 	}
 
-	public static class ChatFormatting
+	public static string Center(string input)
 	{
-		public const string Obfuscated = "§k";
-		public const string Bold = "§l";
-		public const string Strikethrough = "§m";
-		public const string Underline = "§n";
-		public const string Italic = "§o";
-		public const string Reset = "§r";
+		return Center(input, 0);
 	}
 
-	public class TextUtils
+	public static string Center(string input, int maxLength, bool addRightPadding = false)
 	{
-		private const int LineLength = 30;
-		private const int CharWidth = 6;
+		string[] lines = input.Trim().Split('\n');
+		IOrderedEnumerable<string> sortedLines = lines.OrderByDescending(GetPixelLength);
 
-		private const char SpaceChar = ' ';
+		string longest = sortedLines.First();
+		if (maxLength == 0) maxLength = GetPixelLength(longest);
 
-		private static readonly Regex CleanAllFormattingFilter = new Regex("(?:&|§)([0123456789abcdefklmnor])",
-			RegexOptions.Compiled & RegexOptions.IgnoreCase);
+		string result = "";
 
-		private static readonly Regex CleanColourFilter = new Regex("(?:&|§)([0123456789abcdef])",
-			RegexOptions.Compiled & RegexOptions.IgnoreCase);
+		int spaceWidth = GetCharWidth(SpaceChar);
 
-		private static readonly Regex BoldTextRegex = new Regex("(?:&|§)l(.+?)(?:[&|§]r|$)",
-			RegexOptions.Compiled & RegexOptions.IgnoreCase);
-
-		private static readonly IDictionary<char, int> CharWidths = new Dictionary<char, int>
+		foreach (string sortedLine in lines)
 		{
-			{' ', 4},
-			{'!', 2},
-			{'"', 5},
-			{'\'', 3},
-			{'(', 5},
-			{')', 5},
-			{'*', 5},
-			{',', 2},
-			{'.', 2},
-			{':', 2},
-			{';', 2},
-			{'<', 5},
-			{'>', 5},
-			{'@', 7},
-			{'I', 4},
-			{'[', 4},
-			{']', 4},
-			{'f', 5},
-			{'i', 2},
-			{'k', 5},
-			{'l', 3},
-			{'t', 4},
-			{'{', 5},
-			{'|', 2},
-			{'}', 5},
-			{'~', 7},
-			{'█', 9},
-			{'░', 8},
-			{'▒', 9},
-			{'▓', 9},
-			{'▌', 5},
-			{'─', 9}
-			//{'-', 9},
-		};
-
-		public static string CenterLine(string input)
-		{
-			return Center(input, LineLength * CharWidth);
+			int len = Math.Max(maxLength - GetPixelLength(sortedLine), 0);
+			int padding = (int) Math.Round(len / (2d * spaceWidth));
+			int paddingRight = (int) Math.Floor(len / (2d * spaceWidth));
+			result += new string(SpaceChar, padding) + sortedLine + "§r" + (addRightPadding ? new string(SpaceChar, paddingRight) : "") + "\n";
 		}
 
-		public static string Center(string input)
-		{
-			return Center(input, 0);
-		}
+		result = result.TrimEnd('\n');
 
-		public static string Center(string input, int maxLength, bool addRightPadding = false)
-		{
-			var lines = input.Trim().Split('\n');
-			var sortedLines = lines.OrderByDescending(GetPixelLength);
+		return result;
+	}
 
-			var longest = sortedLines.First();
-			if (maxLength == 0)
+	private static int GetCharWidth(char c)
+	{
+		int width;
+		if (CharWidths.TryGetValue(c, out width))
+			return width;
+		return CharWidth;
+	}
+
+	public static int GetPixelLength(string line)
+	{
+		string clean = CleanAllFormattingFilter.Replace(line, "");
+		int length = clean.Sum(GetCharWidth);
+
+		// +1 for each bold character
+
+		MatchCollection boldMatches = BoldTextRegex.Matches(line);
+		if (boldMatches.Count > 0)
+			foreach (Match boldText in boldMatches)
 			{
-				maxLength = GetPixelLength(longest);
+				string cleanBoldText = CleanAllFormattingFilter.Replace(boldText.Value, "");
+				length += cleanBoldText.Length;
 			}
 
-			var result = "";
+		return length;
+	}
 
-			var spaceWidth = GetCharWidth(SpaceChar);
+	private static string Strip(string input, bool keepBold = false)
+	{
+		string result;
+		if (keepBold)
+			result = CleanColourFilter.Replace(input, "\u1234");
+		else
+			result = CleanAllFormattingFilter.Replace(input, "\u1236");
+		return result;
+	}
 
-			foreach (var sortedLine in lines)
-			{
-				var len = Math.Max(maxLength - GetPixelLength(sortedLine), 0);
-				var padding = (int) Math.Round(len / (2d * spaceWidth));
-				var paddingRight = (int) Math.Floor(len / (2d * spaceWidth));
-				result += new string(SpaceChar, padding) + sortedLine + "§r" + (addRightPadding ? new string(SpaceChar, paddingRight) : "") + "\n";
-			}
-
-			result = result.TrimEnd('\n');
-
-			return result;
-		}
-
-		private static int GetCharWidth(char c)
-		{
-			int width;
-			if (CharWidths.TryGetValue(c, out width))
-				return width;
-			return CharWidth;
-		}
-
-		public static int GetPixelLength(string line)
-		{
-			var clean = CleanAllFormattingFilter.Replace(line, "");
-			var length = clean.Sum(GetCharWidth);
-
-			// +1 for each bold character
-
-			var boldMatches = BoldTextRegex.Matches(line);
-			if (boldMatches.Count > 0)
-			{
-				foreach (Match boldText in boldMatches)
-				{
-					var cleanBoldText = CleanAllFormattingFilter.Replace(boldText.Value, "");
-					length += cleanBoldText.Length;
-				}
-			}
-
-			return length;
-		}
-
-		private static string Strip(string input, bool keepBold = false)
-		{
-			string result;
-			if (keepBold)
-			{
-				result = CleanColourFilter.Replace(input, "\u1234");
-			}
-			else
-			{
-				result = CleanAllFormattingFilter.Replace(input, "\u1236");
-			}
-			return result;
-		}
-
-		public static string RemoveFormatting(string input)
-		{
-			return CleanAllFormattingFilter.Replace(input, "");
-		}
+	public static string RemoveFormatting(string input)
+	{
+		return CleanAllFormattingFilter.Replace(input, "");
 	}
 }

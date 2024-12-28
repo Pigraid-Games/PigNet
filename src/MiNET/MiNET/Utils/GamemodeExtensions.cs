@@ -15,7 +15,7 @@ public static class GamemodeExtensions
 				return false;
 		}
 	}
-	
+
 	public static bool HasCollision(this GameMode gameMode)
 	{
 		switch (gameMode)
@@ -26,7 +26,7 @@ public static class GamemodeExtensions
 				return true;
 		}
 	}
-	
+
 	public static bool AllowsTakingDamage(this GameMode gameMode)
 	{
 		switch (gameMode)
@@ -38,7 +38,7 @@ public static class GamemodeExtensions
 				return true;
 		}
 	}
-	
+
 	public static bool HasCreativeInventory(this GameMode gameMode)
 	{
 		switch (gameMode)
@@ -49,7 +49,7 @@ public static class GamemodeExtensions
 				return false;
 		}
 	}
-	
+
 	public static bool AllowsEditing(this GameMode gameMode)
 	{
 		switch (gameMode)
@@ -61,7 +61,7 @@ public static class GamemodeExtensions
 				return true;
 		}
 	}
-	
+
 	public static bool AllowsInteraction(this GameMode gameMode)
 	{
 		switch (gameMode)

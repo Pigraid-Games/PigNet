@@ -23,16 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class LightWeightedPressurePlate : PressurePlateBase
 {
-	public partial class LightWeightedPressurePlate : PressurePlateBase
+	public LightWeightedPressurePlate() : base(147)
 	{
-		public LightWeightedPressurePlate() : base(147)
-		{
-			IsSolid = false;
-			IsTransparent = true;
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
-		}
+		IsSolid = false;
+		IsTransparent = true;
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
 	}
 }

@@ -31,84 +31,62 @@ using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public class TrapdoorBase : Block
 {
-	public partial class TrapdoorBase : Block
-	{
-		[StateRange(0, 3)] public virtual int Direction { get; set; } = 0;
-		[StateBit] public virtual bool OpenBit { get; set; } = false;
-		[StateBit] public virtual bool UpsideDownBit { get; set; } = false;
+	[StateRange(0, 3)] public virtual int Direction { get; set; }
+	[StateBit] public virtual bool OpenBit { get; set; }
+	[StateBit] public virtual bool UpsideDownBit { get; set; }
 
-		protected TrapdoorBase(int id) : base(id)
+	protected TrapdoorBase(int id) : base(id)
+	{
+		IsTransparent = true;
+		BlastResistance = 15;
+		Hardness = 5;
+	}
+
+	public override bool IsBestTool(Item item)
+	{
+		if (this is IronTrapdoor) return item is ItemPickaxe;
+		return item is ItemAxe;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = Entity.DirectionByRotationFlat(player.KnownPosition.Yaw) switch
 		{
-			IsTransparent = true;
-			BlastResistance = 15;
-			Hardness = 5;
-		}
+			0 => 1, // East
+			1 => 3, // South
+			2 => 0, // West
+			3 => 2, // North 
+			_ => 0
+		};
 
-		public override bool IsBestTool(Item item)
-		{
-			if (this is IronTrapdoor)
-			{
-				return item is ItemPickaxe ? true : false;
-			}
-			return item is ItemAxe ? true : false;
-		}
+		UpsideDownBit = (faceCoords.Y > 0.5 && face != BlockFace.Up) || face == BlockFace.Down;
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = Entity.DirectionByRotationFlat(player.KnownPosition.Yaw) switch
-			{
-				0 => 1, // East
-				1 => 3, // South
-				2 => 0, // West
-				3 => 2, // North 
-				_ => 0
-			};
-
-			UpsideDownBit = (faceCoords.Y > 0.5 && face != BlockFace.Up) || face == BlockFace.Down;
-
-			return false;
-		}
-
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			var sound = new Sound((short) LevelEventType.SoundOpenDoor, blockCoordinates);
-			sound.Spawn(world);
-			OpenBit = !OpenBit;
-			world.SetBlock(this);
-
-			return true;
-		}
+		return false;
 	}
 
-	public partial class Trapdoor : TrapdoorBase
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
-		public Trapdoor() : base(96) { }
-	}
+		var sound = new Sound((short) LevelEventType.SoundOpenDoor, blockCoordinates);
+		sound.Spawn(world);
+		OpenBit = !OpenBit;
+		world.SetBlock(this);
 
-	public partial class AcaciaTrapdoor : TrapdoorBase
-	{
-		public AcaciaTrapdoor() : base(400) { }
-	}
-
-	public partial class BirchTrapdoor : TrapdoorBase
-	{
-		public BirchTrapdoor() : base(401) { }
-	}
-
-	public partial class DarkOakTrapdoor : TrapdoorBase
-	{
-		public DarkOakTrapdoor() : base(402) { }
-	}
-
-	public partial class JungleTrapdoor : TrapdoorBase
-	{
-		public JungleTrapdoor() : base(403) { }
-	}
-
-	public partial class SpruceTrapdoor : TrapdoorBase
-	{
-		public SpruceTrapdoor() : base(404) { }
+		return true;
 	}
 }
+
+public partial class Trapdoor() : TrapdoorBase(96);
+
+public partial class AcaciaTrapdoor() : TrapdoorBase(400);
+
+public partial class BirchTrapdoor() : TrapdoorBase(401);
+
+public partial class DarkOakTrapdoor() : TrapdoorBase(402);
+
+public partial class JungleTrapdoor() : TrapdoorBase(403);
+
+public partial class SpruceTrapdoor() : TrapdoorBase(404);

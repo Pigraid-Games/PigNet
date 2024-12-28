@@ -31,39 +31,38 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Loom : Block
 {
-	public partial class Loom : Block
+	public Loom() : base(459)
 	{
-		public Loom() : base(459)
-		{
-			IsTransparent = true;
-			BlastResistance = 6000;
-			Hardness = 5;
-		}
+		IsTransparent = true;
+		BlastResistance = 6000;
+		Hardness = 5;
+	}
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = player.GetOppositeDirection();
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetOppositeDirection();
 
-			return false;
-		}
+		return false;
+	}
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			var containerOpen = McpeContainerOpen.CreateObject();
-			containerOpen.windowId = 24;
-			containerOpen.type = 24;
-			containerOpen.coordinates = blockCoordinates;
-			containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
-			player.SendPacket(containerOpen);
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
+		containerOpen.windowId = 24;
+		containerOpen.type = (byte) ContainerType.Loom;
+		containerOpen.coordinates = blockCoordinates;
+		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+		player.SendPacket(containerOpen);
 
-			return true;
-		}
+		return true;
 	}
 }

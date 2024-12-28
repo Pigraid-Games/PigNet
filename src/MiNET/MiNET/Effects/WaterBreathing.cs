@@ -25,13 +25,12 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class WaterBreathing : Effect
 {
-	public class WaterBreathing : Effect
+	public WaterBreathing() : base(EffectType.WaterBreathing)
 	{
-		public WaterBreathing() : base(EffectType.WaterBreathing)
-		{
-			ParticleColor = Color.FromArgb(0x98, 0xda, 0xc0);
-		}
+		ParticleColor = Color.FromArgb(0x98, 0xda, 0xc0);
 	}
 }

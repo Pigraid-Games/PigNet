@@ -36,7 +36,7 @@ public class ItemNetheriteChestplate : ArmorChestplateBase
 	{
 		ItemMaterial = ItemMaterial.Netherite;
 	}
-	
+
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
 		byte slot = (byte) player.Inventory.Slots.IndexOf(this);

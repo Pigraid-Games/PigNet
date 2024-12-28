@@ -27,262 +27,204 @@ using System;
 using System.Numerics;
 using MiNET.Items;
 using MiNET.Particles;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Sapling : Block
 {
-	public partial class Sapling : Block
+	public Sapling() : base(6)
 	{
-		public Sapling() : base(6)
-		{
-			FuelEfficiency = 5;
-			BlastResistance = 0;
-			IsTransparent = true;
-			IsFlammable = true;
-		}
+		FuelEfficiency = 5;
+		BlastResistance = 0;
+		IsTransparent = true;
+		IsFlammable = true;
+	}
 
-		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+	{
+		if (!base.CanPlace(world, player, blockCoordinates, targetCoordinates, face)) return false;
+		Block under = world.GetBlock(Coordinates.BlockDown());
+		return under is Dirt or Podzol or Grass;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+		SaplingType = itemInHand.Metadata switch
 		{
-			if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
+			0 => "oak",
+			1 => "spruce",
+			2 => "birch",
+			3 => "jungle",
+			4 => "acacia",
+			5 => "dark_oak",
+			_ => throw new ArgumentOutOfRangeException()
+		};
+		return false;
+	}
+
+	public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		if (player.Inventory.GetItemInHand() is not ItemDye { Metadata: 15 }) return false;
+		var random = new Random();
+		for (int i = 0; i < 3; i++)
+		{
+			var particle = new LegacyParticle((int) ParticleType.VillagerHappy, level)
 			{
-				Block under = world.GetBlock(Coordinates.BlockDown());
-				return under is Dirt || under is Podzol || under is Grass;
-			}
-
-			return false;
-		}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			SaplingType = itemInHand.Metadata switch
-			{
-				0 => "oak",
-				1 => "spruce",
-				2 => "birch",
-				3 => "jungle",
-				4 => "acacia",
-				5 => "dark_oak",
-				_ => throw new ArgumentOutOfRangeException()
+				Position = (Vector3) Coordinates
+							+ (new Vector3(0.5f, 0.5f, 0.5f)
+								+ new Vector3((float) (random.NextDouble() - 0.5D), (float) (random.NextDouble() - 0.5D), (float) (random.NextDouble() - 0.5D)))
 			};
-			return false;
+			particle.Spawn();
 		}
 
-		public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			if (player.Inventory.GetItemInHand() is ItemDye inHand && inHand.Metadata == 15)
-			{
-				var random = new Random();
-				for (int i = 0; i < 3; i++)
-				{
-					var particle = new LegacyParticle((int) ParticleType.VillagerHappy, level)
-					{
-						Position = (Vector3) Coordinates
-									+ (new Vector3(0.5f, 0.5f, 0.5f)
-										+ new Vector3((float) (random.NextDouble() - 0.5D), (float) (random.NextDouble() - 0.5D), (float) (random.NextDouble() - 0.5D)))
-					};
-					particle.Spawn();
-				}
-
-				if (random.NextDouble() < 0.45)
-				{
-					OnTick(level, true);
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		//[StateBit] public bool AgeBit { get; set; } = false;
-		//[StateEnum("oak", "spruce", "birch", "jungle", "acacia", "dark_oak")]
-		//public string SaplingType { get; set; } = "oak";
-
-		public override void OnTick(Level level, bool isRandom)
-		{
-			if (!isRandom) return;
-
-			var lightLevel = level.GetSubtractedLight(Coordinates);
-			if (lightLevel >= 9 && new Random().Next(7) == 0)
-			{
-				SmallTreeGenerator generator = null;
-				Block log = null;
-				Block leaves = null;
-				switch (SaplingType)
-				{
-					case "oak":
-						log = new Log {OldLogType = SaplingType};
-						leaves = new Leaves {OldLeafType = SaplingType};
-						generator = new SmallTreeGenerator(log, leaves, 4);
-						break;
-					case "spruce":
-						log = new Log {OldLogType = SaplingType};
-						leaves = new Leaves {OldLeafType = SaplingType};
-						generator = new SmallTreeGenerator(log, leaves, 4);
-						break;
-					case "birch":
-						log = new Log {OldLogType = SaplingType};
-						leaves = new Leaves {OldLeafType = SaplingType};
-						generator = new SmallTreeGenerator(log, leaves, 5);
-						break;
-					case "jungle":
-						log = new Log {OldLogType = SaplingType};
-						leaves = new Leaves {OldLeafType = SaplingType};
-						generator = new SmallTreeGenerator(log, leaves, 4 + new Random().Next(7));
-						break;
-					case "acacia":
-						log = new Log {OldLogType = SaplingType};
-						leaves = new Leaves {OldLeafType = SaplingType};
-						generator = new SmallTreeGenerator(log, leaves, 5);
-						break;
-					case "dark_oak":
-						log = new Log {OldLogType = SaplingType};
-						leaves = new Leaves {OldLeafType = SaplingType};
-						generator = new SmallTreeGenerator(log, leaves, 5);
-						break;
-				}
-
-				if (generator == null) return;
-
-				level.SetAir(Coordinates);
-
-				if (!generator.Generate(level, Coordinates))
-				{
-					level.SetBlock(this);
-				}
-			}
-		}
+		if (!(random.NextDouble() < 0.45)) return false;
+		OnTick(level, true);
+		return true;
 	}
 
-	public abstract class TreeGeneratorBase
+	//[StateBit] public bool AgeBit { get; set; } = false;
+	//[StateEnum("oak", "spruce", "birch", "jungle", "acacia", "dark_oak")]
+	//public string SaplingType { get; set; } = "oak";
+
+	public override void OnTick(Level level, bool isRandom)
 	{
-		protected bool CanGrowInto(Block material)
+		if (!isRandom) return;
+
+		int lightLevel = level.GetSubtractedLight(Coordinates);
+		if (lightLevel < 9 || new Random().Next(7) != 0) return;
+		SmallTreeGenerator generator = null;
+		Block log;
+		Block leaves;
+		switch (SaplingType)
 		{
-			return material is Air || material is Leaves || material is Leaves2 || material is Grass || material is Dirt || material is Log || material is Log2 || material is Sapling || material is Vine;
+			case "oak":
+				log = new Log { OldLogType = SaplingType };
+				leaves = new Leaves { OldLeafType = SaplingType };
+				generator = new SmallTreeGenerator(log, leaves, 4);
+				break;
+			case "spruce":
+				log = new Log { OldLogType = SaplingType };
+				leaves = new Leaves { OldLeafType = SaplingType };
+				generator = new SmallTreeGenerator(log, leaves, 4);
+				break;
+			case "birch":
+				log = new Log { OldLogType = SaplingType };
+				leaves = new Leaves { OldLeafType = SaplingType };
+				generator = new SmallTreeGenerator(log, leaves, 5);
+				break;
+			case "jungle":
+				log = new Log { OldLogType = SaplingType };
+				leaves = new Leaves { OldLeafType = SaplingType };
+				generator = new SmallTreeGenerator(log, leaves, 4 + new Random().Next(7));
+				break;
+			case "acacia":
+				log = new Log { OldLogType = SaplingType };
+				leaves = new Leaves { OldLeafType = SaplingType };
+				generator = new SmallTreeGenerator(log, leaves, 5);
+				break;
+			case "dark_oak":
+				log = new Log { OldLogType = SaplingType };
+				leaves = new Leaves { OldLeafType = SaplingType };
+				generator = new SmallTreeGenerator(log, leaves, 5);
+				break;
 		}
+
+		if (generator == null) return;
+
+		level.SetAir(Coordinates);
+
+		if (!generator.Generate(level, Coordinates)) level.SetBlock(this);
 	}
+}
 
-	public class SmallTreeGenerator : TreeGeneratorBase
+public abstract class TreeGeneratorBase
+{
+	protected static bool CanGrowInto(Block material)
 	{
-		private readonly Block _log;
-		private readonly Block _leave;
-		private readonly int _minTreeHeight;
+		return material is Air or Leaves or Leaves2 or Grass or Dirt or Log or Log2 or Sapling or Vine;
+	}
+}
 
-		public SmallTreeGenerator(Block log, Block leave, int minTreeHeight)
+public class SmallTreeGenerator(Block log, Block leave, int minTreeHeight) : TreeGeneratorBase
+{
+	public bool Generate(Level level, BlockCoordinates position)
+	{
+		var rand = new Random();
+		int height = rand.Next(3) + minTreeHeight;
+
+		bool canGrow = true;
+
+		if (position.Y >= 1 && position.Y + height + 1 <= 256)
 		{
-			_log = log;
-			_leave = leave;
-			_minTreeHeight = minTreeHeight;
-		}
-
-		public bool Generate(Level level, BlockCoordinates position)
-		{
-			var rand = new Random();
-			int height = rand.Next(3) + _minTreeHeight;
-
-			bool canGrow = true;
-
-			if (position.Y >= 1 && position.Y + height + 1 <= 256)
+			for (int y = position.Y; y <= position.Y + 1 + height; ++y)
 			{
-				for (int y = position.Y; y <= position.Y + 1 + height; ++y)
-				{
-					int k = 1;
+				int k = 1;
 
-					if (y == position.Y)
+				if (y == position.Y) k = 0;
+
+				if (y >= position.Y + 1 + height - 2) k = 2;
+
+				for (int x = position.X - k; x <= position.X + k && canGrow; ++x)
+				for (int z = position.Z - k; z <= position.Z + k && canGrow; ++z)
+					if (y is >= 0 and < 256)
 					{
-						k = 0;
-					}
-
-					if (y >= position.Y + 1 + height - 2)
-					{
-						k = 2;
-					}
-
-					for (int x = position.X - k; x <= position.X + k && canGrow; ++x)
-					{
-						for (int z = position.Z - k; z <= position.Z + k && canGrow; ++z)
-						{
-							if (y >= 0 && y < 256)
-							{
-								if (!CanGrowInto(level.GetBlock(x, y, z)))
-								{
-									canGrow = false;
-								}
-							}
-							else
-							{
-								canGrow = false;
-							}
-						}
-					}
-				}
-
-				if (!canGrow)
-				{
-					return false;
-				}
-				else
-				{
-					Block block = level.GetBlock(position.BlockDown());
-
-					if ((block is Grass || block is Dirt || block is Farmland) && position.Y < 256 - height - 1)
-					{
-						level.SetBlock(new Dirt {Coordinates = position.BlockDown()});
-
-						for (int y = position.Y - 3 + height; y <= position.Y + height; ++y)
-						{
-							int yd = y - (position.Y + height);
-							int ydHalf = 1 - yd / 2;
-
-							for (int x = position.X - ydHalf; x <= position.X + ydHalf; ++x)
-							{
-								int xd = x - position.X;
-
-								for (int z = position.Z - ydHalf; z <= position.Z + ydHalf; ++z)
-								{
-									int zd = z - position.Z;
-
-									if (Math.Abs(xd) != ydHalf || Math.Abs(zd) != ydHalf || rand.Next(2) != 0 && yd != 0)
-									{
-										BlockCoordinates blockpos = new BlockCoordinates(x, y, z);
-										Block material = level.GetBlock(blockpos);
-
-										if (material is Air || material is Leaves || material is Leaves2)
-										{
-											_leave.Coordinates = blockpos;
-											level.SetBlock(_leave);
-										}
-									}
-								}
-							}
-						}
-
-						for (int y = 0; y < height; ++y)
-						{
-							BlockCoordinates blockpos = position + (BlockCoordinates.Up * y);
-							Block material = level.GetBlock(blockpos);
-
-							if (material is Air || material is Leaves || material is Leaves2)
-							{
-								_log.Coordinates = blockpos;
-								level.SetBlock(_log);
-							}
-						}
-
-						return true;
+						if (!CanGrowInto(level.GetBlock(x, y, z))) canGrow = false;
 					}
 					else
-					{
-						return false;
-					}
-				}
+						canGrow = false;
+			}
+
+			if (!canGrow)
+			{
 			}
 			else
 			{
-				return false;
+				Block block = level.GetBlock(position.BlockDown());
+
+				if (block is not (Grass or Dirt or Farmland) || position.Y >= 256 - height - 1) return false;
+				level.SetBlock(new Dirt { Coordinates = position.BlockDown() });
+
+				for (int y = position.Y - 3 + height; y <= position.Y + height; ++y)
+				{
+					int yd = y - (position.Y + height);
+					int ydHalf = 1 - (yd / 2);
+
+					for (int x = position.X - ydHalf; x <= position.X + ydHalf; ++x)
+					{
+						int xd = x - position.X;
+
+						for (int z = position.Z - ydHalf; z <= position.Z + ydHalf; ++z)
+						{
+							int zd = z - position.Z;
+
+							if (Math.Abs(xd) == ydHalf && Math.Abs(zd) == ydHalf && (rand.Next(2) == 0 || yd == 0)) continue;
+							var blockpos = new BlockCoordinates(x, y, z);
+							Block material = level.GetBlock(blockpos);
+
+							if (material is not Air && material is not Leaves && material is not Leaves2) continue;
+							leave.Coordinates = blockpos;
+							level.SetBlock(leave);
+						}
+					}
+				}
+
+				for (int y = 0; y < height; ++y)
+				{
+					BlockCoordinates blockpos = position + (BlockCoordinates.Up * y);
+					Block material = level.GetBlock(blockpos);
+
+					if (material is not Air && material is not Leaves && material is not Leaves2) continue;
+					log.Coordinates = blockpos;
+					level.SetBlock(log);
+				}
+
+				return true;
 			}
+			return false;
 		}
+		return false;
 	}
 }

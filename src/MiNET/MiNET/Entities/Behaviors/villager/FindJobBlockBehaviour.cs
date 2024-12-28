@@ -95,7 +95,7 @@ namespace MiNET.Entities.Behaviors
 					var block = _entity.Level.GetBlock(blockPosition);
 					if (block is Composter composter && _entity.Variant == 0)
 					{
-						composter.doInteract(_entity.Level, (BlockCoordinates) blockPosition);
+						composter.DoInteract(_entity.Level, (BlockCoordinates) blockPosition);
 					}
 
 					_entity.Variant = 1;

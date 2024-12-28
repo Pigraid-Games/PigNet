@@ -26,88 +26,87 @@
 using System;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Utils
+namespace MiNET.Utils;
+
+public class MapInfo : ICloneable
 {
-	public class MapInfo : ICloneable
+	public long MapId;
+	public byte UpdateType;
+	public BlockCoordinates Origin = new();
+	public MapDecorator[] Decorators = new MapDecorator[0];
+	public MapTrackedObject[] TrackedObjects = new MapTrackedObject[0];
+	public byte X;
+	public byte Z;
+	public int Scale;
+	public int Col;
+	public int Row;
+	public int XOffset;
+	public int ZOffset;
+	public byte[] Data;
+
+	public override string ToString()
 	{
-		public long MapId;
-		public byte UpdateType;
-		public BlockCoordinates Origin = new BlockCoordinates();
-		public MapDecorator[] Decorators = new MapDecorator[0];
-		public MapTrackedObject[] TrackedObjects = new MapTrackedObject[0];
-		public byte X;
-		public byte Z;
-		public int Scale;
-		public int Col;
-		public int Row;
-		public int XOffset;
-		public int ZOffset;
-		public byte[] Data;
-
-		public override string ToString()
-		{
-			return $"MapId: {MapId}, UpdateType: {UpdateType}, X: {X}, Z: {Z}, Col: {Col}, Row: {Row}, X-offset: {XOffset}, Z-offset: {ZOffset}, Data: {Data?.Length}";
-		}
-
-		public object Clone()
-		{
-			return MemberwiseClone();
-		}
+		return $"MapId: {MapId}, UpdateType: {UpdateType}, X: {X}, Z: {Z}, Col: {Col}, Row: {Row}, X-offset: {XOffset}, Z-offset: {ZOffset}, Data: {Data?.Length}";
 	}
 
-	public class MapDecorator
+	public object Clone()
 	{
-		protected int Type;
-		public byte Rotation;
-		public byte Icon;
-		public byte X;
-		public byte Z;
-		public string Label;
-		public uint Color;
+		return MemberwiseClone();
 	}
+}
 
-	public class BlockMapDecorator : MapDecorator
+public class MapDecorator
+{
+	protected int Type;
+	public byte Rotation;
+	public byte Icon;
+	public byte X;
+	public byte Z;
+	public string Label;
+	public uint Color;
+}
+
+public class BlockMapDecorator : MapDecorator
+{
+	public BlockCoordinates Coordinates;
+
+	public BlockMapDecorator()
 	{
-		public BlockCoordinates Coordinates;
-
-		public BlockMapDecorator()
-		{
-			Type = 1;
-		}
+		Type = 1;
 	}
+}
 
-	public class EntityMapDecorator : MapDecorator
+public class EntityMapDecorator : MapDecorator
+{
+	public long EntityId;
+
+	public EntityMapDecorator()
 	{
-		public long EntityId;
-
-		public EntityMapDecorator()
-		{
-			Type = 0;
-		}
+		Type = 0;
 	}
+}
 
-	public class MapTrackedObject
+public class MapTrackedObject
+{
+	protected int Type;
+}
+
+public class EntityMapTrackedObject : MapTrackedObject
+{
+	public long EntityId;
+
+	public EntityMapTrackedObject()
 	{
-		protected int Type;
+		Type = 0;
 	}
+}
 
-	public class EntityMapTrackedObject : MapTrackedObject
+public class BlockMapTrackedObject : MapTrackedObject
+{
+	public BlockCoordinates Coordinates;
+
+	public BlockMapTrackedObject()
 	{
-		public long EntityId;
-
-		public EntityMapTrackedObject()
-		{
-			Type = 0;
-		}
-	}
-
-	public class BlockMapTrackedObject : MapTrackedObject
-	{
-		public BlockCoordinates Coordinates;
-
-		public BlockMapTrackedObject()
-		{
-			Type = 1;
-		}
+		Type = 1;
 	}
 }

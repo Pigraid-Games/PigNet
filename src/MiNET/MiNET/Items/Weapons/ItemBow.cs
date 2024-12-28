@@ -77,7 +77,6 @@ public sealed class ItemBow : Item
 
 	public override void Release(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
-
 		long timeUsed = world.TickTime - _useTime;
 		if (timeUsed < 6)
 		{
@@ -116,7 +115,6 @@ public sealed class ItemBow : Item
 
 		// Check for arrows in inventory if none in off-hand
 		if (!haveArrow)
-		{
 			for (byte i = 0; i < inventory.Slots.Count; i++)
 			{
 				Item itemStack = inventory.Slots[i];
@@ -130,7 +128,6 @@ public sealed class ItemBow : Item
 				}
 				break;
 			}
-		}
 
 		if (!haveArrow) return;
 
@@ -150,12 +147,12 @@ public sealed class ItemBow : Item
 		arrow.KnownPosition.Pitch = (float) arrow.Velocity.GetPitch();
 		arrow.BroadcastMovement = true;
 		arrow.DespawnOnImpact = false;
-		
+
 		world.BroadcastSound(new BowSound(player.KnownPosition));
 		arrow.SpawnEntity();
-			
+
 		inventory.DamageItemInHand(ItemDamageReason.ItemUse, player, null);
-			
+
 		player.SendPlayerInventory();
 	}
 
@@ -172,7 +169,7 @@ public sealed class ItemBow : Item
 
 	public Vector3 GetShootVector(double motX, double motY, double motZ, double f, double f1)
 	{
-		double f2 = Math.Sqrt(motX * motX + motY * motY + motZ * motZ);
+		double f2 = Math.Sqrt((motX * motX) + (motY * motY) + (motZ * motZ));
 
 		motX /= f2;
 		motY /= f2;

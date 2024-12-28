@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class DarkOakButton : Button
 {
-	public partial class DarkOakButton : Button
+	public DarkOakButton() : base(397)
 	{
-		public DarkOakButton() : base(397)
-		{
-			TickRate = 30;
-		}
+		TickRate = 30;
 	}
 }

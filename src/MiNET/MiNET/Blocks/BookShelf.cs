@@ -26,21 +26,20 @@
 using MiNET.Items;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks
-{
-	public partial class Bookshelf : Block
-	{
-		public Bookshelf() : base(47)
-		{
-			FuelEfficiency = 15;
-			BlastResistance = 7.5f;
-			Hardness = 1.5f;
-			IsFlammable = true;
-		}
+namespace MiNET.Blocks;
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+public partial class Bookshelf : Block
+{
+	public Bookshelf() : base(47)
+	{
+		FuelEfficiency = 15;
+		BlastResistance = 7.5f;
+		Hardness = 1.5f;
+		IsFlammable = true;
+	}
+
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe;
 	}
 }

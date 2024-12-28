@@ -26,51 +26,50 @@
 using System.Collections.Generic;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Utils
+namespace MiNET.Utils;
+
+public class Records : List<BlockCoordinates>
 {
-	public class Records : List<BlockCoordinates>
+	public Records()
 	{
-		public Records()
-		{
-		}
-
-		public Records(IEnumerable<BlockCoordinates> coordinates) : base(coordinates)
-		{
-		}
 	}
 
-	public abstract class PlayerRecords : List<Player>
+	public Records(IEnumerable<BlockCoordinates> coordinates) : base(coordinates)
 	{
-		public PlayerRecords()
-		{
-		}
+	}
+}
 
-		public PlayerRecords(IEnumerable<Player> players) : base(players)
-		{
-		}
+public abstract class PlayerRecords : List<Player>
+{
+	public PlayerRecords()
+	{
 	}
 
-	public class PlayerAddRecords : PlayerRecords
+	public PlayerRecords(IEnumerable<Player> players) : base(players)
 	{
-		public PlayerAddRecords()
-		{
-		}
+	}
+}
 
-
-		public PlayerAddRecords(IEnumerable<Player> players) : base(players)
-		{
-		}
+public class PlayerAddRecords : PlayerRecords
+{
+	public PlayerAddRecords()
+	{
 	}
 
-	public class PlayerRemoveRecords : PlayerRecords
+
+	public PlayerAddRecords(IEnumerable<Player> players) : base(players)
 	{
-		public PlayerRemoveRecords()
-		{
-		}
+	}
+}
+
+public class PlayerRemoveRecords : PlayerRecords
+{
+	public PlayerRemoveRecords()
+	{
+	}
 
 
-		public PlayerRemoveRecords(IEnumerable<Player> players) : base(players)
-		{
-		}
+	public PlayerRemoveRecords(IEnumerable<Player> players) : base(players)
+	{
 	}
 }

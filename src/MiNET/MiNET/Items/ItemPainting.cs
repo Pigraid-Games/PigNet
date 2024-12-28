@@ -154,7 +154,7 @@ public class ItemPainting() : Item("minecraft:painting", 321)
 		var paintings = new List<(PaintingData, BoundingBox)>();
 
 		int currentSize = 0;
-		foreach (var painting in Paintings.OrderByDescending(pd => pd.Height * pd.Width))
+		foreach (PaintingData painting in Paintings.OrderByDescending(pd => pd.Height * pd.Width))
 		{
 			int width = painting.Width;
 			int widthOffset = painting.WidthOffset;
@@ -165,7 +165,7 @@ public class ItemPainting() : Item("minecraft:painting", 321)
 
 			currentSize = height * width;
 
-			BoundingBox bbox = new BoundingBox();
+			var bbox = new BoundingBox();
 			switch (face)
 			{
 				case BlockFace.North:
@@ -252,17 +252,13 @@ public class ItemPainting() : Item("minecraft:painting", 321)
 		BlockCoordinates min = bbox.Min;
 		BlockCoordinates max = bbox.Max;
 		for (int x = min.X; x <= max.X; x++)
+		for (int y = min.Y; y <= max.Y; y++)
+		for (int z = min.Z; z <= max.Z; z++)
 		{
-			for (int y = min.Y; y <= max.Y; y++)
-			{
-				for (int z = min.Z; z <= max.Z; z++)
-				{
-					// Check this again. Might be that we want to check solids instead?
-					var isAir = level.IsAir(new BlockCoordinates(x, y, z));
-					if (checkForAir & !isAir) return false;
-					if (!checkForAir & isAir) return false;
-				}
-			}
+			// Check this again. Might be that we want to check solids instead?
+			bool isAir = level.IsAir(new BlockCoordinates(x, y, z));
+			if (checkForAir & !isAir) return false;
+			if (!checkForAir & isAir) return false;
 		}
 
 		return true;

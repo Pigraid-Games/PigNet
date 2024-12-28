@@ -25,24 +25,18 @@
 
 using System.Numerics;
 using MiNET.BlockEntities;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class StructureBlock() : Block(252)
 {
-	public partial class StructureBlock : Block
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		public StructureBlock() : base(252)
-		{
-		}
+		var blockEntity = new StructureBlockBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(blockEntity);
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var blockEntity = new StructureBlockBlockEntity {Coordinates = Coordinates};
-			world.SetBlockEntity(blockEntity);
-
-			return false;
-		}
+		return false;
 	}
 }

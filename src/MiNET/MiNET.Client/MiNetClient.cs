@@ -159,10 +159,10 @@ namespace MiNET.Client
 			var clientKey = CryptoUtils.GenerateClientKey();
 			byte[] data = CryptoUtils.CompressJwtBytes(CryptoUtils.EncodeJwt(username, clientKey, IsEmulator), CryptoUtils.EncodeSkinJwt(clientKey, username), CompressionLevel.Fastest);
 
-			McpeLogin loginPacket = new McpeLogin
+			McpeLogin mcpeLogin = new McpeLogin
 			{
-				protocolVersion = Config.GetProperty("EnableEdu", false) ? 111 : McpeProtocolInfo.ProtocolVersion,
-				payload = data
+				ProtocolVersion = Config.GetProperty("EnableEdu", false) ? 111 : McpeProtocolInfo.ProtocolVersion,
+				Payload = data
 			};
 
 			var bedrockHandler = (BedrockClientMessageHandler) Session.CustomMessageHandler;
@@ -172,7 +172,7 @@ namespace MiNET.Client
 				UseEncryption = false,
 			};
 
-			SendPacket(loginPacket);
+			SendPacket(mcpeLogin);
 		}
 
 		public void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
@@ -757,8 +757,8 @@ namespace MiNET.Client
 		{
 			var packet = new UnconnectedPing
 			{
-				pingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
-				guid = _clientGuid
+				PingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
+				Guid = _clientGuid
 			};
 
 			var data = packet.Encode();
@@ -775,7 +775,7 @@ namespace MiNET.Client
 
 		public void SendConnectedPing()
 		{
-			var packet = new ConnectedPing() {sendpingtime = DateTime.UtcNow.Ticks};
+			var packet = new ConnectedPing() {SendPingTime = DateTime.UtcNow.Ticks};
 
 			SendPacket(packet);
 		}
@@ -784,8 +784,8 @@ namespace MiNET.Client
 		{
 			var packet = new ConnectedPong
 			{
-				sendpingtime = sendpingtime,
-				sendpongtime = sendpingtime + 200
+				SendPingTime = sendpingtime,
+				SendPongTime = sendpingtime + 200
 			};
 
 			SendPacket(packet);

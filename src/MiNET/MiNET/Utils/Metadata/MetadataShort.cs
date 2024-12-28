@@ -25,49 +25,42 @@
 
 using System.IO;
 
-namespace MiNET.Utils.Metadata
+namespace MiNET.Utils.Metadata;
+
+public class MetadataShort : MetadataEntry
 {
-	public class MetadataShort : MetadataEntry
+	public override byte Identifier => 1;
+
+	public override string FriendlyName => "short";
+
+	public short Value { get; set; }
+
+	public static implicit operator MetadataShort(short value)
 	{
-		public override byte Identifier
-		{
-			get { return 1; }
-		}
+		return new MetadataShort(value);
+	}
 
-		public override string FriendlyName
-		{
-			get { return "short"; }
-		}
+	public MetadataShort()
+	{
+	}
 
-		public short Value { get; set; }
+	public MetadataShort(short value)
+	{
+		Value = value;
+	}
 
-		public static implicit operator MetadataShort(short value)
-		{
-			return new MetadataShort(value);
-		}
+	public override void FromStream(BinaryReader reader)
+	{
+		Value = reader.ReadInt16();
+	}
 
-		public MetadataShort()
-		{
-		}
+	public override void WriteTo(BinaryWriter stream)
+	{
+		stream.Write(Value);
+	}
 
-		public MetadataShort(short value)
-		{
-			Value = value;
-		}
-
-		public override void FromStream(BinaryReader reader)
-		{
-			Value = reader.ReadInt16();
-		}
-
-		public override void WriteTo(BinaryWriter stream)
-		{
-			stream.Write(Value);
-		}
-
-		public override string ToString()
-		{
-			return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
-		}
+	public override string ToString()
+	{
+		return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
 	}
 }

@@ -28,31 +28,30 @@ using MiNET.Utils.Vectors;
 using System.Numerics;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
-{
-	public partial class PurpurBlock : Block
-	{
-		public PurpurBlock() : base(201)
-		{
-			BlastResistance = 30;
-			Hardness = 1.5f;
-		}
+namespace MiNET.Blocks;
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+public partial class PurpurBlock : Block
+{
+	public PurpurBlock() : base(201)
+	{
+		BlastResistance = 30;
+		Hardness = 1.5f;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		switch (ItemBlock.GetPillarAxisFromFace(face))
 		{
-			switch (ItemBlock.GetPillarAxisFromFace(face))
-			{
-				case BlockAxis.X:
-					PillarAxis = "x";
-					break;
-				case BlockAxis.Y:
-					PillarAxis = "y";
-					break;
-				case BlockAxis.Z:
-					PillarAxis = "z";
-					break;
-			}
-			return false;
+			case BlockAxis.X:
+				PillarAxis = "x";
+				break;
+			case BlockAxis.Y:
+				PillarAxis = "y";
+				break;
+			case BlockAxis.Z:
+				PillarAxis = "z";
+				break;
 		}
+		return false;
 	}
 }

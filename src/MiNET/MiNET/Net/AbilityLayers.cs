@@ -1,4 +1,5 @@
 ﻿#region LICENSE
+
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -19,6 +20,7 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2022 Niclas Olofsson.
 // All Rights Reserved.
+
 #endregion
 
 using System;
@@ -28,7 +30,6 @@ namespace MiNET.Net;
 
 public class AbilityLayers : List<AbilityLayer>
 {
-	
 }
 
 public class AbilityLayer
@@ -70,6 +71,6 @@ public enum PlayerAbility : uint
 	Muted = 1 << 15,
 	WorldBuilder = 1 << 16,
 	NoClip = 1 << 17,
-	PrivilegedBuilder= 1 << 18,
-	All= (1 << 19) - 1
+	PrivilegedBuilder = 1 << 18,
+	All = (1 << 19) - 1
 }

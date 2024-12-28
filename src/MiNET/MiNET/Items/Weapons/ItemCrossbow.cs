@@ -31,7 +31,7 @@ public sealed class ItemCrossbow : Item
 
 		if (ExtraData is { } extraData && extraData["chargedItem"] is NbtCompound chargedItem)
 		{
-			if(!_hasReleased) return;
+			if (!_hasReleased) return;
 
 			string itemName = (chargedItem["Name"] as NbtString)?.Value;
 			short damage = (chargedItem["Damage"] as NbtShort)?.Value ?? 0;
@@ -44,7 +44,7 @@ public sealed class ItemCrossbow : Item
 			ExtraData.Clear();
 			player.SendPlayerInventory();
 			const float Force = 2.5f;
-			if(itemInCrossbow is ItemArrow)
+			if (itemInCrossbow is ItemArrow)
 			{
 				var arrow = new Arrow(player, world, 2, !(Force < 1.0))
 				{
@@ -81,7 +81,8 @@ public sealed class ItemCrossbow : Item
 				];
 				player.SendPlayerInventory();
 				_isLoading = false;
-			} else player.SendSound(new CrossbowLoadingStartSound(player.KnownPosition));
+			}
+			else player.SendSound(new CrossbowLoadingStartSound(player.KnownPosition));
 		}
 	}
 
@@ -102,7 +103,7 @@ public sealed class ItemCrossbow : Item
 			];
 			player.SendPlayerInventory();
 		}
-			
+
 		_isLoading = false;
 		_hasReleased = true;
 	}

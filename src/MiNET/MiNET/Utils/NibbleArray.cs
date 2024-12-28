@@ -25,51 +25,47 @@
 
 using System;
 
-namespace MiNET.Utils
+namespace MiNET.Utils;
+
+public class NibbleArray : ICloneable
 {
-	public class NibbleArray : ICloneable
+	public byte[] Data { get; set; }
+
+	private NibbleArray()
 	{
-		public byte[] Data { get; set; }
+	}
 
-		private NibbleArray()
+	public NibbleArray(int length)
+	{
+		Data = new byte[length / 2];
+	}
+
+	public NibbleArray(byte[] data)
+	{
+		if (data.Length % 2 != 0) throw new ArgumentOutOfRangeException(nameof(data), "Input data must be of size div by 2");
+
+		Data = data;
+	}
+
+
+	public int Length => Data.Length * 2;
+
+	public byte this[int index]
+	{
+		get => (byte) ((Data[index >> 1] >> ((index & 1) * 4)) & 0xF);
+		set
 		{
+			value &= 0xF;
+			int idx = index >> 1;
+			Data[idx] &= (byte) (0xF << (((index + 1) & 1) * 4));
+			Data[idx] |= (byte) (value << ((index & 1) * 4));
 		}
+	}
 
-		public NibbleArray(int length)
-		{
-			Data = new byte[length / 2];
-		}
-
-		public NibbleArray(byte[] data)
-		{
-			if (data.Length % 2 != 0) throw new ArgumentOutOfRangeException(nameof(data), "Input data must be of size div by 2");
-
-			Data = data;
-		}
-
-
-		public int Length
-		{
-			get { return Data.Length * 2; }
-		}
-
-		public byte this[int index]
-		{
-			get { return (byte) (Data[index >> 1] >> ((index & 1) * 4) & 0xF); }
-			set
-			{
-				value &= 0xF;
-				var idx = index >> 1;
-				Data[idx] &= (byte) (0xF << (((index + 1) & 1) * 4));
-				Data[idx] |= (byte) (value << ((index & 1) * 4));
-			}
-		}
-
-		public object Clone()
-		{
-			NibbleArray nibbleArray = (NibbleArray) MemberwiseClone();
-			nibbleArray.Data = (byte[]) Data.Clone();
-			return nibbleArray;
-		}
+	public object Clone()
+	{
+		var nibbleArray = (NibbleArray) MemberwiseClone();
+		nibbleArray.Data = (byte[]) Data.Clone();
+		return nibbleArray;
 	}
 }

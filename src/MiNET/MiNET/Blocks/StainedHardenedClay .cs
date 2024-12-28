@@ -22,66 +22,49 @@
 // All Rights Reserved.
 
 #endregion
+
 using System.Numerics;
 using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class StainedHardenedClay : Block
 {
-	public partial class StainedHardenedClay : Block
+	public StainedHardenedClay() : base(159)
 	{
-		public StainedHardenedClay() : base(159)
-		{
-			BlastResistance = 30;
-			Hardness = 1.25f;
-		}
+		BlastResistance = 30;
+		Hardness = 1.25f;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
-			return false;
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
+		return false;
+	}
 
-		public override Item GetSmelt()
+	public override Item GetSmelt()
+	{
+		return Metadata switch
 		{
-			switch (this.Metadata)
-			{
-				case 0:
-					return ItemFactory.GetItem(220, 0);
-				case 8:
-					return ItemFactory.GetItem(228, 0);
-				case 7:
-					return ItemFactory.GetItem(227, 0);
-				case 15:
-					return ItemFactory.GetItem(235, 0);
-				case 12:
-					return ItemFactory.GetItem(232, 0);
-				case 14:
-					return ItemFactory.GetItem(234, 0);
-				case 1:
-					return ItemFactory.GetItem(221, 0);
-				case 4:
-					return ItemFactory.GetItem(224, 0);
-				case 5:
-					return ItemFactory.GetItem(225, 0);
-				case 13:
-					return ItemFactory.GetItem(233, 0);
-				case 9:
-					return ItemFactory.GetItem(229, 0);
-				case 3:
-					return ItemFactory.GetItem(223, 0);
-				case 11:
-					return ItemFactory.GetItem(231, 0);
-				case 10:
-					return ItemFactory.GetItem(219, 0);
-				case 2:
-					return ItemFactory.GetItem(222, 0);
-				case 6:
-					return ItemFactory.GetItem(226, 0);
-				default:
-					return null;
-			}
-		}
+			0 => ItemFactory.GetItem("minecraft:white_glazed_terracotta"),
+			1 => ItemFactory.GetItem("minecraft:orange_glazed_terracotta"),
+			2 => ItemFactory.GetItem("minecraft:magenta_glazed_terracotta"),
+			3 => ItemFactory.GetItem("minecraft:light_blue_glazed_terracotta"),
+			4 => ItemFactory.GetItem("minecraft:yellow_glazed_terracotta"),
+			5 => ItemFactory.GetItem("minecraft:lime_glazed_terracotta"),
+			6 => ItemFactory.GetItem("minecraft:pink_glazed_terracotta"),
+			7 => ItemFactory.GetItem("minecraft:gray_glazed_terracotta"),
+			8 => ItemFactory.GetItem("minecraft:silver_glazed_terracotta"),
+			9 => ItemFactory.GetItem("minecraft:cyan_glazed_terracotta"),
+			10 => ItemFactory.GetItem("minecraft:purple_glazed_terracotta"),
+			11 => ItemFactory.GetItem("minecraft:blue_glazed_terracotta"),
+			12 => ItemFactory.GetItem("minecraft:brown_glazed_terracotta"),
+			13 => ItemFactory.GetItem("minecraft:green_glazed_terracotta"),
+			14 => ItemFactory.GetItem("minecraft:red_glazed_terracotta"),
+			15 => ItemFactory.GetItem("minecraft:black_glazed_terracotta"),
+			_ => null
+		};
 	}
 }

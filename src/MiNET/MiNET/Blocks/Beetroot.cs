@@ -30,45 +30,39 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Beetroot : Crops
 {
-	public partial class Beetroot : Crops
+	public Beetroot() : base(244)
 	{
-		public Beetroot() : base(244)
-		{
-			MaxGrowth = 4;
-		}
+		MaxGrowth = 4;
+	}
 
-		public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			if (Growth < MaxGrowth && itemInHand is ItemDye && itemInHand.Metadata == 15 && new Random().NextDouble() > 0.25)
-			{
-				Growth++;
-				level.SetBlock(this);
+	public override bool Interact(Level level, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+		if (Growth >= MaxGrowth || itemInHand is not ItemDye || itemInHand.Metadata != 15 || !(new Random().NextDouble() > 0.25)) return false;
+		Growth++;
+		level.SetBlock(this);
+		return true;
+	}
 
-				return true;
-			}
-
-			return false;
-		}
-
-
-		public override Item[] GetDrops(Item tool)
-		{
-			if (Growth == MaxGrowth)
-			{
-				// Can also return 0-3 seeds at random.
-				var rnd = new Random();
-				var count = rnd.Next(4);
-				if (count > 0)
-				{
-					return new[] {ItemFactory.GetItem(457, 0, 1), ItemFactory.GetItem(458, 0, (byte) count)};
-				}
-				return new[] {ItemFactory.GetItem(457, 0, 1)};
-			}
-
-			return new[] {ItemFactory.GetItem(458, 0, 1)};
-		}
+	public override Item[] GetDrops(Item tool)
+	{
+		if (Growth != MaxGrowth) return [ItemFactory.GetItem("minecraft:beetroot_seeds")];
+		// Can also return 0-3 seeds at random.
+		var rnd = new Random();
+		int count = rnd.Next(4);
+		return count > 0
+			?
+			[
+				ItemFactory.GetItem("minecraft:beetroot"),
+				ItemFactory.GetItem("minecraft:beetroot_seeds", count: (byte) count)
+			]
+			:
+			[
+				ItemFactory.GetItem("minecraft:beetroot")
+			];
 	}
 }

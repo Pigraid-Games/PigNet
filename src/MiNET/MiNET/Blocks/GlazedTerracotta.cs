@@ -29,21 +29,20 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public abstract class GlazedTerracotta : Block
 {
-	public abstract class GlazedTerracotta : Block
+	[StateRange(0, 5)] public virtual int FacingDirection { get; set; } = 2;
+
+	public GlazedTerracotta(byte id) : base(id)
 	{
-		[StateRange(0, 5)] public virtual int FacingDirection { get; set; } = 2;
+	}
 
-		public GlazedTerracotta(byte id) : base(id)
-		{
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
-
-			return false;
-		}
+		return false;
 	}
 }

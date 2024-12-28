@@ -25,32 +25,23 @@
 
 using System.Numerics;
 using MiNET.BlockEntities;
-using MiNET.Items;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public abstract class BlastFurnaceBase(int id) : Block(id)
 {
-	public abstract class BlastFurnaceBase : Block
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		protected BlastFurnaceBase(int id) : base(id)
-		{
-		}
+		var furnaceBlockEntity = new BlastFurnaceBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(furnaceBlockEntity);
+		return false;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var furnaceBlockEntity = new BlastFurnaceBlockEntity {Coordinates = Coordinates};
-			world.SetBlockEntity(furnaceBlockEntity);
-
-			return false;
-		}
-
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			player.OpenInventory(blockCoordinates);
-
-			return true;
-		}
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		player.OpenInventory(blockCoordinates);
+		return true;
 	}
 }

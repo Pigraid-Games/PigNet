@@ -23,12 +23,11 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class LitBlastFurnace : BlastFurnaceBase
 {
-	public partial class LitBlastFurnace : BlastFurnaceBase
+	public LitBlastFurnace() : base(469)
 	{
-		public LitBlastFurnace() : base(469)
-		{
-		}
 	}
 }

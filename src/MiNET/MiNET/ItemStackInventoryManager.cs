@@ -31,7 +31,6 @@ using log4net;
 using MiNET.Crafting;
 using MiNET.Items;
 using MiNET.Utils;
-using Newtonsoft.Json;
 
 namespace MiNET
 {
@@ -658,28 +657,25 @@ namespace MiNET
 			if (_player.UsingAnvil && containerId < 3) containerId = 13;
 
 			Item item = null;
-			switch (containerId)
+			switch ((ContainerEnumName) containerId)
 			{
-				case 13: // crafting
-				case 21: // enchanting
-				case 22: // enchanting
-				case 23: // enchanting
-				case 41: // loom
-				case 42: // loom
-				case 43: // loom
-				case 59: // cursor
-				case 60: // creative
+				case ContainerEnumName.CraftingInput:
+				case ContainerEnumName.EnchantingInput:
+				case ContainerEnumName.EnchantingMaterial:
+				case ContainerEnumName.LoomInput:
+				case ContainerEnumName.Cursor:
+				case ContainerEnumName.CreatedOutput:
 					item = _player.Inventory.UiInventory.Slots[slot];
 					break;
-				case 12: // auto
-				case 28: // hotbar
-				case 29: // player inventory
+				case ContainerEnumName.CombinedHotbarAndInventory:
+				case ContainerEnumName.Hotbar:
+				case ContainerEnumName.Inventory:
 					item = _player.Inventory.Slots[slot];
 					break;
-				case 34: // off-hand
+				case ContainerEnumName.Offhand:
 					item = _player.Inventory.OffHand;
 					break;
-				case 6: // armor
+				case ContainerEnumName.Armor:
 					item = slot switch
 					{
 						0 => _player.Inventory.Helmet,
@@ -689,12 +685,16 @@ namespace MiNET
 						_ => null
 					};
 					break;
-				case 7: // chest/container
-				case 24: // furnace
-				case 25: // furnace
-				case 26: // furnace
-				case 30: // shulkerbox
-				case 45: // blast furnace
+				case ContainerEnumName.LevelEntity:
+				case ContainerEnumName.FurnaceFuel:
+				case ContainerEnumName.FurnaceIngredient:
+				case ContainerEnumName.FurnaceResult:
+				case ContainerEnumName.BlastFurnaceIngredient:
+				case ContainerEnumName.CartographyInput:
+				case ContainerEnumName.SmithingTableTemplate:
+				case ContainerEnumName.SmithingTableInput:
+				case ContainerEnumName.SmithingTableMaterial:
+				case ContainerEnumName.CartographyAdditional:
 					if (_player._openInventory is Inventory inventory) item = inventory.GetSlot((byte) slot);
 					break;
 				default:
@@ -709,28 +709,25 @@ namespace MiNET
 		{
 			if (_player.UsingAnvil && containerId < 3) containerId = 13;
 
-			switch (containerId)
+			switch ((ContainerEnumName)containerId)
 			{
-				case 13: // crafting
-				case 21: // enchanting
-				case 22: // enchanting
-				case 23: // enchanting
-				case 41: // loom
-				case 42: // loom
-				case 43: // loom
-				case 59: // cursor
-				case 60: // creative
+				case ContainerEnumName.CraftingInput:
+				case ContainerEnumName.EnchantingInput:
+				case ContainerEnumName.EnchantingMaterial:
+				case ContainerEnumName.LoomInput:
+				case ContainerEnumName.Cursor:
+				case ContainerEnumName.CreatedOutput:
 					_player.Inventory.UiInventory.Slots[slot] = item;
 					break;
-				case 12: // auto
-				case 28: // hotbar
-				case 29: // player inventory
+				case ContainerEnumName.CombinedHotbarAndInventory:
+				case ContainerEnumName.Hotbar:
+				case ContainerEnumName.Inventory:
 					_player.Inventory.Slots[slot] = item;
 					break;
-				case 34: // off-hand
+				case ContainerEnumName.Offhand:
 					_player.Inventory.OffHand = item;
 					break;
-				case 6: // armor
+				case ContainerEnumName.Armor:
 					switch (slot)
 					{
 						case 0:
@@ -745,14 +742,17 @@ namespace MiNET
 						case 3:
 							_player.Inventory.Boots = item;
 							break;
-					}
-					break;
-				case 7: // chest/container
-				case 24: // furnace
-				case 25: // furnace
-				case 26: // furnace
-				case 30: // shulkerbox
-				case 45: // blast furnace
+					}					break;
+				case ContainerEnumName.LevelEntity:
+				case ContainerEnumName.FurnaceFuel:
+				case ContainerEnumName.FurnaceIngredient:
+				case ContainerEnumName.FurnaceResult:
+				case ContainerEnumName.CartographyInput:
+				case ContainerEnumName.CartographyAdditional:		
+				case ContainerEnumName.BlastFurnaceIngredient:
+				case ContainerEnumName.SmithingTableTemplate:
+				case ContainerEnumName.SmithingTableInput:
+				case ContainerEnumName.SmithingTableMaterial:
 					if (_player._openInventory is Inventory inventory) inventory.SetSlot(_player, (byte) slot, item);
 					break;
 				default:

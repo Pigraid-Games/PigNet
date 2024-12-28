@@ -32,91 +32,69 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public class WallSignBase : Block
 {
-	public partial class WallSignBase : Block
+	private readonly int _itemDropId;
+
+	public WallSignBase(int id, int itemDropId) : base(id)
 	{
-		private readonly int _itemDropId;
+		_itemDropId = itemDropId;
+		IsTransparent = true;
+		IsSolid = false;
+		BlastResistance = 5;
+		Hardness = 1;
 
-		public WallSignBase(int id, int itemDropId) : base(id)
-		{
-			_itemDropId = itemDropId;
-			IsTransparent = true;
-			IsSolid = false;
-			BlastResistance = 5;
-			Hardness = 1;
-
-			IsFlammable = true; // Only in PE!!
-		}
-
-		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-		{
-			return world.GetBlock(blockCoordinates).IsReplaceable;
-		}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var container = GetState();
-			var direction = (BlockStateInt) container.States.First(s => s.Name == "facing_direction");
-			direction.Value = (int) face;
-			SetState(container);
-			var signBlockEntity = new SignBlockEntity {Coordinates = Coordinates};
-			world.SetBlockEntity(signBlockEntity);
-			OpenSign(player);
-			return false;
-		}
-
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			if (player.Inventory.GetItemInHand() is ItemSignBase)
-			{
-				return false;
-			}
-			OpenSign(player);
-			return true;
-		}
-
-		public override Item[] GetDrops(Item tool)
-		{
-			return new[] {ItemFactory.GetItem((short) _itemDropId)}; // Drop sign item
-		}
-
-		public void OpenSign(Player player, bool front = true)
-		{
-			var packet = McpeOpenSign.CreateObject();
-			packet.coordinates = Coordinates;
-			packet.front = front;
-			player.SendPacket(packet);
-		}
+		IsFlammable = true; // Only in PE!!
 	}
 
-	public partial class WallSign : WallSignBase
+	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 	{
-		public WallSign() : base(68, 323) { }
+		return world.GetBlock(blockCoordinates).IsReplaceable;
 	}
 
-	public partial class SpruceWallSign : WallSignBase
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		public SpruceWallSign() : base(437, 472) { }
+		BlockStateContainer container = GetState();
+		var direction = (BlockStateInt) container.States.First(s => s.Name == "facing_direction");
+		direction.Value = (int) face;
+		SetState(container);
+		var signBlockEntity = new SignBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(signBlockEntity);
+		OpenSign(player);
+		return false;
 	}
 
-	public partial class BirchWallSign : WallSignBase
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
-		public BirchWallSign() : base(442, 473) { }
+		if (player.Inventory.GetItemInHand() is ItemSignBase) return false;
+		OpenSign(player);
+		return true;
 	}
 
-	public partial class JungleWallSign : WallSignBase
+	public override Item[] GetDrops(Item tool)
 	{
-		public JungleWallSign() : base(444, 474) { }
+		return [ItemFactory.GetItem((short) _itemDropId)]; // Drop sign item
 	}
 
-	public partial class AcaciaWallSign : WallSignBase
+	public void OpenSign(Player player, bool front = true)
 	{
-		public AcaciaWallSign() : base(446, 475) { }
-	}
-
-	public partial class DarkoakWallSign : WallSignBase
-	{
-		public DarkoakWallSign() : base(448, 476) { }
+		McpeOpenSign packet = McpeOpenSign.CreateObject();
+		packet.coordinates = Coordinates;
+		packet.front = front;
+		player.SendPacket(packet);
 	}
 }
+
+public partial class WallSign() : WallSignBase(68, 323);
+
+public partial class SpruceWallSign() : WallSignBase(437, 472);
+
+public partial class BirchWallSign() : WallSignBase(442, 473);
+
+public partial class JungleWallSign() : WallSignBase(444, 474);
+
+public partial class AcaciaWallSign() : WallSignBase(446, 475);
+
+public partial class DarkoakWallSign() : WallSignBase(448, 476);

@@ -28,12 +28,11 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class IronTrapdoor : TrapdoorBase
 {
-	public partial class IronTrapdoor : TrapdoorBase
+	public IronTrapdoor() : base(167)
 	{
-		public IronTrapdoor() : base(167)
-		{
-		}
 	}
 }

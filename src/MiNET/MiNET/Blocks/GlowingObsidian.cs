@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Glowingobsidian : Block
 {
-	public partial class Glowingobsidian : Block
+	public Glowingobsidian() : base(246)
 	{
-		public Glowingobsidian() : base(246)
-		{
-			LightLevel = 12;
-			BlastResistance = 6000;
-			Hardness = 50;
-		}
+		LightLevel = 12;
+		BlastResistance = 6000;
+		Hardness = 50;
 	}
 }

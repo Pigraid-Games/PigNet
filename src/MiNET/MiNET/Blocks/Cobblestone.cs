@@ -25,19 +25,18 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks
-{
-	public partial class Cobblestone : Block
-	{
-		public Cobblestone() : base(4)
-		{
-			BlastResistance = 30;
-			Hardness = 2;
-		}
+namespace MiNET.Blocks;
 
-		public override Item GetSmelt()
-		{
-			return ItemFactory.GetItem(1, 0);
-		}
+public partial class Cobblestone : Block
+{
+	public Cobblestone() : base(4)
+	{
+		BlastResistance = 30;
+		Hardness = 2;
+	}
+
+	public override Item GetSmelt()
+	{
+		return ItemFactory.GetItem(1, 0);
 	}
 }

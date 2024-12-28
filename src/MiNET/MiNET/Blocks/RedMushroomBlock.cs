@@ -26,25 +26,21 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks
-{
-	public partial class RedMushroomBlock : Block
-	{
-		public RedMushroomBlock() : base(100)
-		{
-			BlastResistance = 1;
-			Hardness = 0.2f;
-		}
+namespace MiNET.Blocks;
 
-		public override Item[] GetDrops(Item tool)
-		{
-			var rnd = new Random();
-			var next = rnd.Next(3);
-			if (next > 0)
-			{
-				return new[] {ItemFactory.GetItem(40, 0, (byte) next)};
-			}
-			return new Item[0];
-		}
+public partial class RedMushroomBlock : Block
+{
+	public RedMushroomBlock() : base(100)
+	{
+		BlastResistance = 1;
+		Hardness = 0.2f;
+	}
+
+	public override Item[] GetDrops(Item tool)
+	{
+		var rnd = new Random();
+		int next = rnd.Next(3);
+		if (next > 0) return new[] { ItemFactory.GetItem(40, 0, (byte) next) };
+		return new Item[0];
 	}
 }

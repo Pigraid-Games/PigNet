@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class IronBlock : Block
 {
-	public partial class IronBlock : Block
+	public IronBlock() : base(42)
 	{
-		public IronBlock() : base(42)
-		{
-			BlastResistance = 30;
-			Hardness = 5;
-		}
+		BlastResistance = 30;
+		Hardness = 5;
 	}
 }

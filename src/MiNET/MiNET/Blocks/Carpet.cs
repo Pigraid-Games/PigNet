@@ -22,27 +22,26 @@
 // All Rights Reserved.
 
 #endregion
+
 using System.Numerics;
-using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
-{
-	public partial class Carpet : Block
-	{
-		public Carpet() : base(171)
-		{
-			IsTransparent = true;
-			BlastResistance = 0.5f;
-			Hardness = 0.1f;
-			IsFlammable = true;
-		}
+namespace MiNET.Blocks;
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
-			return false;
-		}
+public partial class Carpet : Block
+{
+	public Carpet() : base(171)
+	{
+		IsTransparent = true;
+		BlastResistance = 0.5f;
+		Hardness = 0.1f;
+		IsFlammable = true;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Color = BlockFactory.GetBlockColor(player.Inventory.GetItemInHand().Id, (byte) player.Inventory.GetItemInHand().Metadata);
+		return false;
 	}
 }

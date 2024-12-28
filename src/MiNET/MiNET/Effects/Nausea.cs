@@ -25,13 +25,12 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class Nausea : Effect
 {
-	public class Nausea : Effect
+	public Nausea() : base(EffectType.Nausea)
 	{
-		public Nausea() : base(EffectType.Nausea)
-		{
-			ParticleColor = Color.FromArgb(0x55, 0x1D, 0x4A);
-		}
+		ParticleColor = Color.FromArgb(0x55, 0x1D, 0x4A);
 	}
 }

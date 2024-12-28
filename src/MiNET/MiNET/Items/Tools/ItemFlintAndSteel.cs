@@ -67,7 +67,7 @@ public sealed class ItemFlintAndSteel : Item
 					{
 						X = blockCoordinates.X + 0.5f,
 						Y = blockCoordinates.Y + 0.5f,
-						Z = blockCoordinates.Z + 0.5f,
+						Z = blockCoordinates.Z + 0.5f
 					},
 					Fuse = 80
 				}.SpawnEntity();
@@ -83,7 +83,8 @@ public sealed class ItemFlintAndSteel : Item
 					if (blocks.Count == 0) blocks = Fill(world, affectedBlock.Coordinates, BlockFace.North);
 
 					if (blocks.Count > 0)
-						foreach (Block portal in blocks.FindAll(b => b is Portal)) world.SetBlock(portal);
+						foreach (Block portal in blocks.FindAll(b => b is Portal))
+							world.SetBlock(portal);
 					else
 					{
 						if (face == BlockFace.Up)
@@ -91,7 +92,7 @@ public sealed class ItemFlintAndSteel : Item
 							affectedBlock = world.GetBlock(GetNewCoordinatesFromFace(blockCoordinates, BlockFace.Up));
 							if (affectedBlock.Id == 0)
 							{
-								var fire = new Fire {Coordinates = affectedBlock.Coordinates};
+								var fire = new Fire { Coordinates = affectedBlock.Coordinates };
 								world.SetBlock(fire);
 							}
 						}
@@ -107,7 +108,7 @@ public sealed class ItemFlintAndSteel : Item
 					Block affectedBlock = world.GetBlock(GetNewCoordinatesFromFace(blockCoordinates, BlockFace.Up));
 					if (affectedBlock.Id == 0)
 					{
-						var fire = new Fire {Coordinates = affectedBlock.Coordinates};
+						var fire = new Fire { Coordinates = affectedBlock.Coordinates };
 						world.SetBlock(fire);
 					}
 					player.Inventory.DamageItemInHand(ItemDamageReason.BlockInteract, null, block);
@@ -172,14 +173,14 @@ public sealed class ItemFlintAndSteel : Item
 	{
 		BlockAxis dir = direction switch
 		{
-			BlockFace.Down  => BlockAxis.X,
-			BlockFace.Up    => BlockAxis.X,
+			BlockFace.Down => BlockAxis.X,
+			BlockFace.Up => BlockAxis.X,
 			BlockFace.North => BlockAxis.X,
 			BlockFace.South => BlockAxis.X,
-			BlockFace.West  => BlockAxis.Z,
-			BlockFace.East  => BlockAxis.Z,
-			BlockFace.None  => default,
-			_               => default
+			BlockFace.West => BlockAxis.Z,
+			BlockFace.East => BlockAxis.Z,
+			BlockFace.None => default,
+			_ => default
 		};
 
 		blocks.Add(new Portal

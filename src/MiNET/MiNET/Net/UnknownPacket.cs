@@ -25,20 +25,19 @@
 
 using System;
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public class UnknownPacket : Packet<UnknownPacket>
 {
-	public class UnknownPacket : Packet<UnknownPacket>
+	public ReadOnlyMemory<byte> Message { get; private set; }
+
+	public UnknownPacket() : this(0, null)
 	{
-		public ReadOnlyMemory<byte> Message { get; private set; }
+	}
 
-		public UnknownPacket() : this(0, null)
-		{
-		}
-
-		public UnknownPacket(byte id, ReadOnlyMemory<byte> message)
-		{
-			Message = message;
-			Id = id;
-		}
+	public UnknownPacket(byte id, ReadOnlyMemory<byte> message)
+	{
+		Message = message;
+		Id = id;
 	}
 }

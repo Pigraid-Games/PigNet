@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class FlowingLava : Flowing
 {
-	public partial class FlowingLava : Flowing
+	public FlowingLava() : base(10)
 	{
-		public FlowingLava() : base(10)
-		{
-			LightLevel = 15;
-			BlastResistance = 500;
-			Hardness = 100;
-		}
+		LightLevel = 15;
+		BlastResistance = 500;
+		Hardness = 100;
 	}
 }

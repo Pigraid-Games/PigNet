@@ -29,19 +29,13 @@ using MiNET.Worlds;
 using System.Numerics;
 using System;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class TrappedChest() : ChestBase(146)
 {
-	public partial class TrappedChest : ChestBase
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		public TrappedChest() : base(146)
-		{
-		}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
-
-			return false;
-		}
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+		return false;
 	}
 }

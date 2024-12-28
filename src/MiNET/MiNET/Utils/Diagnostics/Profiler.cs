@@ -31,140 +31,136 @@ using System.Linq;
 using System.Text;
 using log4net;
 
-namespace MiNET.Utils.Diagnostics
+namespace MiNET.Utils.Diagnostics;
+
+/// <summary>
+///     A general purpose profiler. Profiler is threadsafe in order to be possible to use everywhere independent
+///     of thread knowledge. Measurements can be collected in a hierarchy, so sub-timers can measure individual sections
+///     of code, while still getting an overall view of the whole.
+///     When using measurements, do make sure to check for null in the case profiler is disabled. Check world tick for
+///     examples of proper use.
+/// </summary>
+public class Profiler
 {
-	/// <summary>
-	///     A general purpose profiler. Profiler is threadsafe in order to be possible to use everywhere independent
-	///     of thread knowledge. Measurements can be collected in a hierarchy, so sub-timers can measure individual sections
-	///     of code, while still getting an overall view of the whole.
-	///     When using measurements, do make sure to check for null in the case profiler is disabled. Check world tick for
-	///     examples of proper use.
-	/// </summary>
-	public class Profiler
+	public bool Enabled { get; set; }
+
+	private ConcurrentBag<ProfilerResult> _results = new();
+
+	public Profiler()
 	{
-		public bool Enabled { get; set; }
-
-		ConcurrentBag<ProfilerResult> _results = new ConcurrentBag<ProfilerResult>();
-
-		public Profiler()
-		{
-			Enabled = Config.GetProperty("Profiler.Enabled", false);
-		}
-
-		public Measurement Begin(string name)
-		{
-			if (!Enabled) return null;
-
-			return new Measurement(name, this);
-		}
-
-		public void End(Measurement measurement)
-		{
-			measurement.Timer.Stop();
-
-			if (!Enabled) return;
-
-			_results.Add(new ProfilerResult(measurement.Name, measurement.Timer.ElapsedMilliseconds, Stopwatch.GetTimestamp()));
-		}
-
-		public void Reset()
-		{
-			if (!Enabled) _results = new ConcurrentBag<ProfilerResult>();
-		}
-
-		public string GetResults(long timespan = 10000)
-		{
-			long fromTime = (long) (Stopwatch.GetTimestamp() - ((TimeSpan.FromMilliseconds(timespan).TotalSeconds) * Stopwatch.Frequency));
-
-			ProfilerResult[] filtered = _results.ToArray().Where(o => o.TimeStamp > fromTime).ToArray();
-
-			Dictionary<string, long> totalTime = new Dictionary<string, long>();
-			foreach (var profilerResult in filtered)
-			{
-				if (!totalTime.ContainsKey(profilerResult.Name))
-				{
-					totalTime.Add(profilerResult.Name, 0);
-				}
-
-				long val = totalTime[profilerResult.Name];
-				totalTime[profilerResult.Name] = val + profilerResult.Time;
-			}
-
-			Dictionary<string, long> avarageTime = new Dictionary<string, long>();
-			foreach (var counter in totalTime)
-			{
-				long count = filtered.Count(a => a.Name == counter.Key);
-				long avg = counter.Value / count;
-				avarageTime.Add(counter.Key, avg);
-			}
-
-			StringBuilder sb = new StringBuilder();
-			sb.AppendLine("** Profiler result **");
-
-			foreach (var counter in avarageTime.OrderByDescending(a => a.Value))
-			{
-				long count = filtered.Count(a => a.Name == counter.Key);
-				long min = filtered.Where(a => a.Name == counter.Key).Min(a => a.Time);
-				long max = filtered.Where(a => a.Name == counter.Key).Max(a => a.Time);
-				long violations = filtered.Where(a => a.Name == counter.Key).Count(a => a.Time > 50);
-				sb.AppendLine($"{counter.Key} Avarage={counter.Value}ms, Count={count}, Min={min}, Max={max}, Violations={violations}");
-			}
-
-			sb.AppendLine("** End results **");
-
-			return sb.ToString();
-		}
+		Enabled = Config.GetProperty("Profiler.Enabled", false);
 	}
 
-	public class Measurement
+	public Measurement Begin(string name)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Measurement));
+		if (!Enabled) return null;
 
-		public string Name;
-		public Stopwatch Timer;
-		private Profiler _profiler = null;
-		private Measurement _parent = null;
-		ConcurrentBag<ProfilerResult> Results = new ConcurrentBag<ProfilerResult>();
-
-		public Measurement(string name, Profiler profiler, Measurement parent = null)
-		{
-			Name = parent == null ? name : parent.Name + "->" + name;
-			_parent = parent;
-			_profiler = profiler;
-
-			Timer = Stopwatch.StartNew();
-		}
-
-		public Measurement Begin(string name)
-		{
-			return new Measurement(name, _profiler, this);
-		}
-
-		public void End()
-		{
-			Timer.Stop();
-
-			_profiler.End(this);
-			_parent?.Results.Add(new ProfilerResult(Name, Timer.ElapsedMilliseconds, Stopwatch.GetTimestamp()));
-		}
-
-		~Measurement()
-		{
-			if (Timer != null && Timer.IsRunning) Log.Warn($"Timer for {Name} is still running during call to destructor. Please call End() for accurate measurements");
-		}
+		return new Measurement(name, this);
 	}
 
-	public struct ProfilerResult
+	public void End(Measurement measurement)
 	{
-		public string Name;
-		public long Time;
-		public long TimeStamp;
+		measurement.Timer.Stop();
 
-		public ProfilerResult(string name, long time, long timeStamp)
+		if (!Enabled) return;
+
+		_results.Add(new ProfilerResult(measurement.Name, measurement.Timer.ElapsedMilliseconds, Stopwatch.GetTimestamp()));
+	}
+
+	public void Reset()
+	{
+		if (!Enabled) _results = new ConcurrentBag<ProfilerResult>();
+	}
+
+	public string GetResults(long timespan = 10000)
+	{
+		long fromTime = (long) (Stopwatch.GetTimestamp() - (TimeSpan.FromMilliseconds(timespan).TotalSeconds * Stopwatch.Frequency));
+
+		ProfilerResult[] filtered = _results.ToArray().Where(o => o.TimeStamp > fromTime).ToArray();
+
+		var totalTime = new Dictionary<string, long>();
+		foreach (ProfilerResult profilerResult in filtered)
 		{
-			Name = name;
-			Time = time;
-			TimeStamp = timeStamp;
+			if (!totalTime.ContainsKey(profilerResult.Name)) totalTime.Add(profilerResult.Name, 0);
+
+			long val = totalTime[profilerResult.Name];
+			totalTime[profilerResult.Name] = val + profilerResult.Time;
 		}
+
+		var avarageTime = new Dictionary<string, long>();
+		foreach (KeyValuePair<string, long> counter in totalTime)
+		{
+			long count = filtered.Count(a => a.Name == counter.Key);
+			long avg = counter.Value / count;
+			avarageTime.Add(counter.Key, avg);
+		}
+
+		var sb = new StringBuilder();
+		sb.AppendLine("** Profiler result **");
+
+		foreach (KeyValuePair<string, long> counter in avarageTime.OrderByDescending(a => a.Value))
+		{
+			long count = filtered.Count(a => a.Name == counter.Key);
+			long min = filtered.Where(a => a.Name == counter.Key).Min(a => a.Time);
+			long max = filtered.Where(a => a.Name == counter.Key).Max(a => a.Time);
+			long violations = filtered.Where(a => a.Name == counter.Key).Count(a => a.Time > 50);
+			sb.AppendLine($"{counter.Key} Avarage={counter.Value}ms, Count={count}, Min={min}, Max={max}, Violations={violations}");
+		}
+
+		sb.AppendLine("** End results **");
+
+		return sb.ToString();
+	}
+}
+
+public class Measurement
+{
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Measurement));
+
+	public string Name;
+	public Stopwatch Timer;
+	private Profiler _profiler = null;
+	private Measurement _parent = null;
+	private ConcurrentBag<ProfilerResult> Results = new();
+
+	public Measurement(string name, Profiler profiler, Measurement parent = null)
+	{
+		Name = parent == null ? name : parent.Name + "->" + name;
+		_parent = parent;
+		_profiler = profiler;
+
+		Timer = Stopwatch.StartNew();
+	}
+
+	public Measurement Begin(string name)
+	{
+		return new Measurement(name, _profiler, this);
+	}
+
+	public void End()
+	{
+		Timer.Stop();
+
+		_profiler.End(this);
+		_parent?.Results.Add(new ProfilerResult(Name, Timer.ElapsedMilliseconds, Stopwatch.GetTimestamp()));
+	}
+
+	~Measurement()
+	{
+		if (Timer != null && Timer.IsRunning) Log.Warn($"Timer for {Name} is still running during call to destructor. Please call End() for accurate measurements");
+	}
+}
+
+public struct ProfilerResult
+{
+	public string Name;
+	public long Time;
+	public long TimeStamp;
+
+	public ProfilerResult(string name, long time, long timeStamp)
+	{
+		Name = name;
+		Time = time;
+		TimeStamp = timeStamp;
 	}
 }

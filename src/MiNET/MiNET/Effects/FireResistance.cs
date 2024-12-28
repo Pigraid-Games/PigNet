@@ -25,13 +25,12 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class FireResistance : Effect
 {
-	public class FireResistance : Effect
+	public FireResistance() : base(EffectType.FireResistance)
 	{
-		public FireResistance() : base(EffectType.FireResistance)
-		{
-			ParticleColor = Color.FromArgb(0xff, 0x99, 0x00);
-		}
+		ParticleColor = Color.FromArgb(0xff, 0x99, 0x00);
 	}
 }

@@ -42,10 +42,8 @@ public class ItemSlate : ItemBlock
 		// block 230, data 32-35 (rotations) Slate, Poster or Board
 
 		if (face == BlockFace.Down) // At the bottom of block
-		{
 			// Doesn't work, ignore if that happen. 
 			return;
-		}
 		Block = BlockFactory.GetBlockById(230);
 		Block.Metadata = (byte) Metadata;
 

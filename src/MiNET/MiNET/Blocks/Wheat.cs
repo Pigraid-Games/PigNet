@@ -26,29 +26,25 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Wheat() : Crops(59)
 {
-	public partial class Wheat : Crops
+	public override Item[] GetDrops(Item tool)
 	{
-		public Wheat() : base(59)
-		{
-		}
-
-		public override Item[] GetDrops(Item tool)
-		{
-			if (Growth == 7)
-			{
-				// Can also return 0-3 seeds at random.
-				var rnd = new Random();
-				var count = rnd.Next(4);
-				if (count > 0)
-				{
-					return new[] {ItemFactory.GetItem(296, 0, 1), ItemFactory.GetItem(295, 0, (byte) count)};
-				}
-				return new[] {ItemFactory.GetItem(296, 0, 1)};
-			}
-
-			return new[] {ItemFactory.GetItem(295, 0, 1)};
-		}
+		if (Growth != 7) return [ItemFactory.GetItem("minecraft:wheat_seeds")];
+		// Can also return 0-3 seeds at random.
+		var rnd = new Random();
+		int count = rnd.Next(4);
+		return count > 0
+			?
+			[
+				ItemFactory.GetItem("minecraft:wheat"),
+				ItemFactory.GetItem("minecraft:wheat_seeds", count: (byte) count)
+			]
+			:
+			[
+				ItemFactory.GetItem(296, 0, 1)
+			];
 	}
 }

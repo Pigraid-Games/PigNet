@@ -25,26 +25,25 @@
 
 using System;
 
-namespace MiNET.Plugins
+namespace MiNET.Plugins;
+
+public abstract class Plugin : IPlugin
 {
-	public abstract class Plugin : IPlugin
+	protected PluginContext Context { get; set; }
+
+	[ThreadStatic] public static Player CurrentPlayer = null;
+
+	public void OnEnable(PluginContext context)
 	{
-		protected PluginContext Context { get; set; }
+		Context = context;
+		OnEnable();
+	}
 
-		[ThreadStatic] public static Player CurrentPlayer = null;
+	protected virtual void OnEnable()
+	{
+	}
 
-		public void OnEnable(PluginContext context)
-		{
-			Context = context;
-			OnEnable();
-		}
-
-		protected virtual void OnEnable()
-		{
-		}
-
-		public virtual void OnDisable()
-		{
-		}
+	public virtual void OnDisable()
+	{
 	}
 }

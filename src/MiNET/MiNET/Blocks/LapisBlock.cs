@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class LapisBlock : Block
 {
-	public partial class LapisBlock : Block
+	public LapisBlock() : base(22)
 	{
-		public LapisBlock() : base(22)
-		{
-			BlastResistance = 15;
-			Hardness = 3;
-		}
+		BlastResistance = 15;
+		Hardness = 3;
 	}
 }

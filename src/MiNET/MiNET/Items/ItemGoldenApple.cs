@@ -33,7 +33,7 @@ public class ItemGoldenApple() : FoodItem("minecraft:golden_apple", 322, 0, 4, 9
 	protected override void Consume(Player player)
 	{
 		base.Consume(player);
-		player.SetEffect(new Absorption() {Duration = 2400});
+		player.SetEffect(new Absorption() { Duration = 2400 });
 		player.SetEffect(new Regeneration()
 		{
 			Duration = 100,

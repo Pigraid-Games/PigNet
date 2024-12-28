@@ -31,52 +31,50 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class EnchantingTable : Block
 {
-	public partial class EnchantingTable : Block
+	public EnchantingTable() : base(116)
 	{
-		public EnchantingTable() : base(116)
-		{
-			FuelEfficiency = 15;
-			IsTransparent = true;
-			BlastResistance = 6000;
-			Hardness = 5;
-		}
+		FuelEfficiency = 15;
+		IsTransparent = true;
+		BlastResistance = 6000;
+		Hardness = 5;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			byte direction = player.GetDirection();
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		byte direction = player.GetDirection();
 
-			//switch (direction)
-			//{
-			//	case 1:
-			//		Metadata = 2;
-			//		break; // West
-			//	case 2:
-			//		Metadata = 5;
-			//		break; // North
-			//	case 3:
-			//		Metadata = 3;
-			//		break; // East
-			//	case 0:
-			//		Metadata = 4;
-			//		break; // South 
-			//}
+		//switch (direction)
+		//{
+		//	case 1:
+		//		Metadata = 2;
+		//		break; // West
+		//	case 2:
+		//		Metadata = 5;
+		//		break; // North
+		//	case 3:
+		//		Metadata = 3;
+		//		break; // East
+		//	case 0:
+		//		Metadata = 4;
+		//		break; // South 
+		//}
 
-			var tableBlockEntity = new EnchantingTableBlockEntity {Coordinates = Coordinates};
+		var tableBlockEntity = new EnchantingTableBlockEntity { Coordinates = Coordinates };
 
-			world.SetBlockEntity(tableBlockEntity);
+		world.SetBlockEntity(tableBlockEntity);
 
-			return false;
-		}
+		return false;
+	}
 
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			
-			player.OpenInventory(blockCoordinates);
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		player.OpenInventory(blockCoordinates);
 
-			return true;
-		}
+		return true;
 	}
 }

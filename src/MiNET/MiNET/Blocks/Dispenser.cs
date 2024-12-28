@@ -28,27 +28,26 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Dispenser : Block
 {
-	public partial class Dispenser : Block
+	public Dispenser() : base(23)
 	{
-		public Dispenser() : base(23)
-		{
-			BlastResistance = 17.5f;
-			Hardness = 3.5f;
-		}
+		BlastResistance = 17.5f;
+		Hardness = 3.5f;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-			return false;
-		}
+		return false;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			// TODO: Needs Dispenser TileEntity.
-			return base.GetDrops(tool);
-		}
+	public override Item[] GetDrops(Item tool)
+	{
+		// TODO: Needs Dispenser TileEntity.
+		return base.GetDrops(tool);
 	}
 }

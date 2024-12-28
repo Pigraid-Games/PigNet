@@ -34,112 +34,105 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 
-namespace MiNET.Items
+namespace MiNET.Items;
+
+/// <summary>
+///     Generic Item that will simply place the block on use. No interaction or other use supported by the block.
+/// </summary>
+public class ItemBlock : Item
 {
-	/// <summary>
-	///     Generic Item that will simply place the block on use. No interaction or other use supported by the block.
-	/// </summary>
-	public class ItemBlock : Item
+	private static readonly ILog Log = LogManager.GetLogger(typeof(ItemBlock));
+
+	[JsonIgnore] public Block Block { get; protected set; }
+
+	protected ItemBlock(string name, short id, short metadata = 0) : base(name, id, metadata)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemBlock));
+		//TODO: Problematic block
+		Block = BlockFactory.GetBlockById(id);
+	}
 
-		[JsonIgnore] public Block Block { get; protected set; }
+	public ItemBlock([NotNull] Block block, short metadata = 0) : base(block.Name, (short) (block.Id > 255 ? 255 - block.Id : block.Id), metadata)
+	{
+		Block = block ?? throw new ArgumentNullException(nameof(block));
 
-		protected ItemBlock(string name, short id, short metadata = 0) : base(name, id, metadata)
+		FuelEfficiency = Block.FuelEfficiency;
+	}
+
+	public override Item GetSmelt()
+	{
+		return Block.GetSmelt();
+	}
+
+	public static int GetFacingDirectionFromEntity(Entity entity)
+	{
+		return entity.GetDirectionEmum() switch
 		{
-			//TODO: Problematic block
-			Block = BlockFactory.GetBlockById(id);
+			Entity.Direction.South => 4,
+			Entity.Direction.West => 2,
+			Entity.Direction.North => 5,
+			Entity.Direction.East => 3,
+			_ => throw new ArgumentOutOfRangeException()
+		};
+	}
+
+	public static int GetReverseFacingDirectionFromEntity(Entity entity)
+	{
+		return entity.GetDirectionEmum() switch
+		{
+			Entity.Direction.South => 5,
+			Entity.Direction.West => 3,
+			Entity.Direction.North => 4,
+			Entity.Direction.East => 2,
+			_ => throw new ArgumentOutOfRangeException()
+		};
+	}
+
+	public static BlockAxis GetPillarAxisFromFace(BlockFace face)
+	{
+		return face switch
+		{
+			BlockFace.Down => BlockAxis.Y,
+			BlockFace.Up => BlockAxis.Y,
+			BlockFace.North => BlockAxis.Z,
+			BlockFace.South => BlockAxis.Z,
+			BlockFace.West => BlockAxis.X,
+			BlockFace.East => BlockAxis.X,
+			_ => throw new ArgumentOutOfRangeException(nameof(face), face, null)
+		};
+	}
+
+	public override void PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Block currentBlock = world.GetBlock(targetCoordinates);
+		Block newBlock = BlockFactory.GetBlockById(Block.Id);
+		newBlock.Coordinates = currentBlock.IsReplaceable ? targetCoordinates : GetNewCoordinatesFromFace(targetCoordinates, face);
+
+		// This won't work without explicit mapping where an item dictates
+		// the initial value of a block. Need some sort of manual mapping or from
+		// generated data. The logic belong to the item.
+		// Basically what we want to do here is to check all items for a blockstate
+		// and find a matching one. Then use the blockstate for that item, to set the
+		// default data for this item.
+		newBlock.SetState(Block.GetState());
+
+		//newBlock.Metadata = (byte) Metadata;
+
+		if (!newBlock.CanPlace(world, player, targetCoordinates, face)) return;
+
+		if (!newBlock.PlaceBlock(world, player, targetCoordinates, face, faceCoords)) world.SetBlock(newBlock);
+
+		if (player.GameMode == GameMode.Survival && newBlock.Id != 0)
+		{
+			Item itemInHand = player.Inventory.GetItemInHand();
+			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
 		}
 
-		public ItemBlock([NotNull] Block block, short metadata = 0) : base(block.Name, (short) (block.Id > 255 ? 255 - block.Id : block.Id), metadata)
-		{
-			Block = block ?? throw new ArgumentNullException(nameof(block));
+		world.BroadcastSound(newBlock.Coordinates, LevelSoundEventType.Place, newBlock.GetRuntimeId());
+	}
 
-			FuelEfficiency = Block.FuelEfficiency;
-		}
-
-		public override Item GetSmelt()
-		{
-			return Block.GetSmelt();
-		}
-
-		public static int GetFacingDirectionFromEntity(Entity entity)
-		{
-			return entity.GetDirectionEmum() switch
-			{
-				Entity.Direction.South => 4,
-				Entity.Direction.West => 2,
-				Entity.Direction.North => 5,
-				Entity.Direction.East => 3,
-				_ => throw new ArgumentOutOfRangeException()
-			};
-		}
-
-		public static int GetReverseFacingDirectionFromEntity(Entity entity)
-		{
-			return entity.GetDirectionEmum() switch
-			{
-				Entity.Direction.South => 5,
-				Entity.Direction.West => 3,
-				Entity.Direction.North => 4,
-				Entity.Direction.East => 2,
-				_ => throw new ArgumentOutOfRangeException()
-			};
-		}
-
-		public static BlockAxis GetPillarAxisFromFace(BlockFace face)
-		{
-			return face switch
-			{
-				BlockFace.Down => BlockAxis.Y,
-				BlockFace.Up => BlockAxis.Y,
-				BlockFace.North => BlockAxis.Z,
-				BlockFace.South => BlockAxis.Z,
-				BlockFace.West => BlockAxis.X,
-				BlockFace.East => BlockAxis.X,
-				_ => throw new ArgumentOutOfRangeException(nameof(face), face, null)
-			};
-		}
-
-		public override void PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Block currentBlock = world.GetBlock(targetCoordinates);
-			Block newBlock = BlockFactory.GetBlockById(Block.Id);
-			newBlock.Coordinates = currentBlock.IsReplaceable ? targetCoordinates : GetNewCoordinatesFromFace(targetCoordinates, face);
-
-			// This won't work without explicit mapping where an item dictates
-			// the initial value of a block. Need some sort of manual mapping or from
-			// generated data. The logic belong to the item.
-			// Basically what we want to do here is to check all items for a blockstate
-			// and find a matching one. Then use the blockstate for that item, to set the
-			// default data for this item.
-			newBlock.SetState(Block.GetState());
-
-			//newBlock.Metadata = (byte) Metadata;
-
-			if (!newBlock.CanPlace(world, player, targetCoordinates, face))
-			{
-				return;
-			}
-
-			if (!newBlock.PlaceBlock(world, player, targetCoordinates, face, faceCoords))
-			{
-				world.SetBlock(newBlock);
-			}
-
-			if (player.GameMode == GameMode.Survival && newBlock.Id != 0)
-			{
-				var itemInHand = player.Inventory.GetItemInHand();
-				itemInHand.Count--;
-				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-			}
-
-			world.BroadcastSound(newBlock.Coordinates, LevelSoundEventType.Place, newBlock.GetRuntimeId());
-		}
-
-		public override string ToString()
-		{
-			return $"{GetType().Name}(Id={Id}, Meta={Metadata}, UniqueId={UniqueId}) {{Block={Block?.GetType().Name}}} Count={Count}, NBT={ExtraData}";
-		}
+	public override string ToString()
+	{
+		return $"{GetType().Name}(Id={Id}, Meta={Metadata}, UniqueId={UniqueId}) {{Block={Block?.GetType().Name}}} Count={Count}, NBT={ExtraData}";
 	}
 }

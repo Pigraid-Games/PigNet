@@ -32,7 +32,7 @@ namespace MiNET.Net
 		public Vector3 Position;
 		partial void AfterDecode()
 		{
-			if (actionId == (int) Actions.MouseOver || actionId == (int) Actions.LeaveVehicle)
+			if (actionId is (int) Actions.MouseOver or (int) Actions.LeaveVehicle)
 			{
 				// TODO: Something useful with this value
 				Position = ReadVector3();
@@ -41,7 +41,7 @@ namespace MiNET.Net
 
 		partial void AfterEncode()
 		{
-			if (actionId == (int) Actions.MouseOver || actionId == (int) Actions.LeaveVehicle)
+			if (actionId is (int) Actions.MouseOver or (int) Actions.LeaveVehicle)
 			{
 				// TODO: Something useful with this value
 				Write(Position);

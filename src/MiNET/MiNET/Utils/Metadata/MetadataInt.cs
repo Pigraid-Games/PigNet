@@ -25,49 +25,42 @@
 
 using System.IO;
 
-namespace MiNET.Utils.Metadata
+namespace MiNET.Utils.Metadata;
+
+public class MetadataInt : MetadataEntry
 {
-	public class MetadataInt : MetadataEntry
+	public override byte Identifier => 2;
+
+	public override string FriendlyName => "int";
+
+	public int Value { get; set; }
+
+	public static implicit operator MetadataInt(int value)
 	{
-		public override byte Identifier
-		{
-			get { return 2; }
-		}
+		return new MetadataInt(value);
+	}
 
-		public override string FriendlyName
-		{
-			get { return "int"; }
-		}
+	public MetadataInt()
+	{
+	}
 
-		public int Value { get; set; }
+	public MetadataInt(int value)
+	{
+		Value = value;
+	}
 
-		public static implicit operator MetadataInt(int value)
-		{
-			return new MetadataInt(value);
-		}
+	public override void FromStream(BinaryReader reader)
+	{
+		Value = VarInt.ReadSInt32(reader.BaseStream);
+	}
 
-		public MetadataInt()
-		{
-		}
+	public override void WriteTo(BinaryWriter stream)
+	{
+		VarInt.WriteSInt32(stream.BaseStream, Value);
+	}
 
-		public MetadataInt(int value)
-		{
-			Value = value;
-		}
-
-		public override void FromStream(BinaryReader reader)
-		{
-			Value = VarInt.ReadSInt32(reader.BaseStream);
-		}
-
-		public override void WriteTo(BinaryWriter stream)
-		{
-			VarInt.WriteSInt32(stream.BaseStream, Value);
-		}
-
-		public override string ToString()
-		{
-			return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
-		}
+	public override string ToString()
+	{
+		return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
 	}
 }
