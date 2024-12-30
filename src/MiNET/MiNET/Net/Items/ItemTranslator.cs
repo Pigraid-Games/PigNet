@@ -32,58 +32,49 @@ namespace MiNET.Net.Items
 	public class ItemTranslator
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemTranslator));
-		
-		private readonly Dictionary<int, TranslatedItem> _networkIdToInternal;
-		private readonly Dictionary<int, int> _simpleNetworkIdToInternal;
 
-		private readonly Dictionary<int, ComplexMappingEntry> _internalIdToNetwork;
-		private readonly Dictionary<int, int> _simpleInternalIdToNetwork;
-
-		private readonly Dictionary<string, string> _internalNameToNetworkName;
-		private readonly MetaToName<string, int, string> _metaToName;
-		private readonly Dictionary<string, int> _metaList;
-		private readonly Dictionary<string, string> _metaMapList;
+		private readonly Dictionary<int, TranslatedItem> _networkIdToInternal = new();
+		private readonly Dictionary<int, int> _simpleNetworkIdToInternal = new();
+		private readonly Dictionary<int, ComplexMappingEntry> _internalIdToNetwork = new();
+		private readonly Dictionary<int, int> _simpleInternalIdToNetwork = new();
+		private readonly Dictionary<string, string> _internalNameToNetworkName = new(StringComparer.Ordinal);
+		private readonly MetaToName<string, int, string> _metaToName = new();
+		private readonly Dictionary<string, int> _metaList = new();
+		private readonly Dictionary<string, string> _metaMapList = new();
 
 		public ItemTranslator(Itemstates itemStates)
 		{
-			var internalNameToNetworkName = new Dictionary<string, string>(StringComparer.Ordinal);
-			Dictionary<string, short> legacyTranslations = ResourceUtil.ReadResource<Dictionary<string, short>>("item_id_map.json", typeof(Item));
-			Dictionary<string, Dictionary<string, string>> metaMapRes = ResourceUtil.ReadResource<Dictionary<string, Dictionary<string, string>>>("block_meta_map.json", typeof(Item));
+			Dictionary<string, short> legacyTranslations =
+				ResourceUtil.ReadResource<Dictionary<string, short>>("item_id_map.json", typeof(Item));
+			Dictionary<string, Dictionary<string, string>> metaMapRes =
+				ResourceUtil.ReadResource<Dictionary<string, Dictionary<string, string>>>("block_meta_map.json", typeof(Item));
 
-			var simpleMappings = new Dictionary<string, short>();
-			var metaToNameList = new MetaToName<string, int, string>();
-			var metaList = new Dictionary<string, int>();
-			var metaMapList = new Dictionary<string, string>();
-
-			foreach ((string stringId, short integerId) in legacyTranslations)
+			foreach ((string stringId, short _) in legacyTranslations)
 			{
-				simpleMappings[stringId] = integerId;
-				internalNameToNetworkName[stringId] = stringId;
+				_internalNameToNetworkName[stringId] = stringId;
 			}
 
 			var complexMapping = new Dictionary<string, TranslatedItem>();
 			foreach ((string oldId, Dictionary<string, string> value) in metaMapRes)
 			{
-				if (!legacyTranslations.ContainsKey(oldId)) continue;
-				metaToNameList[oldId] = new MetaToName<int, string>();
-				short legacyIntegerId = legacyTranslations[oldId];
+				if (!legacyTranslations.TryGetValue(oldId, out short legacyIntegerId)) continue;
+
+				_metaToName[oldId] = new MetaToName<int, string>();
+
 				foreach ((string key, string newId) in value)
 				{
-					metaToNameList[oldId].TryAdd(int.Parse(key), newId);
-					metaList.TryAdd(newId, int.Parse(key));
-					metaMapList.TryAdd(newId, oldId);
-					if (!short.TryParse(key, out short meta)) continue;
-					if (!complexMapping.TryAdd(newId, new TranslatedItem(legacyIntegerId, meta)))
+					int meta = int.Parse(key);
+					_metaToName[oldId][meta] = newId;
+					_metaList.TryAdd(newId, meta);
+					_metaMapList.TryAdd(newId, oldId);
+
+					if (!complexMapping.TryAdd(newId, new TranslatedItem(legacyIntegerId, (short) meta)))
 					{
 						Log.Debug($"Duplicate complex... OldId={oldId} NewId={newId} (IntegerID={legacyIntegerId} Meta={meta})");
 					}
 				}
 			}
-			
-			var internalToNetwork = new Dictionary<int, ComplexMappingEntry>();
-			var simpleInternalToNetwork = new Dictionary<int, int>();
-			var networkIdToInternal = new Dictionary<int, TranslatedItem>();
-			var simpleNetworkIdToInternal = new Dictionary<int, int>();
+
 			foreach (Itemstate state in itemStates)
 			{
 				string stringId = state.Name;
@@ -91,55 +82,35 @@ namespace MiNET.Net.Items
 
 				if (complexMapping.TryGetValue(stringId, out TranslatedItem translatedItem))
 				{
-					int internalId = translatedItem.Id;
-					short internalMeta = translatedItem.Meta;
-
-					if (!internalToNetwork.TryGetValue(internalId, out ComplexMappingEntry mappingEntry))
-					{
-						mappingEntry = new ComplexMappingEntry();
-						internalToNetwork.Add(internalId, mappingEntry);
-					}
-
-					mappingEntry.Add(internalMeta, netId);
-					
-					internalToNetwork[internalId] = mappingEntry;
-					networkIdToInternal.Add(netId, translatedItem);
+					AddComplexMapping(translatedItem, netId);
 				}
-				else if (simpleMappings.TryGetValue(stringId, out short legacyId))
+				else if (legacyTranslations.TryGetValue(stringId, out short legacyId))
 				{
-					simpleNetworkIdToInternal.Add(netId, legacyId);
-					simpleInternalToNetwork.Add(legacyId, netId);
+					_simpleNetworkIdToInternal[netId] = legacyId;
+					_simpleInternalIdToNetwork[legacyId] = netId;
 				}
 			}
-
-			_internalIdToNetwork = internalToNetwork;
-			_simpleInternalIdToNetwork = simpleInternalToNetwork;
-			_networkIdToInternal = networkIdToInternal;
-			_simpleNetworkIdToInternal = simpleNetworkIdToInternal;
-			_internalNameToNetworkName = internalNameToNetworkName;
-			_metaToName = metaToNameList;
-			_metaList = metaList;
-			_metaMapList = metaMapList;
 		}
 
-		public string GetNameByMeta(string cname, int meta)
+		private void AddComplexMapping(TranslatedItem translatedItem, int netId)
 		{
-			return _metaToName[cname].GetValueOrDefault(meta);
-		}
-
-		public byte GetMetaByName(string name)
-		{
-			if (_metaList.TryGetValue(name, out int meta))
+			if (!_internalIdToNetwork.TryGetValue(translatedItem.Id, out ComplexMappingEntry mappingEntry))
 			{
-				return (byte)meta;
+				mappingEntry = new ComplexMappingEntry();
+				_internalIdToNetwork[translatedItem.Id] = mappingEntry;
 			}
-			return 255;
+			mappingEntry.Add(translatedItem.Meta, (short) netId);
+			_networkIdToInternal[netId] = translatedItem;
 		}
 
-		public string GetMetaMapByName(string name)
-		{
-			return _metaMapList.GetValueOrDefault(name);
-		}
+		public string GetNameByMeta(string cname, int meta) =>
+			_metaToName[cname].GetValueOrDefault(meta);
+
+		public byte GetMetaByName(string name) =>
+			_metaList.TryGetValue(name, out int meta) ? (byte) meta : (byte) 255;
+
+		public string GetMetaMapByName(string name) =>
+			_metaMapList.GetValueOrDefault(name);
 
 		internal bool TryGetNetworkId(int id, short meta, out TranslatedItem item)
 		{
@@ -148,50 +119,28 @@ namespace MiNET.Net.Items
 				item = new TranslatedItem(netId, 0);
 				return true;
 			}
-			else if (_simpleInternalIdToNetwork.TryGetValue(id, out netId))
+			if (_simpleInternalIdToNetwork.TryGetValue(id, out netId))
 			{
 				item = new TranslatedItem(netId, meta);
 				return true;
 			}
-
 			item = default;
 			return false;
 		}
-		
-		internal TranslatedItem ToNetworkId(int id, short meta)
-		{
-			if (_internalIdToNetwork.TryGetValue(id, out ComplexMappingEntry complex) && complex.TryGet(meta, out int netId))
-			{
-				id = netId;
-				meta = 0;
-			}
-			else if (_simpleInternalIdToNetwork.TryGetValue(id, out netId))
-			{
-				id = netId;
-			}
 
-			return new TranslatedItem(id, meta);
-		}
-		
-		internal TranslatedItem FromNetworkId(int id, short meta)
-		{
-			if (_networkIdToInternal.TryGetValue(id, out TranslatedItem value))
-			{
-				id = value.Id;
-				meta = value.Meta;
-			}
-			else if (_simpleNetworkIdToInternal.TryGetValue(id, out int simpleValue))
-			{
-				id = simpleValue;
-			}
+		internal TranslatedItem ToNetworkId(int id, short meta) =>
+			_internalIdToNetwork.TryGetValue(id, out ComplexMappingEntry complex) && complex.TryGet(meta, out int netId)
+				? new TranslatedItem(netId, 0)
+				: new TranslatedItem(_simpleInternalIdToNetwork.GetValueOrDefault(id, id), meta);
 
-			return new TranslatedItem(id, meta);
-		}
 
-		public bool TryGetName(string input, out string output)
-		{
-			return _internalNameToNetworkName.TryGetValue(input, out output);
-		}
+		internal TranslatedItem FromNetworkId(int id, short meta) =>
+			_networkIdToInternal.TryGetValue(id, out TranslatedItem value)
+				? new TranslatedItem(value.Id, value.Meta)
+				: new TranslatedItem(_simpleNetworkIdToInternal.GetValueOrDefault(id, id), meta);
+
+		public bool TryGetName(string input, out string output) =>
+			_internalNameToNetworkName.TryGetValue(input, out output);
 	}
 
 	public class MetaToName<MetaId, MetaName> :
@@ -223,7 +172,7 @@ namespace MiNET.Net.Items
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			return obj.GetType() == this.GetType() && Equals((TranslatedItem)obj);
+			return obj.GetType() == this.GetType() && Equals((TranslatedItem) obj);
 		}
 
 		/// <inheritdoc />
@@ -236,6 +185,7 @@ namespace MiNET.Net.Items
 	internal class ComplexMappingEntry
 	{
 		private readonly Dictionary<short, int> _mapping = new();
+
 		public void Add(short meta, short translatedItem)
 		{
 			_mapping.Add(meta, translatedItem);
