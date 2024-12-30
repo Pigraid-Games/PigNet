@@ -47,6 +47,8 @@ public static class InventoryUtils
 	// GENERATED CODE. DON'T EDIT BY HAND
 	public static List<Item> CreativeInventoryItems = new()
 	{
+		// Cusotm item test
+		new Item(1113),
 		//Minecraft Bedrock Edition 1.13.0 Creative Inventory
 		new Item(586), //bordure_intented_banner_pattern
 		new Item(572), //scute

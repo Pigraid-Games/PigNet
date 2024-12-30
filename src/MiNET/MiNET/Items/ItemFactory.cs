@@ -487,7 +487,8 @@ public class ItemFactory
 		{ 1109, (_, _) => new ItemEyeArmorTrim() },
 		{ 1110, (_, _) => new ItemSpireArmorTrim() },
 		{ 1111, (_, _) => new ItemFlowArmorTrim() },
-		{ 1112, (_, _) => new ItemBoltArmorTrim() }
+		{ 1112, (_, _) => new ItemBoltArmorTrim() },
+		{ 1113, (_, _) => new ItemCustomTest() }
 	};
 
 	public static Item GetItem(short id, short metadata = 0, int count = 1)
@@ -554,6 +555,24 @@ public class ItemFactory
 		return CustomBlockItemFactory != null
 			? CustomBlockItemFactory.GetBlockItem(block, metadata, count)
 			: new ItemBlock(block, metadata);
+	}
+}
+
+public class ItemCustomTest : Item
+{
+	public ItemCustomTest() : base("pigraid:cuplove", 1113)
+	{
+		ItemType = ItemType.Elytra;
+	}
+
+	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
+	{	
+		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+		player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
+
+		UniqueId = Environment.TickCount;
+		player.Inventory.Chest = this;
+		player.SendArmorForPlayer();
 	}
 }
 
