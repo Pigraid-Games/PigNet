@@ -377,100 +377,67 @@ namespace MiNET
 			{
 				var packInfos = new TexturePackInfos();
 				var packInfosB = new ResourcePackInfos();
-				string directory = Config.GetProperty("ResourceDirectory", "ResourcePacks");
-				string directoryB = Config.GetProperty("BehaviorDirectory", "BehaviorPacks");
+				string resourceDirectory = Config.GetProperty("ResourceDirectory", "ResourcePacks");
+				string behaviorDirectory = Config.GetProperty("BehaviorDirectory", "BehaviorPacks");
 				packInfo.mustAccept = Config.GetProperty("ForceResourcePacks", false);
 				packInfo.templateUUID = new UUID(Guid.Empty.ToByteArray());
 
-				if (Directory.Exists(directory))
-				{
-					foreach (string zipPack in Directory.GetFiles(directory, "*.zip"))
-					{
-						ZipArchive archive = ZipFile.OpenRead(zipPack);
-						string entry = "";
+				ProcessResourcePacks(resourceDirectory, packInfos, ResourcePackType.Resources);
+				ProcessResourcePacks(behaviorDirectory, packInfosB, ResourcePackType.Behaviour);
 
-						for (byte i = 0; i < archive.Entries.Count; i++) //todo too time consuming. I think. For large packs...
-						{
-							if (archive.Entries[i].ToString() == "manifest.json")
-							{
-								entry = archive.Entries[i].ToString();
-							}
-						}
-
-						if (entry == "")
-						{
-							Disconnect($"Invalid resource pack {zipPack}. Unable to locate manifest.json");
-							continue;
-						}
-
-						bool encrypted = File.Exists($"{zipPack}.key");
-
-						using Stream stream = archive.GetEntry(entry)?.Open();
-						if (stream == null) continue;
-						using var reader = new StreamReader(stream);
-						string jsonContent = reader.ReadToEnd();
-						manifestStructure obj = JsonConvert.DeserializeObject<manifestStructure>(jsonContent);
-						packInfos.Add(new TexturePackInfo
-						{
-							UUID = new UUID(obj.Header.Uuid),
-							Version = $"{obj.Header.Version[0]}.{obj.Header.Version[1]}.{obj.Header.Version[2]}",
-							Size = (ulong) File.ReadAllBytes(zipPack).Count(),
-							ContentKey = encrypted ? File.ReadAllText($"{zipPack}.key") : "",
-							ContentIdentity = obj.Header.Uuid
-						});
-						;
-						PlayerPackMap.Add(obj.Header.Uuid, new PlayerPackMapData
-						{
-							pack = zipPack,
-							type = ResourcePackType.Resources
-						});
-					}
-					PlayerPackData = packInfos;
-				}
-
-				if (Directory.Exists(directoryB))
-				{
-					foreach (string zipPack in Directory.GetFiles(directoryB, "*.zip"))
-					{
-						ZipArchive archive = ZipFile.OpenRead(zipPack);
-						string entry = "";
-
-						for (byte i = 0; i < archive.Entries.Count; i++)
-						{
-							if (archive.Entries[i].ToString() == "manifest.json")
-							{
-								entry = archive.Entries[i].ToString();
-							}
-						}
-
-						if (entry == "")
-						{
-							Disconnect($"Invalid behaviour pack {zipPack}. Unable to locate manifest.json");
-							continue;
-						}
-
-						using Stream stream = archive.GetEntry(entry)?.Open();
-						if (stream == null) continue;
-						using var reader = new StreamReader(stream);
-						string jsonContent = reader.ReadToEnd();
-						manifestStructure obj = JsonConvert.DeserializeObject<manifestStructure>(jsonContent);
-						packInfosB.Add(new ResourcePackInfo
-						{
-							UUID = new UUID(obj.Header.Uuid),
-							Version = $"{obj.Header.Version[0]}.{obj.Header.Version[1]}.{obj.Header.Version[2]}",
-							Size = (ulong) File.ReadAllBytes(zipPack).Length
-						});
-						PlayerPackMap.Add(obj.Header.Uuid, new PlayerPackMapData
-						{
-							pack = zipPack,
-							type = ResourcePackType.Behaviour
-						});
-					}
-					PlayerPackDataB = packInfosB;
-				}
+				PlayerPackData = packInfos;
+				PlayerPackDataB = packInfosB;
 				packInfo.texturepacks = packInfos;
+
 			}
 			SendPacket(packInfo);
+		}
+
+		private void ProcessResourcePacks(string directory, dynamic packInfos, ResourcePackType type)
+		{
+			if (!Directory.Exists(directory)) return;
+
+			foreach (string zipPack in Directory.GetFiles(directory, "*.zip"))
+			{
+				try
+				{
+					using ZipArchive archive = ZipFile.OpenRead(zipPack);
+					ZipArchiveEntry manifestEntry = archive.Entries.FirstOrDefault(e => e.FullName == "manifest.json");
+					if (manifestEntry == null)
+					{
+						Disconnect($"Invalid {type.ToString().ToLower()} pack {zipPack}. Unable to locate manifest.json");
+						continue;
+					}
+
+					bool encrypted = File.Exists($"{zipPack}.key");
+
+					using Stream stream = manifestEntry.Open();
+					using var reader = new StreamReader(stream);
+					string jsonContent = reader.ReadToEnd();
+					manifestStructure obj = JsonConvert.DeserializeObject<manifestStructure>(jsonContent);
+
+					var packInfo = new TexturePackInfo
+					{
+						UUID = new UUID(obj.Header.Uuid),
+						Version = $"{obj.Header.Version[0]}.{obj.Header.Version[1]}.{obj.Header.Version[2]}",
+						Size = (ulong) new FileInfo(zipPack).Length,
+						ContentKey = encrypted ? File.ReadAllText($"{zipPack}.key") : "",
+						ContentIdentity = obj.Header.Uuid
+					};
+
+					packInfos.Add(packInfo);
+
+					PlayerPackMap[obj.Header.Uuid] = new PlayerPackMapData
+					{
+						pack = zipPack,
+						type = type
+					};
+				}
+				catch (Exception ex)
+				{
+					Disconnect($"Failed to process {zipPack}: {ex.Message}");
+				}
+			}
 		}
 
 		public virtual void SendResourcePackStack()
@@ -482,22 +449,16 @@ namespace MiNET
 			{
 				var packVersions = new ResourcePackIdVersions();
 				var packVersionsB = new ResourcePackIdVersions();
-				foreach (var packData in PlayerPackData)
+				packVersions.AddRange(PlayerPackData.Select(packData => new PackIdVersion
 				{
-					packVersions.Add(new PackIdVersion
-					{
-						Id = packData.UUID.ToString(),
-						Version = packData.Version
-					});
-				}
-				foreach (var packData in PlayerPackDataB)
+					Id = packData.UUID.ToString(),
+					Version = packData.Version
+				}));
+				packVersionsB.AddRange(PlayerPackDataB.Select(packData => new PackIdVersion
 				{
-					packVersionsB.Add(new PackIdVersion
-					{
-						Id = packData.UUID.ToString(),
-						Version = packData.Version
-					});
-				}
+					Id = packData.UUID.ToString(),
+					Version = packData.Version
+				}));
 				packStack.resourcepackidversions = packVersions;
 				packStack.behaviorpackidversions = packVersionsB;
 			}

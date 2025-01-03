@@ -28,7 +28,7 @@ using Newtonsoft.Json;
 
 namespace MiNET.UI;
 
-public abstract class Button : Element
+public class Button : Element
 {
 	public Image Image { get; set; }
 
