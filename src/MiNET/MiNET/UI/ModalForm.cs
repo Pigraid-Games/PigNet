@@ -1,4 +1,4 @@
-#region LICENSE
+﻿#region LICENSE
 
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
@@ -25,6 +25,7 @@
 
 using System;
 using log4net;
+using MiNET.Sounds;
 using Newtonsoft.Json;
 
 namespace MiNET.UI;
@@ -65,6 +66,7 @@ public class ModalForm : Form
 
 	public void Execute(Player player)
 	{
+		player.Level.BroadcastSound(new ClickSound(player.KnownPosition.ToVector3()), [player]);
 		ExecuteAction?.Invoke(player, this);
 	}
 }

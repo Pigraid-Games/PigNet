@@ -1,4 +1,4 @@
-#region LICENSE
+﻿#region LICENSE
 
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using MiNET.Sounds;
 using Newtonsoft.Json;
 
 namespace MiNET.UI;
@@ -36,6 +37,7 @@ public class Button : Element
 
 	public void Execute(Player player, SimpleForm form)
 	{
+		player.Level.BroadcastSound(new ClickSound(player.KnownPosition.ToVector3()), [player]);
 		ExecuteAction?.Invoke(player, form);
 	}
 }

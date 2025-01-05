@@ -141,8 +141,11 @@ namespace MiNET.Net.RakNet
 				{
 					while (!_cancellationToken.Token.IsCancellationRequested)
 					{
-						SendPing(); // Send the ping
-						await Task.Delay(5000, _cancellationToken.Token); // Wait 5 seconds
+						if (State == ConnectionState.Connected)
+						{
+							SendPing();
+						}
+						await Task.Delay(5000, _cancellationToken.Token);  // 5-second interval
 					}
 				}
 				catch (TaskCanceledException)
@@ -433,11 +436,20 @@ namespace MiNET.Net.RakNet
 
 		protected virtual void HandleConnectedPing(ConnectedPing message)
 		{
-			var packet = ConnectedPong.CreateObject();
-			packet.sendpingtime = message.sendpingtime;
-			packet.sendpongtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-			SendPacket(packet);
+			if (State == ConnectionState.Connected)
+			{
+				var packet = ConnectedPong.CreateObject();
+				packet.sendpingtime = message.sendpingtime;
+				packet.sendpongtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+
+				SendPacket(packet);
+			}
+			else
+			{
+				Log.Warn($"Received ConnectedPing but session state is {State}. Pong not sent.");
+			}
 		}
+
 
 		protected virtual void HandleConnectionRequest(ConnectionRequest message)
 		{

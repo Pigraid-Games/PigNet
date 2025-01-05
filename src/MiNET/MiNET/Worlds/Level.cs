@@ -1749,27 +1749,41 @@ namespace MiNET.Worlds
 
 		public virtual GameRules GetGameRules()
 		{
-			GameRules rules = new GameRules();
-			rules.Add(new GameRule<bool>(GameRulesEnum.DrowningDamage, DrowningDamage));
-			rules.Add(new GameRule<bool>(GameRulesEnum.CommandblockOutput, CommandblockOutput));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoTiledrops, DoTiledrops));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoMobloot, DoMobloot));
-			rules.Add(new GameRule<bool>(GameRulesEnum.KeepInventory, KeepInventory));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoDaylightcycle, DoDaylightcycle));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoMobspawning, DoMobspawning));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoEntitydrops, DoEntitydrops));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoFiretick, DoFiretick));
-			rules.Add(new GameRule<bool>(GameRulesEnum.DoWeathercycle, DoWeathercycle));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Pvp, Pvp));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Falldamage, Falldamage));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Firedamage, Firedamage));
-			rules.Add(new GameRule<bool>(GameRulesEnum.Mobgriefing, Mobgriefing));
-			rules.Add(new GameRule<bool>(GameRulesEnum.ShowCoordinates, ShowCoordinates));
-			rules.Add(new GameRule<bool>(GameRulesEnum.NaturalRegeneration, NaturalRegeneration));
-			rules.Add(new GameRule<bool>(GameRulesEnum.TntExplodes, TntExplodes));
-			rules.Add(new GameRule<bool>(GameRulesEnum.SendCommandfeedback, SendCommandfeedback));
-			rules.Add(new GameRule<bool>(GameRulesEnum.ExperimentalGameplay, true));
+			var rules = new GameRules
+			{
+				new GameRule<bool>(GameRulesEnum.DrowningDamage, DrowningDamage),
+				new GameRule<bool>(GameRulesEnum.CommandblockOutput, CommandblockOutput),
+				new GameRule<bool>(GameRulesEnum.DoTiledrops, DoTiledrops),
+				new GameRule<bool>(GameRulesEnum.DoMobloot, DoMobloot),
+				new GameRule<bool>(GameRulesEnum.KeepInventory, KeepInventory),
+				new GameRule<bool>(GameRulesEnum.DoDaylightcycle, DoDaylightcycle),
+				new GameRule<bool>(GameRulesEnum.DoMobspawning, DoMobspawning),
+				new GameRule<bool>(GameRulesEnum.DoEntitydrops, DoEntitydrops),
+				new GameRule<bool>(GameRulesEnum.DoFiretick, DoFiretick),
+				new GameRule<bool>(GameRulesEnum.DoWeathercycle, DoWeathercycle),
+				new GameRule<bool>(GameRulesEnum.Pvp, Pvp),
+				new GameRule<bool>(GameRulesEnum.Falldamage, Falldamage),
+				new GameRule<bool>(GameRulesEnum.Firedamage, Firedamage),
+				new GameRule<bool>(GameRulesEnum.Mobgriefing, Mobgriefing),
+				new GameRule<bool>(GameRulesEnum.ShowCoordinates, ShowCoordinates),
+				new GameRule<bool>(GameRulesEnum.NaturalRegeneration, NaturalRegeneration),
+				new GameRule<bool>(GameRulesEnum.TntExplodes, TntExplodes),
+				new GameRule<bool>(GameRulesEnum.SendCommandfeedback, SendCommandfeedback),
+				new GameRule<bool>(GameRulesEnum.ExperimentalGameplay, true)
+			};
 			return rules;
+		}
+
+		public void BroadcastSound(Sound sound, Player[] receivers)
+		{
+			var packet = McpeLevelEvent.CreateObject();
+			packet.eventId = sound.Id;
+			packet.data = sound.Pitch * 1000;
+			packet.position = sound.Position;
+			foreach(Player player in receivers)
+			{
+				player.SendPacket(packet);
+			}
 		}
 
 		public void BroadcastSound(Sound sound, string entityType = null)
