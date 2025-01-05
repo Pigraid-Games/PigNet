@@ -37,6 +37,7 @@ using MiNET.Entities.Passive;
 using MiNET.Entities.Vehicles;
 using MiNET.Entities.World;
 using MiNET.Items;
+using MiNET.Items.Armor;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.Utils;
@@ -51,6 +52,19 @@ namespace MiNET.Plugins.Commands
 
 		public VanillaCommands()
 		{
+		}
+
+		[Command(Name = "CustomItem", Description = "Spawns the custom elytra in the chest slot")]
+		public void CustomItem(Player commander, string name)
+		{
+			Item item = ItemFactory.GetItem(name);
+			if (item == null)
+			{
+				commander.SendMessage("Cannot find this item");
+				return;
+			}
+			commander.Inventory.Chest = item;
+			commander.SendPlayerInventory();
 		}
 
 		[Command(Name = "about", Description = "About the server")]
