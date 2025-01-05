@@ -888,89 +888,48 @@ namespace MiNET
 		{
 			PlayerAbility abilities = 0;
 
-			if (GameMode.AllowsFlying())
+			if (AllowFly || GameMode.AllowsFlying())
 			{
 				abilities |= PlayerAbility.MayFly;
-
 				if (IsFlying)
 				{
 					abilities |= PlayerAbility.Flying;
 				}
-				else
-				{
-					abilities |= 0;
-				}
-			}
-			else
-			{
-				abilities |= 0;
 			}
 
 			if (!GameMode.HasCollision())
 			{
 				abilities |= PlayerAbility.NoClip;
 			}
-			else
-			{
-				abilities |= 0;
-			}
 
 			if (!GameMode.AllowsTakingDamage())
 			{
 				abilities |= PlayerAbility.Invulnerable;
-			}
-			else
-			{
-				abilities |= 0;
 			}
 
 			if (GameMode.HasCreativeInventory())
 			{
 				abilities |= PlayerAbility.InstantBuild;
 			}
-			else
-			{
-				abilities |= 0;
-			}
 
 			if (PermissionLevel == PermissionLevel.Operator || PermissionLevel == PermissionLevel.Member)
 			{
-				abilities |= PlayerAbility.Build | PlayerAbility.Mine;
-			}
-			else
-			{
-				abilities |= 0;
-			}
-
-			if (PermissionLevel == PermissionLevel.Operator || PermissionLevel == PermissionLevel.Member)
-			{
-				abilities |= PlayerAbility.DoorsAndSwitches | PlayerAbility.OpenContainers | PlayerAbility.AttackPlayers | PlayerAbility.AttackMobs;
-			}
-			else
-			{
-				abilities |= 0;
+				abilities |= PlayerAbility.Build | PlayerAbility.Mine |
+							 PlayerAbility.DoorsAndSwitches | PlayerAbility.OpenContainers |
+							 PlayerAbility.AttackPlayers | PlayerAbility.AttackMobs;
 			}
 
 			if (PermissionLevel == PermissionLevel.Operator)
 			{
 				abilities |= PlayerAbility.OperatorCommands;
 			}
-			else
-			{
-				abilities |= 0;
-			}
 
 			if (IsMuted)
 			{
 				abilities |= PlayerAbility.Muted;
 			}
-			else
-			{
-				abilities |= 0;
-			}
 
 			var layers = new AbilityLayers();
-
 			var baseLayer = new AbilityLayer()
 			{
 				Type = AbilityLayerType.Base,
@@ -981,7 +940,6 @@ namespace MiNET
 			};
 
 			layers.Add(baseLayer);
-
 			return layers;
 		}
 
