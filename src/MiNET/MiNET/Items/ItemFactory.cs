@@ -4,6 +4,7 @@ using System.Linq;
 using log4net;
 using MiNET.Blocks;
 using MiNET.Items.Armor;
+using MiNET.Items.Custom;
 using MiNET.Items.Food;
 using MiNET.Items.Tools;
 using MiNET.Items.Weapons;
@@ -555,27 +556,6 @@ public class ItemFactory
 		return CustomBlockItemFactory != null
 			? CustomBlockItemFactory.GetBlockItem(block, metadata, count)
 			: new ItemBlock(block, metadata);
-	}
-}
-
-public class ItemCupLove : ArmorChestplateBase
-{
-	public ItemCupLove() : base("pigraid:cuplove", 1113)
-	{
-		RuntimeId = 799;
-		ItemType = ItemType.Chestplate;
-		ItemMaterial = ItemMaterial.None;
-		MaxStackSize = 1;
-	}
-	
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Chest = this;
-		player.SendArmorForPlayer();
 	}
 }
 
