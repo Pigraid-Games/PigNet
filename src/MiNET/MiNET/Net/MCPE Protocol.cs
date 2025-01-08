@@ -253,6 +253,7 @@ namespace MiNET.Net
 		void HandleMcpePermissionRequest(McpePermissionRequest message);
 		void HandleMcpePlayerFog(McpePlayerFog message);
 		void HandleMcpeAnimateEntity(McpeAnimateEntity message);
+		void HandleMcpeCloseForm(McpeCloseForm message);
 	}
 
 	public class McpeClientMessageDispatcher
@@ -667,6 +668,9 @@ namespace MiNET.Net
 				case McpeAnimateEntity msg:
 					_messageHandler.HandleMcpeAnimateEntity(msg);
 					break;
+				case McpeCloseForm msg:
+					_messageHandler.HandleMcpeCloseForm(msg);
+					break;
 				default:
 					return false;
 			}
@@ -1044,6 +1048,8 @@ namespace MiNET.Net
 						return McpePermissionRequest.CreateObject().Decode(buffer);
 					case 0x133:
 						return McpeSetInventoryOptions.CreateObject().Decode(buffer);
+					case 0x136:
+						return McpeCloseForm.CreateObject().Decode(buffer);
 					case 0x138:
 						return McpeServerboundLoadingScreen.CreateObject().Decode(buffer);
 					case 0xa0:
@@ -4723,8 +4729,9 @@ namespace MiNET.Net
 	public partial class McpeContainerClose : Packet<McpeContainerClose>
 	{
 
-		public byte windowId; // = null;
-		public bool server; // = null;
+		public byte windowId;
+		public sbyte windowType;
+		public bool server;
 
 		public McpeContainerClose()
 		{
@@ -4739,7 +4746,7 @@ namespace MiNET.Net
 			BeforeEncode();
 
 			Write(windowId);
-			Write((byte) 0);
+			Write(windowType);
 			Write(server);
 
 			AfterEncode();
@@ -4755,7 +4762,7 @@ namespace MiNET.Net
 			BeforeDecode();
 
 			windowId = ReadByte();
-			ReadByte();
+			windowType = ReadSByte();
 			server = ReadBool();
 
 			AfterDecode();
@@ -4768,8 +4775,9 @@ namespace MiNET.Net
 		{
 			base.ResetPacket();
 
-			windowId=default(byte);
-			server=default(bool);
+			windowId = default;
+			windowType = default;
+			server = default;
 		}
 
 	}
@@ -7647,12 +7655,61 @@ namespace MiNET.Net
 
 	}
 
-	public partial class McpeModalFormResponse : Packet<McpeModalFormResponse>
+	public partial class McpeCloseForm : Packet<McpeCloseForm>
 	{
 
-		public uint formId; // = null;
-		public string data = "";
-		public byte cancelReason; // = null;
+
+		public McpeCloseForm()
+		{
+			Id = 0x136;
+			IsMcpe = true;
+		}
+
+		protected override void EncodePacket()
+		{
+			base.EncodePacket();
+
+			BeforeEncode();
+
+
+			AfterEncode();
+		}
+
+		partial void BeforeEncode();
+		partial void AfterEncode();
+
+		protected override void DecodePacket()
+		{
+			base.DecodePacket();
+
+			BeforeDecode();
+
+
+			AfterDecode();
+		}
+
+		partial void BeforeDecode();
+		partial void AfterDecode();
+
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+
+		}
+
+	}
+
+	public partial class McpeModalFormResponse : Packet<McpeModalFormResponse>
+	{
+		public enum CancelReason
+		{
+			UserClosed = 0,
+			UserBusy = 1,
+		}
+
+		public uint formId;
+		public string? data;
+		public byte? cancelReason;
 
 		public McpeModalFormResponse()
 		{
@@ -7667,7 +7724,16 @@ namespace MiNET.Net
 			BeforeEncode();
 
 			WriteUnsignedVarInt(formId);
-			Write(data);
+			Write(data != null); // is optional
+			if (data != null)
+			{
+				Write(data);
+			}
+			Write(cancelReason.HasValue); // is optional
+			if (cancelReason.HasValue)
+			{
+				Write(cancelReason.Value);
+			}
 
 			AfterEncode();
 		}
@@ -7701,9 +7767,9 @@ namespace MiNET.Net
 		{
 			base.ResetPacket();
 
-			formId=default(uint);
-			data=default(string);
-			cancelReason=default(byte);
+			formId = default;
+			data = default;
+			cancelReason = default;
 		}
 
 	}

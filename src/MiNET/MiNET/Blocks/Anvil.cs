@@ -56,13 +56,6 @@ namespace MiNET.Blocks
 			containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
 			player.SendPacket(containerOpen);
 
-			//var sendSlot = McpeInventorySlot.CreateObject();
-			//sendSlot.inventoryId = 14;
-			//sendSlot.slot = (uint) 1;
-			//sendSlot.uniqueid = 1;
-			//sendSlot.item = new ItemIronShovel();
-			//player.SendPacket(sendSlot);
-
 			return true;
 		}
 	}

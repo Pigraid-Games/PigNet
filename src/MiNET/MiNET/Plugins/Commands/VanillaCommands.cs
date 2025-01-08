@@ -38,6 +38,7 @@ using MiNET.Entities.Vehicles;
 using MiNET.Entities.World;
 using MiNET.Items;
 using MiNET.Items.Armor;
+using MiNET.Items.Custom;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.Utils;
@@ -57,13 +58,15 @@ namespace MiNET.Plugins.Commands
 		[Command(Name = "CustomItem", Description = "Spawns the custom elytra in the chest slot")]
 		public void CustomItem(Player commander, string name)
 		{
-			Item item = ItemFactory.GetItem(name);
-			if (item == null)
+			switch (name)
 			{
-				commander.SendMessage("Cannot find this item");
-				return;
+				case "pigraid:cuplove":
+					commander.Inventory.Chest = new ItemCupLove();
+					break;
+				case "hivebackbling:ender_wings":
+					commander.Inventory.Chest = new ItemHiveEnderWings();
+					break;
 			}
-			commander.Inventory.Chest = item;
 			commander.SendPlayerInventory();
 		}
 

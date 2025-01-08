@@ -803,6 +803,11 @@ namespace MiNET.Client
 		{
 
 		}
+
+		public void HandleMcpeCloseForm(McpeCloseForm message)
+		{
+
+		}
 	}
 
 	public class DefaultMessageHandler : McpeClientMessageHandlerBase

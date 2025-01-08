@@ -489,7 +489,8 @@ public class ItemFactory
 		{ 1110, (_, _) => new ItemSpireArmorTrim() },
 		{ 1111, (_, _) => new ItemFlowArmorTrim() },
 		{ 1112, (_, _) => new ItemBoltArmorTrim() },
-		{ 1113, (_, _) => new ItemCupLove() }
+		{ 1113, (_, _) => new ItemCupLove() },
+		{ 1114, (_, _) => new ItemHiveEnderWings() }
 	};
 
 	public static Item GetItem(short id, short metadata = 0, int count = 1)

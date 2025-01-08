@@ -8941,6 +8941,11 @@
 	},
 	{
 		"runtime_id": 799,
+		"name": "hivebackbling:ender_wings",
+		"component_based": false
+	},
+	{
+		"runtime_id": 800,
 		"name": "pigraid:cuplove",
 		"component_based": false
 	}

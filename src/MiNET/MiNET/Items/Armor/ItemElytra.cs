@@ -43,6 +43,6 @@ public class ItemElytra : Item
 
 		UniqueId = Environment.TickCount;
 		player.Inventory.Chest = this;
-		player.SendArmorForPlayer();
+		player.SendPlayerInventory();
 	}
 }

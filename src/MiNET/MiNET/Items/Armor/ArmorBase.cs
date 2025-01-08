@@ -44,7 +44,7 @@ namespace MiNET.Items
 
 			UniqueId = Environment.TickCount;
 			player.Inventory.Helmet = this;
-			player.SendArmorForPlayer();
+			player.SendPlayerInventory();
 		}
 	}
 
@@ -62,7 +62,7 @@ namespace MiNET.Items
 
 			UniqueId = Environment.TickCount;
 			player.Inventory.Chest = this;
-			player.SendArmorForPlayer();
+			player.SendPlayerInventory();
 		}
 	}
 
@@ -80,7 +80,7 @@ namespace MiNET.Items
 
 			UniqueId = Environment.TickCount;
 			player.Inventory.Leggings = this;
-			player.SendArmorForPlayer();
+			player.SendPlayerInventory();
 		}
 	}
 
@@ -98,7 +98,7 @@ namespace MiNET.Items
 
 			UniqueId = Environment.TickCount;
 			player.Inventory.Boots = this;
-			player.SendArmorForPlayer();
+			player.SendPlayerInventory();
 		}
 	}
 }
