@@ -22,7 +22,6 @@ public enum ArmorSlots
 
 public enum MobHeads
 {
-
 	SkeletonHead = 1059,
 	WitherSkull = -965,
 	ZombieHead = -966,
@@ -72,9 +71,9 @@ public class ArmorInventory
 	{
 		if (ExceptionItems.TryGetValue(slotType, out List<int> list))
 		{
-			if(list.Remove(itemId))
+			if (list.Remove(itemId))
 			{
-				if(list.Count == 0)
+				if (list.Count == 0)
 				{
 					ExceptionItems.TryRemove(slotType, out _);
 				}
@@ -111,9 +110,12 @@ public class ArmorInventory
 		}
 
 		_inventoryItems[ArmorSlots.Head] = item;
-		if (sendUpdate) SendMobArmorEquipmentPacket();
-		if (sendEquipSound) SendEquipSoundPacket(item);
-		if (Entity is Player player) SendArmorContentPacket(player);
+		if (sendUpdate)
+			SendMobArmorEquipmentPacket();
+		if (sendEquipSound)
+			SendEquipSoundPacket(item);
+		if (Entity is Player player)
+			SendArmorContentPacket(player);
 		return true;
 	}
 
@@ -128,9 +130,12 @@ public class ArmorInventory
 
 		_inventoryItems[ArmorSlots.Chest] = item;
 
-		if (sendUpdate) SendMobArmorEquipmentPacket();
-		if (sendEquipSound) SendEquipSoundPacket(item);
-		if (Entity is Player player) SendArmorContentPacket(player);
+		if (sendUpdate)
+			SendMobArmorEquipmentPacket();
+		if (sendEquipSound)
+			SendEquipSoundPacket(item);
+		if (Entity is Player player)
+			SendArmorContentPacket(player);
 		return true;
 	}
 
@@ -144,9 +149,12 @@ public class ArmorInventory
 		}
 
 		_inventoryItems[ArmorSlots.Legs] = item;
-		if (sendUpdate) SendMobArmorEquipmentPacket();
-		if (sendEquipSound) SendEquipSoundPacket(item);
-		if (Entity is Player player) SendArmorContentPacket(player);
+		if (sendUpdate)
+			SendMobArmorEquipmentPacket();
+		if (sendEquipSound)
+			SendEquipSoundPacket(item);
+		if (Entity is Player player)
+			SendArmorContentPacket(player);
 		return true;
 	}
 
@@ -160,9 +168,12 @@ public class ArmorInventory
 		}
 
 		_inventoryItems[ArmorSlots.Feet] = item;
-		if (sendUpdate) SendMobArmorEquipmentPacket();
-		if (sendEquipSound) SendEquipSoundPacket(item);
-		if (Entity is Player player) SendArmorContentPacket(player);
+		if (sendUpdate)
+			SendMobArmorEquipmentPacket();
+		if (sendEquipSound)
+			SendEquipSoundPacket(item);
+		if (Entity is Player player)
+			SendArmorContentPacket(player);
 		return true;
 	}
 
@@ -183,7 +194,8 @@ public class ArmorInventory
 		_inventoryItems[ArmorSlots.Chest] = new ItemAir();
 		_inventoryItems[ArmorSlots.Legs] = new ItemAir();
 		_inventoryItems[ArmorSlots.Feet] = new ItemAir();
-		if(updateClient) SendMobArmorEquipmentPacket();
+		if (updateClient)
+			SendMobArmorEquipmentPacket();
 	}
 
 	public virtual void DamageAll()
@@ -226,13 +238,13 @@ public class ArmorInventory
 
 		item.Damage++;
 
-		if(item.Damage >= item.Durability && item.Id != 0)
+		if (item.Damage >= item.Durability && item.Id != 0)
 		{
 			item = new ItemAir();
 			armorBroke = true;
 		}
 
-		if(item.ExtraData != null)
+		if (item.ExtraData != null)
 		{
 			var damageNbt = item.ExtraData.Get<NbtInt>("Damage");
 			if (damageNbt != null)
@@ -262,7 +274,8 @@ public class ArmorInventory
 		packet.runtimeEntityId = Entity.EntityId;
 		Entity.Level.RelayBroadcast(packet);
 
-		if (Entity is not Player player) return;
+		if (Entity is not Player player)
+			return;
 		if (receivers == null)
 		{
 			Entity.Level.RelayBroadcast(player, packet);
@@ -275,8 +288,9 @@ public class ArmorInventory
 
 	private void SendEquipSoundPacket(Item item)
 	{
-		if (Entity is not Player player) return;
-		
+		if (Entity is not Player player)
+			return;
+
 		LevelSoundEventType levelEventType;
 		switch (item.ItemMaterial)
 		{
@@ -313,4 +327,4 @@ public class ArmorInventory
 	{
 		return Enum.IsDefined(typeof(MobHeads), itemId);
 	}
-} 
+}
