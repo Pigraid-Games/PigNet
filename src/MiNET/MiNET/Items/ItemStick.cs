@@ -66,7 +66,7 @@ public class ItemStick : Item
 
 			player.SendPacket(motions);
 		}
-		else if (player.Inventory.Chest is ItemElytra)
+		else if (player.Inventory.ArmorInventory.GetChestItem() is ItemElytra)
 		{
 			McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
 			motions.runtimeEntityId = EntityManager.EntityIdSelf;

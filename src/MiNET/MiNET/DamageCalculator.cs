@@ -156,7 +156,7 @@ namespace MiNET
 
 			if (target is Player player)
 			{
-				Item armorPiece1 = player.Inventory.Helmet;
+				Item armorPiece1 = player.Inventory.ArmorInventory.GetHeadItem();
 				switch (armorPiece1.ItemMaterial)
 				{
 					case ItemMaterial.Leather:
@@ -177,7 +177,7 @@ namespace MiNET
 				}
 				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece1, tool, cause);
 
-				Item armorPiece2 = player.Inventory.Chest;
+				Item armorPiece2 = player.Inventory.ArmorInventory.GetChestItem();
 				switch (armorPiece2.ItemMaterial)
 				{
 					case ItemMaterial.Leather:
@@ -198,7 +198,7 @@ namespace MiNET
 				}
 				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece2, tool, cause);
 
-				Item armorPiece3 = player.Inventory.Leggings;
+				Item armorPiece3 = player.Inventory.ArmorInventory.GetLegsItem();
 				switch (armorPiece3.ItemMaterial)
 				{
 					case ItemMaterial.Leather:
@@ -219,7 +219,7 @@ namespace MiNET
 				}
 				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece3, tool, cause);
 
-				Item armorPiece4 = player.Inventory.Boots;
+				Item armorPiece4 = player.Inventory.ArmorInventory.GetFeetItem();
 				switch (armorPiece4.ItemMaterial)
 				{
 					case ItemMaterial.Leather:
@@ -352,10 +352,10 @@ namespace MiNET
 		public int CalculateFireTickReduction(Player target)
 		{
 			int reduction = 0;
-			reduction = Math.Max(reduction, target.Inventory.Helmet.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
-			reduction = Math.Max(reduction, target.Inventory.Chest.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
-			reduction = Math.Max(reduction, target.Inventory.Leggings.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
-			reduction = Math.Max(reduction, target.Inventory.Boots.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+			reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetHeadItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+			reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetChestItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+			reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetLegsItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+			reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetFeetItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
 
 			return (int) Math.Ceiling(reduction / 100f);
 		}

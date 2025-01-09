@@ -39,10 +39,8 @@ public class ItemElytra : Item
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
 		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
-
+		player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetChestItem());
 		UniqueId = Environment.TickCount;
-		player.Inventory.Chest = this;
-		player.SendPlayerInventory();
+		player.Inventory.ArmorInventory.SetChestItem(this);
 	}
 }

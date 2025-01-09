@@ -36,17 +36,4 @@ public class ItemNetheriteBoots : ArmorBootsBase
 	{
 		ItemMaterial = ItemMaterial.Netherite;
 	}
-	
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Boots);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Boots = this;
-		player.SendArmorForPlayer();
-
-		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
-		sound.SpawnToPlayers([player]);
-	}
 }

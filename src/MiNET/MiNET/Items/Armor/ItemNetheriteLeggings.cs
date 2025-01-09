@@ -36,17 +36,4 @@ public class ItemNetheriteLeggings : ArmorLeggingsBase
 	{
 		ItemMaterial = ItemMaterial.Netherite;
 	}
-	
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Leggings);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Leggings = this;
-		player.SendArmorForPlayer();
-
-		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
-		sound.SpawnToPlayers([player]);
-	}
 }

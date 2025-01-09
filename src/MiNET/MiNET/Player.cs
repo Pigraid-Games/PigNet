@@ -58,6 +58,7 @@ using System.IO.Compression;
 using MiNET.BlockEntities;
 using MiNET.Net.RakNet;
 using MiNET.Sounds;
+using MiNET.Inventories;
 // ReSharper disable UnusedMember.Global
 
 // ReSharper disable MemberCanBeProtected.Global
@@ -1869,10 +1870,7 @@ namespace MiNET
 			inventoryContent.input = Inventory.GetSlots();
 			SendPacket(inventoryContent);
 
-			McpeInventoryContent armorContent = McpeInventoryContent.CreateObject();
-			armorContent.inventoryId = 0x78;
-			armorContent.input = Inventory.GetArmor();
-			SendPacket(armorContent);
+			Inventory.ArmorInventory.SendArmorContentPacket(this);
 
 			McpeInventoryContent uiContent = McpeInventoryContent.CreateObject();
 			uiContent.inventoryId = 0x7c;
@@ -2423,12 +2421,12 @@ namespace MiNET
 					item = Inventory.Slots[slot];
 					break;
 				case 6: // armor
-					item = slot switch
+					item = (ArmorSlots) slot switch
 					{
-						0 => Inventory.Helmet,
-						1 => Inventory.Chest,
-						2 => Inventory.Leggings,
-						3 => Inventory.Boots,
+						ArmorSlots.Head => Inventory.ArmorInventory.GetHeadItem(),
+						ArmorSlots.Chest => Inventory.ArmorInventory.GetChestItem(),
+						ArmorSlots.Legs => Inventory.ArmorInventory.GetLegsItem(),
+						ArmorSlots.Feet => Inventory.ArmorInventory.GetFeetItem(),
 						_ => null
 					};
 					break;
@@ -2463,21 +2461,21 @@ namespace MiNET
 					Inventory.Slots[slot] = item;
 					break;
 				case 6: // armor
-					switch (slot)
+					switch((ArmorSlots) slot)
 					{
-						case 0:
-							Inventory.Helmet = item;
+						case ArmorSlots.Head:
+							Inventory.ArmorInventory.SetHeadItem(item);
 							break;
-						case 1:
-							Inventory.Chest = item;
+						case ArmorSlots.Chest:
+							Inventory.ArmorInventory.SetChestItem(item);
 							break;
-						case 2:
-							Inventory.Leggings = item;
+						case ArmorSlots.Legs:
+							Inventory.ArmorInventory.SetLegsItem(item);
 							break;
-						case 3:
-							Inventory.Boots = item;
+						case ArmorSlots.Feet:
+							Inventory.ArmorInventory.SetFeetItem(item);
 							break;
-					}
+					};
 					break;
 				case 7: // chest/container
 					if (_openInventory is Inventory inventory) inventory.SetSlot(this, (byte) slot, item);
@@ -4090,30 +4088,26 @@ namespace MiNET
 				Level.DropItem(coordinates, stack);
 			}
 
-			if (Inventory.Helmet.Id != 0)
+			if (Inventory.ArmorInventory.GetHeadItem().Id != 0)
 			{
-				Level.DropItem(coordinates, Inventory.Helmet);
-				Inventory.Helmet = new ItemAir();
+				Level.DropItem(coordinates, Inventory.ArmorInventory.GetHeadItem());
 			}
 
-			if (Inventory.Chest.Id != 0)
+			if (Inventory.ArmorInventory.GetChestItem().Id != 0)
 			{
-				Level.DropItem(coordinates, Inventory.Chest);
-				Inventory.Chest = new ItemAir();
+				Level.DropItem(coordinates, Inventory.ArmorInventory.GetChestItem());
 			}
 
-			if (Inventory.Leggings.Id != 0)
+			if (Inventory.ArmorInventory.GetLegsItem().Id != 0)
 			{
-				Level.DropItem(coordinates, Inventory.Leggings);
-				Inventory.Leggings = new ItemAir();
+				Level.DropItem(coordinates, Inventory.ArmorInventory.GetLegsItem());
 			}
 
-			if (Inventory.Boots.Id != 0)
+			if (Inventory.ArmorInventory.GetFeetItem().Id != 0)
 			{
-				Level.DropItem(coordinates, Inventory.Boots);
-				Inventory.Boots = new ItemAir();
+				Level.DropItem(coordinates, Inventory.ArmorInventory.GetFeetItem());
 			}
-
+			Inventory.ArmorInventory.Clear();
 			Inventory.Clear();
 		}
 
@@ -4153,8 +4147,7 @@ namespace MiNET
 			}
 
 			SendEquipmentForPlayer(players);
-
-			SendArmorForPlayer(players);
+			Inventory.ArmorInventory.SendMobArmorEquipmentPacket(players);
 		}
 
 		public virtual void SendEquipmentForPlayer(Player[] receivers = null)
@@ -4171,25 +4164,6 @@ namespace MiNET
 			{
 				Level.RelayBroadcast(this, receivers, mcpePlayerEquipment);
 			}
-		}
-
-		public virtual void SendArmorForPlayer(Player[] receivers = null)
-		{
-			McpeMobArmorEquipment mcpePlayerArmorEquipment = McpeMobArmorEquipment.CreateObject();
-			mcpePlayerArmorEquipment.runtimeEntityId = EntityId;
-			mcpePlayerArmorEquipment.helmet = Inventory.Helmet;
-			mcpePlayerArmorEquipment.chestplate = Inventory.Chest;
-			mcpePlayerArmorEquipment.leggings = Inventory.Leggings;
-			mcpePlayerArmorEquipment.boots = Inventory.Boots;
-			if (receivers == null)
-			{
-				Level.RelayBroadcast(this, mcpePlayerArmorEquipment);
-			}
-			else
-			{
-				Level.RelayBroadcast(this, receivers, mcpePlayerArmorEquipment);
-			}
-			//Level.BroadcastSound((BlockCoordinates)KnownPosition, LevelSoundEventType.ArmorEquipGeneric);
 		}
 
 		public override void DespawnFromPlayers(Player[] players)

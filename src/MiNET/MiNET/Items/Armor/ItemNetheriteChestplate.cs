@@ -36,17 +36,4 @@ public class ItemNetheriteChestplate : ArmorChestplateBase
 	{
 		ItemMaterial = ItemMaterial.Netherite;
 	}
-	
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
-
-		UniqueId = Environment.TickCount;
-		player.Inventory.Chest = this;
-		player.SendArmorForPlayer();
-
-		var sound = new ArmorEquipNetheriteSound(blockCoordinates);
-		sound.SpawnToPlayers([player]);
-	}
 }

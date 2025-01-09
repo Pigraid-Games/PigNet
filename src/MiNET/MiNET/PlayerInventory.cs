@@ -31,6 +31,7 @@ using log4net;
 using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Entities.World;
+using MiNET.Inventories;
 using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
@@ -54,20 +55,15 @@ namespace MiNET
 
 		public CursorInventory UiInventory { get; set; } = new CursorInventory();
 
-		// Armour
-		public Item Boots { get; set; } = new ItemAir();
-		public Item Leggings { get; set; } = new ItemAir();
-		public Item Chest { get; set; } = new ItemAir();
-		public Item Helmet { get; set; } = new ItemAir();
+		public ArmorInventory ArmorInventory { get; set; }
 
 
 		public PlayerInventory(Player player)
 		{
 			Player = player;
-
 			Slots = Enumerable.Repeat((Item) new ItemAir(), InventorySize).ToList();
-
 			InHandSlot = 0;
+			ArmorInventory = new ArmorInventory(player);
 		}
 
 		public virtual Item GetItemInHand()
@@ -110,61 +106,6 @@ namespace MiNET
 
 			SendSetSlot(InHandSlot);
 		}
-
-		public virtual void DamageArmor()
-		{
-			if (Player.GameMode != GameMode.Survival || Player.IsInvicible || Player.HealthManager.CooldownTick > 0) return;
-
-			bool armorBroke = false;
-
-			Helmet = DamageArmorItem(Helmet, ref armorBroke);
-			Chest = DamageArmorItem(Chest, ref armorBroke);
-			Leggings = DamageArmorItem(Leggings, ref armorBroke);
-			Boots = DamageArmorItem(Boots, ref armorBroke);
-
-			var armorContent = McpeInventoryContent.CreateObject();
-			armorContent.inventoryId = 0x78;
-			armorContent.input = Player.Inventory.GetArmor();
-			Player.SendPacket(armorContent);
-
-			if (armorBroke)
-			{
-				Player.SendArmorForPlayer();
-				Player.Level.BroadcastSound((BlockCoordinates) Player.KnownPosition, LevelSoundEventType.Break, -1);
-			}
-
-		}
-
-		public virtual Item DamageArmorItem(Item item, ref bool armorBroke)
-		{
-			if (Player.GameMode != GameMode.Survival) return item;
-
-			var unbreakingLevel = item.GetEnchantingLevel(EnchantingType.Unbreaking);
-			if (unbreakingLevel > 0)
-			{
-				if (new Random().Next(1 + unbreakingLevel) != 0) return item;
-			}
-
-			item.Damage++;
-
-			if (item.Damage >= item.Durability && item.Id != 0)
-			{
-				item = new ItemAir();
-				armorBroke = true;
-			}
-
-			if (item.ExtraData != null)
-			{
-				var damageNbt = item.ExtraData.Get<NbtInt>("Damage");
-				if (damageNbt != null)
-				{
-					damageNbt.Value = item.Damage;
-				}
-			}
-
-			return item;
-		}
-
 
 		[Wired]
 		public virtual void SetInventorySlot(int slot, Item item, bool forceReplace = false)
@@ -222,17 +163,6 @@ namespace MiNET
 			};
 		}
 
-		public ItemStacks GetArmor()
-		{
-			return new ItemStacks
-			{
-				Helmet ?? new ItemAir(),
-				Chest ?? new ItemAir(),
-				Leggings ?? new ItemAir(),
-				Boots ?? new ItemAir(),
-			};
-		}
-
 		public virtual bool SetFirstEmptySlot(Item item, bool update)
 		{
 			for (int si = 0; si < Slots.Count; si++)
@@ -245,7 +175,8 @@ namespace MiNET
 					int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
 					existingItem.Count += (byte) take;
 					item.Count -= (byte) take;
-					if (update) SendSetSlot(si);
+					if (update)
+						SendSetSlot(si);
 
 					if (item.Count <= 0)
 					{
@@ -256,7 +187,8 @@ namespace MiNET
 
 			for (int si = 0; si < Slots.Count; si++)
 			{
-				if (FirstEmptySlot(item, update, si)) return true;
+				if (FirstEmptySlot(item, update, si))
+					return true;
 			}
 
 			return false;
@@ -446,12 +378,6 @@ namespace MiNET
 			UiInventory.Clear();
 
 			if (OffHand.Id != 0) OffHand = new ItemAir();
-
-			if (Helmet.Id != 0) Helmet = new ItemAir();
-			if (Chest.Id != 0) Chest = new ItemAir();
-			if (Leggings.Id != 0) Leggings = new ItemAir();
-			if (Boots.Id != 0) Boots = new ItemAir();
-
 			Player.SendPlayerInventory();
 		}
 	}

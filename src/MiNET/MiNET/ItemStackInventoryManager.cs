@@ -29,6 +29,7 @@ using System.Linq;
 using fNbt;
 using log4net;
 using MiNET.Crafting;
+using MiNET.Inventories;
 using MiNET.Items;
 using MiNET.Utils;
 using Newtonsoft.Json;
@@ -335,7 +336,7 @@ namespace MiNET
 				}
 				if (destination.ContainerId == 6 || source.ContainerId == 6)
 				{
-					_player.SendArmorForPlayer(_player.Level.GetSpawnedPlayers());
+					_player.Inventory.ArmorInventory.SendMobArmorEquipmentPacket(_player.Level.GetSpawnedPlayers());
 				}
 				else if (destination.ContainerId == 22)
 				{
@@ -456,7 +457,7 @@ namespace MiNET
 
 				if (source.ContainerId == 6)
 				{
-					_player.SendArmorForPlayer(_player.Level.GetSpawnedPlayers());
+					_player.Inventory.ArmorInventory.SendMobArmorEquipmentPacket(_player.Level.GetSpawnedPlayers());
 				}
 			}
 
@@ -680,12 +681,12 @@ namespace MiNET
 					item = _player.Inventory.OffHand;
 					break;
 				case 6: // armor
-					item = slot switch
+					item = (ArmorSlots) slot switch
 					{
-						0 => _player.Inventory.Helmet,
-						1 => _player.Inventory.Chest,
-						2 => _player.Inventory.Leggings,
-						3 => _player.Inventory.Boots,
+						ArmorSlots.Head => _player.Inventory.ArmorInventory.GetHeadItem(),
+						ArmorSlots.Chest => _player.Inventory.ArmorInventory.GetChestItem(),
+						ArmorSlots.Legs => _player.Inventory.ArmorInventory.GetLegsItem(),
+						ArmorSlots.Feet => _player.Inventory.ArmorInventory.GetFeetItem(),
 						_ => null
 					};
 					break;
@@ -731,19 +732,19 @@ namespace MiNET
 					_player.Inventory.OffHand = item;
 					break;
 				case 6: // armor
-					switch (slot)
+					switch ((ArmorSlots) slot)
 					{
-						case 0:
-							_player.Inventory.Helmet = item;
+						case ArmorSlots.Head:
+							_player.Inventory.ArmorInventory.SetHeadItem(item);
 							break;
-						case 1:
-							_player.Inventory.Chest = item;
+						case	ArmorSlots.Chest:
+							_player.Inventory.ArmorInventory.SetChestItem(item);
 							break;
-						case 2:
-							_player.Inventory.Leggings = item;
+						case ArmorSlots.Legs:
+							_player.Inventory.ArmorInventory.SetLegsItem(item);
 							break;
-						case 3:
-							_player.Inventory.Boots = item;
+						case ArmorSlots.Feet:
+							_player.Inventory.ArmorInventory.SetFeetItem(item);
 							break;
 					}
 					break;

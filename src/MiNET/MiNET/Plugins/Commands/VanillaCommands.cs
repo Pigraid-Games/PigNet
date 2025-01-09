@@ -41,6 +41,7 @@ using MiNET.Items.Armor;
 using MiNET.Items.Custom;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
+using MiNET.UI;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -55,19 +56,40 @@ namespace MiNET.Plugins.Commands
 		{
 		}
 
+		[Command(Name = "CustomForm")]
+		public void CustomForm(Player commander)
+		{
+			var customForm = new CustomForm()
+			{
+				Title = "Custom Form"
+			};
+			List<CustomElement> customElements = [];
+			customElements.Add(new Label() { Text = "This is a label test" });
+			customElements.Add(new Slider()
+			{
+				Max = 64,
+				Min = 1,
+				Step = 1,
+				// minet.shop.slider.buy
+				Text = "Select the amount that you want to buy",
+				Value = 1
+			});
+			customForm.Content = customElements;
+			commander.SendForm(customForm);
+		}
+
 		[Command(Name = "CustomItem", Description = "Spawns the custom elytra in the chest slot")]
 		public void CustomItem(Player commander, string name)
 		{
 			switch (name)
 			{
 				case "pigraid:cuplove":
-					commander.Inventory.Chest = new ItemCupLove();
+					commander.Inventory.ArmorInventory.SetChestItem(new ItemCupLove());
 					break;
 				case "hivebackbling:ender_wings":
-					commander.Inventory.Chest = new ItemHiveEnderWings();
+					commander.Inventory.ArmorInventory.SetChestItem(new ItemHiveEnderWings());
 					break;
 			}
-			commander.SendPlayerInventory();
 		}
 
 		[Command(Name = "about", Description = "About the server")]

@@ -34,17 +34,16 @@ namespace MiNET.Items
 	{
 		protected ArmorHelmetBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
 		{
-			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+			ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
 		}
 
 		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
 			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-			player.Inventory.SetInventorySlot(slot, player.Inventory.Helmet);
+			player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetHeadItem());
 
 			UniqueId = Environment.TickCount;
-			player.Inventory.Helmet = this;
-			player.SendPlayerInventory();
+			player.Inventory.ArmorInventory.SetHeadItem(this);
 		}
 	}
 
@@ -52,17 +51,15 @@ namespace MiNET.Items
 	{
 		protected ArmorChestplateBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
 		{
-			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+			ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
 		}
 
 		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
 			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-			player.Inventory.SetInventorySlot(slot, player.Inventory.Chest);
-
+			player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetChestItem());
 			UniqueId = Environment.TickCount;
-			player.Inventory.Chest = this;
-			player.SendPlayerInventory();
+			player.Inventory.ArmorInventory.SetChestItem(this);
 		}
 	}
 
@@ -70,17 +67,15 @@ namespace MiNET.Items
 	{
 		protected ArmorLeggingsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
 		{
-			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+			ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
 		}
 
 		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
 			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-			player.Inventory.SetInventorySlot(slot, player.Inventory.Leggings);
-
+			player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetLegsItem());
 			UniqueId = Environment.TickCount;
-			player.Inventory.Leggings = this;
-			player.SendPlayerInventory();
+			player.Inventory.ArmorInventory.SetLegsItem(this);
 		}
 	}
 
@@ -88,17 +83,15 @@ namespace MiNET.Items
 	{
 		protected ArmorBootsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
 		{
-			ExtraData = new NbtCompound { new NbtInt("Damage", 0), new NbtInt("RepairCost", 1) };
+			ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
 		}
 
 		public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 		{
 			byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-			player.Inventory.SetInventorySlot(slot, player.Inventory.Boots);
-
+			player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetFeetItem());
 			UniqueId = Environment.TickCount;
-			player.Inventory.Boots = this;
-			player.SendPlayerInventory();
+			player.Inventory.ArmorInventory.SetFeetItem(this);
 		}
 	}
 }
