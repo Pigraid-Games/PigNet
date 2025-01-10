@@ -1,4 +1,6 @@
-﻿namespace MiNET.Items;
+﻿using MiNET.Items.Food;
+
+namespace MiNET.Items;
 
 public class ItemKelp() : Item("minecraft:kelp", 335, canInteract: false)
 {

@@ -562,11 +562,7 @@ public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward", 509);
 
 public class ItemTropicalFish() : Item("minecraft:tropical_fish", 461);
 
-public class ItemPufferFish() : Item("minecraft:pufferfish", 462);
-
 public class ItemSparkler() : Item("minecraft:sparkler", 442);
-
-public class ItemDriedKelp() : Item("minecraft:dried_kelp", 464);
 
 public class ItemNautilusShell() : Item("minecraft:nautilus_shell", 465);
 
@@ -579,8 +575,6 @@ public class ItemLingeringPotion(short metadata = 0) : Item("minecraft:lingering
 public class ItemCampfire() : Item("minecraft:campfire", 720);
 
 public class ItemMusicDiscFar() : Item("minecraft:music_disc_far", 504);
-
-public class ItemSpiderEye() : Item("minecraft:spider_eye", 375);
 
 public class ItemPumpkinSeeds() : Item("minecraft:pumpkin_seeds", 361);
 
@@ -725,8 +719,6 @@ public class ItemBalloon() : Item("minecraft:balloon", 448);
 public class ItemBannerPattern() : Item("minecraft:banner_pattern", 434);
 
 public class ItemHoneycomb() : Item("minecraft:honeycomb", 736);
-
-public class ItemHoneyBottle() : Item("minecraft:honey_bottle", 737);
 
 public class ItemCompound() : Item("minecraft:compound", 499);
 

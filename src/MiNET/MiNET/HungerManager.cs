@@ -209,10 +209,10 @@ namespace MiNET
 			attributes["minecraft:player.hunger"] = new PlayerAttribute
 			{
 				Name = "minecraft:player.hunger",
-				MinValue = MinHunger,
-				MaxValue = MaxHunger,
-				Value = Hunger,
-				Default = MaxHunger,
+				MinValue = (float) MinHunger,
+				MaxValue = (float) MaxHunger,
+				Value = (float) Hunger,
+				Default = (float) MaxHunger,
 				Modifiers = new AttributeModifiers()
 			};
 
@@ -220,9 +220,9 @@ namespace MiNET
 			{
 				Name = "minecraft:player.saturation",
 				MinValue = 0,
-				MaxValue = MaxHunger,
+				MaxValue = (float) MaxHunger,
 				Value = (float) Saturation,
-				Default = MaxHunger,
+				Default = (float) MaxHunger,
 				Modifiers = new AttributeModifiers()
 			};
 			attributes["minecraft:player.exhaustion"] = new PlayerAttribute

@@ -30,7 +30,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items.Food;
 
-public class ItemCarrot() : FoodItem("minecraft:carrot", 391, 0, 3, 4.8)
+public class ItemCarrot() : FoodItem("minecraft:carrot", 391, 0, 3, 3.6)
 {
 	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{

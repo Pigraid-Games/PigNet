@@ -34,8 +34,11 @@ public class ItemCookedPorkchop() : FoodItem("minecraft:cooked_porkchop", 320, 0
 public class ItemCookedMutton() : FoodItem("minecraft:cooked_mutton", 424, 0, 6, 9.6);
 public class ItemCookedChicken() : FoodItem("minecraft:cooked_chicken", 366, 0, 6, 7.2);
 public class ItemCookedBeef() : FoodItem("minecraft:cooked_beef", 364, 0, 8, 12.8);
-public class ItemBread() : FoodItem("minecraft:bread", 297, 0, 5, 6.0);
+public class ItemBread() : FoodItem("minecraft:bread", 297, 0, 5, 6);
 public class ItemBeetroot() : FoodItem("minecraft:beetroot", 457, 0, 1, 1.2);
-public class ItemBakedPotato() : FoodItem("minecraft:baked_potato", 393, 0, 5, 7.2);
+public class ItemBakedPotato() : FoodItem("minecraft:baked_potato", 393, 0, 5, 2.4);
 public class ItemApple() : FoodItem("minecraft:apple", 260, 0, 4, 2.4);
-public class ItemCookedCod() : Item("minecraft:cooked_cod", 350);
+public class ItemCookedCod() : FoodItem("minecraft:cooked_cod", 350, 0, 5, 6);
+public class ItemDriedKelp() : FoodItem("minecraft:dried_kelp", 464, 0, 1, 0.2);
+public class ItemGoldenCarrot() : FoodItem("minecraft:golden_carrot", 396, 0, 6, 14.4);
+public class ItemTropicalFish() : FoodItem("minecraft:tropical_fish", 461, 0, 1, 0.2);

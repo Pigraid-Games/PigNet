@@ -23,8 +23,20 @@
 
 #endregion
 
-using MiNET.Items.Food;
+using MiNET.Effects;
 
-namespace MiNET.Items;
+namespace MiNET.Items.Food;
 
-public class ItemGoldenCarrot() : FoodItem("minecraft:golden_carrot", 396, 0, 6, 14.4);
+public class ItemGoldenApple() : FoodItem("minecraft:golden_apple", 322, 0, 4, 9.6)
+{
+	protected override void Consume(Player player)
+	{
+		base.Consume(player);
+		player.SetEffect(new Absorption() { Duration = 2400 });
+		player.SetEffect(new Regeneration()
+		{
+			Duration = 100,
+			Level = 1
+		});
+	}
+}
