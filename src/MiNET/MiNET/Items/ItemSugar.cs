@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemSugar() : Item("minecraft:sugar", 353);
+public class ItemSugar() : Item("minecraft:sugar", 353, canInteract: false);

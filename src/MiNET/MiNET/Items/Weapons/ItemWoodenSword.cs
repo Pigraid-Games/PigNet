@@ -27,7 +27,7 @@ namespace MiNET.Items.Weapons;
 
 public class ItemWoodenSword : ItemSword
 {
-	public ItemWoodenSword() : base("minecraft:wooden_sword", 268)
+	public ItemWoodenSword() : base("minecraft:wooden_sword", 268, canInteract: false)
 	{
 		ItemMaterial = ItemMaterial.Wood;
 		FuelEfficiency = 10;

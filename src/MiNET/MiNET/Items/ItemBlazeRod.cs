@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemBlazeRod() : Item("minecraft:blaze_rod", 369);
+public class ItemBlazeRod() : Item("minecraft:blaze_rod", 369, canInteract: false);

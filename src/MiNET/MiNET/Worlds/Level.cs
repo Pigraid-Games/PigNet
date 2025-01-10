@@ -40,6 +40,7 @@ using MiNET.Entities.Hostile;
 using MiNET.Entities.Passive;
 using MiNET.Entities.World;
 using MiNET.Items;
+using MiNET.Items.Weapons;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Sounds;
@@ -1375,6 +1376,8 @@ namespace MiNET.Worlds
 
 			if (!AllowBuild || player.GameMode == GameMode.Spectator || !OnBlockPlace(new BlockPlaceEventArgs(player, this, target, block)))
 			{
+				if (!itemInHand.CanInteract)
+					return;
 				// Revert
 
 				player.SendPlayerInventory();

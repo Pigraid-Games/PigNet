@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemIronIngot() : Item("minecraft:iron_ingot", 265);
+public class ItemIronIngot() : Item("minecraft:iron_ingot", 265, canInteract: false);

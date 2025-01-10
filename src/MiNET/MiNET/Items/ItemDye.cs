@@ -25,7 +25,7 @@
 
 namespace MiNET.Items;
 
-public class ItemDye() : Item("minecraft:dye", 351)
+public class ItemDye() : Item("minecraft:dye", 351, canInteract: false)
 {
 	public static byte ToColorCode(int metadata)
 	{

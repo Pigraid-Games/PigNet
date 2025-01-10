@@ -71,15 +71,18 @@ namespace MiNET.Items
 
 		[JsonIgnore] public int FuelEfficiency { get; set; }
 
-		public Item(string name, short id, short metadata = 0, int count = 1)
+		[JsonIgnore] public bool CanInteract { get; set; }
+
+		public Item(string name, short id, short metadata = 0, int count = 1, bool canInteract = true)
 		{
 			Name = name;
 			Id = id;
 			Metadata = metadata;
 			Count = (byte) count;
+			CanInteract = canInteract;
 		}
 
-		public Item(short id, short metadata = 0, int count = 1) : this(String.Empty, id, metadata, count)
+		public Item(short id, short metadata = 0, int count = 1, bool canInteract = true) : this(String.Empty, id, metadata, count, canInteract)
 		{
 		}
 

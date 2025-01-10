@@ -33,6 +33,7 @@ public class ItemAxe : Item
 {
 	public ItemAxe(string name, short id) : base(name, id)
 	{
+		CanInteract = false;
 		MaxStackSize = 1;
 		ItemType = ItemType.Axe;
 		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];

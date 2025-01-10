@@ -33,6 +33,7 @@ public class ItemPickaxe : Item
 {
 	internal ItemPickaxe(string name, short id) : base(name, id)
 	{
+		CanInteract = false;
 		MaxStackSize = 1;
 		ItemType = ItemType.PickAxe;
 		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];

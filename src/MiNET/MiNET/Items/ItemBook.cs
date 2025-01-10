@@ -25,11 +25,11 @@
 
 namespace MiNET.Items;
 
-public class ItemBook() : Item("minecraft:book", 340);
+public class ItemBook() : Item("minecraft:book", 340, canInteract: false);
 
 public class ItemEnchantedBook : Item
 {
-	public ItemEnchantedBook() : base("minecraft:enchanted_book", 403)
+	public ItemEnchantedBook() : base("minecraft:enchanted_book", 403, canInteract: false)
 	{
 		MaxStackSize = 1;
 	}

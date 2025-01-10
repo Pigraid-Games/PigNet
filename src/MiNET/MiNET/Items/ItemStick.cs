@@ -35,7 +35,7 @@ namespace MiNET.Items;
 
 public class ItemStick : Item
 {
-	public ItemStick() : base("minecraft:stick", 280)
+	public ItemStick() : base("minecraft:stick", 280, canInteract: false)
 	{
 		FuelEfficiency = 5;
 	}

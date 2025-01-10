@@ -1860,11 +1860,6 @@ namespace MiNET
 
 		public virtual void SendPlayerInventory()
 		{
-			//McpeInventoryContent strangeContent = McpeInventoryContent.CreateObject();
-			//strangeContent.inventoryId = (byte) 0x7b;
-			//strangeContent.input = new ItemStacks();
-			//SendPacket(strangeContent);
-
 			var inventoryContent = McpeInventoryContent.CreateObject();
 			inventoryContent.inventoryId = (byte) 0x00;
 			inventoryContent.input = Inventory.GetSlots();

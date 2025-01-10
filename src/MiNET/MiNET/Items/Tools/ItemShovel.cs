@@ -36,6 +36,7 @@ public class ItemShovel : Item
 {
 	internal ItemShovel(string name, short id) : base(name, id)
 	{
+		CanInteract = false;
 		MaxStackSize = 1;
 		ItemType = ItemType.Shovel;
 		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];

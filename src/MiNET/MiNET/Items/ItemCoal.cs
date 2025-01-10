@@ -27,7 +27,7 @@ namespace MiNET.Items;
 
 public class ItemCoal : Item
 {
-	public ItemCoal() : base("minecraft:coal", 263)
+	public ItemCoal() : base("minecraft:coal", 263, canInteract: false)
 	{
 		FuelEfficiency = 80;
 	}
