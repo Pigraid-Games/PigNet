@@ -511,7 +511,6 @@ public class ItemFactory
 
 			if (item == null)
 			{
-				Log.Warn($"No item found for ID {id}");
 				return null;
 			}
 
@@ -546,7 +545,6 @@ public class ItemFactory
 		uint runtimeId = BlockFactory.GetRuntimeId(blockId, (byte)metadata);
 		if (!BlockFactory.BlockPalette.TryGetValue((int)runtimeId, out BlockStateContainer blockState))
 		{
-			Log.Warn($"Runtime ID {runtimeId} for Block ID {blockId} with metadata {metadata} not found in BlockPalette. Using default block state.");
 			return CustomBlockItemFactory != null
 				? CustomBlockItemFactory.GetBlockItem(block, metadata, count)
 				: new ItemBlock(block, metadata);
