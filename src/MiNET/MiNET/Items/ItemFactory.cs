@@ -560,8 +560,6 @@ public class ItemFactory
 
 public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward", 509);
 
-public class ItemTropicalFish() : Item("minecraft:tropical_fish", 461);
-
 public class ItemSparkler() : Item("minecraft:sparkler", 442);
 
 public class ItemNautilusShell() : Item("minecraft:nautilus_shell", 465);
