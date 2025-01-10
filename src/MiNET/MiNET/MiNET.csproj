@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>MiNET-CobwebSMP</PackageId>
+    <PackageId>MiNET-Pigraid</PackageId>
     <Version>1.13.0.24</Version>
     <Authors>gurun</Authors>
     <Company>Niclas Olofsson</Company>

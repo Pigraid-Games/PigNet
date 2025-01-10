@@ -146,16 +146,16 @@ public class Projectile : Entity
 
 			if (player != null && doDamage)
 			{
-				damage = player.DamageCalculator.CalculatePlayerDamage(this, player, null, damage, DamageCause.Projectile);
+				damage = player.DamageCalculator.CalculatePlayerDamage(this, player, null, damage, DamageCause.ShotByArrow);
 				player.LastAttackTarget = entityCollided;
-				entityCollided.HealthManager.TakeHit(this, (int) damage, DamageCause.Projectile);
+				entityCollided.HealthManager.TakeHit(this, (int) damage, DamageCause.ShotByArrow);
 				entityCollided.HealthManager.LastDamageSource = Shooter;
 				OnHitEntity(entityCollided);
 			}
 
 			if (entity != null && doDamage)
 			{
-				entity.HealthManager.TakeHit(this, (int) damage, DamageCause.Projectile);
+				entity.HealthManager.TakeHit(this, (int) damage, DamageCause.ShotByArrow);
 				entity.HealthManager.LastDamageSource = Shooter;
 				OnHitEntity(entity);
 			}

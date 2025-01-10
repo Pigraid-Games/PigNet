@@ -30,6 +30,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
+using LibNoise.Model;
 using log4net;
 using MiNET.Entities;
 using MiNET.Entities.Hostile;
@@ -39,12 +40,14 @@ using MiNET.Entities.World;
 using MiNET.Items;
 using MiNET.Items.Armor;
 using MiNET.Items.Custom;
+using MiNET.Items.Tools;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.UI;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MiNET.Plugins.Commands
 {
@@ -84,18 +87,35 @@ namespace MiNET.Plugins.Commands
 			switch (name)
 			{
 				case "pigraid:cuplove":
-					commander.Inventory.ArmorInventory.SetChestItem(new ItemCupLove());
+					commander.Inventory.OffHand = new ItemCupLove();
 					break;
 				case "hivebackbling:ender_wings":
-					commander.Inventory.ArmorInventory.SetChestItem(new ItemHiveEnderWings());
+					commander.Inventory.OffHand = new ItemHiveEnderWings();
 					break;
 			}
+			commander.SendPlayerInventory();
+		}
+
+		[Command(Name = "animate")]
+		public void Animate(Player commander, string name)
+		{
+			McpeAnimateEntity packet = McpeAnimateEntity.CreateObject();
+			packet.animationName = "animation.player.swim";
+			packet.entities = [commander.EntityId];
+			commander.SendPacket(packet);
+		}
+
+		[Command(Name = "stopanimate")]
+		public void StopAnimate(Player commander)
+		{
+			commander.Level.DespawnFromAll(commander);
+			commander.Level.SpawnToAll(commander);
 		}
 
 		[Command(Name = "about", Description = "About the server")]
 		public string About()
 		{
-			return $"This server is running on MiNET-CobwebSMP {FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(MiNetServer)).Location).ProductVersion} for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion} ({McpeProtocolInfo.ProtocolVersion}). https://github.com/CobwebSMP/MiNET ";
+			return $"This server is running on MiNET-Pigraid {FileVersionInfo.GetVersionInfo(Assembly.GetAssembly(typeof(MiNetServer)).Location).ProductVersion} for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion} ({McpeProtocolInfo.ProtocolVersion}). https://github.com/CobwebSMP/MiNET ";
 		}
 
 		[Command(Name = "op", Description = "Make player an operator")]
@@ -349,6 +369,9 @@ namespace MiNET.Plugins.Commands
 					break;
 				case EntityType.ExperienceOrb:
 					entity = new ExperienceOrb(world);
+					break;
+				case EntityType.Llama:
+					entity = new Llama(world);
 					break;
 			}
 

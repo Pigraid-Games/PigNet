@@ -73,7 +73,7 @@ namespace MiNET.Entities
 		public bool IsInWater { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
 		public int PotionColor { get; set; }
-		public int Variant { get; set; }
+		public int Variant { get; set; } = 1;
 		public long Age { get; set; }
 		public double Scale { get; set; } = 1.0;
 		public virtual double Height { get; set; } = 1;
@@ -263,6 +263,7 @@ namespace MiNET.Entities
 			metadata[(int) MetadataFlags.RiderRotationLocked] = new MetadataByte(RiderRotationLocked);
 			metadata[(int) MetadataFlags.RiderMaxRotation] = new MetadataFloat(RiderMaxRotation);
 			metadata[(int) MetadataFlags.RiderMinRotation] = new MetadataFloat(RiderMinRotation);
+			metadata[(int) MetadataFlags.Variant] = new MetadataInt(Variant);
 			metadata[(int) MetadataFlags.AlwaysShowNameTag] = new MetadataByte(IsAlwaysShowName);
 			return metadata;
 		}

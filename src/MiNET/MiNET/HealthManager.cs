@@ -42,37 +42,87 @@ namespace MiNET
 {
 	public enum DamageCause
 	{
+		// Shouldn't be used, but it's when the attack source is unknown
 		[Description("{0} went MIA")] Unknown,
-
-		[Description("{0} was pricked  to death")]
-		Contact,
-		[Description("{0} was slain by {1}")] EntityAttack,
-		[Description("{0} was shot by {1}")] Projectile,
-
-		[Description("{0} suffocated in a wall")]
-		Suffocation,
-
-		[Description("{0} hit the ground too hard")]
-		Fall,
-		[Description("{0} went up in flames")] Fire,
-		[Description("{0} burned to death")] FireTick,
-
-		[Description("{0} tried to swim in lava")]
-		Lava,
+		// Source: https://minecraft.fandom.com/wiki/Death_messages#Bedrock_Edition
+		// Appears when the player is killed by being 64 blocks below the lowest point where blocks can be placed
+		[Description("{0} fell out of the world")] Void,
+		// Appears when the player is killed by an arrow shot from a dispenser or summoned with /summon
+		[Description("{0} was slain by Arrow")] SlainByArrow,
+		// Appears when the player is killed by an arrow shot by a player or mob
+		[Description("{0} was shot by {1}")] ShotByArrow,
+		// Appears when the player is killed because they were touching a cactus
+		[Description("{0} was pricked to death")] KilledByCatctus,
+		// Appears when the player runs out of air underwater and is killed from drowning damage
 		[Description("{0} drowned")] Drowning,
+		// Appears when the player is killed by hitting a wall while flying with elytra on
+		[Description("{0} experienced kinectic energy")] ElytraCollision,
+		// Appears when the player is killed by an end crytal, a bed exploding in the Nether or the End, or by a charged respawn anchor exploding in the Overworld or the End
 		[Description("{0} blew up")] BlockExplosion,
-		[Description("{0} blew up")] EntityExplosion,
-
-		[Description("{0} fell out of the world")]
-		Void,
-		[Description("{0} died")] Suicide,
-
-		[Description("{0} was killed by magic")]
-		Magic,
+		// Appears when the player is killed by TNT activated by redstone mechanisms, fire, or dispensed out from a dispenser
+		[Description("{0} was blown up by Block of TNT")] TNTExplosion,
+		// Appears when the player is killed by an entity that exploded, or by TNT activated by a player or mob
+		[Description("{0} was blown up by {1}")] EntityExplosion,
+		// Appears when the player is killed because they were in a sweet berry bush.
+		[Description("{0} was poked to death by a sweet berry bush")] SweetBerryBush,
+		// Appears when the player is killed by a less than 5 block fall, ender pearl damage, or falling while riding an entity that died due to fall damage
+		[Description("{0} hit the ground too hard")] Fall,
+		// Appears when the player is killed by a greater than 5 block fall
+		[Description("{0} fell from a high place")] FallFromHighPlace,
+		// Appears when the player is killed by an anvil falling on their head
+		[Description("{0} was squashed by a falling anvil")] FallingAnvil,
+		// Appears when the player is killed by a falling block (other than an anvil) modified to inflict damage
+		[Description("{0} was squashed by a falling block")] FallingBlock,
+		// Appears when the player is killed because they were in a fire source block
+		[Description("{0} went up in flames")] Fire,
+		// Appears when the player is killed because they were on fire, but not in a fire source block
+		[Description("{0} burned to death")] FireTick,
+		// Appears when the player is killed by the explosion of a firework rocket
+		[Description("{0} went off with a bang")] FireworkExplosion,
+		// Appears when the player is killed because they were in lava
+		[Description("{0} tried to swim in lava")] Lava,
+		// Appears when the player is killed by a lightning bolt
+		[Description("{0} was struck by lightning")] Lightning,
+		// Appears when the player is killed because they were standing on a magma block
+		[Description("{0} discovered floor was lava")] MagmaBlock,
+		// Appears when the player is killed by a potion of Harming shot from a dispenser, by Instant Damage given with /effect or by an evoker fang summoned with /summon
+		[Description("{0} was killed by magic")] Magic,
+		// Appears when the player is killed by a potion or arrow of Harming shot by a player or mob, or by an evoker fang summoned by an evoker
+		[Description("{0} was killed by {1} using magic")] MobMagic,
+		// Appears when the player is hurt by a player or mob and killed
+		[Description("{0} was slain by {1}")] EntityAttack,
+		// Appears when the player is hurt by a player holding a renamed item and killed
+		[Description("{0} was slain by {1} using {2}")] CustomItem,
+		// Appears when the player is killed by a fireball shot from a dispenser
+		[Description("{0} was slain by Small Fireball")] SmallFireball,
+		// Appears when the player plays in hard difficulty and is killed by hunger damage because their hunger bar was at 0
 		[Description("{0} starved to death")] Starving,
-
-		[Description("{0} died a customized death")]
-		Custom
+		// Appears when the player is killed because they were inside of a non-transparent block.
+		[Description("{0} suffocated in a wall")] SuffocatedInWall,
+		// Appears when the player is killed because they hurt a guardian, elder guardian, or a player or mob wearing armor enchanted with Thorns.
+		[Description("{0} was killed trying to hurt {1}")] KilledByThorns,
+		// Appears when the player is killed by a trident shot by a player or mob, or from a dispenser or summoned with /summon.
+		[Description("{0} was impaled to death by {1}")] ImpaledByTrident,
+		// Appears when the player is killed by being more than 64 blocks below the bottom of the world.
+		[Description("{0} fell out of the world")] FellOutOfWorld,
+		// Appears when the player is killed by the wither status effect.
+		[Description("{0} withered away")] WitherEffect,
+		// Appears when the player is killed by /kill.
+		[Description("{0} died")] KilledByCommand,
+		// Appears when the player is killed by a fireball shot by a player or mob.
+		[Description("{0} was fireballed by {1}")] KilledByFireball,
+		// Appears when the player is killed by a shulker bullet shot by a shulker.
+		[Description("{0} was sniped by {1}")] KilledByShulkerBullet,
+		// Appears when the player is killed by a llama spit shot by a llama.
+		[Description("{0} was spitballed by {1}")] KilledByLlamaSpit,
+		// Appears when the player is killed because they were in powder snow for too long.
+		[Description("{0} froze to death")] Freezing,
+		// Appears when the player is killed by falling stalactite.
+		[Description("{0} was skewered by a falling stalactite")] KilledByFallingStalactite,
+		// Appears when the player falls on a stalagmite and dies.
+		[Description("{0} was impaled on a stalagmite")] KilledByStalagmite,
+		// Appears when the player is killed by a warden using its sonic boom.
+		[Description("{0} was obliterated by a sonically-charged shriek whilst trying to escape {1}")] KilledByWardenSonicBoom,
 	}
 
 	public class HealthManager
@@ -450,7 +500,7 @@ namespace MiNET
 			{
 				if (SuffocationTicks <= 0)
 				{
-					TakeHit(null, 1, DamageCause.Suffocation);
+					TakeHit(null, 1, DamageCause.SuffocatedInWall);
 					Entity.BroadcastSetEntityData();
 
 					SuffocationTicks = 10;

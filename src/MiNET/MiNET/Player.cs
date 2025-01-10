@@ -3836,7 +3836,6 @@ namespace MiNET
 			metadata[(int) MetadataFlags.NameTag] = new MetadataString(NameTag ?? Username);
 			metadata[(int) MetadataFlags.PlayerFlags] = new MetadataByte((byte) (IsSleeping ? 0b10 : 0));
 			metadata[(int) MetadataFlags.BedPosition] = new MetadataIntCoordinates((int) SpawnPosition.X, (int) SpawnPosition.Y, (int) SpawnPosition.Z);
-
 			return metadata;
 		}
 

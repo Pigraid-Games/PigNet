@@ -100,7 +100,6 @@ public class ArmorInventory
 
 	public bool SetHeadItem(Item item, bool sendUpdate = true, bool sendEquipSound = true)
 	{
-		// TODO: Add the check for mob head and carved pumpkin
 		// NOTE: 0 == Item::AIR, -155 == Item::CARVED_PUMPKIN
 		if (item is not ArmorHelmetBase && item.Id != 0 && item.Id != -155 && !IsMobHead(item.Id) &&
 			(!ExceptionItems.TryGetValue(ArmorSlots.Head, out List<int> exceptionList) || !exceptionList.Contains(item.Id)))
