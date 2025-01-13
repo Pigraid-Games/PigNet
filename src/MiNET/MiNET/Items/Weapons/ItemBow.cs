@@ -100,7 +100,7 @@ public sealed class ItemBow : Item
 		byte effect = 0;
 
 		// Check for arrows in off-hand
-		Item item = inventory.OffHand;
+		Item item = inventory.OffHandInventory.GetItem();
 		if (item is ItemArrow)
 		{
 			haveArrow = true;
@@ -110,7 +110,7 @@ public sealed class ItemBow : Item
 				item.Count -= 1;
 				item.UniqueId = Environment.TickCount;
 				if (item.Count <= 0)
-					inventory.OffHand = new ItemAir();
+					inventory.OffHandInventory.SetItem(new ItemAir());
 			}
 		}
 

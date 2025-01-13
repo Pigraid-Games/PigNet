@@ -11,7 +11,7 @@ public class ItemSplashPotion : Item
 	public ItemSplashPotion(short metadata = 0) : base("minecraft:splash_potion", 438)
 	{
 		Metadata = metadata;
-		MaxStackSize = 64;
+		MaxStackSize = 1;
 	}
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)

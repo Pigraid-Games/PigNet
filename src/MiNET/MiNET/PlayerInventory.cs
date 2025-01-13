@@ -35,7 +35,6 @@ using MiNET.Inventories;
 using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
-using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
 namespace MiNET
@@ -51,12 +50,12 @@ namespace MiNET
 		public List<Item> Slots { get; }
 
 		public int InHandSlot { get; set; }
-		public Item OffHand { get; set; } = new ItemAir();
 
 		public CursorInventory UiInventory { get; set; } = new CursorInventory();
 
 		public ArmorInventory ArmorInventory { get; set; }
 
+		public OffHandInventory OffHandInventory { get; set; }
 
 		public PlayerInventory(Player player)
 		{
@@ -64,6 +63,7 @@ namespace MiNET
 			Slots = Enumerable.Repeat((Item) new ItemAir(), InventorySize).ToList();
 			InHandSlot = 0;
 			ArmorInventory = new ArmorInventory(player);
+			OffHandInventory = new OffHandInventory(player);
 		}
 
 		public virtual Item GetItemInHand()
@@ -155,14 +155,6 @@ namespace MiNET
 			return slotData;
 		}
 
-		public ItemStacks GetOffHand()
-		{
-			return new ItemStacks
-			{
-				OffHand ?? new ItemAir(),
-			};
-		}
-
 		public virtual bool SetFirstEmptySlot(Item item, bool update)
 		{
 			for (int si = 0; si < Slots.Count; si++)
@@ -170,7 +162,7 @@ namespace MiNET
 				Item existingItem = Slots[si];
 
 				// This needs to also take extradata into account when comparing.
-				if (existingItem.Equals(item) && existingItem.Count < existingItem.MaxStackSize)
+				if (existingItem.Equals(item) && existingItem.Count < existingItem.MaxStackSize && existingItem.ExtraData == item.ExtraData)
 				{
 					int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
 					existingItem.Count += (byte) take;
@@ -340,6 +332,9 @@ namespace MiNET
 				case 45:
 					inventoryId = invId; //Container
 					break;
+				case 34:
+					inventoryId = 119; // OffHand
+					break;
 				default:
 					inventoryId = 0;
 					Log.Warn($"SendSetSlot: Unknown ContainerId: {ContainerId}");
@@ -352,9 +347,16 @@ namespace MiNET
 			{
 				item = UiInventory.Slots[slot];
 			}
-			else if (inventoryId == invId)
+			else if (inventoryId == 119)
 			{
-				item = Player.Level.InventoryManager.GetInventory(inv.Id).Slots[slot];
+				item = Player.Inventory.OffHandInventory.GetItem();
+				var sendOffHandSlot = McpeMobEquipment.CreateObject();
+				sendOffHandSlot.runtimeEntityId = Player.EntityId;
+				sendOffHandSlot.selectedSlot = 0;
+				sendOffHandSlot.slot = 0;
+				sendOffHandSlot.windowsId = (byte) inventoryId;
+				sendOffHandSlot.item = item;
+				Player.Level.RelayBroadcast(sendOffHandSlot);
 			}
 			else
 			{
@@ -377,7 +379,7 @@ namespace MiNET
 			
 			UiInventory.Clear();
 
-			if (OffHand.Id != 0) OffHand = new ItemAir();
+			if (OffHandInventory.GetItem().Id != 0) OffHandInventory.SetItem(new ItemAir(), false);
 			Player.SendPlayerInventory();
 		}
 	}

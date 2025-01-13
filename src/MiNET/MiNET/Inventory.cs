@@ -28,7 +28,6 @@ using System.Collections.Concurrent;
 using fNbt;
 using log4net;
 using MiNET.BlockEntities;
-using MiNET.Blocks;
 using MiNET.Items;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;

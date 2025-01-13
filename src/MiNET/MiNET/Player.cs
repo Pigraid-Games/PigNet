@@ -578,13 +578,6 @@ namespace MiNET
 		{
 			if (Level == null) return;
 
-			Item itemInHand = Inventory.GetItemInHand();
-			if (itemInHand != null)
-			{
-				bool isHandled = itemInHand.Animate(Level, this);
-				if (isHandled) return; // Handled, return
-			}
-
 			McpeAnimate msg = McpeAnimate.CreateObject();
 			msg.runtimeEntityId = EntityId;
 			msg.actionId = message.actionId;
@@ -1866,16 +1859,12 @@ namespace MiNET
 			SendPacket(inventoryContent);
 
 			Inventory.ArmorInventory.SendArmorContentPacket(this);
+			Inventory.OffHandInventory.SendUpdate();
 
 			McpeInventoryContent uiContent = McpeInventoryContent.CreateObject();
 			uiContent.inventoryId = 0x7c;
 			uiContent.input = Inventory.GetUiSlots();
 			SendPacket(uiContent);
-
-			McpeInventoryContent offHandContent = McpeInventoryContent.CreateObject();
-			offHandContent.inventoryId = 0x77;
-			offHandContent.input = Inventory.GetOffHand();
-			SendPacket(offHandContent);
 
 			McpeMobEquipment mobEquipment = McpeMobEquipment.CreateObject();
 			mobEquipment.runtimeEntityId = EntityManager.EntityIdSelf;
@@ -2391,6 +2380,10 @@ namespace MiNET
 
 			foreach (StackRequestSlotInfo slot in updatedSlots)
 			{
+				if(slot.ContainerId == 34) // offhand
+				{
+					Console.WriteLine("offhand container detected");
+				}
 				Inventory.SendSetSlot(slot.Slot, slot.ContainerId);
 			}
 		}

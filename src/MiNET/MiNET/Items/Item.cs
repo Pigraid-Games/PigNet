@@ -31,7 +31,6 @@ using log4net;
 using MiNET.BlockEntities;
 using MiNET.Blocks;
 using MiNET.Entities;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
@@ -56,7 +55,7 @@ namespace MiNET.Items
 		public int RuntimeId { get; set; }
 		public short Metadata { get; set; }
 		public byte Count { get; set; }
-		public virtual NbtCompound ExtraData { get; set; }
+		[JsonIgnore] public virtual NbtCompound ExtraData { get; set; }
 
 		[JsonIgnore] public ItemMaterial ItemMaterial { get; set; } = ItemMaterial.None;
 

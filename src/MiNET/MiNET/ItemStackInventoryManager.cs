@@ -678,7 +678,7 @@ namespace MiNET
 					item = _player.Inventory.Slots[slot];
 					break;
 				case 34: // off-hand
-					item = _player.Inventory.OffHand;
+					item = _player.Inventory.OffHandInventory.GetItem();
 					break;
 				case 6: // armor
 					item = (ArmorSlots) slot switch
@@ -729,7 +729,7 @@ namespace MiNET
 					_player.Inventory.Slots[slot] = item;
 					break;
 				case 34: // off-hand
-					_player.Inventory.OffHand = item;
+					_player.Inventory.OffHandInventory.SetItem(item);
 					break;
 				case 6: // armor
 					switch ((ArmorSlots) slot)

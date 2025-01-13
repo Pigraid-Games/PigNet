@@ -325,7 +325,7 @@ namespace MiNET
 				if (IsDead) return;
 				if (player != null)
 				{
-					if (player.Inventory.GetItemInHand() is ItemTotemOfUndying || player.Inventory.OffHand is ItemTotemOfUndying)
+					if (player.Inventory.GetItemInHand() is ItemTotemOfUndying || player.Inventory.OffHandInventory.GetItem() is ItemTotemOfUndying)
 					{
 						Health = 2;
 
@@ -348,7 +348,7 @@ namespace MiNET
 						}
 						else
 						{
-							player.Inventory.OffHand = new ItemAir();
+							player.Inventory.OffHandInventory.SetItem(new ItemAir());
 							player.SendPlayerInventory();
 						}
 						return;

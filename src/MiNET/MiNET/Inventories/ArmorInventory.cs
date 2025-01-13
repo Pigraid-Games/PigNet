@@ -221,7 +221,7 @@ public class ArmorInventory
 		player.Level.BroadcastSound((BlockCoordinates) player.KnownPosition, LevelSoundEventType.Break, -1);
 	}
 
-	public virtual Item DamageArmorItem(Item item, ref bool armorBroke)
+	private Item DamageArmorItem(Item item, ref bool armorBroke)
 	{
 		if (Entity is not Player player)
 			return item;

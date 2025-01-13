@@ -30,6 +30,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
+using System.Xml.Linq;
 using LibNoise.Model;
 using log4net;
 using MiNET.Entities;
@@ -60,40 +61,52 @@ namespace MiNET.Plugins.Commands
 		}
 
 		[Command(Name = "CustomForm")]
-		public void CustomForm(Player commander)
+		[Authorize(Permission = 4)]
+		public void CustomForm(Player commander, string contentTest)
 		{
-			var customForm = new CustomForm()
+			var customForm = new SimpleForm
 			{
-				Title = "Custom Form"
+				Title = "Test Form",
+				Content = contentTest,
+				Buttons = [new Button { Text = "Close", ExecuteAction = (_, _) => 
+					commander.SendMessage(contentTest, MessageType.Translation, null, true) 
+				}]
 			};
-			List<CustomElement> customElements = [];
-			customElements.Add(new Label() { Text = "This is a label test" });
-			customElements.Add(new Slider()
-			{
-				Max = 64,
-				Min = 1,
-				Step = 1,
-				// minet.shop.slider.buy
-				Text = "Select the amount that you want to buy",
-				Value = 1
-			});
-			customForm.Content = customElements;
+			
 			commander.SendForm(customForm);
 		}
 
+		[Command(Name = "CustomParticle")]
+		[Authorize(Permission = 4)]
+		public void CustomParticle(Player commander, string identifier)
+		{
+			McpeSpawnParticleEffect pk = McpeSpawnParticleEffect.CreateObject();
+			pk.particleName = identifier;
+			pk.position = commander.KnownPosition.ToVector3();
+			pk.dimensionId = 0;
+			pk.entityId = -1;
+			commander.Level.RelayBroadcast([commander], pk);
+		}
+
 		[Command(Name = "CustomItem", Description = "Spawns the custom elytra in the chest slot")]
+		[Authorize(Permission = 4)]
 		public void CustomItem(Player commander, string name)
 		{
+			Item item;
 			switch (name)
 			{
 				case "pigraid:cuplove":
-					commander.Inventory.OffHand = new ItemCupLove();
+					item = new ItemCupLove();
 					break;
 				case "hivebackbling:ender_wings":
-					commander.Inventory.OffHand = new ItemHiveEnderWings();
+					item = new ItemHiveEnderWings();
+					break;
+				default:
+					commander.SendMessage("Couldn't find the custom item");
+					item = new ItemAir();
 					break;
 			}
-			commander.SendPlayerInventory();
+			commander.Inventory.OffHandInventory.SetItem(item);
 		}
 
 		[Command(Name = "animate")]
