@@ -265,6 +265,7 @@ namespace MiNET.Entities
 			metadata[(int) MetadataFlags.RiderMinRotation] = new MetadataFloat(RiderMinRotation);
 			metadata[(int) MetadataFlags.Variant] = new MetadataInt(Variant);
 			metadata[(int) MetadataFlags.AlwaysShowNameTag] = new MetadataByte(IsAlwaysShowName);
+
 			return metadata;
 		}
 
@@ -426,6 +427,8 @@ namespace MiNET.Entities
 		public bool IsWasdControlled { get; set; }
 		public bool CanPowerJump { get; set; }
 		public bool IsLayingDown { get; set; }
+		public bool IsBlockedWithShield { get; set; }
+		public bool IsTransitionBlocking { get; set; }
 
 		public enum DataFlags
 		{
@@ -609,6 +612,24 @@ namespace MiNET.Entities
 		protected virtual BitArray GetFlags2()
 		{
 			BitArray bits = new BitArray(64);
+
+			foreach (DataFlags flag in Enum.GetValues(typeof(DataFlags)))
+			{
+				int flagIndex = (int) flag;
+				
+				if (flagIndex >= 64 && flagIndex < 128)
+				{
+					int realFlagId = flagIndex % 64;
+					bool value = flag switch
+					{
+						DataFlags.BlockedWithShield => IsBlockedWithShield,
+						DataFlags.BlockedWithDamagedShield => IsTransitionBlocking,
+						_ => false
+					};
+					bits[realFlagId] = value;
+				}
+			}
+
 			return bits;
 		}
 
@@ -664,48 +685,36 @@ namespace MiNET.Entities
 
 		public virtual EntityAttributes GetEntityAttributes()
 		{
-			var attributes = new EntityAttributes();
-			attributes["minecraft:attack_damage"] = new EntityAttribute
+			var attributes = new EntityAttributes
 			{
-				Name = "minecraft:attack_damage",
-				MinValue = 0,
-				MaxValue = 16,
-				Value = AttackDamage
-			};
-			attributes["minecraft:absorption"] = new EntityAttribute
-			{
-				Name = "minecraft:absorption",
-				MinValue = 0,
-				MaxValue = float.MaxValue,
-				Value = HealthManager.Absorption
-			};
-			attributes["minecraft:health"] = new EntityAttribute
-			{
-				Name = "minecraft:health",
-				MinValue = 0,
-				MaxValue = HealthManager.MaxHearts,
-				Value = HealthManager.Hearts
-			};
-			attributes["minecraft:knockback_resistance"] = new EntityAttribute
-			{
-				Name = "minecraft:knockback_resistance",
-				MinValue = 0,
-				MaxValue = 1,
-				Value = 0
-			};
-			attributes["minecraft:luck"] = new EntityAttribute
-			{
-				Name = "minecraft:luck",
-				MinValue = -1025,
-				MaxValue = 1024,
-				Value = 0
-			};
-			attributes["minecraft:follow_range"] = new EntityAttribute
-			{
-				Name = "minecraft:follow_range",
-				MinValue = 0,
-				MaxValue = 2048,
-				Value = 16
+				["minecraft:attack_damage"] = new EntityAttribute
+				{
+					Name = "minecraft:attack_damage",
+					MinValue = 0,
+					MaxValue = 16,
+					Value = AttackDamage
+				},
+				["minecraft:health"] = new EntityAttribute
+				{
+					Name = "minecraft:health",
+					MinValue = 0,
+					MaxValue = HealthManager.MaxHearts,
+					Value = HealthManager.Hearts
+				},
+				["minecraft:knockback_resistance"] = new EntityAttribute
+				{
+					Name = "minecraft:knockback_resistance",
+					MinValue = 0,
+					MaxValue = 1,
+					Value = 0
+				},
+				["minecraft:follow_range"] = new EntityAttribute
+				{
+					Name = "minecraft:follow_range",
+					MinValue = 0,
+					MaxValue = 2048,
+					Value = 16
+				}
 			};
 
 			return attributes;

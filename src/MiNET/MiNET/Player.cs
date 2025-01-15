@@ -2222,12 +2222,18 @@ namespace MiNET
 				if ((message.InputFlags & AuthInputFlags.StartSneaking) != 0)
 				{
 					IsSneaking = true;
+					if(Inventory.OffHandInventory.GetItem() is ItemShield)
+					{
+						IsBlockedWithShield = true;
+						IsTransitionBlocking = true;
+					}
 					BroadcastSetEntityData();
 				}
 
 				if ((message.InputFlags & AuthInputFlags.StopSneaking) != 0)
 				{
 					IsSneaking = false;
+					IsBlockedWithShield = false;
 					BroadcastSetEntityData();
 				}
 

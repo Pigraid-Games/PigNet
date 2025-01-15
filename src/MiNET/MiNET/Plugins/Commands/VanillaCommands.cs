@@ -30,8 +30,6 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
-using System.Xml.Linq;
-using LibNoise.Model;
 using log4net;
 using MiNET.Entities;
 using MiNET.Entities.Hostile;
@@ -39,16 +37,13 @@ using MiNET.Entities.Passive;
 using MiNET.Entities.Vehicles;
 using MiNET.Entities.World;
 using MiNET.Items;
-using MiNET.Items.Armor;
 using MiNET.Items.Custom;
-using MiNET.Items.Tools;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.UI;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MiNET.Plugins.Commands
 {

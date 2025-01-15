@@ -160,8 +160,6 @@ namespace MiNET
 			for (int si = 0; si < Slots.Count; si++)
 			{
 				Item existingItem = Slots[si];
-
-				// This needs to also take extradata into account when comparing.
 				if (existingItem.Equals(item) && existingItem.Count < existingItem.MaxStackSize && existingItem.ExtraData == item.ExtraData)
 				{
 					int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
@@ -308,7 +306,6 @@ namespace MiNET
 			if (Player._openInventory is Inventory inventory)
 			{
 				invId = inventory.WindowsId;
-				inv = inventory;
 			}
 
 			switch (ContainerId)
