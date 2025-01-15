@@ -29,23 +29,23 @@ using MiNET.Worlds;
 
 namespace MiNET.Items;
 
+public enum GoatHornType
+{
+	Ponder,
+	Sing,
+	Seek,
+	Feel,
+	Admire,
+	Call,
+	Yearn,
+	Dream
+}
+
 public sealed class ItemGoatHorn : Item
 {
-	private static readonly Dictionary<Player, DateTime> CooldownTracker = new();
-	
-	public enum GoatHornType
-	{
-		Ponder,
-		Sing,
-		Seek,
-		Feel,
-		Admire,
-		Call,
-		Yearn,
-		Dream
-	}
+	private static readonly Dictionary<Player, DateTime> CooldownTracker = [];
 
-	public ItemGoatHorn(GoatHornType goatHornType = GoatHornType.Ponder) : base("minecraft:goat_horn", 761)
+	public ItemGoatHorn(GoatHornType goatHornType = GoatHornType.Ponder) : base("minecraft:goat_horn")
 	{
 		Metadata = (short)goatHornType;
 		MaxStackSize = 1;

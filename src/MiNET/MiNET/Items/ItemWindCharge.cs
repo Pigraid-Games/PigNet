@@ -11,7 +11,7 @@ namespace MiNET.Items
 	{
 		private static readonly ConcurrentDictionary<Player, bool> Cooldowns = new();
 
-		public ItemWindCharge() : base("minecraft:wind_charge", 1046)
+		public ItemWindCharge() : base("minecraft:wind_charge")
 		{
 			MaxStackSize = 64;
 		}

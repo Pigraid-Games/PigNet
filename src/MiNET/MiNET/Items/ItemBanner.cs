@@ -32,7 +32,7 @@ namespace MiNET.Items;
 
 public class ItemBanner : ItemBlock
 {
-	public ItemBanner() : base("minecraft:banner", 446, 0)
+	public ItemBanner() : base("minecraft:banner", 446)
 	{
 		MaxStackSize = 16;
 	}

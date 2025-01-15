@@ -31,7 +31,7 @@ namespace MiNET.Items.Weapons;
 
 public class ItemSword : Item
 {
-	internal ItemSword(string name, short id, bool canInteract) : base(name, id, canInteract:canInteract)
+	internal ItemSword(string name, bool canInteract) : base(name, canInteract:canInteract)
 	{
 		MaxStackSize = 1;
 		ItemType = ItemType.Sword;

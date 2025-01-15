@@ -29,7 +29,7 @@ namespace MiNET.Items;
 
 public class ItemBed : ItemBlock
 {
-	public ItemBed(short metadata = 0) : base("minecraft:bed", 355, metadata)
+	public ItemBed(short metadata = 0) : base("minecraft:bed", metadata)
 	{
 		Block = new Bed();
 	}

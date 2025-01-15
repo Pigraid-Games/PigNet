@@ -42,7 +42,7 @@ public sealed class ItemFlintAndSteel : Item
 	private const int MaxPortalHeight = 30;
 	private const int MaxPortalWidth = 30;
 
-	public ItemFlintAndSteel() : base("minecraft:flint_and_steel", 259)
+	public ItemFlintAndSteel() : base("minecraft:flint_and_steel")
 	{
 		MaxStackSize = 1;
 		ItemType = ItemType.FlintAndSteel;

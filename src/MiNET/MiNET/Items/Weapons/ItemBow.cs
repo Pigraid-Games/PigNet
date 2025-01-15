@@ -38,7 +38,7 @@ namespace MiNET.Items.Weapons;
 
 public sealed class ItemBow : Item
 {
-	public ItemBow() : base("minecraft:bow", 261)
+	public ItemBow() : base("minecraft:bow")
 	{
 		MaxStackSize = 1;
 		ItemType = ItemType.Bow;

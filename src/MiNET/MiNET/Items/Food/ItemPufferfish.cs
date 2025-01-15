@@ -2,7 +2,7 @@
 
 namespace MiNET.Items.Food;
 
-public class ItemPufferFish() : FoodItem("minecraft:pufferfish", 462, 0, 1, 0.2)
+public class ItemPufferFish() : FoodItem("minecraft:pufferfish", 0, 1, 0.2)
 {
 	protected override void Consume(Player player)
 	{

@@ -236,7 +236,6 @@ namespace MiNET.Net
 		public int enchantmentSeed; // = null;
 		public BlockPalette blockPalette; // = null;
 		public ulong blockPaletteChecksum;
-		public Itemstates itemstates; // = null;
 		public string multiplayerCorrelationId; // = null;
 		public bool enableNewInventorySystem; // = null;
 		public string serverVersion; // = null;
@@ -274,8 +273,6 @@ namespace MiNET.Net
 			WriteSignedVarInt(enchantmentSeed);
 			
 			Write(blockPalette);
-
-			Write(itemstates);
 			
 			Write(multiplayerCorrelationId);
 			Write(enableNewInventorySystem);
@@ -326,8 +323,6 @@ namespace MiNET.Net
 				return;
 			}
 			
-			itemstates = ReadItemstates();
-			
 			multiplayerCorrelationId = ReadString();
 			enableNewInventorySystem = ReadBool();
 			serverVersion = ReadString();
@@ -342,33 +337,32 @@ namespace MiNET.Net
 		/// <inheritdoc />
 		public override void Reset()
 		{
-			entityIdSelf=default(long);
-			runtimeEntityId=default(long);
-			playerGamemode=default(int);
-			spawn=default(Vector3);
-			rotation=default(Vector2);
+			entityIdSelf = default;
+			runtimeEntityId = default;
+			playerGamemode = default;
+			spawn = default;
+			rotation = default;
 			levelSettings = default;
-			serverId=default(string);
-			worldId=default(string);
-			scenarioId=default(string);
-			levelId=default(string);
-			worldName=default(string);
-			premiumWorldTemplateId=default(string);
-			isTrial=default(bool);
-			movementType=default(int);
-			movementRewindHistorySize=default(int);
-			enableNewBlockBreakSystem=default(bool);
-			currentTick=default(long);
-			enchantmentSeed=default(int);
-			blockPalette=default(BlockPalette);
-			itemstates=default(Itemstates);
-			multiplayerCorrelationId=default(string);
-			enableNewInventorySystem=default(bool);
-			serverVersion=default(string);
+			serverId = default;
+			worldId = default;
+			scenarioId = default;
+			levelId = default;
+			worldName = default;
+			premiumWorldTemplateId = default;
+			isTrial = default;
+			movementType = default;
+			movementRewindHistorySize = default;
+			enableNewBlockBreakSystem = default;
+			currentTick = default;
+			enchantmentSeed = default;
+			blockPalette = default;
+			multiplayerCorrelationId = default;
+			enableNewInventorySystem = default;
+			serverVersion = default;
 			propertyData = default;
 			worldTemplateId = default;
-			clientSideGenerationEnabled = default(bool);
-			blockNetworkIdsAreHashes =default(bool);
+			clientSideGenerationEnabled = default;
+			blockNetworkIdsAreHashes = default;
 			base.Reset();
 		}
 	}

@@ -27,7 +27,7 @@ using MiNET.Effects;
 
 namespace MiNET.Items.Food;
 
-public class ItemGoldenApple() : FoodItem("minecraft:golden_apple", 322, 0, 4, 9.6)
+public class ItemGoldenApple() : FoodItem("minecraft:golden_apple", 0, 4, 9.6)
 {
 	protected override void Consume(Player player)
 	{

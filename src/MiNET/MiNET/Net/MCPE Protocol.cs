@@ -39,13 +39,14 @@ using MiNET.Utils.Metadata;
 using MiNET.Utils.Vectors;
 using MiNET.Utils.Nbt;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MiNET.Net
 {
 	public class McpeProtocolInfo
 	{
-		public const int ProtocolVersion = 766;
-		public const string GameVersion = "1.21.50";
+		public const int ProtocolVersion = 776;
+		public const string GameVersion = "1.21.60";
 	}
 
 	public interface IMcpeMessageHandler
@@ -2528,8 +2529,6 @@ namespace MiNET.Net
 
 	public partial class McpeStartGame : Packet<McpeStartGame>
 	{
-
-
 		public McpeStartGame()
 		{
 			Id = 0x0b;
@@ -8967,7 +8966,7 @@ namespace MiNET.Net
 
 			eventId = ReadSignedVarInt();
 			//eventData = ReadNbt(); todo wrong
-			for (byte i = 0; i < 60; i++) //shhhh
+			for (byte i = 0; i < 62; i++) //shhhh
 			{
 				ReadByte();
 			}
@@ -9575,7 +9574,8 @@ namespace MiNET.Net
 	public partial class McpeCreativeContent : Packet<McpeCreativeContent>
 	{
 
-		public CreativeItemStacks input; // = null;
+		public List<CreativeGroup> groups; // = null;
+		public List<CreativeItemEntry> input; // = null;
 
 		public McpeCreativeContent()
 		{
@@ -9589,6 +9589,7 @@ namespace MiNET.Net
 
 			BeforeEncode();
 
+			Write(groups);
 			Write(input);
 
 			AfterEncode();
@@ -9603,7 +9604,8 @@ namespace MiNET.Net
 
 			BeforeDecode();
 
-			input = ReadCreativeItemStacks();
+			groups = ReadCreativeGroups();
+			input = ReadCreativeItemEntry();
 
 			AfterDecode();
 		}
@@ -9615,7 +9617,8 @@ namespace MiNET.Net
 		{
 			base.ResetPacket();
 
-			input=default(CreativeItemStacks);
+			groups = default;
+			input = default;
 		}
 
 	}
@@ -9894,7 +9897,7 @@ namespace MiNET.Net
 	public partial class McpeItemComponent : Packet<McpeItemComponent>
 	{
 
-		public ItemComponentList entries; // = null;
+		public Itemstates entries; // = null;
 
 		public McpeItemComponent()
 		{
@@ -9922,7 +9925,7 @@ namespace MiNET.Net
 
 			BeforeDecode();
 
-			entries = ReadItemComponentList();
+			entries = ReadItemstates();
 
 			AfterDecode();
 		}
@@ -9934,7 +9937,7 @@ namespace MiNET.Net
 		{
 			base.ResetPacket();
 
-			entries=default(ItemComponentList);
+			entries=default;
 		}
 
 	}

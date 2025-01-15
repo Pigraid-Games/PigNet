@@ -81,6 +81,15 @@ namespace MiNET.Items
 			CanInteract = canInteract;
 		}
 
+		public Item(string name, short metadata = 0, int count = 1, bool canInteract = true)
+		{
+			Name = name;
+			Id = ItemFactory.GetItemIdByName(Name);
+			Metadata = metadata;
+			Count = (byte) count;
+			CanInteract = canInteract;
+		}
+
 		public Item(short id, short metadata = 0, int count = 1, bool canInteract = true) : this(String.Empty, id, metadata, count, canInteract)
 		{
 		}

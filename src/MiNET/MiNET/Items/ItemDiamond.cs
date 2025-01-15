@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemDiamond() : Item("minecraft:diamond", 264, canInteract: false);
+public class ItemDiamond() : Item("minecraft:diamond", canInteract: false);

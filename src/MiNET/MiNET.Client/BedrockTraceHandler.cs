@@ -203,8 +203,9 @@ namespace MiNET.Client
 			FileStream file = File.OpenWrite("newResources/creativeInventory.txt");
 			var writer = new IndentedTextWriter(new StreamWriter(file), "\t");
 			writer.WriteLine($"//Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion} Creative Inventory");
-			foreach (var item in message.input)
+			foreach (CreativeItemEntry itemEntry in message.input)
 			{
+				Item item = itemEntry.Item;
 				//Log.Warn($"Got item: {item.Name} ({item.Id} : {item.Metadata})");
 				if (item.ExtraData == null)
 				{
@@ -219,6 +220,44 @@ namespace MiNET.Client
 			writer.Flush();
 			file.Close();
 			Log.Warn("Received creative items exported to newResources/creativeInventory.txt\n");
+
+			FileStream file2 = File.OpenWrite("newResources/creativeGroups.txt");
+			var writer2 = new IndentedTextWriter(new StreamWriter(file2), "\t");
+			writer2.WriteLine("public static Dictionary<string, creativeGroup> CreativeGroups = new Dictionary<string, creativeGroup>()");
+			writer2.WriteLine("		{");
+			writer2.WriteLine("			//Generated code");
+			var lastCategory = 0;
+			foreach (var group in message.groups)
+			{
+				if (group.Icon.Id == 0)
+					continue;
+				if (group.Category != lastCategory)
+				{
+					lastCategory = group.Category;
+					if (group.Category == 1)
+					{
+						writer2.WriteLine($"			{{\"Construction\", new creativeGroup(1, \"\", new ItemAir())}},");
+					}
+					else if (group.Category == 2)
+					{
+						writer2.WriteLine($"			{{\"Equipment\", new creativeGroup(2, \"\", new ItemAir())}},");
+					}
+					else if (group.Category == 3)
+					{
+						writer2.WriteLine($"			{{\"Items\", new creativeGroup(3, \"\", new ItemAir())}},");
+					}
+					else if (group.Category == 4)
+					{
+						writer2.WriteLine($"			{{\"Nature\", new creativeGroup(4, \"\", new ItemAir())}},");
+					}
+				}
+				string groupName = group.Name.Split('.').Last();
+				writer2.WriteLine($"			{{\"{char.ToUpper(groupName[0]) + groupName.Substring(1)}\", new creativeGroup({group.Category}, \"{group.Name}\", new Item({group.Icon.Id}, {group.Icon.Metadata}))}},");
+			}
+			writer2.WriteLine("		};");
+			writer2.Flush();
+			file2.Close();
+			Log.Warn("Received creative groups exported to newResources/creativeGroups.txt\n");
 		}
 
 		public override void HandleMcpeAddItemEntity(McpeAddItemEntity message)

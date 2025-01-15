@@ -31,7 +31,7 @@ namespace MiNET.Items.Tools;
 
 public class ItemAxe : Item
 {
-	public ItemAxe(string name, short id) : base(name, id)
+	public ItemAxe(string name) : base(name)
 	{
 		CanInteract = false;
 		MaxStackSize = 1;

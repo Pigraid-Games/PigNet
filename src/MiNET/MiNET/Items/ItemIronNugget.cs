@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemIronNugget() : Item("minecraft:iron_nugget", 452, canInteract: false);
+public class ItemIronNugget() : Item("minecraft:iron_nugget", canInteract: false);

@@ -11,7 +11,7 @@ public class ItemEnderPearl : Item
 {
 	private static readonly ConcurrentDictionary<Player, bool> Cooldowns = new();
 
-	public ItemEnderPearl() : base("minecraft:ender_pearl", 368)
+	public ItemEnderPearl() : base("minecraft:ender_pearl")
 	{
 		MaxStackSize = 16;
 	}

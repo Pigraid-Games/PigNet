@@ -38,7 +38,7 @@ public class ItemSpawnEgg : Item
 	{
 	}
 
-	public ItemSpawnEgg(short metadata) : base("minecraft:spawn_egg", 383, metadata)
+	public ItemSpawnEgg(short metadata) : base("minecraft:spawn_egg", metadata: metadata)
 	{
 		MaxStackSize = 1;
 	}

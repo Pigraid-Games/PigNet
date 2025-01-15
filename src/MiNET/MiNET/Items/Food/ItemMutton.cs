@@ -25,7 +25,7 @@
 
 namespace MiNET.Items.Food;
 
-public class ItemMutton() : FoodItem("minecraft:mutton", 423, 0, 3, 1.8)
+public class ItemMutton() : FoodItem("minecraft:mutton", 0, 3, 1.8)
 {
 	public override Item GetSmelt()
 	{

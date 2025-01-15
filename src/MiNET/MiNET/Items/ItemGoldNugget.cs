@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemGoldNugget() : Item("minecraft:gold_nugget", 371, canInteract: false);
+public class ItemGoldNugget() : Item("minecraft:gold_nugget", canInteract: false);

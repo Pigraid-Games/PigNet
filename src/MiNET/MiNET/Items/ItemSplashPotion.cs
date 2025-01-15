@@ -8,9 +8,8 @@ namespace MiNET.Items;
 
 public class ItemSplashPotion : Item
 {
-	public ItemSplashPotion(short metadata = 0) : base("minecraft:splash_potion", 438)
+	public ItemSplashPotion(short metadata = 0) : base("minecraft:splash_potion", metadata: metadata)
 	{
-		Metadata = metadata;
 		MaxStackSize = 1;
 	}
 

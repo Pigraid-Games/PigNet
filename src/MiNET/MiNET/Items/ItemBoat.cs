@@ -30,7 +30,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items
 {
-	public class ItemBoat(short metadata) : Item("minecraft:boat", 333, metadata)
+	public class ItemBoat(short metadata) : Item("minecraft:boat", metadata:metadata)
 	{
 		public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 		{

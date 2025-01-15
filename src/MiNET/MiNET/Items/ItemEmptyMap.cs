@@ -30,7 +30,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items;
 
-public class ItemEmptyMap(short metadata = 0, byte count = 1) : Item("minecraft:empty_map", 395, metadata, count)
+public class ItemEmptyMap(short metadata = 0, byte count = 1) : Item("minecraft:empty_map", metadata:metadata, count:count)
 {
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{

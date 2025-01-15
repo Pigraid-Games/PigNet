@@ -22,6 +22,7 @@ using System.Net;
 using System.Numerics;
 using log4net;
 using Microsoft.IO;
+using MiNET.Items;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Plugins;
@@ -49,6 +50,8 @@ public class MiNetServer
 	public LevelManager LevelManager { get; set; }
 	public PlayerFactory PlayerFactory { get; set; }
 	public GreyListManager GreyListManager { get; set; }
+
+	public ItemFactory ItemFactory { get; set; }
 
 	public bool IsEdu { get; set; } = Config.GetProperty("EnableEdu", false);
 	public EduTokenManager EduTokenManager { get; set; }
@@ -107,7 +110,6 @@ public class MiNetServer
 		try
 		{
 			Log.Info("Starting server...");
-
 			InitializeServerRole();
 			InitializeManagers();
 			LoadPlugins();
@@ -151,6 +153,7 @@ public class MiNetServer
 		PlayerFactory ??= new PlayerFactory();
 		GreyListManager ??= new GreyListManager();
 		MotdProvider ??= new MotdProvider();
+		ItemFactory ??= new ItemFactory();
 	}
 
 	private void LoadPlugins()

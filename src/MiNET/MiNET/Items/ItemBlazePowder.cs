@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemBlazePowder() : Item("minecraft:blaze_powder", 377);
+public class ItemBlazePowder() : Item("minecraft:blaze_powder");

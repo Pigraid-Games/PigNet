@@ -25,7 +25,7 @@
 
 namespace MiNET.Items.Food;
 
-public class ItemChicken() : FoodItem("minecraft:chicken", 365, 0, 2, 1.2)
+public class ItemChicken() : FoodItem("minecraft:chicken", 0, 2, 1.2)
 {
 	public override Item GetSmelt()
 	{

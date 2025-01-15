@@ -88,7 +88,7 @@ namespace MiNET.Client
 		{
 			Action<Task, Item, int> doMobEquipmentTask = (t, item, selectedSlot) =>
 			{
-				McpeMobEquipment message = new McpeMobEquipment();
+				McpeMobEquipment message = McpeMobEquipment.CreateObject();
 				message.runtimeEntityId = client.EntityId;
 				message.item = item;
 				message.selectedSlot = (byte) selectedSlot;

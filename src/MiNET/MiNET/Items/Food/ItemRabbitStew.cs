@@ -26,7 +26,7 @@ namespace MiNET.Items.Food;
 public class ItemRabbitStew : FoodItem
 {
 
-	public ItemRabbitStew() : base("minecraft:rabbit_stew", 413, 0, 10, 12)
+	public ItemRabbitStew() : base("minecraft:rabbit_stew", 0, 10, 12)
 	{
 		MaxStackSize = 1;
 	}

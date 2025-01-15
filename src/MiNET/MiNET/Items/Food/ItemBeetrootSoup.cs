@@ -25,7 +25,7 @@ namespace MiNET.Items.Food;
 
 public class ItemBeetrootSoup : FoodItem
 {
-	public ItemBeetrootSoup() : base("minecraft:beetroot_soup", 459, 0, 6, 7.2)
+	public ItemBeetrootSoup() : base("minecraft:beetroot_soup", 0, 6, 7.2)
 	{
 		MaxStackSize = 1;
 	}

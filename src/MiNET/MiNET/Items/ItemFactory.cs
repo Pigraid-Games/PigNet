@@ -10,8 +10,6 @@ using MiNET.Items.Tools;
 using MiNET.Items.Weapons;
 using MiNET.Net.Items;
 using MiNET.Utils;
-using MiNET.Utils.Vectors;
-using MiNET.Worlds;
 
 namespace MiNET.Items;
 
@@ -32,24 +30,28 @@ public class ItemFactory
 	public static ICustomItemFactory CustomItemFactory { get; set; }
 	public static ICustomBlockItemFactory CustomBlockItemFactory { get; set; }
 
-	public static Dictionary<string, short> NameToId { get; private set; }
+	public static Dictionary<string, short> NameToId { get; private set; } = [];
 	public static Itemstates Itemstates { get; internal set; }
 
-	public static ItemTranslator Translator { get; }
+	public static ItemTranslator Translator { get; set; }
 
-	static ItemFactory()
+	public ItemFactory()
 	{
-		NameToId = BuildNameToId();
-
 		Itemstates = ResourceUtil.ReadResource<Itemstates>("itemstates.json", typeof(Item));
+		Log.Info("Loaded itemstates.json");
+
 		Translator = new ItemTranslator(Itemstates);
+		Log.Info("Initialized ItemTranslator");
+		
+		NameToId = BuildNameToId();
+		Log.Info($"NameToId initialized with {NameToId.Count} items");
 	}
 
 	private static Dictionary<string, short> BuildNameToId()
 	{
 		var nameToId = new Dictionary<string, short>();
 
-		for (short idx = -600; idx < 1100; idx++)
+		for (short idx = -999; idx < 1200; idx++)
 			try
 			{
 				Item item = GetItem(idx);
@@ -84,13 +86,20 @@ public class ItemFactory
 			{
 				Log.Error($"Failed to process item ID {idx}: {ex.Message}", ex);
 			}
+		Log.Info($"Found {nameToId.Count} items");
 		return nameToId;
 	}
 
 	public static short GetItemIdByName(string itemName)
 	{
 		itemName = itemName.ToLowerInvariant().Replace("_", "").Replace("minecraft:", "");
-		if (NameToId.TryGetValue(itemName, out short name)) return name;
+		if(NameToId == null)
+		{
+			Log.Error("The NameToId field is null!");
+			return new ItemAir().Id;
+		}
+		if (NameToId.TryGetValue(itemName, out short id))
+			return id;
 		return (short) BlockFactory.GetBlockIdByName(itemName);
 	}
 
@@ -558,232 +567,232 @@ public class ItemFactory
 	}
 }
 
-public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward", 509);
+public class ItemMusicDiscWard() : Item("minecraft:music_disc_ward");
 
-public class ItemSparkler() : Item("minecraft:sparkler", 442);
+public class ItemSparkler() : Item("minecraft:sparkler");
 
-public class ItemNautilusShell() : Item("minecraft:nautilus_shell", 465);
+public class ItemNautilusShell() : Item("minecraft:nautilus_shell");
 
-public class ItemComparator() : Item("minecraft:comparator", 404);
+public class ItemComparator() : Item("minecraft:comparator");
 
-public class ItemRabbitFoot() : Item("minecraft:rabbit_foot", 414);
+public class ItemRabbitFoot() : Item("minecraft:rabbit_foot");
 
-public class ItemLingeringPotion(short metadata = 0) : Item("minecraft:lingering_potion", 441, metadata: metadata);
+public class ItemLingeringPotion(short metadata = 0) : Item("minecraft:lingering_potion", metadata: metadata);
 
-public class ItemCampfire() : Item("minecraft:campfire", 720);
+public class ItemCampfire() : Item("minecraft:campfire");
 
-public class ItemMusicDiscFar() : Item("minecraft:music_disc_far", 504);
+public class ItemMusicDiscFar() : Item("minecraft:music_disc_far");
 
-public class ItemPumpkinSeeds() : Item("minecraft:pumpkin_seeds", 361);
+public class ItemPumpkinSeeds() : Item("minecraft:pumpkin_seeds");
 
-public class ItemCommandBlockMinecart() : Item("minecraft:command_block_minecart", 443);
+public class ItemCommandBlockMinecart() : Item("minecraft:command_block_minecart");
 
-public class ItemMelonSeeds() : Item("minecraft:melon_seeds", 362);
+public class ItemMelonSeeds() : Item("minecraft:melon_seeds");
 
-public class ItemNetherWart() : Item("minecraft:nether_wart", 372);
+public class ItemNetherWart() : Item("minecraft:nether_wart");
 
-public class ItemMusicDiscStrad() : Item("minecraft:music_disc_strad", 508);
+public class ItemMusicDiscStrad() : Item("minecraft:music_disc_strad");
 
-public class ItemBowl() : Item("minecraft:bowl", 281);
+public class ItemBowl() : Item("minecraft:bowl");
 
-public class ItemString() : Item("minecraft:string", 287);
+public class ItemString() : Item("minecraft:string");
 
-public class ItemFeather() : Item("minecraft:feather", 288);
+public class ItemFeather() : Item("minecraft:feather");
 
-public class ItemGunpowder() : Item("minecraft:gunpowder", 289);
+public class ItemGunpowder() : Item("minecraft:gunpowder");
 
-public class ItemMusicDiscMellohi() : Item("minecraft:music_disc_mellohi", 506);
+public class ItemMusicDiscMellohi() : Item("minecraft:music_disc_mellohi");
 
-public class ItemEnderEye() : Item("minecraft:ender_eye", 381);
+public class ItemEnderEye() : Item("minecraft:ender_eye");
 
-public class ItemShield() : Item("minecraft:shield", 513);
+public class ItemShield() : Item("minecraft:shield");
 
-public class ItemFlint() : Item("minecraft:flint", 318);
+public class ItemFlint() : Item("minecraft:flint");
 
-public class ItemHeartOfTheSea() : Item("minecraft:heart_of_the_sea", 467);
+public class ItemHeartOfTheSea() : Item("minecraft:heart_of_the_sea");
 
-public class ItemMinecart() : Item("minecraft:minecart", 328);
+public class ItemMinecart() : Item("minecraft:minecart");
 
-public class ItemWrittenBook() : Item("minecraft:written_book", 387);
+public class ItemWrittenBook() : Item("minecraft:written_book");
 
-public class ItemLeather() : Item("minecraft:leather", 334);
+public class ItemLeather() : Item("minecraft:leather");
 
-public class ItemBrick() : Item("minecraft:brick", 336);
+public class ItemBrick() : Item("minecraft:brick");
 
-public class ItemCarrotOnAStick() : Item("minecraft:carrot_on_a_stick", 398);
+public class ItemCarrotOnAStick() : Item("minecraft:carrot_on_a_stick");
 
-public class ItemReeds() : Item("minecraft:item.reeds", 338);
+public class ItemReeds() : Item("minecraft:item.reeds");
 
-public class ItemPaper() : Item("minecraft:paper", 339);
+public class ItemPaper() : Item("minecraft:paper");
 
-public class ItemTrident() : Item("minecraft:trident", 455);
+public class ItemTrident() : Item("minecraft:trident");
 
-public class ItemSlimeBall() : Item("minecraft:slime_ball", 341);
+public class ItemSlimeBall() : Item("minecraft:slime_ball");
 
-public class ItemChestMinecart() : Item("minecraft:chest_minecart", 342);
+public class ItemChestMinecart() : Item("minecraft:chest_minecart");
 
-public class ItemFishingRod() : Item("minecraft:fishing_rod", 346);
+public class ItemFishingRod() : Item("minecraft:fishing_rod");
 
-public class ItemClock() : Item("minecraft:clock", 347);
+public class ItemClock() : Item("minecraft:clock");
 	
-public class ItemGlowstoneDust() : Item("minecraft:glowstone_dust", 348);
+public class ItemGlowstoneDust() : Item("minecraft:glowstone_dust");
 
-public class ItemNameTag() : Item("minecraft:name_tag", 421);
+public class ItemNameTag() : Item("minecraft:name_tag");
 
-public class ItemCake() : Item("minecraft:cake", 354);
+public class ItemCake() : Item("minecraft:cake");
 
-public class ItemRepeater() : Item("minecraft:repeater", 356);
+public class ItemRepeater() : Item("minecraft:repeater");
 
-public class ItemGhastTear() : Item("minecraft:ghast_tear", 370);
+public class ItemGhastTear() : Item("minecraft:ghast_tear");
 
-public class ItemGlassBottle() : Item("minecraft:glass_bottle", 374);
+public class ItemGlassBottle() : Item("minecraft:glass_bottle");
 
-public class ItemFermentedSpiderEye() : Item("minecraft:fermented_spider_eye", 376);
+public class ItemFermentedSpiderEye() : Item("minecraft:fermented_spider_eye");
 
-public class ItemMagmaCream() : Item("minecraft:magma_cream", 378);
+public class ItemMagmaCream() : Item("minecraft:magma_cream");
 
-public class ItemBrewingStand() : Item("minecraft:brewing_stand", 379);
+public class ItemBrewingStand() : Item("minecraft:brewing_stand");
 
-public class ItemRapidFertilizer() : Item("minecraft:rapid_fertilizer", 449); // what is this?
+public class ItemRapidFertilizer() : Item("minecraft:rapid_fertilizer"); // what is this?
 
-public class ItemGlisteningMelonSlice() : Item("minecraft:glistering_melon_slice", 382);
+public class ItemGlisteningMelonSlice() : Item("minecraft:glistering_melon_slice");
 
-public class ItemFireCharge() : Item("minecraft:fire_charge", 385);
+public class ItemFireCharge() : Item("minecraft:fire_charge");
 
-public class ItemWritableBook() : Item("minecraft:writable_book", 386);
+public class ItemWritableBook() : Item("minecraft:writable_book");
 
-public class ItemEmerald() : Item("minecraft:emerald", 388);
+public class ItemEmerald() : Item("minecraft:emerald");
 
-public class ItemMusicDiscPigstep() : Item("minecraft:music_disc_pigstep", 759);
+public class ItemMusicDiscPigstep() : Item("minecraft:music_disc_pigstep");
 
-public class ItemFlowerPot() : Item("minecraft:flower_pot", 390);
+public class ItemFlowerPot() : Item("minecraft:flower_pot");
 
-public class ItemNetherstar() : Item("minecraft:nether_star", 399);
+public class ItemNetherstar() : Item("minecraft:nether_star");
 
-public class ItemHopperMinecart() : Item("minecraft:hopper_minecart", 408);
+public class ItemHopperMinecart() : Item("minecraft:hopper_minecart");
 
-public class ItemFireworkStar() : Item("minecraft:firework_star", 402);
+public class ItemFireworkStar() : Item("minecraft:firework_star");
 
-public class ItemNetherbrick() : Item("minecraft:netherbrick", 405);
+public class ItemNetherbrick() : Item("minecraft:netherbrick");
 
-public class ItemQuartz() : Item("minecraft:quartz", 406);
+public class ItemQuartz() : Item("minecraft:quartz");
 
-public class ItemTntMinecart() : Item("minecraft:tnt_minecart", 407);
+public class ItemTntMinecart() : Item("minecraft:tnt_minecart");
 
-public class ItemHopper() : Item("minecraft:hopper", 410);
+public class ItemHopper() : Item("minecraft:hopper");
 
-public class ItemDragonBreath() : Item("minecraft:dragon_breath", 437);
+public class ItemDragonBreath() : Item("minecraft:dragon_breath");
 
-public class ItemRabbitHide() : Item("minecraft:rabbit_hide", 415);
+public class ItemRabbitHide() : Item("minecraft:rabbit_hide");
 
-public class ItemMusicDisc13() : Item("minecraft:music_disc_13", 500);
+public class ItemMusicDisc13() : Item("minecraft:music_disc_13");
 
-public class ItemMusicDiscCat() : Item("minecraft:music_disc_cat", 501);
+public class ItemMusicDiscCat() : Item("minecraft:music_disc_cat");
 
-public class ItemMusicDiscBlocks() : Item("minecraft:music_disc_blocks", 502);
+public class ItemMusicDiscBlocks() : Item("minecraft:music_disc_blocks");
 
-public class ItemMusicDiscChirp() : Item("minecraft:music_disc_chirp", 503);
+public class ItemMusicDiscChirp() : Item("minecraft:music_disc_chirp");
 
-public class ItemMusicDiscMall() : Item("minecraft:music_disc_mall", 505);
+public class ItemMusicDiscMall() : Item("minecraft:music_disc_mall");
 
-public class ItemMusicDiscStal() : Item("minecraft:music_disc_stal", 507);
+public class ItemMusicDiscStal() : Item("minecraft:music_disc_stal");
 
-public class ItemMusicDisc11() : Item("minecraft:music_disc_11", 510);
+public class ItemMusicDisc11() : Item("minecraft:music_disc_11");
 
-public class ItemMusicDiscWait() : Item("minecraft:music_disc_wait", 511);
+public class ItemMusicDiscWait() : Item("minecraft:music_disc_wait");
 
-public class ItemLead() : Item("minecraft:lead", 420);
+public class ItemLead() : Item("minecraft:lead");
 
-public class ItemPrismarineCrystals() : Item("minecraft:prismarine_crystals", 422);
+public class ItemPrismarineCrystals() : Item("minecraft:prismarine_crystals");
 
-public class ItemArmorStand() : Item("minecraft:armor_stand", 425);
+public class ItemArmorStand() : Item("minecraft:armor_stand");
 
-public class ItemPhantomMembrane() : Item("minecraft:phantom_membrane", 470);
+public class ItemPhantomMembrane() : Item("minecraft:phantom_membrane");
 
-public class ItemSuspiciousStew() : Item("minecraft:suspicious_stew", 734);
+public class ItemSuspiciousStew() : Item("minecraft:suspicious_stew");
 
-public class ItemPoppedChorusFruit() : Item("minecraft:popped_chorus_fruit", 433);
+public class ItemPoppedChorusFruit() : Item("minecraft:popped_chorus_fruit");
 
-public class ItemPrismarineShard() : Item("minecraft:prismarine_shard", 409);
+public class ItemPrismarineShard() : Item("minecraft:prismarine_shard");
 
-public class ItemShulkerShell() : Item("minecraft:shulker_shell", 445);
+public class ItemShulkerShell() : Item("minecraft:shulker_shell");
 
-public class ItemTotemOfUndying() : Item("minecraft:totem_of_undying", 450);
+public class ItemTotemOfUndying() : Item("minecraft:totem_of_undying");
 
-public class ItemTurtleShellPiece() : Item("minecraft:scute", 468);
+public class ItemTurtleShellPiece() : Item("minecraft:scute");
 
-public class ItemBalloon() : Item("minecraft:balloon", 448);
+public class ItemBalloon() : Item("minecraft:balloon");
 
-public class ItemBannerPattern() : Item("minecraft:banner_pattern", 434);
+public class ItemBannerPattern() : Item("minecraft:banner_pattern");
 
-public class ItemHoneycomb() : Item("minecraft:honeycomb", 736);
+public class ItemHoneycomb() : Item("minecraft:honeycomb");
 
-public class ItemCompound() : Item("minecraft:compound", 499);
+public class ItemCompound() : Item("minecraft:compound");
 
-public class ItemIceBomb() : Item("minecraft:ice_bomb", 453);
+public class ItemIceBomb() : Item("minecraft:ice_bomb");
 
-public class ItemBleach() : Item("minecraft:bleach", 451);
+public class ItemBleach() : Item("minecraft:bleach");
 
-public class ItemMedicine() : Item("minecraft:medicine", 447);
+public class ItemMedicine() : Item("minecraft:medicine");
 
-public class ItemLodestoneCompass() : Item("minecraft:lodestone_compass", 741);
+public class ItemLodestoneCompass() : Item("minecraft:lodestone_compass");
 
-public class ItemNetheriteIngot() : Item("minecraft:netherite_ingot", 742);
+public class ItemNetheriteIngot() : Item("minecraft:netherite_ingot");
 
-public class ItemNetheriteScrap() : Item("minecraft:netherite_scrap", 752);
+public class ItemNetheriteScrap() : Item("minecraft:netherite_scrap");
 
-public class ItemChain() : Item("minecraft:chain", 758);
+public class ItemChain() : Item("minecraft:chain");
 
-public class ItemNetherSprouts() : Item("minecraft:nether_sprouts", 760);
+public class ItemNetherSprouts() : Item("minecraft:nether_sprouts");
 
-public class ItemSoulCampfire() : Item("minecraft:soul_campfire", 801);
+public class ItemSoulCampfire() : Item("minecraft:soul_campfire");
 
-public class ItemEndCrystal() : Item("minecraft:end_crystal", 426);
+public class ItemEndCrystal() : Item("minecraft:end_crystal");
 
-public class ItemMace() : ItemSword("minecraft:mace", 1047, false);
+public class ItemMace() : ItemSword("minecraft:mace", canInteract:false);
 
-public class ItemSpyglass() : Item("minecraft:spyglass", 624);
+public class ItemSpyglass() : Item("minecraft:spyglass");
 
-public class ItemGlowFrame() : Item("minecraft:glow_frame", 621);
+public class ItemGlowFrame() : Item("minecraft:glow_frame");
 
-public class ItemChickenSpawnEgg() : Item("minecraft:chicken_spawn_egg", 435);
+public class ItemChickenSpawnEgg() : Item("minecraft:chicken_spawn_egg");
 
-public class ItemPiglinBannerPattern() : Item("minecraft:piglin_banner_pattern", 587);
+public class ItemPiglinBannerPattern() : Item("minecraft:piglin_banner_pattern");
 
-public class ItemMojangBannerPattern() : Item("minecraft:mojang_banner_pattern", 584);
+public class ItemMojangBannerPattern() : Item("minecraft:mojang_banner_pattern");
 
-public class ItemSkullBannerPattern() : Item("minecraft:skull_banner_pattern", 583);
+public class ItemSkullBannerPattern() : Item("minecraft:skull_banner_pattern");
 
-public class ItemDarkOakSign() : Item("minecraft:dark_oak_sign", 580);
+public class ItemDarkOakSign() : Item("minecraft:dark_oak_sign");
 
-public class ItemBordureIndentedBannerPattern() : Item("minecraft:bordure_intented_banner_pattern", 586);
+public class ItemBordureIndentedBannerPattern() : Item("minecraft:bordure_intented_banner_pattern");
 
-public class ItemScute() : Item("minecraft:scute", 572);
+public class ItemScute() : Item("minecraft:scute");
 
-public class ItemFlowerBannerPattern() : Item("minecraft:flower_banner_pattern", 581);
+public class ItemFlowerBannerPattern() : Item("minecraft:flower_banner_pattern");
 
-public class ItemCreeperBannerPattern() : Item("minecraft:creeper_banner_pattern", 582);
+public class ItemCreeperBannerPattern() : Item("minecraft:creeper_banner_pattern");
 
-public class ItemFieldMasonedBannerPattern() : Item("minecraft:field_masoned_banner_pattern", 585);
+public class ItemFieldMasonedBannerPattern() : Item("minecraft:field_masoned_banner_pattern");
 
-public class ItemAmethystShard() : Item("minecaft:amethyst_shard", 623);
+public class ItemAmethystShard() : Item("minecaft:amethyst_shard");
 
-public class ItemWarpedFungusOnAStick() : Item("minecraft:warped_fungus_on_a_stick", 757);
+public class ItemWarpedFungusOnAStick() : Item("minecraft:warped_fungus_on_a_stick");
 
-public class ItemRecoveryCompass() : Item("minecraft:recovery_compass", 778);
+public class ItemRecoveryCompass() : Item("minecraft:recovery_compass");
 
-public class ItemEchoShard() : Item("minecraft:echo_shard", 779);
+public class ItemEchoShard() : Item("minecraft:echo_shard");
 
-public class ItemOminousBottle(short metadata = 0) : Item("minecraft:ominous_bottle", 1048, metadata: metadata);
+public class ItemOminousBottle(short metadata = 0) : Item("minecraft:ominous_bottle", metadata: metadata);
 
-public class ItemOminousTrialKey() : Item("minecraft:ominous_trial_key", 1049);
+public class ItemOminousTrialKey() : Item("minecraft:ominous_trial_key");
 
-public class ItemWolfArmor() : Item("minecraft:wolf_armor", 1050);
+public class ItemWolfArmor() : Item("minecraft:wolf_armor");
 
-public class ItemBrush() : Item("minecraft:brush", 1051);
+public class ItemBrush() : Item("minecraft:brush");
 
-public class ItemBoneMeal() : Item("minecraft:bone_meal", 15);
+public class ItemBoneMeal() : Item("minecraft:bone_meal");
 
-public class ItemFlowBannerPattern() : Item("minecraft:flow_banner_pattern", 1069);
+public class ItemFlowBannerPattern() : Item("minecraft:flow_banner_pattern");
 
-public class ItemGusterBannerPattern() : Item("minecraft:guster_banner_pattern", 1070);
+public class ItemGusterBannerPattern() : Item("minecraft:guster_banner_pattern");

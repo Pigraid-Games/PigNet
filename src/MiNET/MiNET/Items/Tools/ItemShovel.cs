@@ -34,7 +34,7 @@ namespace MiNET.Items.Tools;
 
 public class ItemShovel : Item
 {
-	internal ItemShovel(string name, short id) : base(name, id)
+	internal ItemShovel(string name) : base(name)
 	{
 		CanInteract = false;
 		MaxStackSize = 1;

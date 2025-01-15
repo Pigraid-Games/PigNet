@@ -24,6 +24,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Linq;
 using fNbt;
 using MiNET.Blocks;
 using MiNET.Items;
@@ -35,23 +36,194 @@ using MiNET.Utils;
 
 namespace MiNET;
 
+public class CreativeGroup
+{
+	public int Category { get; set; }
+	public string Name { get; set; }
+	public Item Icon { get; set; }
+
+	public CreativeGroup(int category, string name, Item item)
+	{
+		Category = category;
+		Name = name;
+		Icon = item;
+	}
+}
+
+public class CreativeItemEntry
+{
+	public uint GroupIndex { get; set; }
+	public Item Item { get; set; }
+	
+	public CreativeItemEntry(uint groupIndex, Item item)
+	{
+		GroupIndex = groupIndex;
+		Item = item;
+	}
+}
+
 public static class InventoryUtils
 {
-	public static CreativeItemStacks GetCreativeMetadataSlots()
+	public static List<Item> ItemList;
+
+	public static Dictionary<string, CreativeGroup> CreativeGroups = new()
+		{
+			{"Construction", new CreativeGroup(1, "", new ItemAir())},
+			{"Planks", new CreativeGroup(1, "itemGroup.name.planks", new Item(5, 0))},
+			{"Walls", new CreativeGroup(1, "itemGroup.name.walls", new Item(139, 0))},
+			{"Fence", new CreativeGroup(1, "itemGroup.name.fence", new Item(85, 0))},
+			{"FenceGate", new CreativeGroup(1, "itemGroup.name.fenceGate", new Item(107, 0))},
+			{"Stairs", new CreativeGroup(1, "itemGroup.name.stairs", new Item(67, 0))},
+			{"Door", new CreativeGroup(1, "itemGroup.name.door", new Item(324, 0))},
+			{"Trapdoor", new CreativeGroup(1, "itemGroup.name.trapdoor", new Item(96, 0))},
+			{"Glass", new CreativeGroup(1, "itemGroup.name.glass", new Item(20, 0))},
+			{"GlassPane", new CreativeGroup(1, "itemGroup.name.glassPane", new Item(102, 0))},
+			{"Slab", new CreativeGroup(1, "itemGroup.name.slab", new Item(44, 0))},
+			{"StoneBrick", new CreativeGroup(1, "itemGroup.name.stoneBrick", new Item(98, 0))},
+			{"Sandstone", new CreativeGroup(1, "itemGroup.name.sandstone", new Item(24, 0))},
+			{"Copper", new CreativeGroup(1, "itemGroup.name.copper", new Item(-340, 0))},
+			{"Wool", new CreativeGroup(1, "itemGroup.name.wool", new Item(35, 0))},
+			{"WoolCarpet", new CreativeGroup(1, "itemGroup.name.woolCarpet", new Item(171, 0))},
+			{"ConcretePowder", new CreativeGroup(1, "itemGroup.name.concretePowder", new Item(237, 0))},
+			{"Concrete", new CreativeGroup(1, "itemGroup.name.concrete", new Item(236, 0))},
+			{"StainedClay", new CreativeGroup(1, "itemGroup.name.stainedClay", new Item(172, 0))},
+			{"GlazedTerracotta", new CreativeGroup(1, "itemGroup.name.glazedTerracotta", new Item(220, 0))},
+			{"Equipment", new CreativeGroup(2, "", new ItemAir())},
+			{"Ore", new CreativeGroup(2, "itemGroup.name.ore", new Item(15, 0))},
+			{"Stone", new CreativeGroup(2, "itemGroup.name.stone", new Item(1, 0))},
+			{"Log", new CreativeGroup(2, "itemGroup.name.log", new Item(17, 0))},
+			{"Wood", new CreativeGroup(2, "itemGroup.name.wood", new Item(-212, 0))},
+			{"Leaves", new CreativeGroup(2, "itemGroup.name.leaves", new Item(18, 0))},
+			{"Sapling", new CreativeGroup(2, "itemGroup.name.sapling", new Item(6, 0))},
+			{"Seed", new CreativeGroup(2, "itemGroup.name.seed", new Item(295, 0))},
+			{"Crop", new CreativeGroup(2, "itemGroup.name.crop", new Item(296, 0))},
+			{"Grass", new CreativeGroup(2, "itemGroup.name.grass", new Item(-848, 0))},
+			{"Coral_decorations", new CreativeGroup(2, "itemGroup.name.coral_decorations", new Item(-131, 3))},
+			{"Flower", new CreativeGroup(2, "itemGroup.name.flower", new Item(37, 0))},
+			{"Dye", new CreativeGroup(2, "itemGroup.name.dye", new Item(351, 11))},
+			{"RawFood", new CreativeGroup(2, "itemGroup.name.rawFood", new Item(365, 0))},
+			{"Mushroom", new CreativeGroup(2, "itemGroup.name.mushroom", new Item(39, 0))},
+			{"MonsterStoneEgg", new CreativeGroup(2, "itemGroup.name.monsterStoneEgg", new Item(97, 0))},
+			{"MobEgg", new CreativeGroup(2, "itemGroup.name.mobEgg", new Item(383, 10))},
+			{"Coral", new CreativeGroup(2, "itemGroup.name.coral", new Item(-132, 0))},
+			{"Sculk", new CreativeGroup(2, "itemGroup.name.sculk", new Item(-458, 0))},
+			{"Items", new CreativeGroup(3, "", new ItemAir())},
+			{"Helmet", new CreativeGroup(3, "itemGroup.name.helmet", new Item(298, 0))},
+			{"Chestplate", new CreativeGroup(3, "itemGroup.name.chestplate", new Item(299, 0))},
+			{"Leggings", new CreativeGroup(3, "itemGroup.name.leggings", new Item(300, 0))},
+			{"Boots", new CreativeGroup(3, "itemGroup.name.boots", new Item(301, 0))},
+			{"Sword", new CreativeGroup(3, "itemGroup.name.sword", new Item(268, 0))},
+			{"Axe", new CreativeGroup(3, "itemGroup.name.axe", new Item(271, 0))},
+			{"Pickaxe", new CreativeGroup(3, "itemGroup.name.pickaxe", new Item(270, 0))},
+			{"Shovel", new CreativeGroup(3, "itemGroup.name.shovel", new Item(269, 0))},
+			{"Hoe", new CreativeGroup(3, "itemGroup.name.hoe", new Item(290, 0))},
+			{"Arrow", new CreativeGroup(3, "itemGroup.name.arrow", new Item(262, 0))},
+			{"CookedFood", new CreativeGroup(3, "itemGroup.name.cookedFood", new Item(366, 0))},
+			{"MiscFood", new CreativeGroup(3, "itemGroup.name.miscFood", new Item(297, 0))},
+			{"GoatHorn", new CreativeGroup(3, "itemGroup.name.goatHorn", new Item(761, 0))},
+			{"Bundles", new CreativeGroup(3, "itemGroup.name.bundles", new Item(260, 0))},
+			{"HorseArmor", new CreativeGroup(3, "itemGroup.name.horseArmor", new Item(416, 0))},
+			{"Potion", new CreativeGroup(3, "itemGroup.name.potion", new Item(373, 0))},
+			{"SplashPotion", new CreativeGroup(3, "itemGroup.name.splashPotion", new Item(438, 0))},
+			{"LingeringPotion", new CreativeGroup(3, "itemGroup.name.lingeringPotion", new Item(441, 0))},
+			{"OminousBottle", new CreativeGroup(3, "itemGroup.name.ominousBottle", new Item(628, 0))},
+			{"Nature", new CreativeGroup(4, "", new ItemAir())},
+			{"Bed", new CreativeGroup(4, "itemGroup.name.bed", new Item(355, 0))},
+			{"Candles", new CreativeGroup(4, "itemGroup.name.candles", new Item(-412, 0))},
+			{"Anvil", new CreativeGroup(4, "itemGroup.name.anvil", new Item(145, 0))},
+			{"Chest", new CreativeGroup(4, "itemGroup.name.chest", new Item(54, 0))},
+			{"ShulkerBox", new CreativeGroup(4, "itemGroup.name.shulkerBox", new Item(205, 0))},
+			{"Record", new CreativeGroup(4, "itemGroup.name.record", new Item(500, 0))},
+			{"Sign", new CreativeGroup(4, "itemGroup.name.sign", new Item(323, 0))},
+			{"Hanging_sign", new CreativeGroup(4, "itemGroup.name.hanging_sign", new Item(-500, 0))},
+			{"Skull", new CreativeGroup(4, "itemGroup.name.skull", new Item(-968, 0))},
+			{"EnchantedBook", new CreativeGroup(4, "itemGroup.name.enchantedBook", new Item(403, 0))},
+			{"Boat", new CreativeGroup(4, "itemGroup.name.boat", new Item(333, 0))},
+			{"Chestboat", new CreativeGroup(4, "itemGroup.name.chestboat", new Item(675, 0))},
+			{"Rail", new CreativeGroup(4, "itemGroup.name.rail", new Item(66, 0))},
+			{"Minecart", new CreativeGroup(4, "itemGroup.name.minecart", new Item(328, 0))},
+			{"Buttons", new CreativeGroup(4, "itemGroup.name.buttons", new Item(143, 0))},
+			{"PressurePlate", new CreativeGroup(4, "itemGroup.name.pressurePlate", new Item(72, 0))},
+			{"Banner", new CreativeGroup(4, "itemGroup.name.banner", new Item(446, 0))},
+			{"Banner_pattern", new CreativeGroup(4, "itemGroup.name.banner_pattern", new Item(434, 0))},
+			{"PotterySherds", new CreativeGroup(4, "itemGroup.name.potterySherds", new Item(694, 0))},
+			{"Smithing_templates", new CreativeGroup(4, "itemGroup.name.smithing_templates", new Item(717, 0))},
+			{"Firework", new CreativeGroup(4, "itemGroup.name.firework", new Item(401, 0))},
+			{"FireworkStars", new CreativeGroup(4, "itemGroup.name.fireworkStars", new Item(402, 0))},
+		};
+
+	public static List<CreativeItemEntry> GetCreativeMetadataSlots()
 	{
-		var slotData = new CreativeItemStacks();
-		slotData.AddRange(CreativeInventoryItems);
+		var keys = CreativeGroups.Keys.ToList();
+		var slotData = new List<CreativeItemEntry>();
+		foreach (var kvp in CreativeInventoryItems)
+		{
+			string key = kvp.Key;
+			List<Item> items = kvp.Value;
+
+			foreach (var item in items)
+			{
+				slotData.Add(new CreativeItemEntry((uint) keys.IndexOf(key), item));
+			}
+		}
+
+		if (ItemList == null)
+		{
+			ItemList = CreativeInventoryItems.Values.SelectMany(itemList => itemList).ToList();
+		}
 		return slotData;
 	}
 
+	public static List<CreativeGroup> GetCreativeGroups()
+	{
+		var groups = new List<CreativeGroup>();
+
+		foreach (var group in CreativeGroups)
+		{
+			groups.Add(new CreativeGroup(group.Value.Category, group.Value.Name, group.Value.Icon));
+		}
+		return groups;
+	}
+
+	public static Dictionary<string, List<Item>> CreativeInventoryItems = new Dictionary<string, List<Item>>() //group name, item
+		{
+			{"Planks", new List<Item>
+				{
+					new("minecraft:planks"),			 // oak_planks
+					new("minecraft:planks", metadata:1), // spruce_planks
+					new("minecraft:planks", metadata:2), // birch_planks
+					new("minecraft:planks", metadata:3), // jungle_planks
+					new("minecraft:planks", metadata:4), // acacia_planks
+					new("minecraft:planks", metadata:5)  // dark_oak_planks
+				}
+			},
+			{"Walls", new List<Item>
+				{
+					new("minecraft:cobblestone_wall", metadata:1), //mossy_cobblestone_wall
+					new("minecraft:cobblestone_wall", metadata:2), //granite_wall
+					new("minecraft:cobblestone_wall", metadata:3), //diorite_wall
+					new("minecraft:cobblestone_wall", metadata:4), //andesite_wall
+					new("minecraft:cobblestone_wall", metadata:5), //sandstone_wall
+					new("minecraft:cobblestone_wall", metadata:6), //red_sandstone_wall
+					new("minecraft:cobblestone_wall", metadata:7), //stone_brick_wall
+					new("minecraft:cobblestone_wall", metadata:8), //mossy_stone_brick_wall
+					new("minecraft:cobblestone_wall", metadata:9), //brick_wall
+					new("minecraft:cobblestone_wall", metadata:10), //nether_brick_wall
+					new("minecraft:cobblestone_wall", metadata:11), //red_nether_brick_wall
+					new("minecraft:cobblestone_wall", metadata:12), //end_stone_wall
+					new("minecraft:cobblestone_wall", metadata:13), //prismarine_wall
+				}
+			}
+		};
+
 	// GENERATED CODE. DON'T EDIT BY HAND
-	public static List<Item> CreativeInventoryItems = new()
+	public static List<Item> CreativeInventoryItemsOLD = new List<Item>
 	{
 		// Cusotm item test
 		new Item(1113),
 		//Minecraft Bedrock Edition 1.13.0 Creative Inventory
 		new Item(586), //bordure_intented_banner_pattern
-		new Item(572), //scute
+		new Item("minecraft:scute"), //scute
 		new Item(581), //flower_banned_pattern
 		new Item(582), //creeper_banner_pattern
 		new Item(585), //field_masoned_banner_pattern
@@ -735,20 +907,20 @@ public static class InventoryUtils
 		new ItemWarpedFungusOnAStick(),
 		new ItemSnowball(),
 		new ItemWindCharge(),
-		new Item(359, 0), //shears
-		new Item(259, 0), //flint_and_steel
+		new Item("minecraft:shears"), //shears
+		new Item("minecraft:flint_and_steel"), //flint_and_steel
 		new ItemLead(),
 		new ItemClock(),
 		new ItemCompass(),
 		new ItemRecoveryCompass(),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Ponder),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Sing),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Seek),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Feel),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Admire),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Call),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Yearn),
-		new ItemGoatHorn(ItemGoatHorn.GoatHornType.Dream),
+		new ItemGoatHorn(GoatHornType.Ponder),
+		new ItemGoatHorn(GoatHornType.Sing),
+		new ItemGoatHorn(GoatHornType.Seek),
+		new ItemGoatHorn(GoatHornType.Feel),
+		new ItemGoatHorn(GoatHornType.Admire),
+		new ItemGoatHorn(GoatHornType.Call),
+		new ItemGoatHorn(GoatHornType.Yearn),
+		new ItemGoatHorn(GoatHornType.Dream),
 		new ItemEmptyMap(),
 		new ItemEmptyMap(2),
 		new ItemSaddle(),

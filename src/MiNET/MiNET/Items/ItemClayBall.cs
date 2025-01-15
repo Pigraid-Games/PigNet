@@ -1,6 +1,6 @@
 ﻿namespace MiNET.Items;
 
-public class ItemClayBall() : Item("minecraft:clay_ball", 337, canInteract: false)
+public class ItemClayBall() : Item("minecraft:clay_ball", canInteract: false)
 {
 	public override Item GetSmelt()
 	{

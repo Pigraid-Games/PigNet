@@ -26,7 +26,7 @@ using MiNET.Effects;
 
 namespace MiNET.Items.Food;
 
-public class ItemPoisonousPotato() : FoodItem("minecraft:poisonous_potato", 394, 0, 2, 1.2)
+public class ItemPoisonousPotato() : FoodItem("minecraft:poisonous_potato", 0, 2, 1.2)
 {
 	protected override void Consume(Player player)
 	{

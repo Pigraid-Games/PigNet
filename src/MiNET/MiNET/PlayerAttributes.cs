@@ -94,7 +94,12 @@ namespace MiNET
 		public string Name { get; set; }
 
 		[JsonProperty("component_based")]
-		public bool ComponentBased { get; set; } = false; 
-		//public int RuntimeId { get; set; }
+		public bool ComponentBased { get; set; } = false;
+
+		[JsonProperty("version")]
+		public int Version { get; set; }
+
+		[JsonProperty("components")]
+		public byte[] Components { get; set; }
 	}
 }

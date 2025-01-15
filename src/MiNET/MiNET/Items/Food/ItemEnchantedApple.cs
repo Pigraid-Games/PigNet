@@ -28,7 +28,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items.Food;
 
-public class ItemEnchantedApple() : FoodItem("minecraft:enchanted_golden_apple", 466, 0, 4, 9.6)
+public class ItemEnchantedApple() : FoodItem("minecraft:enchanted_golden_apple", 0, 4, 9.6)
 {
 	private bool _isUsing;
 	

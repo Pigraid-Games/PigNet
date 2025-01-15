@@ -34,7 +34,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items;
 
-public class ItemPainting() : Item("minecraft:painting", 321)
+public class ItemPainting() : Item("minecraft:painting")
 {
 	public class PaintingData(string title, int width, int widthOffset, int height, int heightOffset)
 	{

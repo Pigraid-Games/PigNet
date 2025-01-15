@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
 using MiNET.Utils.Vectors;
-using MiNET.Worlds;
 
 namespace MiNET.Items.Food;
 
-public class ItemChorusFruit() : FoodItem("minecraft:chorus_fruit", 432, 0, 4, 2.4)
+public class ItemChorusFruit() : FoodItem("minecraft:chorus_fruit", 0, 4, 2.4)
 {
 	public override Item GetSmelt()
 	{

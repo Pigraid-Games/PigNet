@@ -23,47 +23,82 @@
 
 #endregion
 
+using System;
+
 namespace MiNET.Items;
 
-public class ItemDye() : Item("minecraft:dye", 351, canInteract: false)
+public enum DyeMetadata
+{
+	Red = 1,
+	Green = 2,
+	Purple = 5,
+	Cyan = 6,
+	LightGray = 7,
+	Gray = 8,
+	Pink = 9,
+	Lime = 10,
+	Yellow = 11,
+	LightBlue = 12,
+	Magenta = 13,
+	Orange = 14,
+	Black = 16,
+	Brown = 17,
+	Blue = 18,
+	White = 19,
+}
+
+public enum DyeColor
+{
+	White = 0,
+	Orange = 1,
+	Magenta = 2,
+	LightBlue = 3,
+	Yellow = 4,
+	Lime = 5,
+	Pink = 6,
+	Gray = 7,
+	LightGray = 8,
+	Cyan = 9,
+	Purple = 10,
+	Blue = 11,
+	Brown = 12,
+	Red = 14,
+	Green = 13,
+	Black = 15,
+	Unknown = 255
+}
+
+public class ItemDye() : Item("minecraft:dye", canInteract: false)
 {
 	public static byte ToColorCode(int metadata)
 	{
-		return metadata switch
+		// Check if the metadata is valid in the DyeMetadata enum
+		if (!Enum.IsDefined(typeof(DyeMetadata), metadata))
 		{
-			1 => //red
-				14,
-			2 => //green
-				13,
-			5 => //purple
-				10,
-			6 => //cyan
-				9,
-			7 => //light_gray
-				8,
-			8 => //gray
-				7,
-			9 => //pink
-				6,
-			10 => //lime
-				5,
-			11 => //yellow
-				4,
-			12 => //ligh_blue
-				3,
-			13 => //magenta
-				2,
-			14 => //orange
-				1,
-			16 => //black
-				15,
-			17 => //brown
-				12,
-			18 => //blue
-				11,
-			19 => //white
-				0,
-			_ => 255
+			return (byte) DyeColor.Unknown;
+		}
+
+		DyeMetadata dyeMetadata = (DyeMetadata) metadata;
+
+		return dyeMetadata switch
+		{
+			DyeMetadata.Red => (byte) DyeColor.Red,
+			DyeMetadata.Green => (byte) DyeColor.Green,
+			DyeMetadata.Purple => (byte) DyeColor.Purple,
+			DyeMetadata.Cyan => (byte) DyeColor.Cyan,
+			DyeMetadata.LightGray => (byte) DyeColor.LightGray,
+			DyeMetadata.Gray => (byte) DyeColor.Gray,
+			DyeMetadata.Pink => (byte) DyeColor.Pink,
+			DyeMetadata.Lime => (byte) DyeColor.Lime,
+			DyeMetadata.Yellow => (byte) DyeColor.Yellow,
+			DyeMetadata.LightBlue => (byte) DyeColor.LightBlue,
+			DyeMetadata.Magenta => (byte) DyeColor.Magenta,
+			DyeMetadata.Orange => (byte) DyeColor.Orange,
+			DyeMetadata.Black => (byte) DyeColor.Black,
+			DyeMetadata.Brown => (byte) DyeColor.Brown,
+			DyeMetadata.Blue => (byte) DyeColor.Blue,
+			DyeMetadata.White => (byte) DyeColor.White,
+			_ => (byte) DyeColor.Unknown
 		};
 	}
 }

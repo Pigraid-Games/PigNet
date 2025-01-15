@@ -7,7 +7,7 @@ namespace MiNET.Items;
 
 public class ItemExperienceBottle : Item
 {
-	public ItemExperienceBottle() : base("minecraft:experience_bottle", 384)
+	public ItemExperienceBottle() : base("minecraft:experience_bottle")
 	{
 		MaxStackSize = 64;
 	}

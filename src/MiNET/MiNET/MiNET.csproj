@@ -26,8 +26,8 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\blockstates.json" />
-    <EmbeddedResource Include="Resources\itemstates.json" />
+	<EmbeddedResource Include="Resources\itemstates.json" />
+	<EmbeddedResource Include="Resources\blockstates.json" />
     <EmbeddedResource Include="Resources\item_id_map.json" />
     <EmbeddedResource Include="Resources\block_meta_map.json" />
   </ItemGroup>

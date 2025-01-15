@@ -2,7 +2,7 @@
 
 public class ItemCupLove : ArmorChestplateBase
 {
-	public ItemCupLove() : base("pigraid:cuplove", 1113)
+	public ItemCupLove() : base("pigraid:cuplove")
 	{
 		MaxStackSize = 1;
 		ItemType = ItemType.Chestplate;

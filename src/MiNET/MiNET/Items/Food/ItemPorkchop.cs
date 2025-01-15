@@ -25,7 +25,7 @@
 
 namespace MiNET.Items.Food;
 
-public class ItemPorkchop() : Item("minecraft:porkchop", 319)
+public class ItemPorkchop() : Item("minecraft:porkchop")
 {
 	public override Item GetSmelt()
 	{

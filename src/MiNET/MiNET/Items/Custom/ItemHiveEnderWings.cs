@@ -1,7 +1,7 @@
 ﻿namespace MiNET.Items.Custom;
 public class ItemHiveEnderWings : ArmorChestplateBase
 {
-	public ItemHiveEnderWings() : base("hivebackbling:ender_wings", 1114)
+	public ItemHiveEnderWings() : base("hivebackbling:ender_wings")
 	{
 		MaxStackSize = 1;
 		Durability = 1;

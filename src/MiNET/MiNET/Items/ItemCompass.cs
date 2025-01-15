@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemCompass() : Item("minecraft:compass", 345, canInteract: false);
+public class ItemCompass() : Item("minecraft:compass", canInteract: false);

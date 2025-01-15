@@ -34,7 +34,7 @@ namespace MiNET.Items;
 
 public class ItemSkull : Item
 {
-	public ItemSkull(short metadata) : base("minecraft:skull", 397, metadata)
+	public ItemSkull(short metadata) : base("minecraft:skull", metadata:metadata)
 	{
 		MaxStackSize = 1;
 	}

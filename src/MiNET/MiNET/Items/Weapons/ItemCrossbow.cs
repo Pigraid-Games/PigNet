@@ -14,7 +14,7 @@ public sealed class ItemCrossbow : Item
 	private bool _isLoading;
 	private bool _hasReleased;
 
-	public ItemCrossbow() : base("minecraft:crossbow", 471)
+	public ItemCrossbow() : base("minecraft:crossbow")
 	{
 		MaxStackSize = 1;
 		ItemType = ItemType.Bow;

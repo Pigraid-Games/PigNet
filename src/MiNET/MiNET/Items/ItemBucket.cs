@@ -33,7 +33,7 @@ namespace MiNET.Items
 	public class ItemBucket : Item
 	{
 		private bool _isUsing;
-		public ItemBucket(short metadata) : base("minecraft:bucket", 325, metadata)
+		public ItemBucket(short metadata) : base("minecraft:bucket", metadata:metadata)
 		{
 			MaxStackSize = 1;
 			FuelEfficiency = (short) (Metadata == 10 ? 1000 : 0);

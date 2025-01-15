@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemSaddle() : Item("minecraft:saddle", 329);
+public class ItemSaddle() : Item("minecraft:saddle");

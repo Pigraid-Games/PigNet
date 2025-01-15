@@ -35,7 +35,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items
 {
-	public class ItemFireworkRocket() : Item("minecraft:firework_rocket", 401)
+	public class ItemFireworkRocket() : Item("minecraft:firework_rocket")
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(ItemFireworkRocket));
 

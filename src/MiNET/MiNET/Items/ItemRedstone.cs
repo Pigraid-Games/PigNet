@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemRedstone() : Item("minecraft:redstone", 331);
+public class ItemRedstone() : Item("minecraft:redstone");

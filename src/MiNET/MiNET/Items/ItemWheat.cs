@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemWheat() : Item("minecraft:wheat", 296, canInteract: false);
+public class ItemWheat() : Item("minecraft:wheat", canInteract: false);

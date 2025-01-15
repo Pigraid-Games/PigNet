@@ -31,7 +31,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items;
 
-public class ItemCamera(short metadata) : Item("minecraft:camera", 498, metadata)
+public class ItemCamera(short metadata) : Item("minecraft:camera", metadata:metadata)
 {
 	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{

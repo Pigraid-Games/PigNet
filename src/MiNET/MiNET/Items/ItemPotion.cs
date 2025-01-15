@@ -30,7 +30,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items;
 
-public class ItemPotion(short metadata) : Item("minecraft:potion", 373, metadata)
+public class ItemPotion(short metadata) : Item("minecraft:potion", metadata:metadata)
 {
 	private bool _isUsing;
 

@@ -25,4 +25,4 @@
 
 namespace MiNET.Items;
 
-public class ItemBone() : Item("minecraft:bone", 352, canInteract: false);
+public class ItemBone() : Item("minecraft:bone", canInteract: false);

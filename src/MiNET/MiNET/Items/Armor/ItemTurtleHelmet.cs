@@ -25,4 +25,12 @@
 
 namespace MiNET.Items.Armor;
 
-public class ItemTurtleHelmet() : ArmorHelmetBase("minecraft:turtle_helmet", 469);
+public class ItemTurtleHelmet : ArmorHelmetBase
+{
+	public ItemTurtleHelmet() : base("minecraft:turtle_helmet")
+	{
+		ItemType = ItemType.Helmet;
+		ItemMaterial = ItemMaterial.Iron; // same properties
+		Durability = 275;
+	}
+}

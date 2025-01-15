@@ -32,7 +32,7 @@ namespace MiNET.Items;
 
 public class ItemEgg : Item
 {
-	public ItemEgg() : base("minecraft:egg", 344)
+	public ItemEgg() : base("minecraft:egg")
 	{
 		MaxStackSize = 16;
 	}

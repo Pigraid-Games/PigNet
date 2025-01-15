@@ -26,7 +26,7 @@ using MiNET.Effects;
 
 namespace MiNET.Items.Food;
 
-public class ItemRottenFlesh() : FoodItem("minecraft:rotten_flesh", 367, 0, 4, 0.8)
+public class ItemRottenFlesh() : FoodItem("minecraft:rotten_flesh", 0, 4, 0.8)
 {
 	protected override void Consume(Player player)
 	{

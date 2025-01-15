@@ -2,7 +2,7 @@
 
 namespace MiNET.Items;
 
-public class ItemKelp() : Item("minecraft:kelp", 335, canInteract: false)
+public class ItemKelp() : Item("minecraft:kelp", canInteract: false)
 {
 	public override Item GetSmelt()
 	{
