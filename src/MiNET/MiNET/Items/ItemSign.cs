@@ -24,7 +24,6 @@
 #endregion
 
 using System.Numerics;
-using MiNET.Blocks;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -44,24 +43,16 @@ public class ItemSignBase : ItemBlock
 
 	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		if (face == BlockFace.Down) // At the bottom of block
-		{
-			// Doesn't work, ignore if that happen. 
-			return;
-		}
-
-		if (face == BlockFace.Up) // On top of block
-		{
-			// Standing sign
-			Block = BlockFactory.GetBlockById(_standingId);
-		}
-		else
-		{
-			// Wall sign
-			Block = BlockFactory.GetBlockById(_wallId);
-		}
+		if (!SetupSignBlock(face)) return;
 
 		base.PlaceBlock(world, player, blockCoordinates, face, faceCoords);
+	}
+
+	protected virtual bool SetupSignBlock(BlockFace face)
+	{
+		if (face == BlockFace.Down)
+			return false;
+		return true;
 	}
 }
 

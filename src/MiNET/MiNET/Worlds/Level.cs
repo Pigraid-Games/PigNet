@@ -433,15 +433,17 @@ namespace MiNET.Worlds
 			RelayBroadcast(sender, sendList, mcpeSetTitle);
 		}
 
-		public virtual void BroadcastMessage(string text, MessageType type = MessageType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null)
+		public virtual void BroadcastMessage(string text, MessageType type = MessageType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null, string platformId = null)
 		{
 			if (type == MessageType.Chat || type == MessageType.Raw)
 			{
-				foreach (var line in text.Split(new string[] {"\n", Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries))
+				foreach (string line in text.Split(new string[] { "\n", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
 				{
-					McpeText message = McpeText.CreateObject();
+					var message = McpeText.CreateObject();
 					message.type = (byte) type;
 					message.source = sender == null ? "" : sender.NameTag;
+					message.xuid = sender?.CertificateData.ExtraData.Xuid;
+					message.platformChatId = platformId;
 					message.message = line;
 					message.needsTranslation = needsTranslation;
 					message.parameters = parameters;
@@ -453,6 +455,8 @@ namespace MiNET.Worlds
 				McpeText message = McpeText.CreateObject();
 				message.type = (byte) type;
 				message.source = sender == null ? "" : sender.Username;
+				message.xuid = sender?.CertificateData.ExtraData.Xuid;
+				message.platformChatId = platformId;
 				message.message = text;
 				message.needsTranslation = needsTranslation;
 				message.parameters = parameters;
@@ -1412,59 +1416,64 @@ namespace MiNET.Worlds
 			return !e.Cancel;
 		}
 
-		public void BreakBlock(Player player, BlockCoordinates blockCoordinates, BlockFace face = BlockFace.None)
+		public bool BreakBlock(Player player, BlockCoordinates blockCoordinates, BlockFace face= BlockFace.None)
 		{
 			Block block = GetBlock(blockCoordinates);
-
 			BlockEntity blockEntity = GetBlockEntity(blockCoordinates);
 
-			Item inHand = player.Inventory.GetItemInHand();
+			Item inHand = player.Inventory.GetItemInHand() ?? new ItemAir();
+
 			bool canBreak = inHand.BreakBlock(this, player, block, blockEntity);
 
-			if (!canBreak || !AllowBreak || player.GameMode == GameMode.Spectator || !OnBlockBreak(new BlockBreakEventArgs(player, this, block, null)))
-			{
-				// Revert
+			int xpDrop = (player.GameMode == GameMode.Survival) ? (int) block.GetExperiencePoints() : 0;
 
+			BlockBreakEventArgs eventArgs = new BlockBreakEventArgs(player, this, block, [.. block.GetDrops(inHand)]);
+
+			if (!canBreak || !AllowBreak || player.GameMode == GameMode.Spectator || !OnBlockBreak(eventArgs))
+			{
 				RevertBlockAction(player, block, blockEntity);
+				return false;
 			}
-			else
-			{
-				BreakBlock(player, block, blockEntity, inHand, face);
 
-				player.Inventory.DamageItemInHand(ItemDamageReason.BlockBreak, null, block);
-				player.HungerManager.IncreaseExhaustion(0.005f);
-				player.ExperienceManager.AddExperience(block.GetExperiencePoints());
+			BreakBlock(player, block, blockEntity, inHand, face);
+
+			player.Inventory.DamageItemInHand(ItemDamageReason.BlockBreak, null, block);
+
+			player.HungerManager.IncreaseExhaustion(0.005f);
+
+			if(xpDrop > 0)
+			{
+				DropExperience(blockCoordinates, xpDrop);
 			}
+			Log.Warn("The BreakBlock completed as - can be broken");
+			return true;
+		}
+
+		private void DropExperience(BlockCoordinates coordinates, int amount)
+		{
+			var dropPosition = new Vector3(coordinates.X + 0.5f, coordinates.Y + 0.5f, coordinates.Z + 0.5f);
+			var packet = McpeSpawnExperienceOrb.CreateObject();
+			packet.count = amount;
+			packet.position = dropPosition;
+			RelayBroadcast(packet);
 		}
 
 		private void RevertBlockAction(Player player, Block block, BlockEntity blockEntity)
 		{
+			Log.Warn("The RevertBlockAction has been called");
+			BlockCoordinates revertCoords = block.Coordinates;
+
 			if (block is DoorBase doors)
 			{
-				var message1 = McpeUpdateBlock.CreateObject();
-				if (doors.UpperBlockBit)
-				{
-					Block block1 = GetBlock(block.Coordinates.BlockDown());
-					message1.blockRuntimeId = BlockFactory.GetRuntimeId(block1.Id, block1.Metadata);
-					message1.coordinates = block.Coordinates.BlockDown();
-				}
-				else
-				{
-					Block block1 = GetBlock(block.Coordinates.BlockUp());
-					message1.blockRuntimeId = BlockFactory.GetRuntimeId(block1.Id, block1.Metadata);
-					message1.coordinates = block.Coordinates.BlockUp();
-				}
-				message1.blockPriority = 0xb;
-				player.SendPacket(message1);
+				revertCoords = doors.UpperBlockBit ? revertCoords.BlockDown() : revertCoords.BlockUp();
 			}
 
 			var message = McpeUpdateBlock.CreateObject();
-			message.blockRuntimeId = BlockFactory.GetRuntimeId(block.Id, block.Metadata);
-			message.coordinates = block.Coordinates;
+			message.blockRuntimeId = (uint) block.GetRuntimeId();
+			message.coordinates = revertCoords;
 			message.blockPriority = 0xb;
 			player.SendPacket(message);
 
-			// Revert block entity if exists
 			if (blockEntity != null)
 			{
 				Nbt nbt = new Nbt
@@ -1479,7 +1488,6 @@ namespace MiNET.Worlds
 				var entityData = McpeBlockEntityData.CreateObject();
 				entityData.namedtag = nbt;
 				entityData.coordinates = blockEntity.Coordinates;
-
 				player.SendPacket(entityData);
 			}
 		}
@@ -1494,7 +1502,6 @@ namespace MiNET.Worlds
 			{
 				RemoveBlockEntity(block.Coordinates);
 				drops.AddRange(blockEntity.GetDrops());
-				//Log.Error(drops);
 			}
 
 			if ((player != null && player.GameMode == GameMode.Survival && DoTiledrops) || (player == null && GameMode == GameMode.Survival && DoTiledrops))

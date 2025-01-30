@@ -178,6 +178,15 @@ public class MiNetServer
 
 	public void StopServer()
 	{
+		Log.Info("Disconnecting all players...");
+		foreach(var level in LevelManager.Levels)
+		{
+			foreach (var player in level.Players)
+			{
+				player.Value.Disconnect("The server has been closed.");
+			}
+		}
+
 		Log.Info("Stopping server...");
 		LevelManager.Close();
 

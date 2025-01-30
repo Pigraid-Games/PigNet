@@ -57,15 +57,22 @@ namespace MiNET.Plugins.Commands
 
 		[Command(Name = "CustomForm")]
 		[Authorize(Permission = 4)]
-		public void CustomForm(Player commander, string contentTest)
+		public void CustomForm(Player commander, string title)
 		{
+			var image = new Image { Type = "path", Url = "textures/ui/teeth-glasse.png" };
+			var url = new Image { Type = "url", Url = "https://media.tenor.com/e9vcnOU6RHwAAAAM/teeth-glasses.gif" };
 			var customForm = new SimpleForm
 			{
-				Title = "Test Form",
-				Content = contentTest,
-				Buttons = [new Button { Text = "Close", ExecuteAction = (_, _) => 
-					commander.SendMessage(contentTest, MessageType.Translation, null, true) 
-				}]
+				Title = title,
+				Content = "Grid form test",
+				Buttons = [
+					new Button { Text = "Button1", Image = image},
+					new Button { Text = "Button2", Image = url },
+					new Button { Text = "Button3" },
+					new Button { Text = "Button4" },
+					new Button { Text = "Button5" }
+
+				]
 			};
 			
 			commander.SendForm(customForm);

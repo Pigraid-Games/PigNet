@@ -1993,7 +1993,7 @@ namespace MiNET
 
 			if (string.IsNullOrEmpty(text)) return;
 
-			Level.BroadcastMessage(text, sender: this);
+			Level.BroadcastMessage(text, sender: this, platformId: message.platformChatId);
 		}
 
 		private int _lastOrderingIndex;
@@ -3969,9 +3969,9 @@ namespace MiNET
 			Level.BroadcastTitle(text, type, fadeIn, fadeOut, stayTime, sender, new[] { this });
 		}
 
-		public virtual void SendMessage(string text, MessageType type = MessageType.Chat, Player sender = null, bool needsTranslation = false, string[] parameters = null)
+		public virtual void SendMessage(string text, MessageType type = MessageType.Chat, Player sender = null, bool needsTranslation = false, string[] parameters = null, string platformId = null)
 		{
-			Level.BroadcastMessage(text, type, sender, new[] { this }, needsTranslation, parameters);
+			Level.BroadcastMessage(text, type, sender, new[] { this }, needsTranslation, parameters, platformId: platformId);
 		}
 
 		public override void BroadcastEntityEvent()

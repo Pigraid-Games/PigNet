@@ -740,8 +740,6 @@ public class ItemSoulCampfire() : Item("minecraft:soul_campfire", 801);
 
 public class ItemEndCrystal() : Item("minecraft:end_crystal", 426);
 
-public class ItemMace() : ItemSword("minecraft:mace", 1047, false);
-
 public class ItemSpyglass() : Item("minecraft:spyglass", 624);
 
 public class ItemGlowFrame() : Item("minecraft:glow_frame", 621);

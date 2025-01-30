@@ -71,8 +71,8 @@ namespace MiNET.Console
 					System.Console.WriteLine(MiNetServer.MiNET);
 				}
 
-				var currentProcess = Process.GetCurrentProcess();
-				currentProcess.ProcessorAffinity = (IntPtr) Config.GetProperty("ProcessorAffinity", (int) currentProcess.ProcessorAffinity);
+				//var currentProcess = Process.GetCurrentProcess();
+				//currentProcess.ProcessorAffinity = (IntPtr) Config.GetProperty("ProcessorAffinity", (int) currentProcess.ProcessorAffinity);
 
 				var service = new MiNetServer();
 				Log.Info($"Starting MiNET for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion}...");

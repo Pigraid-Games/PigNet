@@ -73,6 +73,13 @@ namespace MiNET
 						worldProvider = new ExperimentalWorldProvider();
 						break;
 					case "anvil":
+						worldProvider = new AnvilWorldProvider
+						{
+							MissingChunkProvider = Generator,
+							ReadSkyLight = !Config.GetProperty("CalculateLights", false),
+							ReadBlockLight = !Config.GetProperty("CalculateLights", false),
+						};
+						break;
 					case "flat":
 					case "flatland":
 					default:
