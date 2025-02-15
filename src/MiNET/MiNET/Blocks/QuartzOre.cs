@@ -26,30 +26,29 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class QuartzOre : Block
 {
-	public partial class QuartzOre : Block
+	public QuartzOre() : base(153)
 	{
-		public QuartzOre() : base(153)
-		{
-			BlastResistance = 15;
-			Hardness = 3;
-		}
+		BlastResistance = 15;
+		Hardness = 3;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			return new[] {ItemFactory.GetItem(406, 0, 1)};
-		}
+	public override Item[] GetDrops(Item tool)
+	{
+		return new[] { ItemFactory.GetItem(406) };
+	}
 
-		public override Item GetSmelt()
-		{
-			return new ItemQuartz();
-		}
+	public override Item GetSmelt()
+	{
+		return new ItemQuartz();
+	}
 
-		public override float GetExperiencePoints()
-		{
-			Random random = new Random();
-			return random.Next(2, 6);
-		}
+	public override float GetExperiencePoints()
+	{
+		var random = new Random();
+		return random.Next(2, 6);
 	}
 }

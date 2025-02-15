@@ -23,40 +23,39 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.Net;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Anvil : Block
 {
-	public partial class Anvil : Block
+	public Anvil() : base(145)
 	{
-		public Anvil() : base(145)
-		{
-			IsTransparent = true;
-			BlastResistance = 6000;
-			Hardness = 5;
-			Damage = "undamaged";
-		}
+		IsTransparent = true;
+		BlastResistance = 6000;
+		Hardness = 5;
+		Damage = "undamaged";
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = player.GetProperDirection();
-			return false;
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetProperDirection();
+		return false;
+	}
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			player.UsingAnvil = true;
-			var containerOpen = McpeContainerOpen.CreateObject();
-			containerOpen.windowId = 14;
-			containerOpen.type = 5;
-			containerOpen.coordinates = blockCoordinates;
-			containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
-			player.SendPacket(containerOpen);
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		player.UsingAnvil = true;
+		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
+		containerOpen.windowId = 14;
+		containerOpen.type = 5;
+		containerOpen.coordinates = blockCoordinates;
+		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+		player.SendPacket(containerOpen);
 
-			return true;
-		}
+		return true;
 	}
 }

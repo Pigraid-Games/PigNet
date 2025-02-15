@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Deadbush : Block
 {
-	public partial class Deadbush : Block
+	public Deadbush() : base(32)
 	{
-		public Deadbush() : base(32)
-		{
-			IsSolid = false;
-			IsTransparent = true;
-			IsFlammable = true;
-		}
+		IsSolid = false;
+		IsTransparent = true;
+		IsFlammable = true;
 	}
 }

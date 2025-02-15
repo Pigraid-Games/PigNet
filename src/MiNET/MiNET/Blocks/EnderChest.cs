@@ -23,38 +23,36 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System;
-using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class EnderChest : ChestBase
 {
-	public partial class EnderChest : ChestBase
+	public EnderChest() : base(130)
 	{
-		public EnderChest() : base(130)
-		{
-			IsTransparent = true;
-			LightLevel = 7;
-			BlastResistance = 3000;
-			Hardness = 22.5f;
-			FuelEfficiency = 0;
-		}
+		IsTransparent = true;
+		LightLevel = 7;
+		BlastResistance = 3000;
+		Hardness = 22.5f;
+		FuelEfficiency = 0;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-			var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
-			world.SetBlockEntity(chestBlockEntity);
-			return false;
-		}
+		var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(chestBlockEntity);
+		return false;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			return new Item[] {ItemFactory.GetItem(49, 0, 8)}; // 8 Obsidian
-		}
+	public override Item[] GetDrops(Item tool)
+	{
+		return new[] { ItemFactory.GetItem(49, 0, 8) }; // 8 Obsidian
 	}
 }

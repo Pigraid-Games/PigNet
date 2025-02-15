@@ -26,35 +26,34 @@
 using System;
 using MiNET.Items;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class LapisOre : Block
 {
-	public partial class LapisOre : Block
+	public LapisOre() : base(21)
 	{
-		public LapisOre() : base(21)
-		{
-			BlastResistance = 15;
-			Hardness = 3;
-		}
+		BlastResistance = 15;
+		Hardness = 3;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			if (tool.ItemMaterial < ItemMaterial.Stone) return new Item[0];
+	public override Item[] GetDrops(Item tool)
+	{
+		if (tool.ItemMaterial < ItemMaterial.Stone) return new Item[0];
 
-			// Random between 4-8
-			var rnd = new Random();
-			var plus = rnd.Next(4);
-			return new[] {ItemFactory.GetItem(351, 4, (byte) (4 + plus))};
-		}
+		// Random between 4-8
+		var rnd = new Random();
+		int plus = rnd.Next(4);
+		return new[] { ItemFactory.GetItem(351, 4, (byte) (4 + plus)) };
+	}
 
-		public override Item GetSmelt()
-		{
-			return ItemFactory.GetItem(351, 4);
-		}
+	public override Item GetSmelt()
+	{
+		return ItemFactory.GetItem(351, 4);
+	}
 
-		public override float GetExperiencePoints()
-		{
-			Random random = new Random();
-			return random.Next(2, 6);
-		}
+	public override float GetExperiencePoints()
+	{
+		var random = new Random();
+		return random.Next(2, 6);
 	}
 }

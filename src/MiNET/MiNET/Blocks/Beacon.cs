@@ -26,59 +26,48 @@
 using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Net;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Beacon : Block
 {
-	public partial class Beacon : Block
+	public Beacon() : base(138)
 	{
-		public Beacon() : base(138)
-		{
-			LightLevel = 15;
-			BlastResistance = 15;
-			Hardness = 3;
-		}
+		LightLevel = 15;
+		BlastResistance = 15;
+		Hardness = 3;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			BeaconBlockEntity blockEntity = new BeaconBlockEntity()
-			{
-				Coordinates = Coordinates
-			};
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		var blockEntity = new BeaconBlockEntity { Coordinates = Coordinates };
 
-			world.SetBlockEntity(blockEntity);
+		world.SetBlockEntity(blockEntity);
 
-			//BuildPyramidLevels(world, 4);
+		//BuildPyramidLevels(world, 4);
 
-			return false;
-		}
+		return false;
+	}
 
-		private void BuildPyramidLevels(Level level, int levels)
-		{
-			for (int i = 1; i < levels + 1; i++)
-			{
-				for (int x = -i; x < i + 1; x++)
-				{
-					for (int z = -i; z < i + 1; z++)
-					{
-						level.SetBlock(new IronBlock() {Coordinates = Coordinates + new BlockCoordinates(x, -i, z)});
-					}
-				}
-			}
-		}
+	private void BuildPyramidLevels(Level level, int levels)
+	{
+		for (int i = 1; i < levels + 1; i++)
+		for (int x = -i; x < i + 1; x++)
+		for (int z = -i; z < i + 1; z++)
+			level.SetBlock(new IronBlock { Coordinates = Coordinates + new BlockCoordinates(x, -i, z) });
+	}
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			var containerOpen = McpeContainerOpen.CreateObject();
-			containerOpen.windowId = 5 + 9;
-			containerOpen.type = 13;
-			containerOpen.coordinates = blockCoordinates;
-			containerOpen.runtimeEntityId = -1;
-			player.SendPacket(containerOpen);
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
+		containerOpen.windowId = 5 + 9;
+		containerOpen.type = 13;
+		containerOpen.coordinates = blockCoordinates;
+		containerOpen.runtimeEntityId = -1;
+		player.SendPacket(containerOpen);
 
-			return true;
-		}
+		return true;
 	}
 }

@@ -27,47 +27,43 @@ using System.Numerics;
 using MiNET.Net;
 using MiNET.Worlds;
 
-namespace MiNET.Sounds
+namespace MiNET.Sounds;
+
+public class Sound
 {
-	public class Sound
+	public Sound(short id, Vector3 position, int pitch = 0)
 	{
-		public short Id { get; private set; }
-		public int Pitch { get; set; }
-		public Vector3 Position { get; set; }
+		Id = id;
+		Position = position;
+		Pitch = pitch;
+	}
 
-		public Sound(short id, Vector3 position, int pitch = 0)
-		{
-			Id = id;
-			Position = position;
-			Pitch = pitch;
-		}
+	public short Id { get; }
+	public int Pitch { get; set; }
+	public Vector3 Position { get; set; }
 
 
-		public virtual void Spawn(Level level)
-		{
-			McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-			levelEvent.eventId = Id;
-			levelEvent.data = Pitch;
-			levelEvent.position = Position;
+	public virtual void Spawn(Level level)
+	{
+		McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
+		levelEvent.eventId = Id;
+		levelEvent.data = Pitch;
+		levelEvent.position = Position;
 
-			level.RelayBroadcast(levelEvent);
-		}
+		level.RelayBroadcast(levelEvent);
+	}
 
-		public virtual void SpawnToPlayers(Player[] players)
-		{
-			if (players == null) return;
-			if (players.Length == 0) return;
+	public virtual void SpawnToPlayers(Player[] players)
+	{
+		if (players == null) return;
+		if (players.Length == 0) return;
 
-			McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-			levelEvent.eventId = Id;
-			levelEvent.data = Pitch;
-			levelEvent.position = Position;
-			levelEvent.AddReferences(players.Length - 1);
+		McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
+		levelEvent.eventId = Id;
+		levelEvent.data = Pitch;
+		levelEvent.position = Position;
+		levelEvent.AddReferences(players.Length - 1);
 
-			foreach (var player in players)
-			{
-				player.SendPacket(levelEvent);
-			}
-		}
+		foreach (Player player in players) player.SendPacket(levelEvent);
 	}
 }

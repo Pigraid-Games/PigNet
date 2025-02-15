@@ -25,10 +25,9 @@
 
 using fNbt;
 
-namespace MiNET.Utils.Nbt
+namespace MiNET.Utils.Nbt;
+
+public class Nbt
 {
-	public class Nbt
-	{
-		public NbtFile NbtFile { get; set; }
-	}
+	public NbtFile NbtFile { get; set; }
 }

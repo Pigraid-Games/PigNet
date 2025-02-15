@@ -25,23 +25,19 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks
-{
-	public partial class Stonebrick : Block
-	{
-		public Stonebrick() : base(98)
-		{
-			BlastResistance = 30;
-			Hardness = 1.5f;
-		}
+namespace MiNET.Blocks;
 
-		public override Item GetSmelt()
-		{
-			if (StoneBrickType == "smooth")
-			{
-				return ItemFactory.GetItem(98, 2);
-			}
-			return null;
-		}
+public partial class Stonebrick : Block
+{
+	public Stonebrick() : base(98)
+	{
+		BlastResistance = 30;
+		Hardness = 1.5f;
+	}
+
+	public override Item GetSmelt()
+	{
+		if (StoneBrickType == "smooth") return ItemFactory.GetItem(98, 2);
+		return null;
 	}
 }

@@ -28,30 +28,22 @@ using System.Linq;
 using log4net;
 using MiNET.Items;
 
-namespace MiNET
+namespace MiNET;
+
+public class CursorInventory
 {
-	public class CursorInventory
+
+	public List<Item> Slots { get; } = Enumerable.Repeat((Item) new ItemAir(), 51).ToList();
+
+	public Item Cursor
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(CursorInventory));
+		get => Slots[0];
+		set => Slots[0] = value;
+	}
 
-		public List<Item> Slots { get; } = Enumerable.Repeat((Item) new ItemAir(), 51).ToList();
-
-		public Item Cursor
-		{
-			get => Slots[0];
-			set => Slots[0] = value;
-		}
-
-		public CursorInventory()
-		{
-		}
-
-		public void Clear()
-		{
-			for (int i = 0; i < Slots.Count; i++)
-			{
-				if (Slots[i] == null || Slots[i].Id != 0) Slots[i] = new ItemAir();
-			}
-		}
+	public void Clear()
+	{
+		for (int i = 0; i < Slots.Count; i++)
+			if (Slots[i] == null || Slots[i].Id != 0) Slots[i] = new ItemAir();
 	}
 }

@@ -23,47 +23,45 @@
 
 #endregion
 
+using System.Numerics;
 using log4net;
 using MiNET.Items;
-using MiNET.Sounds;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class EndPortalFrame : Block
 {
-	public partial class EndPortalFrame : Block
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
+
+	public EndPortalFrame() : base(120)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
-		public EndPortalFrame() : base(120)
-		{
-			LightLevel = 1;
-			BlastResistance = 18000000;
-			Hardness = 60000;
-		}
+		LightLevel = 1;
+		BlastResistance = 18000000;
+		Hardness = 60000;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = player.GetDirection();
-			return false;
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetDirection();
+		return false;
+	}
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+		if (itemInHand.Name == "minecraft:ender_eye" && EndPortalEyeBit == false)
 		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			if(itemInHand.Name == "minecraft:ender_eye" && EndPortalEyeBit == false)
+			EndPortalEyeBit = true;
+			world.SetBlock(this);
+			world.BroadcastSound(blockCoordinates, LevelSoundEventType.BlockEndPortalFrameFill);
+			if (player.GameMode == GameMode.Survival)
 			{
-				EndPortalEyeBit = true;
-				world.SetBlock(this);
-				world.BroadcastSound(blockCoordinates, LevelSoundEventType.BlockEndPortalFrameFill);
-				if (player.GameMode == GameMode.Survival)
-				{
-					itemInHand.Count--;
-					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-				}
+				itemInHand.Count--;
+				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
 			}
-			return true;
 		}
-
+		return true;
 	}
 }

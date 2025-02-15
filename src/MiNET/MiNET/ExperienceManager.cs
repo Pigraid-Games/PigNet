@@ -4,60 +4,43 @@ using System;
 
 namespace MiNET
 {
-	public class ExperienceManager
+	public class ExperienceManager(Player player)
 	{
-		public Player Player { get; set; }
-		public float ExperienceLevel { get; set; } = 0f;
-		public float Experience { get; set; } = 0f;
-
-		public ExperienceManager(Player player)
-		{
-			Player = player;
-		}
+		public Player Player { get; set; } = player;
+		public float ExperienceLevel { get; set; }
+		public float Experience { get; set; }
 
 		public void AddExperience(float xp, bool send = true)
 		{
-			var xpToNextLevel = GetXpToNextLevel();
+			float xpToNextLevel = GetXpToNextLevel();
 
-			if (xp + Experience < xpToNextLevel)
-			{
-				Experience += xp;
-			}
+			if (xp + Experience < xpToNextLevel) Experience += xp;
 			else
 			{
-				var expDiff = Experience + xp - xpToNextLevel;
+				float expDiff = Experience + xp - xpToNextLevel;
 				ExperienceLevel++;
 				Experience = 0;
 				AddExperience(expDiff, false);
 			}
 
-			if (send)
-			{
-				SendAttributes();
-			}
+			if (send) SendAttributes();
 		}
 
 		public void RemoveExperienceLevels(float levels)
 		{
-			var currentXp = CalculateXp();
+			float currentXp = CalculateXp();
 			ExperienceLevel = Experience - Math.Abs(levels);
 			Experience = GetXpToNextLevel() * currentXp;
 		}
 
 		public virtual float GetXpToNextLevel()
 		{
-			if (ExperienceLevel >= 0 && ExperienceLevel <= 15)
+			return ExperienceLevel switch
 			{
-				return 2 * ExperienceLevel + 7;
-			}
-			else if (ExperienceLevel > 15 && ExperienceLevel <= 30)
-			{
-				return 5 * ExperienceLevel - 28;
-			}
-			else // Level > 30
-			{
-				return 9 * ExperienceLevel - 158;
-			}
+				>= 0 and <= 15 => 2 * ExperienceLevel + 7,
+				> 15 and <= 30 => 5 * ExperienceLevel - 28,
+				_ => 9 * ExperienceLevel - 158
+			};
 		}
 
 		protected virtual float CalculateXp()
@@ -93,10 +76,10 @@ namespace MiNET
 			var attributes = new PlayerAttributes();
 			attributes = AddExperienceAttributes(attributes);
 
-			McpeUpdateAttributes attributesPackate = McpeUpdateAttributes.CreateObject();
-			attributesPackate.runtimeEntityId = EntityManager.EntityIdSelf;
-			attributesPackate.attributes = attributes;
-			Player.SendPacket(attributesPackate);
+			McpeUpdateAttributes attributesPackage = McpeUpdateAttributes.CreateObject();
+			attributesPackage.runtimeEntityId = EntityManager.EntityIdSelf;
+			attributesPackage.attributes = attributes;
+			Player.SendPacket(attributesPackage);
 		}
 	}
 }

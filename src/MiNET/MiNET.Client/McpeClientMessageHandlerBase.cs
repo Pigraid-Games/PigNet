@@ -209,7 +209,7 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeTakeItemEntity(McpeTakeItemEntity message)
+		public virtual void HandleMcpeTakeItemActor(McpeTakeItemActor message)
 		{
 		}
 
@@ -290,7 +290,7 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeSetEntityData(McpeSetEntityData message)
+		public virtual void HandleMcpeSetActorData(McpeSetActorData message)
 		{
 			//Log.Warn(JsonConvert.SerializeObject(message, Formatting.Indented));
 			/*Log.Warn($"start =============================================");
@@ -319,11 +319,11 @@ namespace MiNET.Client
 			*/
 		}
 
-		public virtual void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
+		public virtual void HandleMcpeSetActorMotion(McpeSetActorMotion message)
 		{
 		}
 
-		public virtual void HandleMcpeSetEntityLink(McpeSetEntityLink message)
+		public virtual void HandleMcpeSetActorLink(McpeSetActorLink message)
 		{
 		}
 
@@ -716,12 +716,6 @@ namespace MiNET.Client
 
 		/// <inheritdoc />
 		public virtual void HandleMcpeItemComponent(McpeItemComponent message)
-		{
-			
-		}
-
-		/// <inheritdoc />
-		public virtual void HandleMcpeFilterTextPacket(McpeFilterTextPacket message)
 		{
 			
 		}

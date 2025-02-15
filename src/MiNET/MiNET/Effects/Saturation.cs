@@ -25,13 +25,12 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class Saturation : Effect
 {
-	public class Saturation : Effect
+	public Saturation() : base(EffectType.Saturation)
 	{
-		public Saturation() : base(EffectType.Saturation)
-		{
-			ParticleColor = Color.FromArgb(0xF8, 0x24, 0x23);
-		}
+		ParticleColor = Color.FromArgb(0xF8, 0x24, 0x23);
 	}
 }

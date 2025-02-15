@@ -23,38 +23,36 @@
 
 #endregion
 
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class YellowFlower : Block
 {
-	public partial class YellowFlower : Block
+	public YellowFlower() : base(37)
 	{
-		public YellowFlower() : base(37)
+		IsSolid = false;
+		IsTransparent = true;
+	}
+
+	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+	{
+		if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
 		{
-			IsSolid = false;
-			IsTransparent = true;
+			Block under = world.GetBlock(Coordinates.BlockDown());
+			return under is Grass || under is Dirt;
 		}
 
-		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-		{
-			if (base.CanPlace(world, player, blockCoordinates, targetCoordinates, face))
-			{
-				Block under = world.GetBlock(Coordinates.BlockDown());
-				return under is Grass || under is Dirt;
-			}
+		return false;
+	}
 
-			return false;
-		}
-
-		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+	{
+		if (Coordinates.BlockDown() == blockCoordinates)
 		{
-			if (Coordinates.BlockDown() == blockCoordinates)
-			{
-				level.SetAir(Coordinates);
-				UpdateBlocks(level);
-			}
+			level.SetAir(Coordinates);
+			UpdateBlocks(level);
 		}
 	}
 }

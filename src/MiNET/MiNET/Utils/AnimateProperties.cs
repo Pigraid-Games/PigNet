@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -18,26 +17,20 @@
 // The Original Developer is the Initial Developer.  The Initial Developer of
 // the Original Code is Niclas Olofsson.
 // 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
+// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2025 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
-using System;
+namespace MiNET.Utils;
 
-namespace MiNET.Net;
-
-public class UnknownPacket : Packet<UnknownPacket>
+public class AnimateProperties
 {
-	public UnknownPacket() : this(0, null)
-	{
-	}
-
-	public UnknownPacket(byte id, ReadOnlyMemory<byte> message)
-	{
-		Message = message;
-		Id = id;
-	}
-
-	public ReadOnlyMemory<byte> Message { get; private set; }
+	// See the doc for explanation on these fields
+	// https://minecraft.fandom.com/wiki/Commands/playanimation
+	public string AnimationName;
+	public float BlendOutTime;
+	public string ControllerName;
+	public int MolangVersion;
+	public string NextState;
+	public string StopExpression;
 }

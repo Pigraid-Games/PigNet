@@ -23,12 +23,11 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class BirchDoor : DoorBase
 {
-	public partial class BirchDoor : DoorBase
+	public BirchDoor() : base(194)
 	{
-		public BirchDoor() : base(194)
-		{
-		}
 	}
 }

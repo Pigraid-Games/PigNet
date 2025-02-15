@@ -8,7 +8,7 @@ public class ItemSpiderEye() : FoodItem("minecraft:spider_eye", 375, 0, 2, 3.2)
 	{
 		base.Consume(player);
 
-		var poisonEffect = new Poison()
+		var poisonEffect = new Poison
 		{
 			EffectId = EffectType.Poison,
 			Level = 1,

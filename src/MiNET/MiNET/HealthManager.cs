@@ -300,7 +300,7 @@ namespace MiNET
 			Player player = Entity as Player;
 			if (player != null)
 			{
-				ticks -= ticks * player.DamageCalculator.CalculateFireTickReduction(player);
+				ticks -= ticks * DamageCalculator.CalculateFireTickReduction(player);
 			}
 
 			ticks = Math.Max(0, ticks);

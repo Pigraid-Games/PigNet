@@ -1,4 +1,5 @@
 #region LICENSE
+
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -19,94 +20,84 @@
 // 
 // All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2021 Niclas Olofsson.
 // All Rights Reserved.
+
 #endregion
 
 using System;
+using MiNET.Utils;
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public class CommandOutputMessage
 {
-	public class CommandOutputMessage
-	{
-		public bool IsInternal { get; set; }
-		public string MessageId { get; set; }
-		public string[] Parameters { get; set; }
+	public bool IsInternal { get; set; }
+	public string MessageId { get; set; }
+	public string[] Parameters { get; set; }
 
-		/// <inheritdoc />
-		public override string ToString()
+	/// <inheritdoc />
+	public override string ToString()
+	{
+		switch (MessageId)
 		{
-			switch (MessageId)
-			{
-				case "commands.generic.unknown":
-					return $"Unknown command: {Parameters[0]}";
-			}
-			return $"{{MessageId={MessageId}, IsInternal={IsInternal}, Parameters={String.Join(',', Parameters)}}}";
+			case "commands.generic.unknown":
+				return $"Unknown command: {Parameters[0]}";
 		}
+		return $"{{MessageId={MessageId}, IsInternal={IsInternal}, Parameters={String.Join(',', Parameters)}}}";
+	}
+}
+
+public enum CommandOutputType
+{
+	Last = 1,
+	Silent = 2,
+	All = 3,
+	DataSet = 4
+}
+
+public partial class McpeCommandOutput
+{
+	public CommandOriginData OriginData { get; set; }
+	public CommandOutputType OutputType { get; set; }
+	public uint SuccessCount { get; set; }
+	public CommandOutputMessage[] Messages { get; set; }
+	public string UnknownString { get; set; }
+
+	partial void AfterDecode()
+	{
+		OriginData = ReadOriginData();
+		OutputType = (CommandOutputType) ReadByte();
+		SuccessCount = ReadUnsignedVarInt();
+
+		uint messageCount = ReadUnsignedVarInt();
+		Messages = new CommandOutputMessage[messageCount];
+
+		for (int i = 0; i < Messages.Length; i++) Messages[i] = ReadCommandOutputMessage();
+
+		if (OutputType == CommandOutputType.DataSet) UnknownString = ReadString();
 	}
 
-	public enum CommandOutputType
+	private CommandOriginData ReadOriginData()
 	{
-		Last = 1,
-		Silent = 2,
-		All = 3,
-		DataSet = 4,
+		var type = (CommandOriginType) ReadUnsignedVarInt();
+		UUID uuid = ReadUUID();
+		string requestId = ReadString();
+		long entityId = 0L;
+		if (type == CommandOriginType.DevConsole || type == CommandOriginType.Test) entityId = ReadVarLong();
+
+		return new CommandOriginData(type, uuid, requestId, entityId);
 	}
-	
-	public partial class McpeCommandOutput
+
+	private CommandOutputMessage ReadCommandOutputMessage()
 	{
-		public CommandOriginData OriginData { get; set; }
-		public CommandOutputType OutputType { get; set; }
-		public uint SuccessCount { get; set; }
-		public CommandOutputMessage[] Messages { get; set; }
-		public string UnknownString { get; set; }
-		partial void AfterDecode()
-		{
-			OriginData = ReadOriginData();
-			OutputType = (CommandOutputType)ReadByte();
-			SuccessCount = ReadUnsignedVarInt();
+		var result = new CommandOutputMessage();
+		result.IsInternal = ReadBool();
+		result.MessageId = ReadString();
 
-			var messageCount = ReadUnsignedVarInt();
-			Messages = new CommandOutputMessage[messageCount];
+		uint count = ReadUnsignedVarInt();
+		result.Parameters = new string[count];
 
-			for (int i = 0; i < Messages.Length; i++)
-			{
-				Messages[i] = ReadCommandOutputMessage();
-			}
+		for (int i = 0; i < result.Parameters.Length; i++) result.Parameters[i] = ReadString();
 
-			if (OutputType == CommandOutputType.DataSet)
-			{
-				UnknownString = ReadString();
-			}
-		}
-
-		private CommandOriginData ReadOriginData()
-		{
-			var type = (CommandOriginType)ReadUnsignedVarInt();
-			var uuid = ReadUUID();
-			var requestId = ReadString();
-			var entityId = 0L;
-			if (type == CommandOriginType.DevConsole || type == CommandOriginType.Test)
-			{
-				entityId = ReadVarLong();
-			}
-
-			return new CommandOriginData(type, uuid, requestId, entityId);
-		}
-		
-		private CommandOutputMessage ReadCommandOutputMessage()
-		{
-			CommandOutputMessage result = new CommandOutputMessage();
-			result.IsInternal = ReadBool();
-			result.MessageId = ReadString();
-
-			var count = ReadUnsignedVarInt();
-			result.Parameters = new string[count];
-
-			for (int i = 0; i < result.Parameters.Length; i++)
-			{
-				result.Parameters[i] = ReadString();
-			}
-
-			return result;
-		}
+		return result;
 	}
 }

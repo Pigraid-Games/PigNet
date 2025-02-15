@@ -24,12 +24,11 @@
 #endregion
 
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class RedSandstoneStairs : BlockStairs
 {
-	public partial class RedSandstoneStairs : BlockStairs
+	public RedSandstoneStairs() : base(180)
 	{
-		public RedSandstoneStairs() : base(180)
-		{
-		}
 	}
 }

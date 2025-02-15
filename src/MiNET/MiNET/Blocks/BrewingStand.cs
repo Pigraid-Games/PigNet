@@ -25,21 +25,20 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks
-{
-	public partial class BrewingStand : Block
-	{
-		public BrewingStand() : base(117)
-		{
-			IsTransparent = true;
-			LightLevel = 1;
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
-		}
+namespace MiNET.Blocks;
 
-		public override Item[] GetDrops(Item tool)
-		{
-			return new Item[] {ItemFactory.GetItem(379, 0, 1)};
-		}
+public partial class BrewingStand : Block
+{
+	public BrewingStand() : base(117)
+	{
+		IsTransparent = true;
+		LightLevel = 1;
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
+	}
+
+	public override Item[] GetDrops(Item tool)
+	{
+		return new[] { ItemFactory.GetItem(379) };
 	}
 }

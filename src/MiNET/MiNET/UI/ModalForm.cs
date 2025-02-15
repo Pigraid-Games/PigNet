@@ -34,35 +34,32 @@ public class ModalForm : Form
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
 
-	public string Content { get; set; }
-	public string Button1 { get; set; }
-	public string Button2 { get; set; }
-
 	public ModalForm()
 	{
 		Type = "modal";
 	}
+
+	public string Content { get; set; }
+	public string Button1 { get; set; }
+	public string Button2 { get; set; }
+
+	[JsonIgnore] public Action<Player, ModalForm> ExecuteAction { get; set; }
 
 	public override void FromJson(string json, Player player)
 	{
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented,
+			Formatting = Formatting.Indented
 		};
 
-		var parsedResult = JsonConvert.DeserializeObject<bool?>(json);
+		bool? parsedResult = JsonConvert.DeserializeObject<bool?>(json);
 		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
 
 		if (!parsedResult.HasValue) return;
 
-		if (parsedResult.Value)
-		{
-			Execute(player);
-		}
+		if (parsedResult.Value) Execute(player);
 	}
-
-	[JsonIgnore] public Action<Player, ModalForm> ExecuteAction { get; set; }
 
 	public void Execute(Player player)
 	{

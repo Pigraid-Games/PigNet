@@ -1,8 +1,8 @@
-﻿using MiNET.Utils.Skins;
+﻿using System;
+using System.Collections.Generic;
+using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 
 public class UvConverter : JsonConverter
 {
@@ -17,17 +17,21 @@ public class UvConverter : JsonConverter
 
 		if (reader.TokenType == JsonToken.StartObject)
 		{
-			JObject obj = JObject.Load(reader);
-			foreach (var property in obj.Properties())
+			var obj = JObject.Load(reader);
+			foreach (JProperty property in obj.Properties())
 			{
-				var faceUv = property.Value.ToObject<FaceUv>();
+				FaceUv faceUv = property.Value.ToObject<FaceUv>();
 				uvDictionary[property.Name] = faceUv;
 			}
 		}
 		else if (reader.TokenType == JsonToken.StartArray)
 		{
-			var uvArray = JArray.Load(reader).ToObject<float[]>();
-			uvDictionary["default"] = new FaceUv { Uv = uvArray, UvSize = new float[] { 16, 16 } };
+			float[] uvArray = JArray.Load(reader).ToObject<float[]>();
+			uvDictionary["default"] = new FaceUv
+			{
+				Uv = uvArray,
+				UvSize = new float[] { 16, 16 }
+			};
 		}
 
 		return uvDictionary;
@@ -36,14 +40,10 @@ public class UvConverter : JsonConverter
 	public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 	{
 		var uv = (Dictionary<string, FaceUv>) value;
-		
+
 		if (uv.ContainsKey("default") && uv.Count == 1)
-		{
 			serializer.Serialize(writer, uv["default"].Uv);
-		}
 		else
-		{
 			serializer.Serialize(writer, uv);
-		}
 	}
 }

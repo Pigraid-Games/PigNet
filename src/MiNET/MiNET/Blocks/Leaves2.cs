@@ -32,113 +32,105 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Leaves2 : Block
 {
-	public partial class Leaves2 : Block
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Leaves2));
+
+	public Leaves2() : base(161)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Leaves2));
+		IsTransparent = true;
+		BlastResistance = 1;
+		Hardness = 0.2f;
+		IsFlammable = true;
+	}
 
-		public Leaves2() : base(161)
+	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+	{
+		// No decay
+		if (PersistentBit) return;
+		if (UpdateBit) return;
+
+		UpdateBit = true;
+
+		level.SetBlock(this, false, false, false);
+	}
+
+	public override void OnTick(Level level, bool isRandom)
+	{
+		if (PersistentBit) return;
+		if (!UpdateBit) return;
+
+		if (FindLog(level, Coordinates, new List<BlockCoordinates>(), 0))
 		{
-			IsTransparent = true;
-			BlastResistance = 1;
-			Hardness = 0.2f;
-			IsFlammable = true;
-		}
-
-		public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
-		{
-			// No decay
-			if (PersistentBit) return;
-			if (UpdateBit) return;
-
-			UpdateBit = true;
-
+			UpdateBit = false;
 			level.SetBlock(this, false, false, false);
+			return;
 		}
 
-		public override void OnTick(Level level, bool isRandom)
+		Item[] drops = GetDrops(null);
+		BreakBlock(level, BlockFace.None, drops.Length == 0);
+		foreach (Item drop in drops) level.DropItem(Coordinates, drop);
+	}
+
+	public override Item[] GetDrops(Item tool)
+	{
+		var rnd = new Random();
+		if (NewLeafType == "dark_oak") // Oak and dark oak drops apple
+			if (rnd.Next(200) == 0)
+				// Apple
+				return new[] { ItemFactory.GetItem(260) };
+		if (rnd.Next(20) == 0)
 		{
-			if (PersistentBit) return;
-			if (!UpdateBit) return;
-
-			if (FindLog(level, Coordinates, new List<BlockCoordinates>(), 0))
-			{
-				UpdateBit = false;
-				level.SetBlock(this, false, false, false);
-				return;
-			}
-
-			var drops = GetDrops(null);
-			BreakBlock(level, BlockFace.None, drops.Length == 0);
-			foreach (var drop in drops)
-			{
-				level.DropItem(Coordinates, drop);
-			}
+			// Sapling
+			BlockStateContainer blockstate = GetState();
+			return new[] { ItemFactory.GetItem(6, blockstate.Data) };
 		}
 
-		public override Item[] GetDrops(Item tool)
+		return new Item[0];
+	}
+
+	private bool FindLog(Level level, BlockCoordinates coord, List<BlockCoordinates> visited, int distance)
+	{
+		if (visited.Contains(coord)) return false;
+
+		Block block = level.GetBlock(coord);
+		if (block is Log) return true;
+
+		visited.Add(coord);
+
+		if (distance >= 4) return false;
+
+		if (!(block is Leaves2)) return false;
+		var leaves = (Leaves2) block;
+		if (leaves.NewLeafType != NewLeafType) return false;
+
+		// check down
+		if (FindLog(level, coord.BlockDown(), visited, distance + 1)) return true;
+		// check west
+		if (FindLog(level, coord.BlockWest(), visited, distance + 1)) return true;
+		// check east
+		if (FindLog(level, coord.BlockEast(), visited, distance + 1)) return true;
+		// check south
+		if (FindLog(level, coord.BlockSouth(), visited, distance + 1)) return true;
+		// check north
+		if (FindLog(level, coord.BlockNorth(), visited, distance + 1)) return true;
+		// check up
+		if (FindLog(level, coord.BlockUp(), visited, distance + 1)) return true;
+
+		return false;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+		NewLeafType = itemInHand.Metadata switch
 		{
-			var rnd = new Random();
-			if (NewLeafType == "dark_oak") // Oak and dark oak drops apple
-			{
-				if (rnd.Next(200) == 0)
-				{
-					// Apple
-					return new Item[] {ItemFactory.GetItem(260, 0, 1)};
-				}
-			}
-			if (rnd.Next(20) == 0)
-			{
-				// Sapling
-				var blockstate = GetState();
-				return new[] {ItemFactory.GetItem(6, blockstate.Data, 1)};
-			}
-
-			return new Item[0];
-		}
-
-		private bool FindLog(Level level, BlockCoordinates coord, List<BlockCoordinates> visited, int distance)
-		{
-			if (visited.Contains(coord)) return false;
-
-			var block = level.GetBlock(coord);
-			if (block is Log) return true;
-
-			visited.Add(coord);
-
-			if (distance >= 4) return false;
-
-			if (!(block is Leaves2)) return false;
-			var leaves = (Leaves2) block;
-			if (leaves.NewLeafType != NewLeafType) return false;
-
-			// check down
-			if (FindLog(level, coord.BlockDown(), visited, distance + 1)) return true;
-			// check west
-			if (FindLog(level, coord.BlockWest(), visited, distance + 1)) return true;
-			// check east
-			if (FindLog(level, coord.BlockEast(), visited, distance + 1)) return true;
-			// check south
-			if (FindLog(level, coord.BlockSouth(), visited, distance + 1)) return true;
-			// check north
-			if (FindLog(level, coord.BlockNorth(), visited, distance + 1)) return true;
-			// check up
-			if (FindLog(level, coord.BlockUp(), visited, distance + 1)) return true;
-
-			return false;
-		}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			NewLeafType = itemInHand.Metadata switch
-			{
-				0 => "acacia",
-				1 => "dark_oak",
-				_ => throw new ArgumentOutOfRangeException()
-			};
-			return false;
-		}
+			0 => "acacia",
+			1 => "dark_oak",
+			_ => throw new ArgumentOutOfRangeException()
+		};
+		return false;
 	}
 }

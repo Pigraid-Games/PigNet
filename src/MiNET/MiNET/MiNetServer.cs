@@ -17,7 +17,11 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Numerics;
 using log4net;
@@ -27,6 +31,7 @@ using MiNET.Net.RakNet;
 using MiNET.Plugins;
 using MiNET.Utils;
 using MiNET.Utils.IO;
+using Newtonsoft.Json;
 
 namespace MiNET;
 
@@ -43,7 +48,7 @@ public class MiNetServer
 
 	public MotdProvider MotdProvider { get; set; }
 
-	public static RecyclableMemoryStreamManager MemoryStreamManager { get; set; } = new RecyclableMemoryStreamManager();
+	public static RecyclableMemoryStreamManager MemoryStreamManager { get; set; } = new();
 
 	public IServerManager ServerManager { get; set; }
 	public LevelManager LevelManager { get; set; }
@@ -73,13 +78,8 @@ public class MiNetServer
 		InitializeFastThreadPool();
 	}
 
-	public MiNetServer(IPEndPoint endpoint) : this()
-	{
-		Endpoint = endpoint;
-	}
-
 	// Dynamically scale the thread pool based on system resources
-	private void InitializeFastThreadPool()
+	private static void InitializeFastThreadPool()
 	{
 		FastThreadPool?.Dispose();
 		int threadCount = Environment.ProcessorCount * 10;
@@ -100,9 +100,9 @@ public class MiNetServer
 		Console.WriteLine($"Timer accuracy: {nanosecPerTick} ns");
 	}
 
-	public bool StartServer()
+	public void StartServer()
 	{
-		if (_listener != null) return false;
+		if (_listener != null) return;
 
 		try
 		{
@@ -114,13 +114,11 @@ public class MiNetServer
 			StartRakNetListener();
 
 			Log.Info($"Server running on port {Endpoint?.Port}.");
-			return true;
 		}
 		catch (Exception e)
 		{
 			Log.Error("Error during startup!", e);
 			_listener?.Stop();
-			return false;
 		}
 	}
 

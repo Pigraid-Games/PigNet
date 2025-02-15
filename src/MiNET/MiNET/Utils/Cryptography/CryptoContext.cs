@@ -25,25 +25,24 @@
 
 using Org.BouncyCastle.Crypto;
 
-namespace MiNET.Utils.Cryptography
+namespace MiNET.Utils.Cryptography;
+
+public class CryptoContext
 {
-	public class CryptoContext
-	{
-		public bool UseEncryption;
+	//public MemoryStream OutputStream { get; set; }
+	//public CryptoStream CryptoStreamOut { get; set; }
 
-		//public RijndaelManaged Algorithm { get; set; }
+	public long SendCounter = -1;
+	public bool UseEncryption;
 
-		public IBufferedCipher Decryptor { get; set; }
-		//public MemoryStream InputStream { get; set; }
-		//public CryptoStream CryptoStreamIn { get; set; }
+	//public RijndaelManaged Algorithm { get; set; }
 
-		public IBufferedCipher Encryptor { get; set; }
-		//public MemoryStream OutputStream { get; set; }
-		//public CryptoStream CryptoStreamOut { get; set; }
+	public IBufferedCipher Decryptor { get; set; }
+	//public MemoryStream InputStream { get; set; }
+	//public CryptoStream CryptoStreamIn { get; set; }
 
-		public long SendCounter = -1;
+	public IBufferedCipher Encryptor { get; set; }
 
-		public AsymmetricCipherKeyPair ClientKey { get; set; }
-		public byte[] Key { get; set; }
-	}
+	public AsymmetricCipherKeyPair ClientKey { get; set; }
+	public byte[] Key { get; set; }
 }

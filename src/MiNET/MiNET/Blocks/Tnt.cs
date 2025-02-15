@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Tnt : Block
 {
-	public partial class Tnt : Block
+	public Tnt() : base(46)
 	{
-		public Tnt() : base(46)
-		{
-			IsFlammable = true;
-		}
+		IsFlammable = true;
 	}
 }

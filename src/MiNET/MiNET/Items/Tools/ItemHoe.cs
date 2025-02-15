@@ -53,10 +53,7 @@ public class ItemHoe : Item
 			case Dirt { DirtType: "normal" }:
 			case GrassPath:
 			{
-				var farmland = new Farmland
-				{
-					Coordinates = blockCoordinates,
-				};
+				var farmland = new Farmland { Coordinates = blockCoordinates };
 
 				if (farmland.FindWater(world, blockCoordinates, [], 0))
 				{
@@ -70,7 +67,7 @@ public class ItemHoe : Item
 			}
 			case Dirt { DirtType: "coarse" }:
 			{
-				var dirt = new Dirt {Coordinates = blockCoordinates};
+				var dirt = new Dirt { Coordinates = blockCoordinates };
 
 				world.SetBlock(dirt);
 				player.Inventory.DamageItemInHand(ItemDamageReason.BlockInteract, null, block);

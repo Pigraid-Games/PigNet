@@ -27,7 +27,7 @@ namespace MiNET.Items.Weapons;
 
 public class ItemIronSword : ItemSword
 {
-	public ItemIronSword() : base("minecraft:iron_sword", 267, canInteract: false)
+	public ItemIronSword() : base("minecraft:iron_sword", 267, false)
 	{
 		ItemMaterial = ItemMaterial.Iron;
 	}

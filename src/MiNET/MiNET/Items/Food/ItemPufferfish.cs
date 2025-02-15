@@ -8,23 +8,23 @@ public class ItemPufferFish() : FoodItem("minecraft:pufferfish", 462, 0, 1, 0.2)
 	{
 		base.Consume(player);
 
-		var hungerEffect = new Hunger()
+		var hungerEffect = new Hunger
 		{
 			EffectId = EffectType.Hunger,
 			Level = 3,
-			Duration = 300,
+			Duration = 300
 		};
 		player.SetEffect(hungerEffect);
 
-		var nauseaEffect = new Nausea()
+		var nauseaEffect = new Nausea
 		{
 			EffectId = EffectType.Nausea,
 			Level = 2,
-			Duration = 300,
+			Duration = 300
 		};
 		player.SetEffect(nauseaEffect);
 
-		var poisonEffect = new Poison()
+		var poisonEffect = new Poison
 		{
 			EffectId = EffectType.Poison,
 			Level = 2,

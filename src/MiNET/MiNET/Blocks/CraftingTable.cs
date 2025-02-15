@@ -24,34 +24,31 @@
 #endregion
 
 using System.Numerics;
-using MiNET.Items;
 using MiNET.Net;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class CraftingTable : Block
 {
-	public partial class CraftingTable : Block
+	public CraftingTable() : base(58)
 	{
-		public CraftingTable() : base(58)
-		{
-			FuelEfficiency = 15;
-			BlastResistance = 12.5f;
-			Hardness = 2.5f;
-			//IsFlammable = true; // Only from lava.
-		}
+		FuelEfficiency = 15;
+		BlastResistance = 12.5f;
+		Hardness = 2.5f;
+		//IsFlammable = true; // Only from lava.
+	}
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			var containerOpen = McpeContainerOpen.CreateObject();
-			containerOpen.windowId = 13;
-			containerOpen.type = 1;
-			containerOpen.coordinates = Coordinates;
-			containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
-			player.SendPacket(containerOpen);
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
+		containerOpen.windowId = 13;
+		containerOpen.type = 1;
+		containerOpen.coordinates = Coordinates;
+		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+		player.SendPacket(containerOpen);
 
-			return true;
-		}
+		return true;
 	}
 }

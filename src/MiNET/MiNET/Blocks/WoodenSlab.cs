@@ -31,54 +31,53 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class WoodenSlab : Block
 {
-	public partial class WoodenSlab : Block
+	public WoodenSlab() : base(158)
 	{
-		public WoodenSlab() : base(158)
+		BlastResistance = 15;
+		Hardness = 2;
+		IsFlammable = true;
+		IsTransparent = true; // Partial - blocks light.
+		IsBlockingSkylight = false; // Partial - blocks light.
+	}
+
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+
+		TopSlotBit = faceCoords.Y > 0.5 && face != BlockFace.Up;
+
+		WoodType = itemInHand.Metadata switch
 		{
-			BlastResistance = 15;
-			Hardness = 2;
-			IsFlammable = true;
-			IsTransparent = true; // Partial - blocks light.
-			IsBlockingSkylight = false; // Partial - blocks light.
-		}
+			1 => "spruce",
+			2 => "birch",
+			3 => "jungle",
+			4 => "acacia",
+			5 => "dark_oak",
+			_ => throw new ArgumentOutOfRangeException()
+		};
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+		var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var itemInHand = player.Inventory.GetItemInHand();
-
-			TopSlotBit = (faceCoords.Y > 0.5 && face != BlockFace.Up);
-
-			WoodType = itemInHand.Metadata switch
-			{
-				1 => "spruce",
-				2 => "birch",
-				3 => "jungle",
-				4 => "acacia",
-				5 => "dark_oak",
-				_ => throw new ArgumentOutOfRangeException()
-			};
-
-			var slabcoordinates = new BlockCoordinates(Coordinates.X, Coordinates.Y - 1, Coordinates.Z);
-
-			foreach (var state in world.GetBlock(slabcoordinates).GetState().States)
-			{
-				if (state is BlockStateString s && s.Name == "wood_type")
+		foreach (IBlockState state in world.GetBlock(slabcoordinates).GetState().States)
+			if (state is BlockStateString s && s.Name == "wood_type")
+				if (world.GetBlock(slabcoordinates).Name == "minecraft:wooden_slab" && s.Value == WoodType)
 				{
-					if (world.GetBlock(slabcoordinates).Name == "minecraft:wooden_slab" && s.Value == WoodType)
+					world.SetBlock(new DoubleWoodenSlab
 					{
-						world.SetBlock(new DoubleWoodenSlab { WoodType = WoodType, TopSlotBit = true });
-						return true;
-					}
+						WoodType = WoodType,
+						TopSlotBit = true
+					});
+					return true;
 				}
-			}
-			return false;
-		}
+		return false;
 	}
 }

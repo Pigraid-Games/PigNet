@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -33,66 +32,58 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using log4net;
 using log4net.Config;
+using log4net.Repository;
 using MiNET.Net;
 using MiNET.Utils;
 
-namespace MiNET.Console
+namespace MiNET.Console;
+
+class Startup
 {
-	class Startup
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Startup));
+
+	static void Main(string[] args)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Startup));
-
-		static void Main(string[] args)
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (args.Length > 0 && args[0] == "listener")
 			{
-				if (args.Length > 0 && args[0] == "listener")
-				{
-					// This is a brutal hack to block BDS to use the ports we are using. So we start this, and basically block BDS
-					// while it is starting. Then we close down this process again, and continue on our way.
-					var reset = new ManualResetEvent(false);
-					using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ExclusiveAddressUse = true };
-					socket.Bind(new IPEndPoint(IPAddress.Any, 19132));
-					System.Console.WriteLine("LISTENING!");
-					reset.WaitOne();
-					System.Console.WriteLine("EXIT!");
-					return;
-				}
-
-				var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-				XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "log4net.xml")));
-
-				if (Log.IsInfoEnabled)
-				{
-					Log.Info(MiNetServer.MiNET);
-				}
-				else
-				{
-					System.Console.WriteLine(MiNetServer.MiNET);
-				}
-
-				//var currentProcess = Process.GetCurrentProcess();
-				//currentProcess.ProcessorAffinity = (IntPtr) Config.GetProperty("ProcessorAffinity", (int) currentProcess.ProcessorAffinity);
-
-				var service = new MiNetServer();
-				Log.Info($"Starting MiNET for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion}...");
-
-				if (Config.GetProperty("UserBedrockGenerator", false))
-				{
-					service.LevelManager = new LevelManager();
-					service.LevelManager.Generator = new BedrockGenerator();
-				}
-
-				service.StartServer();
-
-				System.Console.WriteLine("MiNET running. Press <enter> to stop service.");
-				System.Console.ReadLine();
-				service.StopServer();
+				// This is a brutal hack to block BDS to use the ports we are using. So we start this, and basically block BDS
+				// while it is starting. Then we close down this process again, and continue on our way.
+				var reset = new ManualResetEvent(false);
+				using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+				socket.ExclusiveAddressUse = true;
+				socket.Bind(new IPEndPoint(IPAddress.Any, 19132));
+				System.Console.WriteLine("LISTENING!");
+				reset.WaitOne();
+				System.Console.WriteLine("EXIT!");
+				return;
 			}
-			else
+
+			ILoggerRepository logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly() ?? throw new InvalidOperationException());
+			XmlConfigurator.Configure(logRepository, new FileInfo(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) 
+																				?? throw new InvalidOperationException(), "log4net.xml")));
+
+			if (Log.IsInfoEnabled) Log.Info(MiNetServer.MiNET);
+			else System.Console.WriteLine(MiNetServer.MiNET);
+
+			var service = new MiNetServer();
+			Log.Info($"Starting MiNET for Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion}...");
+
+			if (Config.GetProperty("UserBedrockGenerator", false))
 			{
-				System.Console.WriteLine("Unsupported platform.");
+				service.LevelManager = new LevelManager
+				{
+					Generator = new BedrockGenerator()
+				};
 			}
+
+			service.StartServer();
+
+			System.Console.WriteLine("MiNET running. Press <enter> to stop service.");
+			System.Console.ReadLine();
+			service.StopServer();
 		}
+		else System.Console.WriteLine("Unsupported platform.");
 	}
 }

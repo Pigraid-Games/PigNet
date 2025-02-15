@@ -26,18 +26,17 @@
 using MiNET.Items;
 using MiNET.Items.Tools;
 
-namespace MiNET.Blocks
-{
-	public partial class WoodenButton : Button
-	{
-		public WoodenButton() : base(143)
-		{
-			TickRate = 30;
-		}
+namespace MiNET.Blocks;
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+public partial class WoodenButton : Button
+{
+	public WoodenButton() : base(143)
+	{
+		TickRate = 30;
+	}
+
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
 	}
 }

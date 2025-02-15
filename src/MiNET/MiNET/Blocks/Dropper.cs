@@ -23,26 +23,25 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Dropper : Block
 {
-	public partial class Dropper : Block
+	public Dropper() : base(125)
 	{
-		public Dropper() : base(125)
-		{
-			BlastResistance = 17.5f;
-			Hardness = 3.5f;
-		}
+		BlastResistance = 17.5f;
+		Hardness = 3.5f;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-			return false;
-		}
+		return false;
 	}
 }

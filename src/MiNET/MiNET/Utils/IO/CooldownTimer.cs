@@ -25,73 +25,66 @@
 
 using System;
 
-namespace MiNET.Utils.IO
+namespace MiNET.Utils.IO;
+
+public class CooldownTimer
 {
-	public class CooldownTimer
+	public CooldownTimer(long timeSpan) : this(new TimeSpan(timeSpan * TimeSpan.TicksPerMillisecond))
 	{
-		public TimeSpan TimeSpan { get; private set; }
-
-		public DateTime ClearingTime { get; private set; }
-
-		public CooldownTimer(long timeSpan) : this(new TimeSpan(timeSpan * TimeSpan.TicksPerMillisecond))
-		{
-		}
-
-		public CooldownTimer(TimeSpan timeSpan)
-		{
-			TimeSpan = timeSpan;
-			Reset();
-		}
-
-		public void Reset()
-		{
-			ClearingTime = DateTime.UtcNow.Add(TimeSpan);
-		}
-
-		public bool CanExecute()
-		{
-			return ClearingTime <= DateTime.UtcNow;
-		}
-
-
-		public bool Execute()
-		{
-			if (!CanExecute())
-			{
-				return false;
-			}
-
-			Reset();
-
-			return true;
-		}
 	}
 
-	public class CooldownTimerAction<T> : CooldownTimer where T : class
+	public CooldownTimer(TimeSpan timeSpan)
 	{
-		public Action<T> CallBackAction { get; set; }
+		TimeSpan = timeSpan;
+		Reset();
+	}
 
-		public CooldownTimerAction(long timeSpan, Action<T> callbackAction) : this(new TimeSpan(timeSpan * TimeSpan.TicksPerMillisecond), callbackAction)
-		{
-		}
+	public TimeSpan TimeSpan { get; }
 
-		public CooldownTimerAction(TimeSpan timeSpan, Action<T> callbackAction) : base(timeSpan)
-		{
-			CallBackAction = callbackAction;
-		}
+	public DateTime ClearingTime { get; private set; }
 
-		public bool Execute(T param)
-		{
-			if (!CanExecute())
-			{
-				return false;
-			}
+	public void Reset()
+	{
+		ClearingTime = DateTime.UtcNow.Add(TimeSpan);
+	}
 
-			CallBackAction?.Invoke(param);
+	public bool CanExecute()
+	{
+		return ClearingTime <= DateTime.UtcNow;
+	}
 
-			Reset();
 
-			return true;
-		}
+	public bool Execute()
+	{
+		if (!CanExecute()) return false;
+
+		Reset();
+
+		return true;
+	}
+}
+
+public class CooldownTimerAction<T> : CooldownTimer where T : class
+{
+	public CooldownTimerAction(long timeSpan, Action<T> callbackAction) : this(new TimeSpan(timeSpan * TimeSpan.TicksPerMillisecond), callbackAction)
+	{
+	}
+
+	public CooldownTimerAction(TimeSpan timeSpan, Action<T> callbackAction) : base(timeSpan)
+	{
+		CallBackAction = callbackAction;
+	}
+
+	public Action<T> CallBackAction { get; set; }
+
+	public bool Execute(T param)
+	{
+		if (!CanExecute()) return false;
+
+		CallBackAction?.Invoke(param);
+
+		Reset();
+
+		return true;
 	}
 }

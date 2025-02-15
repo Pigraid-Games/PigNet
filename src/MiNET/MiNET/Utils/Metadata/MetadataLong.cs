@@ -25,51 +25,44 @@
 
 using System.IO;
 
-namespace MiNET.Utils.Metadata
+namespace MiNET.Utils.Metadata;
+
+public class MetadataLong : MetadataEntry
 {
-	public class MetadataLong : MetadataEntry
+	public byte id = 7;
+
+	public MetadataLong()
 	{
-		public byte id = 7;
+	}
 
-		public override byte Identifier
-		{
-			get { return id; }
-		}
+	public MetadataLong(long value)
+	{
+		Value = value;
+	}
 
-		public override string FriendlyName
-		{
-			get { return "long"; }
-		}
+	public override byte Identifier => id;
 
-		public long Value { get; set; }
+	public override string FriendlyName => "long";
 
-		public static implicit operator MetadataLong(long value)
-		{
-			return new MetadataLong(value);
-		}
+	public long Value { get; set; }
 
-		public MetadataLong()
-		{
-		}
+	public static implicit operator MetadataLong(long value)
+	{
+		return new MetadataLong(value);
+	}
 
-		public MetadataLong(long value)
-		{
-			Value = value;
-		}
+	public override void FromStream(BinaryReader reader)
+	{
+		Value = VarInt.ReadSInt64(reader.BaseStream);
+	}
 
-		public override void FromStream(BinaryReader reader)
-		{
-			Value = VarInt.ReadSInt64(reader.BaseStream);
-		}
+	public override void WriteTo(BinaryWriter stream)
+	{
+		VarInt.WriteSInt64(stream.BaseStream, Value);
+	}
 
-		public override void WriteTo(BinaryWriter stream)
-		{
-			VarInt.WriteSInt64(stream.BaseStream, Value);
-		}
-
-		public override string ToString()
-		{
-			return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
-		}
+	public override string ToString()
+	{
+		return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
 	}
 }

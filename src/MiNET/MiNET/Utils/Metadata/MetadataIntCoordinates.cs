@@ -26,53 +26,46 @@
 using System.IO;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Utils.Metadata
+namespace MiNET.Utils.Metadata;
+
+public class MetadataIntCoordinates : MetadataEntry
 {
-	public class MetadataIntCoordinates : MetadataEntry
+	public MetadataIntCoordinates()
 	{
-		public override byte Identifier
-		{
-			get { return 6; }
-		}
+	}
 
-		public override string FriendlyName
-		{
-			get { return "int coordinates"; }
-		}
+	public MetadataIntCoordinates(int x, int y, int z)
+	{
+		Value = new BlockCoordinates(x, y, z);
+	}
 
-		public BlockCoordinates Value { get; set; }
+	public override byte Identifier => 6;
 
-		public MetadataIntCoordinates()
-		{
-		}
+	public override string FriendlyName => "int coordinates";
 
-		public MetadataIntCoordinates(int x, int y, int z)
-		{
-			Value = new BlockCoordinates(x, y, z);
-		}
+	public BlockCoordinates Value { get; set; }
 
-		public override void FromStream(BinaryReader reader)
+	public override void FromStream(BinaryReader reader)
+	{
+		Stream stream = reader.BaseStream;
+		Value = new BlockCoordinates
 		{
-			Stream stream = reader.BaseStream;
-			Value = new BlockCoordinates
-			{
-				X = VarInt.ReadSInt32(stream),
-				Y = VarInt.ReadSInt32(stream),
-				Z = VarInt.ReadSInt32(stream),
-			};
-		}
+			X = VarInt.ReadSInt32(stream),
+			Y = VarInt.ReadSInt32(stream),
+			Z = VarInt.ReadSInt32(stream)
+		};
+	}
 
-		public override void WriteTo(BinaryWriter reader)
-		{
-			Stream stream = reader.BaseStream;
-			VarInt.WriteSInt32(stream, Value.X);
-			VarInt.WriteSInt32(stream, Value.Y);
-			VarInt.WriteSInt32(stream, Value.Z);
-		}
+	public override void WriteTo(BinaryWriter reader)
+	{
+		Stream stream = reader.BaseStream;
+		VarInt.WriteSInt32(stream, Value.X);
+		VarInt.WriteSInt32(stream, Value.Y);
+		VarInt.WriteSInt32(stream, Value.Z);
+	}
 
-		public override string ToString()
-		{
-			return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
-		}
+	public override string ToString()
+	{
+		return string.Format("({0}) {2}", FriendlyName, Identifier, Value);
 	}
 }

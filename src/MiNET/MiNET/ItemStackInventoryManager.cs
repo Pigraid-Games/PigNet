@@ -149,16 +149,16 @@ namespace MiNET
 			stackResponses.Add(new StackResponseContainerInfo
 			{
 				ContainerId = source.ContainerId,
-				Slots = new List<StackResponseSlotInfo>
-				{
-					new StackResponseSlotInfo()
+				Slots =
+				[
+					new StackResponseSlotInfo
 					{
 						Count = sourceItem.Count,
 						Slot = source.Slot,
 						HotbarSlot = source.Slot,
 						StackNetworkId = sourceItem.UniqueId
 					}
-				}
+				]
 			});
 		}
 
@@ -194,16 +194,16 @@ namespace MiNET
 			stackResponses.Add(new StackResponseContainerInfo
 			{
 				ContainerId = source.ContainerId,
-				Slots = new List<StackResponseSlotInfo>
-				{
-					new StackResponseSlotInfo()
+				Slots =
+				[
+					new StackResponseSlotInfo
 					{
 						Count = sourceItem.Count,
 						Slot = source.Slot,
 						HotbarSlot = source.Slot,
 						StackNetworkId = sourceItem.UniqueId
 					}
-				}
+				]
 			});
 		}
 
@@ -223,16 +223,16 @@ namespace MiNET
 			stackResponses.Add(new StackResponseContainerInfo
 			{
 				ContainerId = source.ContainerId,
-				Slots = new List<StackResponseSlotInfo>
-				{
-					new StackResponseSlotInfo()
+				Slots =
+				[
+					new StackResponseSlotInfo
 					{
 						Count = sourceItem.Count,
 						Slot = source.Slot,
 						HotbarSlot = source.Slot,
 						StackNetworkId = sourceItem.UniqueId
 					}
-				}
+				]
 			});
 		}
 
@@ -266,42 +266,41 @@ namespace MiNET
 			stackResponses.Add(new StackResponseContainerInfo
 			{
 				ContainerId = source.ContainerId,
-				Slots = new List<StackResponseSlotInfo>
-				{
-					new StackResponseSlotInfo()
+				Slots =
+				[
+					new StackResponseSlotInfo
 					{
 						Count = destItem.Count,
 						Slot = source.Slot,
 						HotbarSlot = source.Slot,
 						StackNetworkId = destItem.UniqueId
 					}
-				}
+				]
 			});
 			stackResponses.Add(new StackResponseContainerInfo
 			{
 				ContainerId = destination.ContainerId,
-				Slots = new List<StackResponseSlotInfo>
-				{
-					new StackResponseSlotInfo()
+				Slots =
+				[
+					new StackResponseSlotInfo
 					{
 						Count = sourceItem.Count,
 						Slot = destination.Slot,
 						HotbarSlot = destination.Slot,
 						StackNetworkId = sourceItem.UniqueId
 					}
-				}
+				]
 			});
 		}
 
 		protected virtual StackRequestSlotInfo ProcessPlaceAction(PlaceAction action, List<StackResponseContainerInfo> stackResponses)
 		{
 			byte count = action.Count;
-			Item sourceItem;
 			Item destItem = new ItemAir();
 			StackRequestSlotInfo source = action.Source;
 			StackRequestSlotInfo destination = action.Destination;
 
-			sourceItem = GetContainerItem(source.ContainerId, source.Slot);
+			Item sourceItem = GetContainerItem(source.ContainerId, source.Slot);
 
 			if (!_player.OnItemTransaction(new ItemTransactionEventArgs(_player, _player.Level, sourceItem, action)))
 			{
@@ -523,14 +522,14 @@ namespace MiNET
 
 		protected virtual void ProcessCraftCreativeAction(CraftCreativeAction action)
 		{
-			Item creativeItem = InventoryUtils.CreativeInventoryItems[(int)action.CreativeItemNetworkId];
+			Item creativeItem = InventoryUtils.itemList[(int)action.CreativeItemNetworkId];
 			if (creativeItem == null) throw new Exception($"Failed to find inventory item with unique id: {action.CreativeItemNetworkId}");
 			creativeItem = ItemFactory.GetItem(creativeItem.Id, creativeItem.Metadata);
 			creativeItem.Count = (byte) creativeItem.MaxStackSize;
 			creativeItem.UniqueId = Environment.TickCount;
 			if (creativeItem.ExtraData == null)
 			{
-				creativeItem.ExtraData = InventoryUtils.CreativeInventoryItems[(int) action.CreativeItemNetworkId].ExtraData;
+				creativeItem.ExtraData = InventoryUtils.itemList[(int) action.CreativeItemNetworkId].ExtraData;
 			}
 			Log.Debug($"Creating {creativeItem}");
 			_player.Inventory.UiInventory.Slots[50] = creativeItem;
@@ -633,17 +632,13 @@ namespace MiNET
 
 			if (strings.Count > 0) // Real renaming
 			{
-				NbtCompound nbt = new NbtCompound("display")
+				var nbt = new NbtCompound("display")
 				{
 					new NbtString("Name", strings[0]),
 				};
 
-				if (data.Contains("display"))
-				{
-					data.Remove("display");
-				}
-
-				data.Add(nbt);
+				data?.Remove("display");
+				data?.Add(nbt);
 			}
 
 			var item = sourceItem.Clone() as Item;

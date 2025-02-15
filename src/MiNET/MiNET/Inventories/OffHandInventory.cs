@@ -22,7 +22,7 @@ public class OffHandInventory(Player player)
 
 	public void SendUpdate()
 	{
-		var sendMobEquipment = McpeMobEquipment.CreateObject();
+		McpeMobEquipment sendMobEquipment = McpeMobEquipment.CreateObject();
 		sendMobEquipment.runtimeEntityId = Holder.EntityId;
 		sendMobEquipment.selectedSlot = 0;
 		sendMobEquipment.slot = 0;
@@ -30,7 +30,7 @@ public class OffHandInventory(Player player)
 		sendMobEquipment.item = _item;
 		Holder.Level.RelayBroadcast(sendMobEquipment);
 
-		var sendSlotUpdate = McpeInventorySlot.CreateObject();
+		McpeInventorySlot sendSlotUpdate = McpeInventorySlot.CreateObject();
 		sendSlotUpdate.inventoryId = InventoryId;
 		sendSlotUpdate.slot = 0;
 		sendSlotUpdate.storageItem = _item;

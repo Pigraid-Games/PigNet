@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class BirchStairs : BlockStairs
 {
-	public partial class BirchStairs : BlockStairs
+	public BirchStairs() : base(135)
 	{
-		public BirchStairs() : base(135)
-		{
-			BlastResistance = 15;
-			Hardness = 2;
-			IsFlammable = true;
-		}
+		BlastResistance = 15;
+		Hardness = 2;
+		IsFlammable = true;
 	}
 }

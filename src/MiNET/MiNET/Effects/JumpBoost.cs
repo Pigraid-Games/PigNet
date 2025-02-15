@@ -25,14 +25,13 @@
 
 using System.Drawing;
 
-namespace MiNET.Effects
+namespace MiNET.Effects;
+
+public class JumpBoost : Effect
 {
-	public class JumpBoost : Effect
+	public JumpBoost() : base(EffectType.JumpBoost)
 	{
-		public JumpBoost() : base(EffectType.JumpBoost)
-		{
-			Particles = false;
-			ParticleColor = Color.FromArgb(0xfd, 0xff, 0x84);
-		}
+		Particles = false;
+		ParticleColor = Color.FromArgb(0xfd, 0xff, 0x84);
 	}
 }

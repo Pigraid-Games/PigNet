@@ -23,22 +23,21 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class UnpoweredComparator : ComparatorBase
 {
-	public partial class UnpoweredComparator : ComparatorBase
+	public UnpoweredComparator() : base(149)
 	{
-		public UnpoweredComparator() : base(149)
-		{
-		}
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = player.GetCardinalDirection();
-			return false;
-		}
+	}
 
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetCardinalDirection();
+		return false;
 	}
 }

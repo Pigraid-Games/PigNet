@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class EmeraldBlock : Block
 {
-	public partial class EmeraldBlock : Block
+	public EmeraldBlock() : base(133)
 	{
-		public EmeraldBlock() : base(133)
-		{
-			BlastResistance = 30;
-			Hardness = 5;
-		}
+		BlastResistance = 30;
+		Hardness = 5;
 	}
 }

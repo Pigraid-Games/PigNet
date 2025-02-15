@@ -207,8 +207,8 @@ namespace MiNET.Entities.Passive
 
 				player.Vehicle = EntityId;
 
-				McpeSetEntityLink link = McpeSetEntityLink.CreateObject();
-				link.linkType = (byte) McpeSetEntityLink.LinkActions.Ride;
+				McpeSetActorLink link = McpeSetActorLink.CreateObject();
+				link.linkType = (byte) McpeSetActorLink.LinkActions.Ride;
 				link.riderId = player.EntityId;
 				link.riddenId = EntityId;
 				Level.RelayBroadcast(link);
@@ -224,8 +224,8 @@ namespace MiNET.Entities.Passive
 				// Unmount ridden entity
 				IsRiding = false;
 
-				McpeSetEntityLink link = McpeSetEntityLink.CreateObject();
-				link.linkType = (byte) McpeSetEntityLink.LinkActions.Remove;
+				McpeSetActorLink link = McpeSetActorLink.CreateObject();
+				link.linkType = (byte) McpeSetActorLink.LinkActions.Remove;
 				link.riderId = player.EntityId;
 				link.riddenId = EntityId;
 				Level.RelayBroadcast(link);

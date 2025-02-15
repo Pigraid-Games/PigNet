@@ -23,76 +23,70 @@
 
 #endregion
 
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public partial class McpeCommandBlockUpdate : Packet<McpeCommandBlockUpdate>
 {
-	public partial class McpeCommandBlockUpdate : Packet<McpeCommandBlockUpdate>
+	public string command; // = null;
+	public uint commandBlockMode; // = null;
+	public BlockCoordinates coordinates; // = null;
+	public bool isConditional; // = null;
+	public bool isRedstoneMode; // = null;
+	public string lastOutput; // = null;
+	public long minecartEntityId; // = null;
+	public string name; // = null;
+	public bool shouldTrackOutput; // = null;
+
+	partial void AfterEncode()
 	{
-		public BlockCoordinates coordinates; // = null;
-		public uint commandBlockMode; // = null;
-		public bool isRedstoneMode; // = null;
-		public bool isConditional; // = null;
-		public long minecartEntityId; // = null;
-		public string command; // = null;
-		public string lastOutput; // = null;
-		public string name; // = null;
-		public bool shouldTrackOutput; // = null;
-
-		partial void AfterEncode()
+		if (isBlock)
 		{
-			if (isBlock)
-			{
-				Write(coordinates);
-				WriteUnsignedVarInt(commandBlockMode);
-				Write(isRedstoneMode);
-				Write(isConditional);
-			}
-			else
-			{
-				WriteUnsignedVarLong(minecartEntityId);
-			}
-
-			Write(command);
-			Write(lastOutput);
-			Write(name);
-			Write(shouldTrackOutput);
+			Write(coordinates);
+			WriteUnsignedVarInt(commandBlockMode);
+			Write(isRedstoneMode);
+			Write(isConditional);
 		}
+		else
+			WriteUnsignedVarLong(minecartEntityId);
 
-		partial void AfterDecode()
+		Write(command);
+		Write(lastOutput);
+		Write(name);
+		Write(shouldTrackOutput);
+	}
+
+	partial void AfterDecode()
+	{
+		if (isBlock)
 		{
-			if (isBlock)
-			{
-				coordinates = ReadBlockCoordinates();
-				commandBlockMode = ReadUnsignedVarInt();
-				isRedstoneMode = ReadBool();
-				isConditional = ReadBool();
-			}
-			else
-			{
-				minecartEntityId = ReadUnsignedVarLong();
-			}
-
-			command = ReadString();
-			lastOutput = ReadString();
-			name = ReadString();
-			shouldTrackOutput = ReadBool();
+			coordinates = ReadBlockCoordinates();
+			commandBlockMode = ReadUnsignedVarInt();
+			isRedstoneMode = ReadBool();
+			isConditional = ReadBool();
 		}
+		else
+			minecartEntityId = ReadUnsignedVarLong();
 
-		public override void Reset()
-		{
-			coordinates = default;
-			commandBlockMode = default;
-			isRedstoneMode = default;
-			isConditional = default;
-			minecartEntityId = default;
-			command = default;
-			lastOutput = default;
-			name = default;
-			shouldTrackOutput = default;
+		command = ReadString();
+		lastOutput = ReadString();
+		name = ReadString();
+		shouldTrackOutput = ReadBool();
+	}
 
-			base.Reset();
-		}
+	public override void Reset()
+	{
+		coordinates = default;
+		commandBlockMode = default;
+		isRedstoneMode = default;
+		isConditional = default;
+		minecartEntityId = default;
+		command = default;
+		lastOutput = default;
+		name = default;
+		shouldTrackOutput = default;
+
+		base.Reset();
 	}
 }

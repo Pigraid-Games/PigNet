@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class MelonStem : Block
 {
-	public partial class MelonStem : Block
+	public MelonStem() : base(105)
 	{
-		public MelonStem() : base(105)
-		{
-			IsSolid = false;
-			IsTransparent = true;
-			IsFlammable = true;
-		}
+		IsSolid = false;
+		IsTransparent = true;
+		IsFlammable = true;
 	}
 }

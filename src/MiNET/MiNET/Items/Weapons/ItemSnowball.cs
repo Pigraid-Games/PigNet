@@ -25,7 +25,6 @@
 
 using MiNET.Entities.Projectiles;
 using MiNET.Sounds;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -48,10 +47,7 @@ public class ItemSnowball : Item
 		}
 		const float Force = 1.5f;
 
-		var snowBall = new Snowball(player, world)
-		{
-			KnownPosition = (PlayerLocation) player.KnownPosition.Clone()
-		};
+		var snowBall = new Snowball(player, world) { KnownPosition = (PlayerLocation) player.KnownPosition.Clone() };
 		snowBall.KnownPosition.Y += 1.62f;
 		snowBall.Velocity = snowBall.KnownPosition.GetDirection().Normalize() * Force;
 		snowBall.SpawnEntity();

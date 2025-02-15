@@ -23,16 +23,15 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class StonePressurePlate : Block
 {
-	public partial class StonePressurePlate : Block
+	public StonePressurePlate() : base(70)
 	{
-		public StonePressurePlate() : base(70)
-		{
-			IsTransparent = true;
-			IsSolid = false;
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
-		}
+		IsTransparent = true;
+		IsSolid = false;
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
 	}
 }

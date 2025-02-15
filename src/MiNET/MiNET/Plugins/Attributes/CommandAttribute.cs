@@ -25,16 +25,15 @@
 
 using System;
 
-namespace MiNET.Plugins.Attributes
+namespace MiNET.Plugins.Attributes;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+public class CommandAttribute : Attribute
 {
-	[AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
-	public class CommandAttribute : Attribute
-	{
-		public string Name;
-		public string Overload;
-		public string[] Aliases;
-		public string Permission;
-		public string Description;
-		public string[] OutputFormatStrings;
-	}
+	public string[] Aliases;
+	public string Description;
+	public string Name;
+	public string[] OutputFormatStrings;
+	public string Overload;
+	public string Permission;
 }

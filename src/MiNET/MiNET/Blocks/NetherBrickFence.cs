@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class NetherBrickFence : Block
 {
-	public partial class NetherBrickFence : Block
+	public NetherBrickFence() : base(113)
 	{
-		public NetherBrickFence() : base(113)
-		{
-			IsFlammable = false; // Overrides Wooden Fence, so make sure its not flammable.
-			BlastResistance = 30;
-			Hardness = 2;
-		}
+		IsFlammable = false; // Overrides Wooden Fence, so make sure its not flammable.
+		BlastResistance = 30;
+		Hardness = 2;
 	}
 }

@@ -41,15 +41,17 @@ public class CustomForm : Form
 
 	public List<CustomElement> Content { get; set; }
 
+	[JsonIgnore] public Action<Player, CustomForm> ExecuteAction { get; set; }
+
 	public override void FromJson(string json, Player player)
 	{
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented,
+			Formatting = Formatting.Indented
 		};
 
-		var parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
+		List<object> parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
 		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
 
 		if (parsedResult == null) return; // Pressed [x]
@@ -79,8 +81,6 @@ public class CustomForm : Form
 
 		Execute(player);
 	}
-
-	[JsonIgnore] public Action<Player, CustomForm> ExecuteAction { get; set; }
 
 	public void Execute(Player player)
 	{

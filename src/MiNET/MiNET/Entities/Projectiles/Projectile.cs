@@ -266,7 +266,7 @@ public class Projectile : Entity
 	{
 		if (new Random().Next(5) == 0)
 		{
-			McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
+			McpeSetActorMotion motions = McpeSetActorMotion.CreateObject();
 			motions.runtimeEntityId = EntityId;
 			motions.velocity = Velocity;
 			Level.RelayBroadcast(motions);

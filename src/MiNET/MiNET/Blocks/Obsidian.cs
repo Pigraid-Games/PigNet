@@ -23,14 +23,13 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Obsidian : Block
 {
-	public partial class Obsidian : Block
+	public Obsidian() : base(49)
 	{
-		public Obsidian() : base(49)
-		{
-			BlastResistance = 6000;
-			Hardness = 50;
-		}
+		BlastResistance = 6000;
+		Hardness = 50;
 	}
 }

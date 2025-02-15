@@ -27,7 +27,7 @@ namespace MiNET.Items.Weapons;
 
 public class ItemGoldenSword : ItemSword
 {
-	public ItemGoldenSword() : base("minecraft:golden_sword", 283, canInteract: false)
+	public ItemGoldenSword() : base("minecraft:golden_sword", 283, false)
 	{
 		ItemMaterial = ItemMaterial.Gold;
 	}

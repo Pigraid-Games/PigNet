@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class DragonEgg : Block
 {
-	public partial class DragonEgg : Block
+	public DragonEgg() : base(122)
 	{
-		public DragonEgg() : base(122)
-		{
-			IsTransparent = true;
-			LightLevel = 1;
-			BlastResistance = 45;
-		}
+		IsTransparent = true;
+		LightLevel = 1;
+		BlastResistance = 45;
 	}
 }

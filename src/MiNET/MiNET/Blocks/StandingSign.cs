@@ -33,95 +33,89 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public class StandingSignBase : Block
 {
-	public partial class StandingSignBase : Block
+	private readonly int _itemDropId;
+
+	public StandingSignBase(int id, int itemDropId) : base(id)
 	{
-		private readonly int _itemDropId;
+		_itemDropId = itemDropId;
+		IsTransparent = true;
+		IsSolid = false;
+		BlastResistance = 5;
+		Hardness = 1;
 
-		public StandingSignBase(int id, int itemDropId) : base(id)
-		{
-			_itemDropId = itemDropId;
-			IsTransparent = true;
-			IsSolid = false;
-			BlastResistance = 5;
-			Hardness = 1;
-
-			IsFlammable = true; // Only in PE!!
-		}
-
-		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-		{
-			return world.GetBlock(blockCoordinates).IsReplaceable;
-		}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var container = GetState();
-			var direction = (BlockStateInt) container.States.First(s => s.Name == "ground_sign_direction");
-			direction.Value = (byte) ((int) (Math.Floor((player.KnownPosition.Yaw + 180) * 16 / 360) + 0.5) & 0x0f);
-			SetState(container);
-
-			var signBlockEntity = new SignBlockEntity {Coordinates = Coordinates};
-			world.SetBlockEntity(signBlockEntity);
-			OpenSign(player);
-			return false;
-		}
-
-
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			if (player.Inventory.GetItemInHand() is ItemSignBase)
-			{
-				return false;
-			}
-			OpenSign(player);
-			return true;
-		}
-
-		public override Item[] GetDrops(Item tool)
-		{
-			return new[] {ItemFactory.GetItem((short) _itemDropId)}; // Drop sign item
-		}
-
-		public void OpenSign(Player player, bool front = true)
-		{
-			var packet = McpeOpenSign.CreateObject();
-			packet.coordinates = Coordinates;
-			packet.front = front;
-			player.SendPacket(packet);
-		}
-
+		IsFlammable = true; // Only in PE!!
 	}
 
-	public partial class StandingSign : StandingSignBase
+	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 	{
-		public StandingSign() : base(63, 323) { }
+		return world.GetBlock(blockCoordinates).IsReplaceable;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		BlockStateContainer container = GetState();
+		var direction = (BlockStateInt) container.States.First(s => s.Name == "ground_sign_direction");
+		direction.Value = (byte) ((int) (Math.Floor((player.KnownPosition.Yaw + 180) * 16 / 360) + 0.5) & 0x0f);
+		SetState(container);
+
+		var signBlockEntity = new SignBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(signBlockEntity);
+		OpenSign(player);
+		return false;
 	}
 
 
-	public partial class SpruceStandingSign : StandingSignBase
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
-		public SpruceStandingSign() : base(436, 472) { }
+		if (player.Inventory.GetItemInHand() is ItemSignBase) return false;
+		OpenSign(player);
+		return true;
 	}
 
-	public partial class BirchStandingSign : StandingSignBase
+	public override Item[] GetDrops(Item tool)
 	{
-		public BirchStandingSign() : base(441, 473) { }
+		return new[] { ItemFactory.GetItem((short) _itemDropId) }; // Drop sign item
 	}
 
-	public partial class JungleStandingSign : StandingSignBase
+	public void OpenSign(Player player, bool front = true)
 	{
-		public JungleStandingSign() : base(443, 474) { }
+		McpeOpenSign packet = McpeOpenSign.CreateObject();
+		packet.coordinates = Coordinates;
+		packet.front = front;
+		player.SendPacket(packet);
 	}
+}
 
-	public partial class AcaciaStandingSign : StandingSignBase
-	{
-		public AcaciaStandingSign() : base(445, 475) { }
-	}
+public partial class StandingSign : StandingSignBase
+{
+	public StandingSign() : base(63, 323) { }
+}
 
-	public partial class DarkoakStandingSign : StandingSignBase
-	{
-		public DarkoakStandingSign() : base(447, 476) { }
-	}
+public partial class SpruceStandingSign : StandingSignBase
+{
+	public SpruceStandingSign() : base(436, 472) { }
+}
+
+public partial class BirchStandingSign : StandingSignBase
+{
+	public BirchStandingSign() : base(441, 473) { }
+}
+
+public partial class JungleStandingSign : StandingSignBase
+{
+	public JungleStandingSign() : base(443, 474) { }
+}
+
+public partial class AcaciaStandingSign : StandingSignBase
+{
+	public AcaciaStandingSign() : base(445, 475) { }
+}
+
+public partial class DarkoakStandingSign : StandingSignBase
+{
+	public DarkoakStandingSign() : base(447, 476) { }
 }

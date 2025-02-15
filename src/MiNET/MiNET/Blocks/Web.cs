@@ -25,31 +25,24 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Web : Block
 {
-	public partial class Web : Block
+	public Web() : base(30)
 	{
-		public Web() : base(30)
-		{
-			IsSolid = false;
-			IsTransparent = true; // Partial - diffuses sky light
-			BlastResistance = 20;
-			Hardness = 4;
-		}
+		IsSolid = false;
+		IsTransparent = true; // Partial - diffuses sky light
+		BlastResistance = 20;
+		Hardness = 4;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			// For PE works differently than this. Need to check enchanting
-			if (tool is ItemShears)
-			{
-				return new[] {ItemFactory.GetItem(30)};
-			}
-			if (tool.ItemType == ItemType.Sword)
-			{
-				return new[] {ItemFactory.GetItem(287)};
-			}
+	public override Item[] GetDrops(Item tool)
+	{
+		// For PE works differently than this. Need to check enchanting
+		if (tool is ItemShears) return new[] { ItemFactory.GetItem(30) };
+		if (tool.ItemType == ItemType.Sword) return new[] { ItemFactory.GetItem(287) };
 
-			return new Item[0];
-		}
+		return new Item[0];
 	}
 }

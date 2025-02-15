@@ -29,65 +29,58 @@ using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class SnowLayer : Block
 {
-	public partial class SnowLayer : Block
+	private static readonly ILog Log = LogManager.GetLogger(typeof(SnowLayer));
+
+	//[StateBit] public bool CoveredBit { get; set; } = false;
+	//[StateRange(0, 7)] public int Height { get; set; } = 0;
+
+	public SnowLayer() : base(78)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(SnowLayer));
+		IsTransparent = true;
+		BlastResistance = 0.5f;
+		Hardness = 0.1f;
+		IsReplaceable = true;
+	}
 
-		//[StateBit] public bool CoveredBit { get; set; } = false;
-		//[StateRange(0, 7)] public int Height { get; set; } = 0;
+	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
+	{
+		Block down = world.GetBlock(Coordinates.BlockDown());
+		if (down is Air) return false;
 
-		public SnowLayer() : base(78)
-		{
-			IsTransparent = true;
-			BlastResistance = 0.5f;
-			Hardness = 0.1f;
-			IsReplaceable = true;
-		}
-
-		protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
-		{
-			Block down = world.GetBlock(Coordinates.BlockDown());
-			if (down is Air)
-			{
+		if (down is SnowLayer snow)
+			if (snow.Height < 7)
 				return false;
-			}
 
-			if (down is SnowLayer snow)
-			{
-				if (snow.Height < 7) return false;
-			}
+		return base.CanPlace(world, player, blockCoordinates, targetCoordinates, face);
+	}
 
-			return base.CanPlace(world, player, blockCoordinates, targetCoordinates, face);
-		}
-
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		if (world.GetBlock(Coordinates) is SnowLayer current)
 		{
-			if (world.GetBlock(Coordinates) is SnowLayer current)
+			if (current.Height < 6)
+				Height = current.Height + 1;
+			else
 			{
-				if (current.Height < 6)
+				if (BlockFactory.GetBlockById(80) is Snow snow)
 				{
-					Height = current.Height + 1;
-				}
-				else
-				{
-					if (BlockFactory.GetBlockById(80) is Snow snow)
-					{
-						snow.Coordinates = Coordinates;
-						world.SetBlock(snow);
-						return true;
-					}
+					snow.Coordinates = Coordinates;
+					world.SetBlock(snow);
+					return true;
 				}
 			}
-
-			return false;
 		}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			// One per layer.
-			return new[] {ItemFactory.GetItem(332, 0, (Height + 1))};
-		}
+		return false;
+	}
+
+	public override Item[] GetDrops(Item tool)
+	{
+		// One per layer.
+		return new[] { ItemFactory.GetItem(332, 0, Height + 1) };
 	}
 }

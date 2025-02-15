@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class EndGateway : Block
 {
-	public partial class EndGateway : Block
+	public EndGateway() : base(209)
 	{
-		public EndGateway() : base(209)
-		{
-			LightLevel = 15;
-			BlastResistance = 18000000;
-			Hardness = -1;
-		}
+		LightLevel = 15;
+		BlastResistance = 18000000;
+		Hardness = -1;
 	}
 }

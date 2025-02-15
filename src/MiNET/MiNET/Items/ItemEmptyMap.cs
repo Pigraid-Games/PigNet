@@ -23,7 +23,6 @@
 
 #endregion
 
-using log4net;
 using MiNET.Entities.World;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;

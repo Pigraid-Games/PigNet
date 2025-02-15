@@ -25,24 +25,23 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Clay : Block
 {
-	public partial class Clay : Block
+	public Clay() : base(82)
 	{
-		public Clay() : base(82)
-		{
-			BlastResistance = 3;
-			Hardness = 0.6f;
-		}
+		BlastResistance = 3;
+		Hardness = 0.6f;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			return new Item[] {ItemFactory.GetItem(337, 0, 4)};
-		}
+	public override Item[] GetDrops(Item tool)
+	{
+		return new[] { ItemFactory.GetItem(337, 0, 4) };
+	}
 
-		public override Item GetSmelt()
-		{
-			return ItemFactory.GetItem(172, 0);
-		}
+	public override Item GetSmelt()
+	{
+		return ItemFactory.GetItem(172);
 	}
 }

@@ -25,23 +25,19 @@
 
 using MiNET.Items;
 
-namespace MiNET.Blocks
-{
-	public partial class Sponge : Block
-	{
-		public Sponge() : base(19)
-		{
-			BlastResistance = 3;
-			Hardness = 0.6f;
-		}
+namespace MiNET.Blocks;
 
-		public override Item GetSmelt()
-		{
-			if (SpongeType == "wet")
-			{
-				return ItemFactory.GetItem(19, 0);
-			}
-			return null;
-		}
+public partial class Sponge : Block
+{
+	public Sponge() : base(19)
+	{
+		BlastResistance = 3;
+		Hardness = 0.6f;
+	}
+
+	public override Item GetSmelt()
+	{
+		if (SpongeType == "wet") return ItemFactory.GetItem(19);
+		return null;
 	}
 }

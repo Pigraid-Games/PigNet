@@ -113,12 +113,12 @@ namespace MiNET.Entities.Projectiles
 					{
 						if (player.Inventory.SetFirstEmptySlot(ItemFactory.GetItem("minecraft:arrow", EffectValue), true))
 						{
-							var takeItemEntity = McpeTakeItemEntity.CreateObject();
+							var takeItemEntity = McpeTakeItemActor.CreateObject();
 							takeItemEntity.runtimeEntityId = EntityId;
 							takeItemEntity.target = player.EntityId;
 							Level.RelayBroadcast(takeItemEntity);
 
-							var takeItemEntity2 = McpeTakeItemEntity.CreateObject();
+							var takeItemEntity2 = McpeTakeItemActor.CreateObject();
 							takeItemEntity2.runtimeEntityId = EntityId;
 							takeItemEntity2.target = EntityManager.EntityIdSelf;
 							player.SendPacket(takeItemEntity2);

@@ -36,44 +36,34 @@ namespace MiNET.Items;
 
 public class ItemPainting() : Item("minecraft:painting", 321)
 {
-	public class PaintingData(string title, int width, int widthOffset, int height, int heightOffset)
-	{
-		public string Title { get; } = title;
-
-		public int Width { get; } = width; // default 4
-		public int WidthOffset { get; } = widthOffset; // default 1
-		public int Height { get; } = height; // default 4
-		public int HeightOffset { get; } = heightOffset; // defdault 1
-	}
-
 	private static readonly List<PaintingData> Paintings =
 	[
-		new("Pointer", 4, 1, 4, 1),
-		new("Pigscene", 4, 1, 4, 1),
-		new("Flaming Skull", 4, 1, 4, 1),
-		new("DonkeyKong", 4, 1, 3, 1),
-		new("Skeleton", 4, 1, 3, 1),
-		new("Fighters", 4, 1, 2, 0),
-		new("Match", 2, 0, 2, 0),
-		new("Bust", 2, 0, 2, 0),
-		new("Stage", 2, 0, 2, 0),
-		new("Void", 2, 0, 2, 0),
-		new("SkullAndRoses", 2, 0, 2, 0),
-		new("Wither", 2, 0, 2, 0),
-		new("Wanderer", 1, 0, 2, 0),
-		new("Graham", 1, 0, 2, 0),
-		new("Pool", 2, 0, 1, 0),
-		new("Courbet", 2, 0, 1, 0),
-		new("Sunset", 2, 0, 1, 0),
-		new("Sea", 2, 0, 1, 0),
-		new("Creebet", 2, 0, 1, 0),
-		new("Kebab", 1, 0, 1, 0),
-		new("Aztec", 1, 0, 1, 0),
-		new("Alban", 1, 0, 1, 0),
-		new("Aztec2", 1, 0, 1, 0),
-		new("Bomb", 1, 0, 1, 0),
-		new("Plant", 1, 0, 1, 0),
-		new("Wasteland", 1, 0, 1, 0)
+		new PaintingData("Pointer", 4, 1, 4, 1),
+		new PaintingData("Pigscene", 4, 1, 4, 1),
+		new PaintingData("Flaming Skull", 4, 1, 4, 1),
+		new PaintingData("DonkeyKong", 4, 1, 3, 1),
+		new PaintingData("Skeleton", 4, 1, 3, 1),
+		new PaintingData("Fighters", 4, 1, 2, 0),
+		new PaintingData("Match", 2, 0, 2, 0),
+		new PaintingData("Bust", 2, 0, 2, 0),
+		new PaintingData("Stage", 2, 0, 2, 0),
+		new PaintingData("Void", 2, 0, 2, 0),
+		new PaintingData("SkullAndRoses", 2, 0, 2, 0),
+		new PaintingData("Wither", 2, 0, 2, 0),
+		new PaintingData("Wanderer", 1, 0, 2, 0),
+		new PaintingData("Graham", 1, 0, 2, 0),
+		new PaintingData("Pool", 2, 0, 1, 0),
+		new PaintingData("Courbet", 2, 0, 1, 0),
+		new PaintingData("Sunset", 2, 0, 1, 0),
+		new PaintingData("Sea", 2, 0, 1, 0),
+		new PaintingData("Creebet", 2, 0, 1, 0),
+		new PaintingData("Kebab", 1, 0, 1, 0),
+		new PaintingData("Aztec", 1, 0, 1, 0),
+		new PaintingData("Alban", 1, 0, 1, 0),
+		new PaintingData("Aztec2", 1, 0, 1, 0),
+		new PaintingData("Bomb", 1, 0, 1, 0),
+		new PaintingData("Plant", 1, 0, 1, 0),
+		new PaintingData("Wasteland", 1, 0, 1, 0)
 	];
 
 	public override void PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
@@ -154,7 +144,7 @@ public class ItemPainting() : Item("minecraft:painting", 321)
 		var paintings = new List<(PaintingData, BoundingBox)>();
 
 		int currentSize = 0;
-		foreach (var painting in Paintings.OrderByDescending(pd => pd.Height * pd.Width))
+		foreach (PaintingData painting in Paintings.OrderByDescending(pd => pd.Height * pd.Width))
 		{
 			int width = painting.Width;
 			int widthOffset = painting.WidthOffset;
@@ -165,7 +155,7 @@ public class ItemPainting() : Item("minecraft:painting", 321)
 
 			currentSize = height * width;
 
-			BoundingBox bbox = new BoundingBox();
+			var bbox = new BoundingBox();
 			switch (face)
 			{
 				case BlockFace.North:
@@ -252,19 +242,25 @@ public class ItemPainting() : Item("minecraft:painting", 321)
 		BlockCoordinates min = bbox.Min;
 		BlockCoordinates max = bbox.Max;
 		for (int x = min.X; x <= max.X; x++)
+		for (int y = min.Y; y <= max.Y; y++)
+		for (int z = min.Z; z <= max.Z; z++)
 		{
-			for (int y = min.Y; y <= max.Y; y++)
-			{
-				for (int z = min.Z; z <= max.Z; z++)
-				{
-					// Check this again. Might be that we want to check solids instead?
-					var isAir = level.IsAir(new BlockCoordinates(x, y, z));
-					if (checkForAir & !isAir) return false;
-					if (!checkForAir & isAir) return false;
-				}
-			}
+			// Check this again. Might be that we want to check solids instead?
+			bool isAir = level.IsAir(new BlockCoordinates(x, y, z));
+			if (checkForAir & !isAir) return false;
+			if (!checkForAir & isAir) return false;
 		}
 
 		return true;
+	}
+
+	public class PaintingData(string title, int width, int widthOffset, int height, int heightOffset)
+	{
+		public string Title { get; } = title;
+
+		public int Width { get; } = width; // default 4
+		public int WidthOffset { get; } = widthOffset; // default 1
+		public int Height { get; } = height; // default 4
+		public int HeightOffset { get; } = heightOffset; // defdault 1
 	}
 }

@@ -23,12 +23,11 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class AcaciaDoor : DoorBase
 {
-	public partial class AcaciaDoor : DoorBase
+	public AcaciaDoor() : base(196)
 	{
-		public AcaciaDoor() : base(196)
-		{
-		}
 	}
 }

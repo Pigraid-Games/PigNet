@@ -26,106 +26,103 @@
 using System.Collections;
 using MiNET.Utils;
 
-namespace MiNET.Net.RakNet
+namespace MiNET.Net.RakNet;
+
+public class DatagramHeader
 {
-	public class DatagramHeader
+	public Int24 DatagramSequenceNumber; // uint 24
+
+	public DatagramHeader() : this(0)
 	{
-		public bool IsAck { get; set; }
-		public bool IsNak { get; set; }
-		public bool IsPacketPair { get; set; }
-		public bool HasBAndAs { get; set; }
-		public bool IsContinuousSend { get; set; }
-		public bool NeedsBAndAs { get; set; }
-		public bool IsValid { get; set; }
+	}
 
-		public Int24 DatagramSequenceNumber; // uint 24
+	public DatagramHeader(byte header)
+	{
+		var bits = new BitArray(new[] { header });
 
-		public DatagramHeader() : this(0)
+		IsValid = bits[7];
+		IsAck = bits[6];
+		if (IsValid)
 		{
-		}
-
-		public DatagramHeader(byte header)
-		{
-			var bits = new BitArray(new[] {header});
-
-			IsValid = bits[7];
-			IsAck = bits[6];
-			if (IsValid)
+			if (IsAck)
 			{
-				if (IsAck)
+				IsNak = false;
+				IsPacketPair = false;
+				HasBAndAs = bits[5];
+				if (HasBAndAs)
 				{
-					IsNak = false;
+					// Read AS
+				}
+			}
+			else
+			{
+				IsNak = bits[5];
+				if (IsNak)
+					// IsNack
 					IsPacketPair = false;
-					HasBAndAs = bits[5];
-					if (HasBAndAs)
-					{
-						// Read AS
-					}
-				}
 				else
 				{
-					IsNak = bits[5];
-					if (IsNak)
-					{
-						// IsNack
-						IsPacketPair = false;
-					}
-					else
-					{
-						// Other
-						IsPacketPair = bits[4];
-						IsContinuousSend = bits[3];
-						NeedsBAndAs = bits[2];
-					}
+					// Other
+					IsPacketPair = bits[4];
+					IsContinuousSend = bits[3];
+					NeedsBAndAs = bits[2];
 				}
 			}
 		}
+	}
 
-		public void Reset()
+	public bool IsAck { get; set; }
+	public bool IsNak { get; set; }
+	public bool IsPacketPair { get; set; }
+	public bool HasBAndAs { get; set; }
+	public bool IsContinuousSend { get; set; }
+	public bool NeedsBAndAs { get; set; }
+	public bool IsValid { get; set; }
+
+	public void Reset()
+	{
+		IsAck = false;
+		IsNak = false;
+		IsPacketPair = false;
+		HasBAndAs = false;
+		IsContinuousSend = false;
+		NeedsBAndAs = false;
+		IsValid = false;
+		DatagramSequenceNumber = 0;
+	}
+
+	public static implicit operator byte(DatagramHeader h)
+	{
+		var bits = new BitArray(8);
+
+		if (h.IsValid)
 		{
-			IsAck = false;
-			IsNak = false;
-			IsPacketPair = false;
-			HasBAndAs = false;
-			IsContinuousSend = false;
-			NeedsBAndAs = false;
-			IsValid = false;
-			DatagramSequenceNumber = 0;
-		}
+			bits[7] = h.IsValid;
 
-		public static implicit operator byte(DatagramHeader h)
-		{
-			var bits = new BitArray(8);
-
-			if (h.IsValid)
+			if (h.IsAck)
 			{
-				bits[7] = h.IsValid;
-
-				if (h.IsAck)
+				bits[6] = h.IsAck;
+				bits[5] = h.HasBAndAs;
+			}
+			else
+			{
+				bits[5] = h.IsNak;
+				if (h.IsNak)
 				{
-					bits[6] = h.IsAck;
-					bits[5] = h.HasBAndAs;
 				}
 				else
 				{
-					bits[5] = h.IsNak;
-					if (h.IsNak)
-					{
-					}
-					else
-					{
-						// Other
-						bits[4] = h.IsPacketPair;
-						bits[3] = h.IsContinuousSend;
-						bits[2] = h.NeedsBAndAs;
-					}
+					// Other
+					bits[4] = h.IsPacketPair;
+					bits[3] = h.IsContinuousSend;
+					bits[2] = h.NeedsBAndAs;
 				}
 			}
-
-			var bytes = new byte[1];
-			bits.CopyTo(bytes, 0);
-
-			return bytes[0];
 		}
+
+		byte[] bytes = new byte[1];
+		bits.CopyTo(bytes, 0);
+
+		return bytes[0];
 	}
 }

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using log4net;
 using MiNET.Utils;
 
@@ -20,13 +19,10 @@ public static class BlockFactory
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(BlockFactory));
 
-	public static ICustomBlockFactory CustomBlockFactory { get; set; }
-
 	public static readonly ConcurrentDictionary<int, byte> TransparentBlocks = new();
 	public static readonly ConcurrentDictionary<int, byte> LuminousBlocks = new();
 	private static readonly Dictionary<string, int> NameToId;
 	public static readonly BlockPalette BlockPalette;
-	public static HashSet<BlockStateContainer> BlockStates { get; set; } = null;
 
 	private static readonly ConcurrentDictionary<int, int> LegacyToRuntimeId = new();
 
@@ -380,10 +376,7 @@ public static class BlockFactory
 
 	static BlockFactory()
 	{
-		for (int i = 0; i < byte.MaxValue * 16; ++i)
-		{
-			LegacyToRuntimeId.TryAdd(i, -1);
-		}
+		for (int i = 0; i < byte.MaxValue * 16; ++i) LegacyToRuntimeId.TryAdd(i, -1);
 
 		NameToId = BuildNameToId();
 
@@ -397,9 +390,7 @@ public static class BlockFactory
 			{
 				using Stream stream = assembly.GetManifestResourceStream("MiNET.Resources.blockstates.json");
 				if (stream == null)
-				{
 					Log.Error("Blockstates JSON resource is missing or could not be loaded.");
-				}
 				else
 				{
 					using var reader = new StreamReader(stream);
@@ -407,18 +398,16 @@ public static class BlockFactory
 				}
 			}
 			else
-			{
 				Log.Error("Assembly containing blockstates.json could not be found.");
-			}
 
-			foreach (BlockStateContainer blockStateContainer in BlockPalette.Values)
-			{
-				LegacyToRuntimeId.TryAdd((blockStateContainer.Id << 4) | (byte)blockStateContainer.Data, blockStateContainer.RuntimeId);
-			}
+			foreach (BlockStateContainer blockStateContainer in BlockPalette.Values) LegacyToRuntimeId.TryAdd((blockStateContainer.Id << 4) | (byte) blockStateContainer.Data, blockStateContainer.RuntimeId);
 		}
 
 		BlockStates = [..BlockPalette.Values.ToArray()];
 	}
+
+	public static ICustomBlockFactory CustomBlockFactory { get; set; }
+	public static HashSet<BlockStateContainer> BlockStates { get; set; }
 
 	private static Dictionary<string, int> BuildNameToId()
 	{
@@ -429,10 +418,7 @@ public static class BlockFactory
 			if (block == null || block.GetType().Name.ToLowerInvariant() == "block") continue;
 
 			string blockName = block.GetType().Name.ToLowerInvariant();
-			if (!nameToId.TryAdd(blockName, idx))
-			{
-				Log.Warn($"Duplicate block name detected: {blockName} for ID {idx}. Ignoring.");
-			}
+			if (!nameToId.TryAdd(blockName, idx)) Log.Warn($"Duplicate block name detected: {blockName} for ID {idx}. Ignoring.");
 		}
 
 		return nameToId;
@@ -450,10 +436,7 @@ public static class BlockFactory
 		if (string.IsNullOrEmpty(blockName)) return null;
 
 		blockName = blockName.ToLowerInvariant().Replace("_", "").Replace("minecraft:", "");
-		if (NameToId.TryGetValue(blockName, out int value))
-		{
-			return GetBlockById(value);
-		}
+		if (NameToId.TryGetValue(blockName, out int value)) return GetBlockById(value);
 
 		Log.Warn($"Block name {blockName} not found in NameToId. Returning null.");
 		return null;
@@ -506,12 +489,12 @@ public static class BlockFactory
 	public static uint GetRuntimeId(int blockId, byte metadata)
 	{
 		int idx = TryGetRuntimeId(blockId, metadata);
-		if (idx != -1) return (uint)idx;
-		
-		int fallbackIdx = TryGetRuntimeId(blockId, 0);
-		if (fallbackIdx != -1) return (uint)fallbackIdx;
+		if (idx != -1) return (uint) idx;
 
-		return (uint)TryGetRuntimeId(0, 0); // Fallback to air block.
+		int fallbackIdx = TryGetRuntimeId(blockId, 0);
+		if (fallbackIdx != -1) return (uint) fallbackIdx;
+
+		return (uint) TryGetRuntimeId(0, 0); // Fallback to air block.
 	}
 
 	public static uint GetItemRuntimeId(int blockId, byte metadata)
@@ -528,32 +511,23 @@ public static class BlockFactory
 	{
 		int key = (blockId << 4) | metadata;
 
-		if (LegacyToRuntimeId.TryGetValue(key, out int runtimeId))
-		{
-			return runtimeId;
-		}
+		if (LegacyToRuntimeId.TryGetValue(key, out int runtimeId)) return runtimeId;
 
 		return -1; // Indicate missing runtime ID.
 	}
-	
+
 	public static string GetBlockColor(int blockId, byte metadata)
 	{
-		if (!BlockPalette.TryGetValue((int)GetRuntimeId(blockId, metadata), out BlockStateContainer states))
+		if (!BlockPalette.TryGetValue((int) GetRuntimeId(blockId, metadata), out BlockStateContainer states))
 		{
 			Log.Warn($"Block color not found for Block ID {blockId} with metadata {metadata}. Returning empty string.");
 			return "";
 		}
 
 		foreach (IBlockState state in states.States)
-		{
 			if (state is BlockStateString s && s.Name == "color")
-			{
 				return s.Value;
-			}
-		}
 
 		return "";
 	}
-
-
 }

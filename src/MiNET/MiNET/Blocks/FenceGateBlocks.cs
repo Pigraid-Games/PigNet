@@ -23,52 +23,53 @@
 
 #endregion
 
-using MiNET.Utils.Vectors;
-using System.Numerics;
-using MiNET.Worlds;
-using MiNET.Sounds;
-using MiNET.Entities;
 using System;
+using System.Numerics;
+using MiNET.Entities;
 using MiNET.Items;
 using MiNET.Items.Tools;
+using MiNET.Sounds;
+using MiNET.Utils.Vectors;
+using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public abstract class FenceGateBlocks : Block
 {
-	public abstract class FenceGateBlocks : Block
+	public FenceGateBlocks(byte id) : base(id)
 	{
-		[StateRange(0, 3)] public virtual int Direction { get; set; }
-		[StateBit] public virtual bool OpenBit { get; set; } = false;
-		public FenceGateBlocks(byte id) : base(id)
-		{
-			FuelEfficiency = 15;
-			IsTransparent = true;
-			BlastResistance = 15;
-			Hardness = 2;
-			IsFlammable = true;
-		}
+		FuelEfficiency = 15;
+		IsTransparent = true;
+		BlastResistance = 15;
+		Hardness = 2;
+		IsFlammable = true;
+	}
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+	[StateRange(0, 3)] public virtual int Direction { get; set; }
+	[StateBit] public virtual bool OpenBit { get; set; } = false;
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetDirectionEmum() switch
 		{
-			Direction = player.GetDirectionEmum() switch
-			{
-				Entity.Direction.West => 0,
-				Entity.Direction.North => 1,
-				Entity.Direction.East => 2,
-				Entity.Direction.South => 3,
-				_ => throw new ArgumentOutOfRangeException()
-			};
-			return false;
-		}
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			var sound = new Sound((short) LevelEventType.SoundOpenDoor, blockCoordinates);
-			sound.Spawn(world);
-			return true;
-		}
+			Entity.Direction.West => 0,
+			Entity.Direction.North => 1,
+			Entity.Direction.East => 2,
+			Entity.Direction.South => 3,
+			_ => throw new ArgumentOutOfRangeException()
+		};
+		return false;
+	}
+
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		var sound = new Sound((short) LevelEventType.SoundOpenDoor, blockCoordinates);
+		sound.Spawn(world);
+		return true;
 	}
 }

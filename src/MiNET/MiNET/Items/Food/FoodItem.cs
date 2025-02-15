@@ -23,7 +23,6 @@
 
 #endregion
 
-using System;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -32,10 +31,9 @@ namespace MiNET.Items.Food;
 public abstract class FoodItem(string name, short id, short metadata, int foodPoints, double saturationRestore)
 	: Item(name, id, metadata)
 {
+	private bool _isUsing;
 	private int FoodPoints { get; } = foodPoints;
 	private double SaturationRestore { get; } = saturationRestore;
-
-	private bool _isUsing;
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
@@ -44,7 +42,7 @@ public abstract class FoodItem(string name, short id, short metadata, int foodPo
 		{
 			Count--;
 			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, this);
-			
+
 			Consume(player);
 			_isUsing = false;
 			return;

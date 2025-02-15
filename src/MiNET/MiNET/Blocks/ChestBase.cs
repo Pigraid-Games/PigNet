@@ -28,41 +28,36 @@ using log4net;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public abstract class ChestBase : Block
 {
-	public abstract class ChestBase : Block
+	private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
+
+	public ChestBase(byte id) : base(id)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
-
-		public ChestBase(byte id) : base(id)
-		{
-			FuelEfficiency = 15;
-			IsTransparent = true;
-			BlastResistance = 12.5f;
-			Hardness = 2.5f;
-		}
+		FuelEfficiency = 15;
+		IsTransparent = true;
+		BlastResistance = 12.5f;
+		Hardness = 2.5f;
+	}
 
 
-		/*public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var chestBlockEntity = new ChestBlockEntity {Coordinates = Coordinates};
-			world.SetBlockEntity(chestBlockEntity);
+	/*public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		var chestBlockEntity = new ChestBlockEntity {Coordinates = Coordinates};
+		world.SetBlockEntity(chestBlockEntity);
 
-			return false;
-		}*/
+		return false;
+	}*/
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			Log.Debug($"Opening chest inventory at {blockCoordinates}");
-			player.OpenInventory(blockCoordinates);
-			if (this is Chest || this is TrappedChest)
-			{
-				world.BroadcastSound(blockCoordinates, LevelSoundEventType.ChestOpen);
-			}else if (this is EnderChest)
-			{
-				world.BroadcastSound(blockCoordinates, LevelSoundEventType.EnderchestOpen);
-			}
-			return true;
-		}
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		Log.Debug($"Opening chest inventory at {blockCoordinates}");
+		player.OpenInventory(blockCoordinates);
+		if (this is Chest || this is TrappedChest)
+			world.BroadcastSound(blockCoordinates, LevelSoundEventType.ChestOpen);
+		else if (this is EnderChest) world.BroadcastSound(blockCoordinates, LevelSoundEventType.EnderchestOpen);
+		return true;
 	}
 }

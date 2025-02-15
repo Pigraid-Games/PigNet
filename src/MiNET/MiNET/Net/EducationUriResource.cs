@@ -2,12 +2,8 @@
 
 public class EducationUriResource
 {
-	public string ButtonName { get; set; }
-	public string LinkUri { get; set; }
-
 	public EducationUriResource()
 	{
-		
 	}
 
 	public EducationUriResource(string buttonName, string linkUri)
@@ -15,4 +11,7 @@ public class EducationUriResource
 		ButtonName = buttonName;
 		LinkUri = linkUri;
 	}
+
+	public string ButtonName { get; set; }
+	public string LinkUri { get; set; }
 }

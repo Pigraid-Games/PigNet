@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class SpruceStairs : BlockStairs
 {
-	public partial class SpruceStairs : BlockStairs
+	public SpruceStairs() : base(134)
 	{
-		public SpruceStairs() : base(134)
-		{
-			BlastResistance = 15;
-			Hardness = 2;
-			IsFlammable = true;
-		}
+		BlastResistance = 15;
+		Hardness = 2;
+		IsFlammable = true;
 	}
 }

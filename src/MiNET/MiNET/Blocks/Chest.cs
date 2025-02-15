@@ -23,34 +23,32 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Items;
+using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
-using MiNET.Items.Tools;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Chest : ChestBase
 {
-	public partial class Chest : ChestBase
+	public Chest() : base(54)
 	{
-		public Chest() : base(54)
-		{
-		}
+	}
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-			var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
-			world.SetBlockEntity(chestBlockEntity);
-			return false;
-		}
-
+		var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
+		world.SetBlockEntity(chestBlockEntity);
+		return false;
 	}
 }

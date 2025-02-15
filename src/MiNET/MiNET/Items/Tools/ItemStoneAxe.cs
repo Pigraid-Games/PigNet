@@ -23,8 +23,6 @@
 
 #endregion
 
-using MiNET.Items.Tools;
-
 namespace MiNET.Items.Tools;
 
 public class ItemStoneAxe : ItemAxe

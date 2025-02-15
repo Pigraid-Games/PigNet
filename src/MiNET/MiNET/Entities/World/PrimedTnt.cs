@@ -83,7 +83,7 @@ namespace MiNET.Entities.World
 					Velocity *= (float) (1.0f - Drag);
 				}
 
-				var entityData = McpeSetEntityData.CreateObject();
+				var entityData = McpeSetActorData.CreateObject();
 				entityData.runtimeEntityId = EntityId;
 				entityData.metadata = GetMetadata();
 				Level.RelayBroadcast(entityData);

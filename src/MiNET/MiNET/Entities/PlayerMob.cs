@@ -162,7 +162,7 @@ namespace MiNET.Entities
 				armorEquipment.boots = Boots;
 				Level.RelayBroadcast(players, armorEquipment);
 
-				var setEntityData = McpeSetEntityData.CreateObject();
+				var setEntityData = McpeSetActorData.CreateObject();
 				setEntityData.runtimeEntityId = EntityId;
 				setEntityData.metadata = GetMetadata();
 				Level?.RelayBroadcast(players, setEntityData);

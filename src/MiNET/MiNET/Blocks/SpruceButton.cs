@@ -23,13 +23,12 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class SpruceButton : Button
 {
-	public partial class SpruceButton : Button
+	public SpruceButton() : base(399)
 	{
-		public SpruceButton() : base(399)
-		{
-			TickRate = 30;
-		}
+		TickRate = 30;
 	}
 }

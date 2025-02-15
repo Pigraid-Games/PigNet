@@ -23,15 +23,14 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Ice : Block
 {
-	public partial class Ice : Block
+	public Ice() : base(79)
 	{
-		public Ice() : base(79)
-		{
-			BlastResistance = 2.5f;
-			Hardness = 0.5f;
-			IsTransparent = true;
-		}
+		BlastResistance = 2.5f;
+		Hardness = 0.5f;
+		IsTransparent = true;
 	}
 }

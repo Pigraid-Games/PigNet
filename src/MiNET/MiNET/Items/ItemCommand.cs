@@ -27,7 +27,6 @@ using System;
 using System.Numerics;
 using log4net;
 using MiNET.Blocks;
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -37,15 +36,15 @@ public class ItemCommand : Item
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(ItemCommand));
 
-	public Action<ItemCommand, Level, Player, BlockCoordinates> Action { get; set; }
-	public bool NeedBlockRevert { get; set; }
-
 	public ItemCommand(short id, short metadata, Action<ItemCommand, Level, Player, BlockCoordinates> action) : base("minet:command", id, metadata)
 	{
 		Action = action ?? throw new ArgumentNullException(nameof(action));
 		Item realItem = ItemFactory.GetItem(id, metadata);
 		NeedBlockRevert = realItem is ItemBlock;
 	}
+
+	public Action<ItemCommand, Level, Player, BlockCoordinates> Action { get; set; }
+	public bool NeedBlockRevert { get; set; }
 
 	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{

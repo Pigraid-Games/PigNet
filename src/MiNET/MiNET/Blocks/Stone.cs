@@ -23,42 +23,38 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.Items;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Stone : Block
 {
-	public partial class Stone : Block
+	public Stone() : base(1)
 	{
-		public Stone() : base(1)
-		{
-			BlastResistance = 30;
-			Hardness = 1.5f;
-		}
+		BlastResistance = 30;
+		Hardness = 1.5f;
+	}
 
-		public override Item[] GetDrops(Item tool)
-		{
-			if (tool.ItemType != ItemType.PickAxe) return new Item[0];
+	public override Item[] GetDrops(Item tool)
+	{
+		if (tool.ItemType != ItemType.PickAxe) return new Item[0];
 
-			return new[] {new ItemBlock(new Cobblestone(), 0) {Count = 1}}; // Drop cobblestone
-		}
+		return new[] { new ItemBlock(new Cobblestone()) { Count = 1 } }; // Drop cobblestone
+	}
 
-		public override Item GetSmelt()
-		{
-			if (StoneType == "stone")
-			{
-				return ItemFactory.GetItem(-183, 0);
-			}
-			return null;
-		}
+	public override Item GetSmelt()
+	{
+		if (StoneType == "stone") return ItemFactory.GetItem(-183);
+		return null;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			var itemInHand = player.Inventory.GetItemInHand();
-			//blockName = ItemFactory.Translator.GetNameByMeta("minecraft:stone", itemInHand.Metadata);
-			return false;
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Item itemInHand = player.Inventory.GetItemInHand();
+		//blockName = ItemFactory.Translator.GetNameByMeta("minecraft:stone", itemInHand.Metadata);
+		return false;
 	}
 }

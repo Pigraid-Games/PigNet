@@ -244,7 +244,9 @@ namespace MiNET.Entities
 			HasDied = 129,
 			CollisionBox = 130,
 			VisibleMobEffects = 131,
-			Count = 132,
+			FilteredName = 132,
+			EnterBedPosition = 133,
+			Count = 134
 		}
 
 		public virtual MetadataDictionary GetMetadata()
@@ -551,6 +553,7 @@ namespace MiNET.Entities
 			Timer2 = 116,
 			Timer3 = 117,
 			BodyRotationBlocked = 118,
+			RendersWhenInvisible = 119,
 		}
 
 		protected virtual BitArray GetFlags()
@@ -745,10 +748,10 @@ namespace MiNET.Entities
 
 		public virtual void BroadcastSetEntityData(MetadataDictionary metadata)
 		{
-			McpeSetEntityData mcpeSetEntityData = McpeSetEntityData.CreateObject();
-			mcpeSetEntityData.runtimeEntityId = EntityId;
-			mcpeSetEntityData.metadata = metadata;
-			Level?.RelayBroadcast(mcpeSetEntityData);
+			McpeSetActorData mcpeSetActorData = McpeSetActorData.CreateObject();
+			mcpeSetActorData.runtimeEntityId = EntityId;
+			mcpeSetActorData.metadata = metadata;
+			Level?.RelayBroadcast(mcpeSetActorData);
 		}
 
 		public virtual void BroadcastEntityEvent()
@@ -921,7 +924,7 @@ namespace MiNET.Entities
 			//return;
 			//if (NoAi || forceMove)
 			//{
-			//	McpeSetEntityMotion motions = McpeSetEntityMotion.CreateObject();
+			//	McpeSetActorMotion motions = McpeSetEntityMotion.CreateObject();
 			//	motions.runtimeEntityId = EntityId;
 			//	motions.velocity = Velocity;
 			//	motions.Encode();

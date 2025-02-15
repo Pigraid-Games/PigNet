@@ -23,11 +23,10 @@
 
 #endregion
 
-namespace MiNET.Plugins
+namespace MiNET.Plugins;
+
+public interface ICommandFilter
 {
-	public interface ICommandFilter
-	{
-		void OnCommandExecuting(Player player);
-		void OnCommandExecuted();
-	}
+	void OnCommandExecuting(Player player);
+	void OnCommandExecuted();
 }

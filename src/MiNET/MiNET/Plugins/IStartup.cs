@@ -23,10 +23,9 @@
 
 #endregion
 
-namespace MiNET.Plugins
+namespace MiNET.Plugins;
+
+public interface IStartup
 {
-	public interface IStartup
-	{
-		void Configure(MiNetServer server);
-	}
+	void Configure(MiNetServer server);
 }

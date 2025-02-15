@@ -23,48 +23,47 @@
 
 #endregion
 
+using System.Numerics;
 using log4net;
 using MiNET.Items;
-using MiNET.Utils.Vectors;
-using MiNET.Worlds;
-using System.Numerics;
 using MiNET.Items.Tools;
 using MiNET.Sounds;
+using MiNET.Utils.Vectors;
+using MiNET.Worlds;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Barrel : Block
 {
-	public partial class Barrel : Block
+	private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
+
+	public Barrel() : base(458)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
+		FuelEfficiency = 15;
+		BlastResistance = 12.5f;
+		Hardness = 2.5f;
+	}
 
-		public Barrel() : base(458)
-		{
-			FuelEfficiency = 15;
-			BlastResistance = 12.5f;
-			Hardness = 2.5f;
-		}
-
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
 
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
 
-			//TODO Berrel entity
+		//TODO Berrel entity
 
-			return false;
-		}
+		return false;
+	}
 
 
-		public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
-		{
-			Log.Debug($"Opening barrel {blockCoordinates}");
-			world.BroadcastSound(new BlockBarrelOpenSound(blockCoordinates));
-			return true;
-		}
+	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
+	{
+		Log.Debug($"Opening barrel {blockCoordinates}");
+		world.BroadcastSound(new BlockBarrelOpenSound(blockCoordinates));
+		return true;
 	}
 }

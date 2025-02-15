@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../.." vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/MiNET.Console/bin/Debug/net8.0/ResourcePacks/PigPack" vcs="Git" />
   </component>
 </project>

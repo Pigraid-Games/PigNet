@@ -489,11 +489,6 @@ namespace MiNET
 		}
 
 		/// <inheritdoc />
-		public void HandleMcpeFilterTextPacket(McpeFilterTextPacket message)
-		{
-		}
-
-		/// <inheritdoc />
 		public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message)
 		{
 			
@@ -535,7 +530,7 @@ namespace MiNET
 		{
 		}
 
-		public void HandleMcpeEntityPickRequest(McpeEntityPickRequest message)
+		public void HandleMcpeTakeItemActor(McpeEntityPickRequest message)
 		{
 		}
 
@@ -543,11 +538,11 @@ namespace MiNET
 		{
 		}
 
-		public void HandleMcpeSetEntityData(McpeSetEntityData message)
+		public void HandleMcpeSetActorData(McpeSetActorData message)
 		{
 		}
 
-		public void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
+		public void HandleMcpeSetActorMotion(McpeSetActorMotion message)
 		{
 		}
 
@@ -700,7 +695,6 @@ namespace MiNET
 
 	public class PlayerInfo
 	{
-		public int ADRole { get; set; }
 		public CertificateData CertificateData { get; set; }
 		public string Username { get; set; }
 		public UUID ClientUuid { get; set; }

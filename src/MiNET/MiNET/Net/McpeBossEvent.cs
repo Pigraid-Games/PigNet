@@ -23,92 +23,91 @@
 
 #endregion
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public partial class McpeBossEvent
 {
-	public partial class McpeBossEvent
+	public uint color = 0xff00ff00;
+	public float healthPercent;
+	public uint overlay = 0xff00ff00;
+	public long playerId;
+	public string title;
+	public ushort unknown6;
+
+	partial void AfterEncode()
 	{
-		public ushort unknown6;
-		public string title;
-		public float healthPercent;
-		public long playerId;
-		public uint color = 0xff00ff00;
-		public uint overlay = 0xff00ff00;
-
-		partial void AfterEncode()
+		switch ((Type) eventType)
 		{
-			switch ((McpeBossEvent.Type)eventType)
-			{
-				case Type.AddPlayer:
-				case Type.RemovePlayer:
-					WriteSignedVarLong(playerId);
-					break;
+			case Type.AddPlayer:
+			case Type.RemovePlayer:
+				WriteSignedVarLong(playerId);
+				break;
 
-				case Type.UpdateProgress:
-					Write(healthPercent);
-					break;
+			case Type.UpdateProgress:
+				Write(healthPercent);
+				break;
 
-				case Type.UpdateName:
-					Write(title);
-					break;
+			case Type.UpdateName:
+				Write(title);
+				break;
 
-				case Type.AddBoss:
-					Write(title);
-					Write(healthPercent);
-					goto case Type.UpdateOptions;
-				case Type.UpdateOptions:
-					Write(unknown6);
-					goto case Type.UpdateStyle;
-				case Type.UpdateStyle:
-					WriteUnsignedVarInt(color);
-					WriteUnsignedVarInt(overlay);
-					break;
-				case Type.Query:
-					WriteEntityId(playerId);
-					break;
-			}
+			case Type.AddBoss:
+				Write(title);
+				Write(healthPercent);
+				goto case Type.UpdateOptions;
+			case Type.UpdateOptions:
+				Write(unknown6);
+				goto case Type.UpdateStyle;
+			case Type.UpdateStyle:
+				WriteUnsignedVarInt(color);
+				WriteUnsignedVarInt(overlay);
+				break;
+			case Type.Query:
+				WriteEntityId(playerId);
+				break;
 		}
+	}
 
-		public override void Reset()
-		{
-			base.Reset();
-		}
+	public override void Reset()
+	{
+		base.Reset();
+	}
 
-		partial void AfterDecode()
+	partial void AfterDecode()
+	{
+		switch ((Type) eventType)
 		{
-			switch ((McpeBossEvent.Type) eventType)
-			{
-				case Type.AddPlayer:
-				case Type.RemovePlayer:
-					// Entity Unique ID
-					playerId = ReadSignedVarLong();
-					break;
-				case Type.UpdateProgress:
-					// float
-					healthPercent = ReadFloat();
-					break;
-				case Type.UpdateName:
-					// string
-					title = ReadString();
-					break;
-				case Type.AddBoss:
-					// string
-					title = ReadString();
-					// float
-					healthPercent = ReadFloat();
-					goto case Type.UpdateOptions;
-				case Type.UpdateOptions:
-					// ushort?
-					 unknown6 = ReadUshort();
-					goto case Type.UpdateStyle;
-				case Type.UpdateStyle:
-					// NOOP
-					color = ReadUnsignedVarInt();
-					overlay = ReadUnsignedVarInt();
-					break;
-				case Type.Query:
-					playerId = ReadSignedVarLong();
-					break;
-			}
+			case Type.AddPlayer:
+			case Type.RemovePlayer:
+				// Entity Unique ID
+				playerId = ReadSignedVarLong();
+				break;
+			case Type.UpdateProgress:
+				// float
+				healthPercent = ReadFloat();
+				break;
+			case Type.UpdateName:
+				// string
+				title = ReadString();
+				break;
+			case Type.AddBoss:
+				// string
+				title = ReadString();
+				// float
+				healthPercent = ReadFloat();
+				goto case Type.UpdateOptions;
+			case Type.UpdateOptions:
+				// ushort?
+				unknown6 = ReadUshort();
+				goto case Type.UpdateStyle;
+			case Type.UpdateStyle:
+				// NOOP
+				color = ReadUnsignedVarInt();
+				overlay = ReadUnsignedVarInt();
+				break;
+			case Type.Query:
+				playerId = ReadSignedVarLong();
+				break;
 		}
 	}
 }

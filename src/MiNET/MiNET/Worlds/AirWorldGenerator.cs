@@ -23,24 +23,22 @@
 
 #endregion
 
-using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.Worlds
-{
-	public class AirWorldGenerator : IWorldGenerator
-	{
-		public void Initialize(IWorldProvider worldProvider)
-		{
-		}
+namespace MiNET.Worlds;
 
-		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+public class AirWorldGenerator : IWorldGenerator
+{
+	public void Initialize(IWorldProvider worldProvider)
+	{
+	}
+
+	public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+	{
+		return new ChunkColumn
 		{
-			return new ChunkColumn()
-			{
-				X = chunkCoordinates.X,
-				Z = chunkCoordinates.Z
-			};
-		}
+			X = chunkCoordinates.X,
+			Z = chunkCoordinates.Z
+		};
 	}
 }

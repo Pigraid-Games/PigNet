@@ -27,138 +27,132 @@ using System;
 using System.Collections.Generic;
 using MiNET.Utils;
 
-namespace MiNET.Net.RakNet
+namespace MiNET.Net.RakNet;
+
+public class Acks : Packet<Acks>
 {
-	public class Acks : Packet<Acks>
+	public List<int> acks = new();
+
+	public Acks()
 	{
-		public List<int> acks = new List<int>();
+		Id = 0xc0;
+	}
 
-		public Acks()
+	public override void Reset()
+	{
+		base.Reset();
+		acks.Clear();
+	}
+
+	protected override void EncodePacket()
+	{
+		base.EncodePacket();
+
+		List<Tuple<int, int>> ranges = Slize(acks);
+
+		Write((short) ranges.Count, true);
+
+		foreach (Tuple<int, int> range in ranges)
 		{
-			Id = 0xc0;
-		}
+			byte singleEntry = (byte) (range.Item1 == range.Item2 ? 0x01 : 0);
 
-		public override void Reset()
-		{
-			base.Reset();
-			acks.Clear();
-		}
-
-		protected override void EncodePacket()
-		{
-			base.EncodePacket();
-
-			List<Tuple<int, int>> ranges = Slize(acks);
-
-			Write((short) ranges.Count, true);
-
-			foreach (var range in ranges)
-			{
-				byte singleEntry = (byte) (range.Item1 == range.Item2 ? 0x01 : 0);
-
-				Write(singleEntry);
-				Write((Int24) range.Item1);
-				if (singleEntry == 0)
-					Write((Int24) range.Item2);
-			}
-		}
-
-		public static List<Tuple<int, int>> Slize(List<int> acks)
-		{
-			List<Tuple<int, int>> ranges = new List<Tuple<int, int>>();
-
-			if (acks.Count == 0) return ranges;
-
-			int start = acks[0];
-			int prev = start;
-
-			if (acks.Count == 1)
-			{
-				ranges.Add(new Tuple<int, int>(start, start));
-				return ranges;
-			}
-
-			acks.Sort();
-
-			int i = 0;
-			int count = acks.Count;
-			int min = start;
-			foreach (int ack in acks.ToArray())
-			{
-				i++;
-
-				bool IsLast = i == count;
-
-				if (start == ack)
-				{
-					prev = ack;//109
-					continue;
-				}
-
-				if (prev + 1 == ack)
-				{
-					if (IsLast)
-					{
-						ranges.Add(new Tuple<int, int>(min, ack));
-					}
-				}
-
-				if (prev + 1 != ack)
-				{
-					if (!IsLast)
-					{
-						ranges.Add(new Tuple<int, int>(min, prev));
-						min = ack;
-					}
-					else
-					{
-						ranges.Add(new Tuple<int, int>(min, prev));
-						ranges.Add(new Tuple<int, int>(ack, ack));
-					}
-				}
-				prev = ack;
-			}
-			return ranges;
+			Write(singleEntry);
+			Write((Int24) range.Item1);
+			if (singleEntry == 0)
+				Write((Int24) range.Item2);
 		}
 	}
 
-
-	public class Ack : Packet<Ack>
+	public static List<Tuple<int, int>> Slize(List<int> acks)
 	{
-		public List<(int, int)> ranges = new List<(int, int)>();
+		var ranges = new List<Tuple<int, int>>();
 
-		public Ack()
+		if (acks.Count == 0) return ranges;
+
+		int start = acks[0];
+		int prev = start;
+
+		if (acks.Count == 1)
 		{
-			Id = 0xc0;
+			ranges.Add(new Tuple<int, int>(start, start));
+			return ranges;
 		}
 
-		protected override void DecodePacket()
+		acks.Sort();
+
+		int i = 0;
+		int count = acks.Count;
+		int min = start;
+		foreach (int ack in acks.ToArray())
 		{
-			base.DecodePacket();
+			i++;
 
-			//if (Id != 0xc0) throw new Exception("Not ACK");
+			bool IsLast = i == count;
 
-			ranges.Clear();
-
-			short count = ReadShort(true);
-			for (int i = 0; i < count; i++)
+			if (start == ack)
 			{
-				var onlyOneSequence = ReadByte();
-				if (onlyOneSequence == 0)
-				{
-					int start = ReadLittle().IntValue();
-					int end = ReadLittle().IntValue();
-					if (end - start > 512) end = start + 512;
+				prev = ack; //109
+				continue;
+			}
 
-					var range = (start, end);
-					ranges.Add(range);
+			if (prev + 1 == ack)
+				if (IsLast)
+					ranges.Add(new Tuple<int, int>(min, ack));
+
+			if (prev + 1 != ack)
+			{
+				if (!IsLast)
+				{
+					ranges.Add(new Tuple<int, int>(min, prev));
+					min = ack;
 				}
 				else
 				{
-					int seqNo = ReadLittle().IntValue();
-					var range = (seqNo, seqNo);
-					ranges.Add(range);
+					ranges.Add(new Tuple<int, int>(min, prev));
+					ranges.Add(new Tuple<int, int>(ack, ack));
 				}
+			}
+			prev = ack;
+		}
+		return ranges;
+	}
+}
+
+public class Ack : Packet<Ack>
+{
+	public List<(int, int)> ranges = new();
+
+	public Ack()
+	{
+		Id = 0xc0;
+	}
+
+	protected override void DecodePacket()
+	{
+		base.DecodePacket();
+
+		//if (Id != 0xc0) throw new Exception("Not ACK");
+
+		ranges.Clear();
+
+		short count = ReadShort(true);
+		for (int i = 0; i < count; i++)
+		{
+			byte onlyOneSequence = ReadByte();
+			if (onlyOneSequence == 0)
+			{
+				int start = ReadLittle().IntValue();
+				int end = ReadLittle().IntValue();
+				if (end - start > 512) end = start + 512;
+
+				(int start, int end) range = (start, end);
+				ranges.Add(range);
+			}
+			else
+			{
+				int seqNo = ReadLittle().IntValue();
+				(int, int) range = (seqNo, seqNo);
+				ranges.Add(range);
 			}
 		}
 	}

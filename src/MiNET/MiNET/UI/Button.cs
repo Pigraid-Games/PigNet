@@ -46,5 +46,5 @@ public class Image
 {
 	public string Type { get; set; } // path, url
 
-	[JsonProperty(propertyName: "data")] public string Url { get; set; }
+	[JsonProperty("data")] public string Url { get; set; }
 }

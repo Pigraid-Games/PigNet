@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MiNET.Blocks;
 using MiNET.Entities.World;
@@ -42,8 +43,8 @@ namespace MiNET
 		private readonly float _size;
 		private readonly Level _world;
 		private BlockCoordinates _centerCoordinates;
-		private bool CoordsSet = false;
-		private bool Fire = false;
+		private bool CoordsSet;
+		private bool Fire;
 
 		/// <summary>
 		///     Use this for Explosion an explosion only!
@@ -71,12 +72,7 @@ namespace MiNET
 
 		public bool Explode()
 		{
-			if (PrimaryExplosion())
-			{
-				return SecondaryExplosion();
-			}
-
-			return false;
+			return PrimaryExplosion() && SecondaryExplosion();
 		}
 
 		private bool PrimaryExplosion()
@@ -109,9 +105,9 @@ namespace MiNET
 							//for (float blastForce2 = 0.3F; blastForce1 > 0.0F; blastForce1 -= blastForce2*0.75F)
 							for (float blastForce2 = 0.3F; blastForce1 > 0.0F; blastForce1 -= 0.225f)
 							{
-								var bx = (int) Math.Floor(cX);
-								var by = (int) Math.Floor(cY);
-								var bz = (int) Math.Floor(cZ);
+								int bx = (int) Math.Floor(cX);
+								int by = (int) Math.Floor(cY);
+								int bz = (int) Math.Floor(cZ);
 								Block block = _world.GetBlock(bx, by, bz);
 
 								if (!(block is Air))
@@ -122,7 +118,7 @@ namespace MiNET
 
 								if (blastForce1 > 0.0F)
 								{
-									if (!_afectedBlocks.ContainsKey(block.Coordinates) && !(block is Air)) _afectedBlocks.Add(block.Coordinates, block);
+									if (!_afectedBlocks.ContainsKey(block.Coordinates) && block is not Air) _afectedBlocks.Add(block.Coordinates, block);
 								}
 
 								cX += x * blastForce2;
@@ -152,10 +148,7 @@ namespace MiNET
 			//var explosionBB = new BoundingBox(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
 
 			var records = new Records();
-			foreach (Block block in _afectedBlocks.Values)
-			{
-				records.Add(block.Coordinates - _centerCoordinates);
-			}
+			records.AddRange(_afectedBlocks.Values.Select(block => block.Coordinates - _centerCoordinates));
 
 			//new Task(() =>
 			//{
@@ -172,27 +165,19 @@ namespace MiNET
 				_world.SetAir(block1.Coordinates);
 				//new Task(() => _world.SetBlock(new Air {Coordinates = block1.Coordinates})).Start();
 				//new Task(() => block1.BreakBlock(_world)).Start();
-				if (block is Tnt)
-				{
-					new Task(() => SpawnTNT(block1.Coordinates, _world)).Start();
-				}
+				if (block is Tnt) new Task(() => SpawnTNT(block1.Coordinates, _world)).Start();
 			}
 
 			// Set stuff on fire
 			if (Fire)
 			{
-				Random random = new Random();
-				foreach (BlockCoordinates coord in _afectedBlocks.Keys)
+				var random = new Random();
+				foreach (BlockCoordinates coordinates in _afectedBlocks.Keys)
 				{
-					var block = _world.GetBlock(coord.X, coord.Y, coord.Z);
-					if (block is Air)
-					{
-						var blockDown = _world.GetBlock(coord.X, coord.Y - 1, coord.Z);
-						if (!(blockDown is Air) && random.Next(3) == 0)
-						{
-							_world.SetBlock(new Fire {Coordinates = block.Coordinates});
-						}
-					}
+					Block block = _world.GetBlock(coordinates.X, coordinates.Y, coordinates.Z);
+					if (block is not Air) continue;
+					Block blockDown = _world.GetBlock(coordinates.X, coordinates.Y - 1, coordinates.Z);
+					if (blockDown is not Air && random.Next(3) == 0) _world.SetBlock(new Fire {Coordinates = block.Coordinates});
 				}
 			}
 

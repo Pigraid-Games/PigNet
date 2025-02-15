@@ -23,29 +23,28 @@
 
 #endregion
 
+using System.Numerics;
 using MiNET.Items;
+using MiNET.Items.Tools;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
-using MiNET.Items.Tools;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Lectern : Block
 {
-	public partial class Lectern : Block
+	public Lectern() : base(449)
 	{
-		public Lectern() : base(449)
-		{
-		}
+	}
 
-		public override bool IsBestTool(Item item)
-		{
-			return item is ItemAxe ? true : false;
-		}
+	public override bool IsBestTool(Item item)
+	{
+		return item is ItemAxe ? true : false;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			Direction = player.GetCardinalDirection();
-			return false;
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		Direction = player.GetCardinalDirection();
+		return false;
 	}
 }

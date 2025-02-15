@@ -25,21 +25,20 @@
 
 using MiNET.Net.RakNet;
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public partial class OpenConnectionRequest1
 {
-	public partial class OpenConnectionRequest1
+	public short mtuSize;
+
+	partial void AfterEncode()
 	{
-		public short mtuSize;
+		Write(new byte[mtuSize - _buffer.Position - RakOfflineHandler.UdpHeaderSize]);
+	}
 
-		partial void AfterEncode()
-		{
-			Write(new byte[mtuSize - _buffer.Position - RakOfflineHandler.UdpHeaderSize]);
-		}
-
-		partial void AfterDecode()
-		{
-			mtuSize = (short) (_reader.Length + RakOfflineHandler.UdpHeaderSize);
-			ReadBytes((int) (_reader.Length - _reader.Position));
-		}
+	partial void AfterDecode()
+	{
+		mtuSize = (short) (_reader.Length + RakOfflineHandler.UdpHeaderSize);
+		ReadBytes((int) (_reader.Length - _reader.Position));
 	}
 }

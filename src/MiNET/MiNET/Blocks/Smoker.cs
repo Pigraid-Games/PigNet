@@ -29,7 +29,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Blocks;
 
-public partial class Smoker() : Block(453) 
+public partial class Smoker() : Block(453)
 {
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{

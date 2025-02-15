@@ -23,11 +23,6 @@
 
 #endregion
 
-using System;
-using MiNET.Sounds;
-using MiNET.Utils.Vectors;
-using MiNET.Worlds;
-
 namespace MiNET.Items.Armor;
 
 public class ItemNetheriteChestplate : ArmorChestplateBase

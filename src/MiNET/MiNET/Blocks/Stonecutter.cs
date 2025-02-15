@@ -22,24 +22,22 @@
 // All Rights Reserved.
 
 #endregion
-using MiNET.Items;
+
+using System.Numerics;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
-using System.Numerics;
-using System;
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class Stonecutter : Block
 {
-	public partial class Stonecutter : Block
+	public Stonecutter() : base(245)
 	{
-		public Stonecutter() : base(245)
-		{
-			BlastResistance = 17.5f;
-		}
+		BlastResistance = 17.5f;
+	}
 
-		public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
-		{
-			return false;
-		}
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		return false;
 	}
 }

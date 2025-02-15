@@ -23,6 +23,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using log4net;
 using Newtonsoft.Json;
@@ -33,27 +34,34 @@ public class SimpleForm : Form
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(SimpleForm));
 
-	public string Content { get; set; }
-	public List<Button> Buttons { get; set; } = new List<Button>();
-
 	public SimpleForm()
 	{
 		Type = "form";
 	}
+
+	public string Content { get; set; }
+	public List<Button> Buttons { get; set; } = [];
 
 	public override void FromJson(string json, Player player)
 	{
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented,
+			Formatting = Formatting.Indented
 		};
 
-		int? parsedResult = JsonConvert.DeserializeObject<int?>(json);
-		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
-		if (!parsedResult.HasValue) return;
+		try
+		{
+			int? parsedResult = JsonConvert.DeserializeObject<int?>(json);
+			Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
+			if (!parsedResult.HasValue) return;
 
-		Button pressedBtn = Buttons[parsedResult.Value];
-		pressedBtn.Execute(player, this);
+			Button pressedBtn = Buttons[parsedResult.Value];
+			pressedBtn.Execute(player, this);
+		}
+		catch (Exception)
+		{
+			Log.Debug("No output from the player - assuming they closed the form");
+		}
 	}
 }

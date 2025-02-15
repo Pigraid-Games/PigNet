@@ -25,35 +25,31 @@
 
 using System.Numerics;
 
-namespace MiNET.Net
+namespace MiNET.Net;
+
+public partial class McpeInteract : Packet<McpeInteract>
 {
-	public partial class McpeInteract : Packet<McpeInteract>
+	public Vector3 Position;
+
+	partial void AfterDecode()
 	{
-		public Vector3 Position;
-		partial void AfterDecode()
-		{
-			if (actionId == (int) Actions.MouseOver || actionId == (int) Actions.LeaveVehicle)
-			{
-				// TODO: Something useful with this value
-				Position = ReadVector3();
-			}
-		}
+		if (actionId == (int) Actions.MouseOver || actionId == (int) Actions.LeaveVehicle)
+			// TODO: Something useful with this value
+			Position = ReadVector3();
+	}
 
-		partial void AfterEncode()
-		{
-			if (actionId == (int) Actions.MouseOver || actionId == (int) Actions.LeaveVehicle)
-			{
-				// TODO: Something useful with this value
-				Write(Position);
-			}
-		}
+	partial void AfterEncode()
+	{
+		if (actionId == (int) Actions.MouseOver || actionId == (int) Actions.LeaveVehicle)
+			// TODO: Something useful with this value
+			Write(Position);
+	}
 
-		/// <inheritdoc />
-		public override void Reset()
-		{
-			base.Reset();
-			
-			Position = default;
-		}
+	/// <inheritdoc />
+	public override void Reset()
+	{
+		base.Reset();
+
+		Position = default;
 	}
 }

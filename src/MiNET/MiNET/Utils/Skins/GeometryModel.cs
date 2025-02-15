@@ -25,74 +25,69 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace MiNET.Utils.Skins
+namespace MiNET.Utils.Skins;
+
+public class GeometryModel : ICloneable
 {
-	public class GeometryModel : ICloneable
+	[JsonProperty(PropertyName = "format_version")]
+	public string FormatVersion { get; set; } = "1.12.0";
+
+	[JsonProperty(PropertyName = "minecraft:geometry")]
+	public List<Geometry> Geometry { get; set; } = new();
+
+	public object Clone()
 	{
-		[JsonProperty(PropertyName = "format_version")]
-		public string FormatVersion { get; set; } = "1.12.0";
+		var model = (GeometryModel) MemberwiseClone();
+		model.Geometry = new List<Geometry>();
+		foreach (Geometry records in Geometry) model.Geometry.Add((Geometry) records.Clone());
 
-		[JsonProperty(PropertyName = "minecraft:geometry")]
-		public List<Geometry> Geometry { get; set; } = new List<Geometry>();
+		return model;
+	}
 
-		public Geometry FindGeometry(string geometryName, bool matchPartial = true)
-		{
-			string fullName = Geometry.FirstOrDefault(g => matchPartial ? 
-				g.Description.Identifier.StartsWith(geometryName, StringComparison.InvariantCultureIgnoreCase) 
+	public Geometry FindGeometry(string geometryName, bool matchPartial = true)
+	{
+		string fullName = Geometry.FirstOrDefault(g => matchPartial
+				? g.Description.Identifier.StartsWith(geometryName, StringComparison.InvariantCultureIgnoreCase)
 				: g.Description.Identifier.Equals(geometryName, StringComparison.InvariantCultureIgnoreCase))
-				?.Description.Identifier;
+			?.Description.Identifier;
 
-			if (fullName == null) return null;
+		if (fullName == null) return null;
 
-			Geometry geometry = Geometry.First(g => g.Description.Identifier == fullName);
-			geometry.Name = fullName;
+		Geometry geometry = Geometry.First(g => g.Description.Identifier == fullName);
+		geometry.Name = fullName;
 
-			//if (fullName.Contains(":"))
-			//{
-			//	geometry.BaseGeometry = fullName.Split(':')[1];
-			//}
+		//if (fullName.Contains(":"))
+		//{
+		//	geometry.BaseGeometry = fullName.Split(':')[1];
+		//}
 
-			return geometry;
-		}
+		return geometry;
+	}
 
-		public Geometry CollapseToDerived(Geometry derived)
+	public Geometry CollapseToDerived(Geometry derived)
+	{
+		if (derived == null) throw new ArgumentNullException(nameof(derived));
+
+		return derived;
+
+		/*var collapsed = (Geometry) derived.Clone();
+
+		if (collapsed.BaseGeometry != null)
 		{
-			if(derived == null) throw new ArgumentNullException(nameof(derived));
+			Geometry baseGeometry = (Geometry) FindGeometry(collapsed.BaseGeometry).Clone();
 
-			return derived;
-
-			/*var collapsed = (Geometry) derived.Clone();
-
-			if (collapsed.BaseGeometry != null)
+			foreach (var bone in baseGeometry.Bones)
 			{
-				Geometry baseGeometry = (Geometry) FindGeometry(collapsed.BaseGeometry).Clone();
-
-				foreach (var bone in baseGeometry.Bones)
+				if (collapsed.Bones.SingleOrDefault(b => b.Name == bone.Name) == null)
 				{
-					if (collapsed.Bones.SingleOrDefault(b => b.Name == bone.Name) == null)
-					{
-						collapsed.Bones.Add(bone);
-					}
+					collapsed.Bones.Add(bone);
 				}
 			}
-
-			return collapsed;*/
 		}
 
-		public object Clone()
-		{
-			var model = (GeometryModel) MemberwiseClone();
-			model.Geometry = new List<Geometry>();
-			foreach (var records in Geometry)
-			{
-				model.Geometry.Add((Geometry) records.Clone());
-			}
-
-			return model;
-		}
+		return collapsed;*/
 	}
 }

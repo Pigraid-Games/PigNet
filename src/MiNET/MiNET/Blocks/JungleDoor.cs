@@ -23,12 +23,11 @@
 
 #endregion
 
-namespace MiNET.Blocks
+namespace MiNET.Blocks;
+
+public partial class JungleDoor : DoorBase
 {
-	public partial class JungleDoor : DoorBase
+	public JungleDoor() : base(195)
 	{
-		public JungleDoor() : base(195)
-		{
-		}
 	}
 }

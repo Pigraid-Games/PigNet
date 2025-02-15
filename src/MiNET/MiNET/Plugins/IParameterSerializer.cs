@@ -23,10 +23,9 @@
 
 #endregion
 
-namespace MiNET.Plugins
+namespace MiNET.Plugins;
+
+public interface IParameterSerializer
 {
-	public interface IParameterSerializer
-	{
-		void Deserialize(Player player, string input);
-	}
+	void Deserialize(Player player, string input);
 }
