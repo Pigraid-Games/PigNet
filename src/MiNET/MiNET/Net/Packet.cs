@@ -818,13 +818,14 @@ public abstract class Packet
 	{
 		WriteUnsignedVarInt((uint) itemStacks.Count);
 
-		const int NetId = 0;
+		int netId = 0;
 		foreach (CreativeItemEntry item in itemStacks)
 		{
 			item.Item.RuntimeId = (int) BlockFactory.GetItemRuntimeId(item.Item.Id, (byte)item.Item.Metadata);
-			WriteUnsignedVarInt(NetId);
+			WriteUnsignedVarInt((uint) netId);
 			Write(item.Item, false);
 			WriteUnsignedVarInt(item.GroupIndex);
+			netId++;
 		}
 	}
 
@@ -835,8 +836,9 @@ public abstract class Packet
 		uint count = ReadUnsignedVarInt();
 		for (int i = 0; i < count; i++)
 		{
-			ReadUnsignedVarInt();
+			uint networkId = ReadUnsignedVarInt();
 			Item item = ReadItem(false);
+			item.NetworkId = (int)networkId;
 			uint groupIndex = ReadUnsignedVarInt();
 			metadata.Add(new CreativeItemEntry(groupIndex, item));
 		}
@@ -847,6 +849,7 @@ public abstract class Packet
 	public void Write(List<creativeGroup> groups)
 	{
 		WriteUnsignedVarInt((uint) groups.Count);
+
 		foreach (creativeGroup group in groups)
 		{
 			Write(group.Category);
@@ -857,6 +860,7 @@ public abstract class Packet
 	public List<creativeGroup> ReadCreativeGroups()
 	{
 		var group = new List<creativeGroup>();
+
 		uint groupCount = ReadUnsignedVarInt();
 		for (int i = 0; i < groupCount; i++)
 		{
@@ -865,6 +869,7 @@ public abstract class Packet
 			Item item = ReadItem(false);
 			group.Add(new creativeGroup(category, name, item));
 		}
+
 		return group;
 	}
 

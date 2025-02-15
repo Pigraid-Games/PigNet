@@ -46,6 +46,7 @@ public class ItemFactory
 		{ -414, (_, _) => new ItemOrangeCandle() },
 		{ -413, (_, _) => new ItemWhiteCandle() },
 		{ -412, (_, _) => new ItemCandle() },
+		{ -239, (_, _) => new ItemTarget() },
 		{ 0, (_, _) => new ItemAir() },
 		{ 15, (_, _) => new ItemBoneMeal() },
 		{ 256, (_, _) => new ItemIronShovel() },
@@ -402,7 +403,9 @@ public class ItemFactory
 		{ 1111, (_, _) => new ItemFlowArmorTrim() },
 		{ 1112, (_, _) => new ItemBoltArmorTrim() },
 		{ 1113, (_, _) => new ItemCupLove() },
-		{ 1114, (_, _) => new ItemHiveEnderWings() }
+		{ 1114, (_, _) => new ItemHiveEnderWings() },
+		{ 1115, (_, _) => new ItemDecoratedPot() },
+		{ 1116, (_, _) => new ItemTrialKey() }
 	};
 
 	static ItemFactory()
@@ -778,3 +781,9 @@ public class ItemBoneMeal() : Item("minecraft:bone_meal", 15);
 public class ItemFlowBannerPattern() : Item("minecraft:flow_banner_pattern", 1069);
 
 public class ItemGusterBannerPattern() : Item("minecraft:guster_banner_pattern", 1070);
+
+public class ItemTarget() : Item("minecraft:target", -239);
+
+public class ItemDecoratedPot() : Item("minecraft:decorated_pot", 1115);
+
+public class ItemTrialKey() : Item("minecraft:trial_key", 1116);

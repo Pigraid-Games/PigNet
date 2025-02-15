@@ -522,6 +522,7 @@ namespace MiNET
 
 		protected virtual void ProcessCraftCreativeAction(CraftCreativeAction action)
 		{
+			Log.Debug($"Searching item for id: {action.CreativeItemNetworkId}");
 			Item creativeItem = InventoryUtils.itemList[(int)action.CreativeItemNetworkId];
 			if (creativeItem == null) throw new Exception($"Failed to find inventory item with unique id: {action.CreativeItemNetworkId}");
 			creativeItem = ItemFactory.GetItem(creativeItem.Id, creativeItem.Metadata);
