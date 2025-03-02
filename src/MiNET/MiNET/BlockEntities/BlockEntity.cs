@@ -30,37 +30,16 @@ using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class BlockEntity(string id)
 {
-	public class BlockEntity
-	{
-		public string Id { get; private set; }
-		public BlockCoordinates Coordinates { get; set; }
-
-		public bool UpdatesOnTick { get; set; }
-
-		public BlockEntity(string id)
-		{
-			Id = id;
-		}
-
-		public virtual NbtCompound GetCompound()
-		{
-			return new NbtCompound();
-		}
-
-		public virtual void SetCompound(NbtCompound compound)
-		{
-		}
-
-		public virtual void OnTick(Level level)
-		{
-		}
-
-
-		public virtual List<Item> GetDrops()
-		{
-			return new List<Item>();
-		}
-	}
+	public string Id { get; private set; } = id;
+	public BlockCoordinates Coordinates { get; set; }
+	public bool UpdatesOnTick { get; set; }
+	
+	public virtual void SetCompound(NbtCompound compound) { }
+	public virtual void OnTick(Level level) { }
+	public virtual NbtCompound GetCompound() => [];
+	public virtual List<Item> GetDrops() =>  [];
 }

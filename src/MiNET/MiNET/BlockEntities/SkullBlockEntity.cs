@@ -27,53 +27,36 @@ using System.Collections.Generic;
 using fNbt;
 using MiNET.Items;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class SkullBlockEntity() : BlockEntity("Skull")
 {
-	public class SkullBlockEntity : BlockEntity
+	public byte Rotation { get; set; }
+	public byte SkullType { get; set; }
+
+	public override NbtCompound GetCompound()
 	{
-		public byte Rotation { get; set; }
-		public byte SkullType { get; set; }
-
-		public SkullBlockEntity() : base("Skull")
+		var compound = new NbtCompound(string.Empty)
 		{
-		}
+			new NbtString("id", Id),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z),
+			new NbtByte("SkullType", SkullType),
+			new NbtByte("Rot", Rotation)
+		};
 
-		//TAG_Compound: 9 entries {
-		//	TAG_Byte("MouthMoving"): 0
-		//	TAG_Int("MouthTickCount"): 0
-		//	TAG_Byte("Rot"): 13
-		//	TAG_Byte("SkullType"): 0
-		//	TAG_String("id"): "Skull"
-		//	TAG_Byte("isMovable"): 1
-		//	TAG_Int("x"): -1
-		//	TAG_Int("y"): 4
-		//	TAG_Int("z"): -4
-		//}
+		return compound;
+	}
 
-		public override NbtCompound GetCompound()
-		{
-			var compound = new NbtCompound(string.Empty)
-			{
-				new NbtString("id", Id),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z),
-				new NbtByte("SkullType", SkullType),
-				new NbtByte("Rot", Rotation)
-			};
+	public override void SetCompound(NbtCompound compound)
+	{
+		SkullType = compound["SkullType"].ByteValue;
+		Rotation = compound["Rot"].ByteValue;
+	}
 
-			return compound;
-		}
-
-		public override void SetCompound(NbtCompound compound)
-		{
-			SkullType = compound["SkullType"].ByteValue;
-			Rotation = compound["Rot"].ByteValue;
-		}
-
-		public override List<Item> GetDrops()
-		{
-			return new List<Item> {ItemFactory.GetItem(397, SkullType, 1)};
-		}
+	public override List<Item> GetDrops()
+	{
+		return [ItemFactory.GetItem(397, SkullType)];
 	}
 }

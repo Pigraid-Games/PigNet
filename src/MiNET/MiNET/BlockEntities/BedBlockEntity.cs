@@ -25,36 +25,29 @@
 
 using fNbt;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class BedBlockEntity() : BlockEntity("Bed")
 {
-	public class BedBlockEntity : BlockEntity
+	public byte Color { get; set; }
+
+	public override NbtCompound GetCompound()
 	{
-		public byte Color { get; set; }
-
-		public BedBlockEntity() : base("Bed")
+		var compound = new NbtCompound(string.Empty)
 		{
-			Color = 0;
-		}
+			new NbtString("id", Id),
+			new NbtByte("color", Color),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z)
+		};
 
-		public override NbtCompound GetCompound()
-		{
-			var compound = new NbtCompound(string.Empty)
-			{
-				new NbtString("id", Id),
-				new NbtByte("color", Color),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z)
-			};
+		return compound;
+	}
 
-			return compound;
-		}
-
-		public override void SetCompound(NbtCompound compound)
-		{
-			NbtByte color;
-			compound.TryGet("color", out color);
-			Color = color.ByteValue;
-		}
+	public override void SetCompound(NbtCompound compound)
+	{
+		compound.TryGet("color", out NbtByte color);
+		Color = color.ByteValue;
 	}
 }

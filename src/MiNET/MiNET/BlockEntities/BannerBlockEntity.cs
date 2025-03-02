@@ -26,76 +26,66 @@
 using System.Collections.Generic;
 using fNbt;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class BannerBlockEntity() : BlockEntity("Banner")
 {
-	public class BannerBlockEntity : BlockEntity
+	public int Base { get; set; }
+	public List<BannerPattern> Patterns { get; set; } = [];
+
+	public override NbtCompound GetCompound()
 	{
-		public int Base { get; set; }
-		public List<BannerPattern> Patterns { get; set; } = new List<BannerPattern>();
-
-		public BannerBlockEntity() : base("Banner")
+		var compound = new NbtCompound(string.Empty)
 		{
-		}
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z),
+			new NbtString("id", Id),
+		};
 
-		public override NbtCompound GetCompound()
+		if (Patterns.Count > 0)
 		{
-			var compound = new NbtCompound(string.Empty)
+			var items = new NbtList("Patterns", new NbtCompound());
+			foreach (BannerPattern pattern in Patterns)
 			{
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z),
-				new NbtString("id", Id),
-			};
-
-			if (Patterns.Count > 0)
-			{
-				NbtList items = new NbtList("Patterns", new NbtCompound());
-				foreach (var pattern in Patterns)
+				items.Add(new NbtCompound
 				{
-					items.Add(new NbtCompound
-					{
-						new NbtString("Pattern", pattern.Pattern),
-						new NbtInt("Color", pattern.Color),
-					});
-				}
-				compound.Add(items);
+					new NbtString("Pattern", pattern.Pattern),
+					new NbtInt("Color", pattern.Color),
+				});
 			}
-
-			compound.Add(new NbtInt("Base", Base));
-
-			return compound;
+			compound.Add(items);
 		}
 
-		public override void SetCompound(NbtCompound compound)
-		{
-			if (compound == null) return;
+		compound.Add(new NbtInt("Base", Base));
 
-			Patterns.Clear();
-
-			var baseColor = compound["Base"];
-			if (baseColor != null)
-			{
-				Base = baseColor.IntValue;
-			}
-
-			NbtList items = (NbtList) compound["Patterns"];
-			if (items != null)
-			{
-				foreach (var item in items)
-				{
-					Patterns.Add(new BannerPattern()
-					{
-						Pattern = item["Pattern"].StringValue,
-						Color = item["Color"].IntValue
-					});
-				}
-			}
-		}
+		return compound;
 	}
 
-	public class BannerPattern
+	public override void SetCompound(NbtCompound compound)
 	{
-		public string Pattern { get; set; }
-		public int Color { get; set; }
+		if (compound == null) return;
+
+		Patterns.Clear();
+
+		NbtTag baseColor = compound["Base"];
+		if (baseColor != null) Base = baseColor.IntValue;
+
+		var items = (NbtList) compound["Patterns"];
+		if (items == null) return;
+		foreach (NbtTag item in items)
+		{
+			Patterns.Add(new BannerPattern()
+			{
+				Pattern = item["Pattern"].StringValue,
+				Color = item["Color"].IntValue
+			});
+		}
 	}
+}
+
+public class BannerPattern
+{
+	public string Pattern { get; set; }
+	public int Color { get; set; }
 }

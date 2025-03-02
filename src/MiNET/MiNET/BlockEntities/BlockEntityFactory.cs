@@ -23,8 +23,6 @@
 
 #endregion
 
-using System.Runtime.CompilerServices;
-
 namespace MiNET.BlockEntities;
 
 public interface ICustomBlockEntityFactory

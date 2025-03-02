@@ -25,56 +25,49 @@
 
 using fNbt;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class MobSpawnerBlockEntity() : BlockEntity("MobSpawner")
 {
-	public class MobSpawnerBlockEntity : BlockEntity
+	public short Delay { get; set; } = 20;
+	public float DisplayEntityHeight { get; set; } = 1.8f;
+	public float DisplayEntityScale { get; set; } = 1.0f;
+	public float DisplayEntityWidth { get; set; } = 0.8f;
+	public int EntityTypeId { get; set; } = 1;
+	public short MaxNearbyEntities { get; set; } = 4;
+	public short MinSpawnDelay { get; set; } = 200;
+	public short MaxSpawnDelay { get; set; } = 800;
+	public short RequiredPlayerRange { get; set; } = 16;
+	public short SpawnCount { get; set; } = 4;
+	public short SpawnRange { get; set; } = 4;
+
+	public override NbtCompound GetCompound()
 	{
-		public short Delay { get; set; } = 20;
-		public float DisplayEntityHeight { get; set; } = 1.8f;
-		public float DisplayEntityScale { get; set; } = 1.0f;
-		public float DisplayEntityWidth { get; set; } = 0.8f;
-		public int EntityTypeId { get; set; } = 1;
-		public short MaxNearbyEntities { get; set; } = 4;
-		public short MinSpawnDelay { get; set; } = 200;
-		public short MaxSpawnDelay { get; set; } = 800;
-		public short RequiredPlayerRange { get; set; } = 16;
-		public short SpawnCount { get; set; } = 4;
-		public short SpawnRange { get; set; } = 4;
-
-		public MobSpawnerBlockEntity() : base("MobSpawner")
+		var compound = new NbtCompound(string.Empty)
 		{
-		}
+			new NbtString("id", Id),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z),
 
-		public override NbtCompound GetCompound()
-		{
-			var compound = new NbtCompound(string.Empty)
-			{
-				new NbtString("id", Id),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z),
+			new NbtShort("Delay", Delay),
+			new NbtFloat("DisplayEntityHeight", DisplayEntityHeight),
+			new NbtFloat("DisplayEntityScale", DisplayEntityScale),
+			new NbtFloat("DisplayEntityWidth", DisplayEntityWidth),
+			new NbtInt("EntityId", EntityTypeId),
+			new NbtShort("MaxNearbyEntities", MaxNearbyEntities),
+			new NbtShort("MinSpawnDelay", MinSpawnDelay),
+			new NbtShort("MaxSpawnDelay", MaxSpawnDelay),
+			new NbtShort("RequiredPlayerRange", RequiredPlayerRange),
+			new NbtShort("SpawnCount", SpawnCount),
+			new NbtShort("SpawnRange", SpawnRange),
+		};
 
-				new NbtShort("Delay", Delay),
-				new NbtFloat("DisplayEntityHeight", DisplayEntityHeight),
-				new NbtFloat("DisplayEntityScale", DisplayEntityScale),
-				new NbtFloat("DisplayEntityWidth", DisplayEntityWidth),
-				new NbtInt("EntityId", EntityTypeId),
-				new NbtShort("MaxNearbyEntities", MaxNearbyEntities),
-				new NbtShort("MinSpawnDelay", MinSpawnDelay),
-				new NbtShort("MaxSpawnDelay", MaxSpawnDelay),
-				new NbtShort("RequiredPlayerRange", RequiredPlayerRange),
-				new NbtShort("SpawnCount", SpawnCount),
-				new NbtShort("SpawnRange", SpawnRange),
-			};
+		return compound;
+	}
 
-			return compound;
-		}
-
-		public override void SetCompound(NbtCompound compound)
-		{
-			//NbtByte color;
-			//compound.TryGet("color", out color);
-			//Color = color.ByteValue;
-		}
+	public override void SetCompound(NbtCompound compound)
+	{
+		
 	}
 }

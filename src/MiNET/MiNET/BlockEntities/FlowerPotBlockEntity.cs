@@ -26,26 +26,13 @@
 using fNbt;
 using log4net;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class FlowerPotBlockEntity() : BlockEntity("FlowerPot")
 {
-	public class FlowerPotBlockEntity : BlockEntity
-	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(FlowerPotBlockEntity));
+	private NbtCompound _compound;
 
-		private NbtCompound _compound;
+	public override NbtCompound GetCompound() => _compound ?? [];
 
-		public FlowerPotBlockEntity() : base("FlowerPot")
-		{
-		}
-
-		public override NbtCompound GetCompound()
-		{
-			return _compound ?? new NbtCompound();
-		}
-
-		public override void SetCompound(NbtCompound compound)
-		{
-			_compound = compound;
-		}
-	}
+	public override void SetCompound(NbtCompound compound) => _compound = compound;
 }

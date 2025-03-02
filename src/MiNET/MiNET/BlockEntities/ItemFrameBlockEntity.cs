@@ -27,115 +27,103 @@ using System.Collections.Generic;
 using fNbt;
 using MiNET.Items;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class ItemFrameBlockEntity : BlockEntity
 {
-	public class ItemFrameBlockEntity : BlockEntity
+	private NbtCompound Compound { get; set; }
+	public Item ItemInFrame { get; private set; }
+	public int Rotation { get; private set; }
+	public float DropChance { get; private set; }
+
+	public ItemFrameBlockEntity() : base("ItemFrame")
 	{
-		private NbtCompound Compound { get; set; }
-		public Item ItemInFrame { get; private set; }
-		public int Rotation { get; private set; }
-		public float DropChance { get; private set; }
-
-		public ItemFrameBlockEntity() : base("ItemFrame")
+		Compound = new NbtCompound(string.Empty)
 		{
-			Compound = new NbtCompound(string.Empty)
+			new NbtCompound("Item", new NbtCompound("Item")),
+			new NbtString("id", Id),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z),
+		};
+
+		var item = (NbtCompound) Compound["Item"];
+		item.Add(new NbtString("Name", ""));
+		item.Add(new NbtShort("Damage", 0));
+		item.Add(new NbtByte("Count", 0));
+	}
+
+	public override NbtCompound GetCompound()
+	{
+		Compound["x"] = new NbtInt("x", Coordinates.X);
+		Compound["y"] = new NbtInt("y", Coordinates.Y);
+		Compound["z"] = new NbtInt("z", Coordinates.Z);
+
+		return Compound;
+	}
+
+	public override void SetCompound(NbtCompound compound)
+	{
+		Compound = compound;
+		if (compound.TryGet("Item", out NbtTag item))
+		{
+			string name = item["Name"].StringValue;
+			short damage = item["Damage"].ShortValue;
+			short count = item["Count"].ShortValue;
+			ItemInFrame = ItemFactory.GetItem(name, damage, count);
+		}
+		if (compound.TryGet("ItemRotation", out NbtTag rotation)) Rotation = rotation.ByteValue;
+		if (compound.TryGet("ItemDropChance", out NbtTag dropChance)) DropChance = dropChance.FloatValue;
+	}
+
+	public void SetItem(Item item, int rotation)
+	{
+		ItemInFrame = item;
+		Rotation = rotation;
+
+		var comp = new NbtCompound(string.Empty)
+		{
+			new NbtString("id", Id),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z),
+			new NbtFloat("ItemDropChance", DropChance),
+			new NbtByte("ItemRotation", (byte) Rotation),
+		};
+
+		if (item != null)
+		{
+			var newItem = new NbtCompound("Item")
 			{
-				new NbtCompound("Item", new NbtCompound("Item")),
-				new NbtString("id", Id),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z),
+				new NbtString("Name", item.Name),
+				new NbtShort("Damage", item.Metadata),
+				new NbtByte("Count", 1)
 			};
 
-			var item = (NbtCompound) Compound["Item"];
-			item.Add(new NbtString("Name", ""));
-			item.Add(new NbtShort("Damage", 0));
-			item.Add(new NbtByte("Count", 0));
-
-			//Log.Error($"New ItemFrame block entity: {Compound}");
-		}
-
-		public override NbtCompound GetCompound()
-		{
-			Compound["x"] = new NbtInt("x", Coordinates.X);
-			Compound["y"] = new NbtInt("y", Coordinates.Y);
-			Compound["z"] = new NbtInt("z", Coordinates.Z);
-
-			return Compound;
-		}
-
-		public override void SetCompound(NbtCompound compound)
-		{
-			Compound = compound;
-			if (compound.TryGet("Item", out var item))
+			if (item.ExtraData != null)
 			{
-				var name = item["Name"].StringValue;
-				var damage = item["Damage"].ShortValue;
-				var count = item["Count"].ShortValue;
-				ItemInFrame = ItemFactory.GetItem(name, damage, count);
-			}
-			if (compound.TryGet("ItemRotation", out var rotation))
-			{
-				Rotation = rotation.ByteValue;
-			}
-			if (compound.TryGet("ItemDropChance", out var dropChance))
-			{
-				DropChance = dropChance.FloatValue;
-			}
-		}
-
-		public void SetItem(Item item, int rotation)
-		{
-			ItemInFrame = item;
-			Rotation = rotation;
-
-			var comp = new NbtCompound(string.Empty)
-			{
-				new NbtString("id", Id),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z),
-				new NbtFloat("ItemDropChance", DropChance),
-				new NbtByte("ItemRotation", (byte) Rotation),
-			};
-
-			if (item != null)
-			{
-				var newItem = new NbtCompound("Item")
-				{
-					new NbtString("Name", item.Name),
-					new NbtShort("Damage", item.Metadata),
-					new NbtByte("Count", 1)
-				};
-
-				if (item.ExtraData != null)
-				{
-					var newTag = (NbtTag) item.ExtraData.Clone();
-					newTag.Name = "tag";
-					newItem.Add(newTag);
-				}
-
-				comp["Item"] = newItem;
-			}
-			else
-			{
-				comp.Remove("Item");
+				var newTag = (NbtTag) item.ExtraData.Clone();
+				newTag.Name = "tag";
+				newItem.Add(newTag);
 			}
 
-			Compound = comp;
+			comp["Item"] = newItem;
 		}
+		else comp.Remove("Item");
 
-		public override List<Item> GetDrops()
-		{
-			List<Item> slots = new List<Item>();
+		Compound = comp;
+	}
 
-			var itemComp = Compound["Item"] as NbtCompound;
-			if (itemComp == null) return slots;
+	public override List<Item> GetDrops()
+	{
+		var slots = new List<Item>();
 
-			Item item = ItemFactory.GetItem(itemComp["Name"].StringValue, itemComp["Damage"].ShortValue, itemComp["Count"].ByteValue);
-			slots.Add(item);
+		var itemComp = Compound["Item"] as NbtCompound;
+		if (itemComp == null) return slots;
 
-			return slots;
-		}
+		Item item = ItemFactory.GetItem(itemComp["Name"].StringValue, itemComp["Damage"].ShortValue, itemComp["Count"].ByteValue);
+		slots.Add(item);
+
+		return slots;
 	}
 }

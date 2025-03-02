@@ -27,58 +27,56 @@ using fNbt;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class StructureBlockBlockEntity : BlockEntity
 {
-	public class StructureBlockBlockEntity : BlockEntity
+	private NbtCompound Compound { get; set; }
+
+	public BlockCoordinates Offset { get; set; } = new(0, -1, 0);
+	public BlockCoordinates Size { get; set; } = new(5, 5, 5);
+	public bool ShowBoundingBox { get; set; } = true;
+
+	public StructureBlockBlockEntity() : base("StructureBlock")
 	{
-		private NbtCompound Compound { get; set; }
-
-		public BlockCoordinates Offset { get; set; } = new BlockCoordinates(0, -1, 0);
-		public BlockCoordinates Size { get; set; } = new BlockCoordinates(5, 5, 5);
-		public bool ShowBoundingBox { get; set; } = true;
-
-		public StructureBlockBlockEntity() : base("StructureBlock")
+		Compound = new NbtCompound(string.Empty)
 		{
-			Compound = new NbtCompound(string.Empty)
-			{
-				new NbtString("id", Id),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z),
-				new NbtInt("xStructureOffset", Offset.X),
-				new NbtInt("yStructureOffset", Offset.Y),
-				new NbtInt("zStructureOffset", Offset.Z),
-				new NbtInt("xStructureSize", Size.X),
-				new NbtInt("yStructureSize", Size.Y),
-				new NbtInt("zStructureSize", Size.Z),
-				new NbtByte("showBoundingBox", (byte) (ShowBoundingBox ? 1 : 0)),
-			};
-		}
+			new NbtString("id", Id),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z),
+			new NbtInt("xStructureOffset", Offset.X),
+			new NbtInt("yStructureOffset", Offset.Y),
+			new NbtInt("zStructureOffset", Offset.Z),
+			new NbtInt("xStructureSize", Size.X),
+			new NbtInt("yStructureSize", Size.Y),
+			new NbtInt("zStructureSize", Size.Z),
+			new NbtByte("showBoundingBox", (byte) (ShowBoundingBox ? 1 : 0)),
+		};
+	}
 
 
-		public override NbtCompound GetCompound()
-		{
-			Compound["x"] = new NbtInt("x", Coordinates.X);
-			Compound["y"] = new NbtInt("y", Coordinates.Y);
-			Compound["z"] = new NbtInt("z", Coordinates.Z);
-			Compound["xStructureOffset"] = new NbtInt("xStructureOffset", Offset.X);
-			Compound["yStructureOffset"] = new NbtInt("yStructureOffset", Offset.Y);
-			Compound["zStructureOffset"] = new NbtInt("zStructureOffset", Offset.Z);
-			Compound["xStructureSize"] = new NbtInt("xStructureSize", Size.X);
-			Compound["yStructureSize"] = new NbtInt("yStructureSize", Size.Y);
-			Compound["zStructureSize"] = new NbtInt("zStructureSize", Size.Z);
-			Compound["showBoundingBox"] = new NbtByte("showBoundingBox", (byte) (ShowBoundingBox ? 1 : 0));
+	public override NbtCompound GetCompound()
+	{
+		Compound["x"] = new NbtInt("x", Coordinates.X);
+		Compound["y"] = new NbtInt("y", Coordinates.Y);
+		Compound["z"] = new NbtInt("z", Coordinates.Z);
+		Compound["xStructureOffset"] = new NbtInt("xStructureOffset", Offset.X);
+		Compound["yStructureOffset"] = new NbtInt("yStructureOffset", Offset.Y);
+		Compound["zStructureOffset"] = new NbtInt("zStructureOffset", Offset.Z);
+		Compound["xStructureSize"] = new NbtInt("xStructureSize", Size.X);
+		Compound["yStructureSize"] = new NbtInt("yStructureSize", Size.Y);
+		Compound["zStructureSize"] = new NbtInt("zStructureSize", Size.Z);
+		Compound["showBoundingBox"] = new NbtByte("showBoundingBox", (byte) (ShowBoundingBox ? 1 : 0));
 
-			return Compound;
-		}
+		return Compound;
+	}
 
-		public override void SetCompound(NbtCompound compound)
-		{
-			Offset = new BlockCoordinates(compound["xStructureOffset"].IntValue, compound["yStructureOffset"].IntValue, compound["zStructureOffset"].IntValue);
-			Size = new BlockCoordinates(compound["xStructureSize"].IntValue, compound["yStructureSize"].IntValue, compound["zStructureSize"].IntValue);
-			ShowBoundingBox = compound["showBoundingBox"].ByteValue == 1;
-
-			Compound = compound;
-		}
+	public override void SetCompound(NbtCompound compound)
+	{
+		Offset = new BlockCoordinates(compound["xStructureOffset"].IntValue, compound["yStructureOffset"].IntValue, compound["zStructureOffset"].IntValue);
+		Size = new BlockCoordinates(compound["xStructureSize"].IntValue, compound["yStructureSize"].IntValue, compound["zStructureSize"].IntValue);
+		ShowBoundingBox = compound["showBoundingBox"].ByteValue == 1;
+		Compound = compound;
 	}
 }

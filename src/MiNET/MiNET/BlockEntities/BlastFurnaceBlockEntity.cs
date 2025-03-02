@@ -31,215 +31,209 @@ using MiNET.Items;
 using MiNET.Net;
 using MiNET.Worlds;
 
-namespace MiNET.BlockEntities
+namespace MiNET.BlockEntities;
+
+public class BlastFurnaceBlockEntity : BlockEntity
 {
-	public class BlastFurnaceBlockEntity : BlockEntity
+	private NbtCompound Compound { get; set; }
+	public Inventory Inventory { get; set; }
+
+	public short CookTime { get; set; }
+	public short BurnTime { get; set; }
+	public short BurnTick { get; set; }
+
+
+	public BlastFurnaceBlockEntity() : base("BlastFurnace")
 	{
-		private NbtCompound Compound { get; set; }
-		public Inventory Inventory { get; set; }
+		UpdatesOnTick = true;
 
-		public short CookTime { get; set; }
-		public short BurnTime { get; set; }
-		public short BurnTick { get; set; }
-
-
-		public BlastFurnaceBlockEntity() : base("BlastFurnace")
+		Compound = new NbtCompound(string.Empty)
 		{
-			UpdatesOnTick = true;
+			new NbtString("id", Id),
+			new NbtList("Items", new NbtCompound()),
+			new NbtInt("x", Coordinates.X),
+			new NbtInt("y", Coordinates.Y),
+			new NbtInt("z", Coordinates.Z)
+		};
 
-			Compound = new NbtCompound(string.Empty)
+		var items = (NbtList) Compound["Items"];
+		for (byte i = 0; i < 3; i++)
+		{
+			items.Add(new NbtCompound()
 			{
-				new NbtString("id", Id),
-				new NbtList("Items", new NbtCompound()),
-				new NbtInt("x", Coordinates.X),
-				new NbtInt("y", Coordinates.Y),
-				new NbtInt("z", Coordinates.Z)
-			};
+				new NbtByte("Count", 0),
+				new NbtByte("Slot", i),
+				new NbtShort("id", 0),
+				new NbtShort("Damage", 0),
+			});
+		}
+	}
 
-			NbtList items = (NbtList) Compound["Items"];
-			for (byte i = 0; i < 3; i++)
+	public override NbtCompound GetCompound()
+	{
+		Compound["x"] = new NbtInt("x", Coordinates.X);
+		Compound["y"] = new NbtInt("y", Coordinates.Y);
+		Compound["z"] = new NbtInt("z", Coordinates.Z);
+
+		return Compound;
+	}
+
+	public override void SetCompound(NbtCompound compound)
+	{
+		Compound = compound;
+
+		if (Compound["Items"] != null) return;
+		var items = new NbtList("Items");
+		for (byte i = 0; i < 3; i++)
+		{
+			items.Add(new NbtCompound()
 			{
-				items.Add(new NbtCompound()
+				new NbtByte("Count", 0),
+				new NbtByte("Slot", i),
+				new NbtShort("id", 0),
+				new NbtShort("Damage", 0)
+			});
+		}
+		Compound["Items"] = items;
+	}
+
+	public override void OnTick(Level level)
+	{
+		if (Inventory == null) return;
+
+		Block furnace = level.GetBlock(Coordinates);
+		if (furnace == null) return;
+
+		if (!(furnace is LitBlastFurnace))
+		{
+			Item fuel = GetFuel();
+			Item ingredient = GetIngredient();
+			Item smelt = ingredient.GetSmelt();
+			// To light a furnace you need both fuel and proper ingredient.
+			if (fuel.Count > 0 && fuel.FuelEfficiency > 0 && smelt != null)
+			{
+				var litFurnace = new LitBlastFurnace
 				{
-					new NbtByte("Count", 0),
-					new NbtByte("Slot", i),
-					new NbtShort("id", 0),
-					new NbtShort("Damage", 0),
-				});
+					Coordinates = furnace.Coordinates,
+				};
+				litFurnace.SetState(furnace.GetState().States);
+				level.SetBlock(litFurnace);
+				furnace = litFurnace;
+
+				BurnTime = GetFuelEfficiency(fuel);
+				FuelEfficiency = BurnTime;
+				CookTime = 0;
+				Inventory.DecreaseSlot(1);
 			}
 		}
 
-		public override NbtCompound GetCompound()
+		if (furnace is LitBlastFurnace)
 		{
-			Compound["x"] = new NbtInt("x", Coordinates.X);
-			Compound["y"] = new NbtInt("y", Coordinates.Y);
-			Compound["z"] = new NbtInt("z", Coordinates.Z);
-
-			return Compound;
-		}
-
-		public override void SetCompound(NbtCompound compound)
-		{
-			Compound = compound;
-
-			if (Compound["Items"] == null)
+			if (BurnTime > 0)
 			{
-				var items = new NbtList("Items");
-				for (byte i = 0; i < 3; i++)
+				BurnTime--;
+				BurnTick = (short) Math.Ceiling((double) BurnTime / FuelEfficiency * 200d);
+
+				Item ingredient = GetIngredient();
+				Item smelt = ingredient.GetSmelt();
+				if (smelt != null)
 				{
-					items.Add(new NbtCompound()
+					CookTime++;
+					if (CookTime >= 200)
 					{
-						new NbtByte("Count", 0),
-						new NbtByte("Slot", i),
-						new NbtShort("id", 0),
-						new NbtShort("Damage", 0),
-					});
+						Inventory.DecreaseSlot(0);
+						Inventory.IncreaseSlot(2, smelt.Id, smelt.Metadata);
+
+						CookTime = 0;
+					}
 				}
-				Compound["Items"] = items;
+				else CookTime = 0;
 			}
-		}
 
-		public override void OnTick(Level level)
-		{
-			if (Inventory == null) return;
-
-			var furnace = level.GetBlock(Coordinates);
-			if (furnace == null) return;
-
-			if (!(furnace is LitBlastFurnace))
+			if (BurnTime <= 0)
 			{
 				Item fuel = GetFuel();
 				Item ingredient = GetIngredient();
 				Item smelt = ingredient.GetSmelt();
-				// To light a furnace you need both fuel and proper ingredient.
 				if (fuel.Count > 0 && fuel.FuelEfficiency > 0 && smelt != null)
 				{
-					var litFurnace = new LitBlastFurnace
+					Inventory.DecreaseSlot(1);
+
+					CookTime = 0;
+					BurnTime = GetFuelEfficiency(fuel);
+					FuelEfficiency = BurnTime;
+					BurnTick = (short) Math.Ceiling((double) BurnTime / FuelEfficiency * 200d);
+				}
+				else
+				{
+					// No more fule or nothin more to smelt.
+					var unlitFurnace = new BlastFurnace
 					{
 						Coordinates = furnace.Coordinates,
 					};
-					litFurnace.SetState(furnace.GetState().States);
-					level.SetBlock(litFurnace);
-					furnace = litFurnace;
+					unlitFurnace.SetState(furnace.GetState().States);
+					level.SetBlock(unlitFurnace);
 
-					BurnTime = GetFuelEfficiency(fuel);
-					FuelEfficiency = BurnTime;
+					FuelEfficiency = 0;
+					BurnTick = 0;
+					BurnTime = 0;
 					CookTime = 0;
-					Inventory.DecreaseSlot(1);
 				}
 			}
-
-			if (furnace is LitBlastFurnace)
-			{
-				if (BurnTime > 0)
-				{
-					BurnTime--;
-					BurnTick = (short) Math.Ceiling((double) BurnTime / FuelEfficiency * 200d);
-
-					Item ingredient = GetIngredient();
-					Item smelt = ingredient.GetSmelt();
-					if (smelt != null)
-					{
-						CookTime++;
-						if (CookTime >= 200)
-						{
-							Inventory.DecreaseSlot(0);
-							Inventory.IncreaseSlot(2, smelt.Id, smelt.Metadata);
-
-							CookTime = 0;
-						}
-					}
-					else
-					{
-						CookTime = 0;
-					}
-				}
-
-				if (BurnTime <= 0)
-				{
-					var fuel = GetFuel();
-					Item ingredient = GetIngredient();
-					Item smelt = ingredient.GetSmelt();
-					if (fuel.Count > 0 && fuel.FuelEfficiency > 0 && smelt != null)
-					{
-						Inventory.DecreaseSlot(1);
-
-						CookTime = 0;
-						BurnTime = GetFuelEfficiency(fuel);
-						FuelEfficiency = BurnTime;
-						BurnTick = (short) Math.Ceiling((double) BurnTime / FuelEfficiency * 200d);
-					}
-					else
-					{
-						// No more fule or nothin more to smelt.
-						var unlitFurnace = new BlastFurnace
-						{
-							Coordinates = furnace.Coordinates,
-						};
-						unlitFurnace.SetState(furnace.GetState().States);
-						level.SetBlock(unlitFurnace);
-
-						FuelEfficiency = 0;
-						BurnTick = 0;
-						BurnTime = 0;
-						CookTime = 0;
-					}
-				}
-			}
-
-			foreach (var observer in Inventory.Observers)
-			{
-				var cookTimeSetData = McpeContainerSetData.CreateObject();
-				cookTimeSetData.windowId = Inventory.WindowsId;
-				cookTimeSetData.property = 0;
-				cookTimeSetData.value = CookTime;
-				observer.SendPacket(cookTimeSetData);
-
-				var burnTimeSetData = McpeContainerSetData.CreateObject();
-				burnTimeSetData.windowId = Inventory.WindowsId;
-				burnTimeSetData.property = 1;
-				burnTimeSetData.value = BurnTick;
-				observer.SendPacket(burnTimeSetData);
-			}
 		}
 
-		private Item GetResult(Item ingredient)
+		foreach (Player observer in Inventory.Observers)
 		{
-			return ingredient.GetSmelt();
+			McpeContainerSetData cookTimeSetData = McpeContainerSetData.CreateObject();
+			cookTimeSetData.windowId = Inventory.WindowsId;
+			cookTimeSetData.property = 0;
+			cookTimeSetData.value = CookTime;
+			observer.SendPacket(cookTimeSetData);
+
+			McpeContainerSetData burnTimeSetData = McpeContainerSetData.CreateObject();
+			burnTimeSetData.windowId = Inventory.WindowsId;
+			burnTimeSetData.property = 1;
+			burnTimeSetData.value = BurnTick;
+			observer.SendPacket(burnTimeSetData);
 		}
+	}
 
-		public short FuelEfficiency { get; set; }
+	private Item GetResult(Item ingredient)
+	{
+		return ingredient.GetSmelt();
+	}
 
-		private Item GetFuel()
+	public short FuelEfficiency { get; set; }
+
+	private Item GetFuel()
+	{
+		return Inventory.Slots[1];
+	}
+
+	private Item GetIngredient()
+	{
+		return Inventory.Slots[0];
+	}
+
+	private short GetFuelEfficiency(Item item)
+	{
+		return (short) (item.FuelEfficiency * 20);
+	}
+
+	public override List<Item> GetDrops()
+	{
+		var slots = new List<Item>();
+
+		var items = Compound["Items"] as NbtList;
+		if (items == null) return slots;
+
+		for (byte i = 0; i < items.Count; i++)
 		{
-			return Inventory.Slots[1];
+			var itemData = (NbtCompound) items[i];
+			Item item = ItemFactory.GetItem(itemData["id"].ShortValue, itemData["Damage"].ShortValue, itemData["Count"].ByteValue);
+			slots.Add(item);
 		}
 
-		private Item GetIngredient()
-		{
-			return Inventory.Slots[0];
-		}
-
-		private short GetFuelEfficiency(Item item)
-		{
-			return (short) (item.FuelEfficiency * 20);
-		}
-
-		public override List<Item> GetDrops()
-		{
-			var slots = new List<Item>();
-
-			var items = Compound["Items"] as NbtList;
-			if (items == null) return slots;
-
-			for (byte i = 0; i < items.Count; i++)
-			{
-				var itemData = (NbtCompound) items[i];
-				Item item = ItemFactory.GetItem(itemData["id"].ShortValue, itemData["Damage"].ShortValue, itemData["Count"].ByteValue);
-				slots.Add(item);
-			}
-
-			return slots;
-		}
+		return slots;
 	}
 }
