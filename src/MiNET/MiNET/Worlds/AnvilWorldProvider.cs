@@ -369,9 +369,9 @@ public class AnvilWorldProvider : IWorldProvider, ICachingWorldProvider, IClonea
 		return LevelInfo.LevelName;
 	}
 
-	public int SaveChunks()
+	public int SaveChunks(bool force = false)
 	{
-		if (!Config.GetProperty("Save.Enabled", false)) return 0;
+		if (!Config.GetProperty("Save.Enabled", false) && !force) return 0;
 
 		int count = 0;
 		try

@@ -42,7 +42,7 @@ public interface IWorldProvider
 	long GetTime();
 	long GetDayTime();
 
-	int SaveChunks();
+	int SaveChunks(bool force = false);
 	bool HaveNether();
 	bool HaveTheEnd();
 }

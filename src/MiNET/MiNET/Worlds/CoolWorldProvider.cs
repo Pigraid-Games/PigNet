@@ -156,7 +156,7 @@ public class CoolWorldProvider : IWorldProvider
 		return "Cool world";
 	}
 
-	public int SaveChunks()
+	public int SaveChunks(bool force = false)
 	{
 		return 0;
 	}

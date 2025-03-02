@@ -32,15 +32,11 @@ using MiNET.Worlds;
 
 namespace MiNET.Blocks;
 
-public partial class Chest : ChestBase
+public partial class Chest() : ChestBase(54)
 {
-	public Chest() : base(54)
-	{
-	}
-
 	public override bool IsBestTool(Item item)
 	{
-		return item is ItemAxe ? true : false;
+		return item is ItemAxe;
 	}
 
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
@@ -49,6 +45,7 @@ public partial class Chest : ChestBase
 
 		var chestBlockEntity = new ChestBlockEntity { Coordinates = Coordinates };
 		world.SetBlockEntity(chestBlockEntity);
+		world.SetBlock(this);
 		return false;
 	}
 }

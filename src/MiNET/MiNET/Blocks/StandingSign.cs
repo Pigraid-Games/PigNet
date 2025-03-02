@@ -47,7 +47,7 @@ public class StandingSignBase : Block
 		BlastResistance = 5;
 		Hardness = 1;
 
-		IsFlammable = true; // Only in PE!!
+		IsFlammable = true;
 	}
 
 	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
@@ -64,6 +64,15 @@ public class StandingSignBase : Block
 
 		var signBlockEntity = new SignBlockEntity { Coordinates = Coordinates };
 		world.SetBlockEntity(signBlockEntity);
+		
+		if (player.GameMode == GameMode.Survival && Id != 0)
+		{
+			Item itemInHand = player.Inventory.GetItemInHand();
+			itemInHand.Count--;
+			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+		}
+		world.SetBlock(this);
+		world.BroadcastSound(Coordinates, LevelSoundEventType.Place, GetRuntimeId());
 		OpenSign(player);
 		return false;
 	}
@@ -71,14 +80,13 @@ public class StandingSignBase : Block
 
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
-		if (player.Inventory.GetItemInHand() is ItemSignBase) return false;
 		OpenSign(player);
 		return true;
 	}
 
 	public override Item[] GetDrops(Item tool)
 	{
-		return new[] { ItemFactory.GetItem((short) _itemDropId) }; // Drop sign item
+		return [ItemFactory.GetItem((short) _itemDropId)]; // Drop sign item
 	}
 
 	public void OpenSign(Player player, bool front = true)
@@ -90,32 +98,14 @@ public class StandingSignBase : Block
 	}
 }
 
-public partial class StandingSign : StandingSignBase
-{
-	public StandingSign() : base(63, 323) { }
-}
+public partial class StandingSign() : StandingSignBase(63, 323);
 
-public partial class SpruceStandingSign : StandingSignBase
-{
-	public SpruceStandingSign() : base(436, 472) { }
-}
+public partial class SpruceStandingSign() : StandingSignBase(436, 472);
 
-public partial class BirchStandingSign : StandingSignBase
-{
-	public BirchStandingSign() : base(441, 473) { }
-}
+public partial class BirchStandingSign() : StandingSignBase(441, 473);
 
-public partial class JungleStandingSign : StandingSignBase
-{
-	public JungleStandingSign() : base(443, 474) { }
-}
+public partial class JungleStandingSign() : StandingSignBase(443, 474);
 
-public partial class AcaciaStandingSign : StandingSignBase
-{
-	public AcaciaStandingSign() : base(445, 475) { }
-}
+public partial class AcaciaStandingSign() : StandingSignBase(445, 475);
 
-public partial class DarkoakStandingSign : StandingSignBase
-{
-	public DarkoakStandingSign() : base(447, 476) { }
-}
+public partial class DarkoakStandingSign() : StandingSignBase(447, 476);

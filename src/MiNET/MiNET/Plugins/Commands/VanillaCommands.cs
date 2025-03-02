@@ -193,6 +193,15 @@ public class VanillaCommands
 		commander.Level.SpawnToAll(commander);
 	}
 
+	[Command(Name = "save-all", Description = "Saves the whole world")]
+	[Authorize(Permission = 4)]
+	public void SaveAll(Player commander)
+	{
+		commander.SendMessage("Saving the world...");
+		commander.Level.WorldProvider.SaveChunks(true);
+		commander.SendMessage("World saved with success!");
+	}
+
 	[Command(Name = "about", Description = "About the server")]
 	public string About()
 	{

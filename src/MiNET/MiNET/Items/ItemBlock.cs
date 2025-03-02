@@ -112,7 +112,7 @@ public class ItemBlock : Item
 		// Basically what we want to do here is to check all items for a blockstate
 		// and find a matching one. Then use the blockstate for that item, to set the
 		// default data for this item.
-		newBlock.SetState(Block.GetState());
+		newBlock.SetState(newBlock.GetState());
 
 		//newBlock.Metadata = (byte) Metadata;
 
