@@ -653,14 +653,14 @@ namespace MiNET.Entities.Behaviors
 			return _level.GetHeight(coordinates);
 		}
 
-		public Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null)
+		public Block GetBlock(BlockCoordinates coordinates, ChunkColumn tryChunk = null)
 		{
 			NumberOfBlockGet++;
 			Block block;
-			if (!_blockCache.TryGetValue(coord, out block))
+			if (!_blockCache.TryGetValue(coordinates, out block))
 			{
-				block = _level.GetBlock(coord);
-				_blockCache[coord] = block;
+				block = _level.GetBlock(coordinates);
+				_blockCache[coordinates] = block;
 			}
 
 			return block;

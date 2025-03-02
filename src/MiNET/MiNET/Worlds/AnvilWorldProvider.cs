@@ -468,7 +468,7 @@ public class AnvilWorldProvider : IWorldProvider, ICachingWorldProvider, IClonea
 					if (Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
 					{
 						var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
-						new SkyLightCalculations().RecalcSkyLight(chunkColumn, blockAccess);
+						new SkyLightCalculations().RecalculateSkyLight(chunkColumn, blockAccess);
 					}
 
 					chunkColumn.IsDirty = false;
@@ -511,7 +511,7 @@ public class AnvilWorldProvider : IWorldProvider, ICachingWorldProvider, IClonea
 						if (Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
 						{
 							var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
-							new SkyLightCalculations().RecalcSkyLight(chunkColumn, blockAccess);
+							new SkyLightCalculations().RecalculateSkyLight(chunkColumn, blockAccess);
 						}
 
 						chunkColumn.IsDirty = false;
@@ -676,7 +676,7 @@ public class AnvilWorldProvider : IWorldProvider, ICachingWorldProvider, IClonea
 					chunk.RecalcHeight();
 
 					var blockAccess = new SkyLightBlockAccess(this, chunk);
-					new SkyLightCalculations().RecalcSkyLight(chunk, blockAccess);
+					new SkyLightCalculations().RecalculateSkyLight(chunk, blockAccess);
 					//TODO: Block lights.
 				}
 

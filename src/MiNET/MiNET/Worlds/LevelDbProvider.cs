@@ -369,7 +369,7 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 			if (Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
 			{
 				var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
-				new SkyLightCalculations().RecalcSkyLight(chunkColumn, blockAccess);
+				new SkyLightCalculations().RecalculateSkyLight(chunkColumn, blockAccess);
 				//TODO: Block lights.
 			}
 

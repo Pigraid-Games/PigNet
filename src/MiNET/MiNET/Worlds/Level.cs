@@ -179,11 +179,11 @@ public class Level : IBlockAccess
 	public bool RedstoneEnabled { get; set; } = true;
 	public bool DoShowDeathMessage { get; set; } = true;
 
-	public Block GetBlock(BlockCoordinates blockCoordinates, ChunkColumn tryChunk = null)
+	public Block GetBlock(BlockCoordinates coordinates, ChunkColumn tryChunk = null)
 	{
 		ChunkColumn chunk = null;
 
-		var chunkCoordinates = new ChunkCoordinates(blockCoordinates.X >> 4, blockCoordinates.Z >> 4);
+		var chunkCoordinates = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
 		if (tryChunk != null && tryChunk.X == chunkCoordinates.X && tryChunk.Z == chunkCoordinates.Z)
 			chunk = tryChunk;
 		else
@@ -191,16 +191,16 @@ public class Level : IBlockAccess
 		if (chunk == null)
 			return new Air
 			{
-				Coordinates = blockCoordinates,
+				Coordinates = coordinates,
 				SkyLight = 15
 			};
 
-		Block block = chunk.GetBlockObject(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
-		byte blockLight = chunk.GetBlocklight(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
-		byte skyLight = chunk.GetSkylight(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
-		byte biomeId = chunk.GetBiome(blockCoordinates.X & 0x0f, blockCoordinates.Z & 0x0f);
+		Block block = chunk.GetBlockObject(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f);
+		byte blockLight = chunk.GetBlocklight(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f);
+		byte skyLight = chunk.GetSkylight(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f);
+		byte biomeId = chunk.GetBiome(coordinates.X & 0x0f, coordinates.Z & 0x0f);
 
-		block.Coordinates = blockCoordinates;
+		block.Coordinates = coordinates;
 		block.BlockLight = blockLight;
 		block.SkyLight = skyLight;
 		block.BiomeId = biomeId;
