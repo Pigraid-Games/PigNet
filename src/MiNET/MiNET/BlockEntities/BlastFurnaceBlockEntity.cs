@@ -41,7 +41,7 @@ public class BlastFurnaceBlockEntity : BlockEntity
 	public short CookTime { get; set; }
 	public short BurnTime { get; set; }
 	public short BurnTick { get; set; }
-
+	public short FuelEfficiency { get; set; }
 
 	public BlastFurnaceBlockEntity() : base("BlastFurnace")
 	{
@@ -198,27 +198,13 @@ public class BlastFurnaceBlockEntity : BlockEntity
 		}
 	}
 
-	private Item GetResult(Item ingredient)
-	{
-		return ingredient.GetSmelt();
-	}
+	private Item GetResult(Item ingredient) => ingredient.GetSmelt();
 
-	public short FuelEfficiency { get; set; }
+	private Item GetFuel() => Inventory.Slots[1];
+	
+	private Item GetIngredient() => Inventory.Slots[0];
 
-	private Item GetFuel()
-	{
-		return Inventory.Slots[1];
-	}
-
-	private Item GetIngredient()
-	{
-		return Inventory.Slots[0];
-	}
-
-	private short GetFuelEfficiency(Item item)
-	{
-		return (short) (item.FuelEfficiency * 20);
-	}
+	private short GetFuelEfficiency(Item item) => (short) (item.FuelEfficiency * 20);
 
 	public override List<Item> GetDrops()
 	{
