@@ -430,22 +430,32 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	{
 		bool isInAir = true;
 
-		for (int y = WorldHeight; y >= WorldMinY; y--)
+		try
 		{
-			SubChunk chunk = GetSubChunk(y);
-			if (isInAir && chunk.IsAllAir())
+			for (int y = WorldHeight; y >= WorldMinY; y--)
 			{
-				if (chunk.IsDirty) Array.Fill<byte>(chunk._skylight.Data, 0xff);
-				y -= 15;
-				continue;
+				SubChunk chunk = GetSubChunk(y);
+				if (chunk == null) continue;
+
+				if (isInAir && chunk.IsAllAir())
+				{
+					if (chunk.IsDirty && chunk._skylight?.Data != null) Array.Fill<byte>(chunk._skylight.Data, 0xff);
+					y -= 15;
+					continue;
+				}
+
+				isInAir = false;
+
+				int bid = GetBlockId(x, y, z);
+				if (bid == 0 || (BlockFactory.TransparentBlocks?.Count > bid && BlockFactory.TransparentBlocks![bid] == 1 && bid != 18 && bid != 30))
+					continue;
+
+				return y + 1;
 			}
-
-			isInAir = false;
-
-			int bid = GetBlockId(x, y, z);
-			if (bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 30)) continue;
-
-			return y + 1;
+		}
+		catch (Exception ex)
+		{
+			Log.Error($"Error in GetRecalatedHeight: {ex.Message}", ex);
 		}
 
 		return 0;

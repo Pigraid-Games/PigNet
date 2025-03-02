@@ -6066,6 +6066,19 @@
       }
     ]
   },
+	{
+		"Id": 65,
+		"Data": 3,
+		"Name": "minecraft:ladder",
+		"RuntimeId": 15105,
+		"States": [
+			{
+				"Type": 3,
+				"Name": "facing_direction",
+				"Value": 3
+			}
+		]
+	},
   {
     "Id": 65,
     "Data": 4,

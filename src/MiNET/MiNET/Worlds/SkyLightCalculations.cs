@@ -377,78 +377,100 @@ public class SkyLightCalculations
 		}
 	}
 
+	/// <summary>
+	/// Sets the light level of a block at the specified coordinates within the given level, chunk, and sub-chunk.
+	/// </summary>
+	/// <param name="level">The block access level.</param>
+	/// <param name="chunk">The chunk column where the block is located.</param>
+	/// <param name="subChunk">The sub-chunk where the block is located.</param>
+	/// <param name="sectionIdx">The section index.</param>
+	/// <param name="lightBfsQueue">The queue for light breadth-first search.</param>
+	/// <param name="lightBfSet">The set for traversed light levels during search.</param>
+	/// <param name="coordinates">The block coordinates.</param>
+	/// <param name="lightLevel">The current light level at the block.</param>
+	/// <param name="down">Boolean indicating a downward direction.</param>
+	/// <param name="up">Boolean indicating an upward direction.</param>
+	/// <returns>The updated light level after processing.</returns>
+	// C#
 	private byte SetLightLevel(IBlockAccess level, ChunkColumn chunk, SubChunk subChunk, int sectionIdx, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, byte lightLevel, bool down = false, bool up = false)
 	{
-		//Interlocked.Add(ref visits, 1);
+		ProcessCoordinates(coordinates);
 
-		if (TrackResults) MakeVisit(coordinates);
-
-		if (!(up || down) && (chunk.X != coordinates.X >> 4 || chunk.Z != coordinates.Z >> 4))
-		{
-			chunk = level.GetChunk((ChunkCoordinates) coordinates);
-			subChunk = null;
-		}
-		else
-		{
-			if ((up || down) && coordinates.Y >> 4 != sectionIdx) subChunk = null;
-		}
+		chunk = HandleChunkCoordinates(level, chunk, coordinates, up, down);
+		subChunk = HandleSectionInChunk(subChunk, chunk, coordinates, sectionIdx, up, down);
 
 		if (chunk == null /* || chunk.chunks == null*/) return lightLevel;
 
+		lightLevel = CheckAndSetLightAboveGround(lightBfsQueue, lightBfSet, coordinates, chunk, subChunk, lightLevel, down, up);
+
+		lightLevel = HandleTransparentBlocks(lightBfsQueue, lightBfSet, coordinates, chunk, subChunk, lightLevel, down);
+
+		return lightLevel;
+	}
+
+	private void ProcessCoordinates(BlockCoordinates coordinates)
+	{
+		if (TrackResults) MakeVisit(coordinates);
+	}
+
+	private ChunkColumn HandleChunkCoordinates(IBlockAccess level, ChunkColumn chunk, BlockCoordinates coordinates, bool up, bool down)
+	{
+		if (!(up || down) && (chunk.X != coordinates.X >> 4 || chunk.Z != coordinates.Z >> 4))
+		{
+			return level.GetChunk((ChunkCoordinates) coordinates);
+		}
+		return chunk;
+	}
+
+	private SubChunk HandleSectionInChunk(SubChunk subChunk, ChunkColumn chunk, BlockCoordinates coordinates, int sectionIdx, bool up, bool down)
+	{
+		if ((up || down) && coordinates.Y >> 4 != sectionIdx) return null;
+		return subChunk ?? chunk.GetSubChunk(coordinates.Y);
+	}
+
+	private byte CheckAndSetLightAboveGround(Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, ChunkColumn chunk, SubChunk subChunk, byte lightLevel, bool down, bool up)
+	{
 		if (!down && !up && coordinates.Y >= GetHeight(coordinates, chunk))
 		{
-			if (GetSkyLight(coordinates, subChunk) != 15)
-			{
-				SetSkyLight(coordinates, 15, chunk);
-
-				if (!lightBfSet.Contains(coordinates))
-				{
-					lightBfsQueue.Enqueue(coordinates);
-					lightBfSet.Add(coordinates);
-				}
-			}
-
+			if (GetSkyLight(coordinates, subChunk) == 15) return 15;
+			SetSkyLight(coordinates, 15, chunk);
+			EnqueueCoordinates(lightBfsQueue, lightBfSet, coordinates);
 			return 15;
 		}
+		return lightLevel;
+	}
 
-		if (subChunk == null) subChunk = chunk.GetSubChunk(coordinates.Y);
-
+	private byte HandleTransparentBlocks(Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, ChunkColumn chunk, SubChunk subChunk, byte lightLevel, bool down)
+	{
 		bool isTransparent = IsTransparent(coordinates, subChunk);
 		byte skyLight = GetSkyLight(coordinates, subChunk);
 
-		if (down && isTransparent && lightLevel == 15)
-			if (IsNotBlockingSkylight(coordinates, chunk))
-			{
-				if (skyLight != 15) SetSkyLight(coordinates, 15, chunk);
-
-				if (!lightBfSet.Contains(coordinates))
-				{
-					lightBfsQueue.Enqueue(coordinates);
-					lightBfSet.Add(coordinates);
-				}
-
-				return 15;
-			}
-
-		if (isTransparent)
+		if (down && isTransparent && lightLevel == 15 && IsNotBlockingSkylight(coordinates, chunk))
 		{
-			int diffuseLevel = GetDiffuseLevel(coordinates, subChunk);
-			if (skyLight + 1 + diffuseLevel <= lightLevel)
-			{
-				byte newLevel = (byte) (lightLevel - diffuseLevel);
-				SetSkyLight(coordinates, newLevel, chunk);
-
-				if (!lightBfSet.Contains(coordinates))
-				{
-					lightBfsQueue.Enqueue(coordinates);
-					lightBfSet.Add(coordinates);
-				}
-
-				return newLevel;
-			}
+			if (skyLight != 15) SetSkyLight(coordinates, 15, chunk);
+			EnqueueCoordinates(lightBfsQueue, lightBfSet, coordinates);
+			return 15;
 		}
 
-		return skyLight;
+		if (!isTransparent) return skyLight;
+		return SetNewLightLevelAndEnqueueCoordinates(isTransparent, lightBfsQueue, lightBfSet, coordinates, chunk, subChunk, skyLight, lightLevel);
+	}
+
+	private byte SetNewLightLevelAndEnqueueCoordinates(bool isTransparent, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, ChunkColumn chunk, SubChunk subChunk, byte skyLight, byte lightLevel)
+	{
+		int diffuseLevel = GetDiffuseLevel(coordinates, subChunk);
+		if (skyLight + 1 + diffuseLevel > lightLevel) return skyLight;
+		byte newLevel = (byte) (lightLevel - diffuseLevel);
+		SetSkyLight(coordinates, newLevel, chunk);
+		EnqueueCoordinates(lightBfsQueue, lightBfSet, coordinates);
+		return newLevel;
+	}
+
+	private void EnqueueCoordinates(Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates)
+	{
+		if (lightBfSet.Contains(coordinates)) return;
+		lightBfsQueue.Enqueue(coordinates);
+		lightBfSet.Add(coordinates);
 	}
 
 	public static void SetSkyLight(BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
@@ -459,9 +481,17 @@ public class SkyLightCalculations
 	public static bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
 	{
 		if (chunk == null) return true;
-
-		int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
-		return bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9);
+		try
+		{
+			int bid = chunk.GetBlockId(blockCoordinates.X & 0x0F, blockCoordinates.Y, blockCoordinates.Z & 0x0F);
+			if (bid == 0 || (BlockFactory.TransparentBlocks?.Count > bid && BlockFactory.TransparentBlocks![bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9)) 
+				return true;
+		}
+		catch (Exception ex)
+		{
+			Log.Error($"Error in IsNotBlockingSkylight: {ex.Message}", ex);
+		}
+		return false;
 	}
 
 	public static int GetDiffuseLevel(BlockCoordinates blockCoordinates, SubChunk section)
@@ -474,20 +504,40 @@ public class SkyLightCalculations
 		int bz = blockCoordinates.Z & 0x0f;
 
 		int bid = section.GetBlockId(bx, by - (16 * (by >> 4)), bz);
-		return bid == 8 || bid == 9 ? 3 : bid == 18 || bid == 161 || bid == 30 ? 2 : 1;
+		return bid switch
+		{
+			8 or 9 => 3,
+			18 => 2,
+			161 => 2,
+			30 => 2,
+			_ => 1
+		};
 	}
 
 	public static bool IsTransparent(BlockCoordinates blockCoordinates, SubChunk section)
 	{
+		const int Bitmask = 0x0F;
+		const int SectionSize = 16;
 		if (section == null) return true;
+		try
+		{
+			int bx = blockCoordinates.X & Bitmask;
+			int by = blockCoordinates.Y;
+			int bz = blockCoordinates.Z & Bitmask;
 
-		int bx = blockCoordinates.X & 0x0f;
-		int by = blockCoordinates.Y;
-		int bz = blockCoordinates.Z & 0x0f;
+			int calculatedBy = by - (SectionSize * (by >> 4));
 
-		int bid = section.GetBlockId(bx, by - (16 * (by >> 4)), bz);
-		return bid == 0 || BlockFactory.TransparentBlocks[bid] == 1;
+			int bid = section.GetBlockId(bx, calculatedBy, bz);
+			if (bid == 0 || (BlockFactory.TransparentBlocks?.Count > bid && BlockFactory.TransparentBlocks[bid] == 1))
+				return true;
+		}
+		catch (Exception ex)
+		{
+			Log.Error($"Error in IsTransparent: {ex.Message}", ex);
+		}
+		return false;
 	}
+
 
 	public static byte GetSkyLight(BlockCoordinates blockCoordinates, SubChunk chunk)
 	{

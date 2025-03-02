@@ -107,25 +107,18 @@ public class Block : ICloneable
 	public virtual BlockStateContainer GetGlobalState()
 	{
 		BlockStateContainer currentState = GetState();
-		if (!BlockFactory.BlockStates.TryGetValue(currentState, out BlockStateContainer blockstate))
-		{
-			Log.Warn($"Did not find block state for {this}, {currentState}");
-			return null;
-		}
-
-		return blockstate;
+		if (BlockFactory.BlockStates.TryGetValue(currentState, out BlockStateContainer blockstate)) return blockstate;
+		Log.Warn($"Did not find block state for {this}, {currentState}");
+		return null;
 	}
 
 	public int GetRuntimeId()
 	{
 		BlockStateContainer currentState = GetState();
-		if (!BlockFactory.BlockStates.TryGetValue(currentState, out BlockStateContainer blockstate))
-		{
-			Log.Warn($"Did not find block state for {this}, {currentState}");
-			return -1;
-		}
+		if (BlockFactory.BlockStates.TryGetValue(currentState, out BlockStateContainer blockstate)) return blockstate.RuntimeId;
+		Log.Warn($"Did not find block state for {this}, {currentState}");
+		return -1;
 
-		return blockstate.RuntimeId;
 	}
 
 	public virtual Item GetItem(int count = 1)
