@@ -12,6 +12,7 @@ using log4net;
 using MiNET.Blocks;
 using MiNET.Net;
 using MiNET.Utils.IO;
+using MiNET.Utils.Nbt;
 using MiNET.Utils.Vectors;
 
 namespace MiNET.Worlds;
@@ -63,11 +64,9 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		get
 		{
 			SubChunk subChunk = _subChunks[chunkIndex];
-			if (generateIfMissing && subChunk == null)
-			{
-				subChunk = SubChunk.CreateObject();
-				_subChunks[chunkIndex] = subChunk;
-			}
+			if (!generateIfMissing || subChunk != null) return subChunk;
+			subChunk = SubChunk.CreateObject();
+			_subChunks[chunkIndex] = subChunk;
 			return subChunk;
 		}
 		set => _subChunks[chunkIndex] = value;
@@ -84,7 +83,7 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		cc.height = (short[]) height.Clone();
 
 		cc.BlockEntities = new Dictionary<BlockCoordinates, NbtCompound>();
-		foreach (KeyValuePair<BlockCoordinates, NbtCompound> blockEntityPair in BlockEntities) cc.BlockEntities.Add(blockEntityPair.Key, (NbtCompound) blockEntityPair.Value.Clone());
+		foreach (KeyValuePair<BlockCoordinates, NbtCompound> blockEntityPair in BlockEntities) cc.BlockEntities.TryAdd(blockEntityPair.Key, (NbtCompound) blockEntityPair.Value.Clone());
 
 		McpeWrapper batch = McpeWrapper.CreateObject();
 		batch.payload = _cachedBatch.payload;
@@ -523,16 +522,16 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 
 		stream.WriteByte(0); // Border blocks - nope (EDU)
 
-		if (BlockEntities.Count != 0)
-			foreach (NbtCompound blockEntity in BlockEntities.Values.ToArray())
+		if (BlockEntities.Count == 0) return stream.ToArray();
+		foreach (NbtCompound blockEntity in BlockEntities.Values.ToArray())
+		{
+			var file = new NbtFile(blockEntity)
 			{
-				var file = new NbtFile(blockEntity)
-				{
-					BigEndian = false,
-					UseVarInt = true
-				};
-				file.SaveToStream(stream, NbtCompression.None);
-			}
+				BigEndian = false,
+				UseVarInt = true
+			};
+			file.SaveToStream(stream, NbtCompression.None);
+		}
 
 		return stream.ToArray();
 	}

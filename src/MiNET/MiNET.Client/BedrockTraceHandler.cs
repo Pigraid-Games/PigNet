@@ -725,12 +725,12 @@ namespace MiNET.Client
 
 		public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
 		{
-			Log.Warn($"[McpeAvailableCommands] Received {message.CommandList.Count} commnands");
-			foreach (var command in message.CommandList)
-			{
+			//Log.Warn($"[McpeAvailableCommands] Received {message.CommandList.Count} commnands");
+			//foreach (var command in message.CommandList)
+			//{
 				//Log.Warn($"Got command: {command.Name} - {command.Versions[0].Description}");
-			}
-			Log.Warn($"[McpeAvailableCommands] Done reading {message.CommandList.Count} commnands\n");
+			//}
+			//Log.Warn($"[McpeAvailableCommands] Done reading {message.CommandList.Count} commnands\n");
 		}
 
 		public override void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)

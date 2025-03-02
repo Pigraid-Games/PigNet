@@ -197,9 +197,9 @@ public class VanillaCommands
 	[Authorize(Permission = 4)]
 	public void SaveAll(Player commander)
 	{
-		commander.SendMessage("Saving the world...");
+		commander.SendMessage("Saving the game (this may take a moment!)");
 		commander.Level.WorldProvider.SaveChunks(true);
-		commander.SendMessage("World saved with success!");
+		commander.SendMessage("Saved the world");
 	}
 
 	[Command(Name = "about", Description = "About the server")]

@@ -23,42 +23,44 @@
 
 #endregion
 
-namespace MiNET.BlockEntities
+using System.Runtime.CompilerServices;
+
+namespace MiNET.BlockEntities;
+
+public interface ICustomBlockEntityFactory
 {
-	public interface ICustomBlockEntityFactory
-	{
-		BlockEntity GetBlockEntityById(string blockEntityId);
-	}
+	BlockEntity GetBlockEntityById(string blockEntityId);
+}
 
-	public static class BlockEntityFactory
-	{
-		public static ICustomBlockEntityFactory CustomBlockEntityFactory { get; set; }
+public static class BlockEntityFactory
+{
+	public static ICustomBlockEntityFactory CustomBlockEntityFactory { get; set; }
 
-		public static BlockEntity GetBlockEntityById(string blockEntityId)
+	public static BlockEntity GetBlockEntityById(string blockEntityId)
+	{
+		BlockEntity blockEntity = CustomBlockEntityFactory?.GetBlockEntityById(blockEntityId);
+
+		if (blockEntity != null) return blockEntity;
+
+		blockEntity = blockEntityId switch
 		{
-			BlockEntity blockEntity = CustomBlockEntityFactory?.GetBlockEntityById(blockEntityId);
+			"Sign" => new SignBlockEntity(),
+			"Chest" => new ChestBlockEntity(),
+			"EnchantTable" => new EnchantingTableBlockEntity(),
+			"Furnace" => new FurnaceBlockEntity(),
+			"BlastFurnace" => new BlastFurnaceBlockEntity(),
+			"Skull" => new SkullBlockEntity(),
+			"ItemFrame" => new ItemFrameBlockEntity(),
+			"Bed" => new BedBlockEntity(),
+			"Banner" => new BannerBlockEntity(),
+			"FlowerPot" => new FlowerPotBlockEntity(),
+			"Beacon" => new BeaconBlockEntity(),
+			"MobSpawner" => new MobSpawnerBlockEntity(),
+			"ShulkerBox" => new ShulkerBoxBlockEntity(),
+			"StructureBlock" => new StructureBlockBlockEntity(),
+			_ => null
+		};
 
-			if (blockEntity != null)
-			{
-				return blockEntity;
-			}
-
-			if (blockEntityId == "Sign") blockEntity = new SignBlockEntity();
-			else if (blockEntityId == "Chest") blockEntity = new ChestBlockEntity();
-			else if (blockEntityId == "EnchantTable") blockEntity = new EnchantingTableBlockEntity();
-			else if (blockEntityId == "Furnace") blockEntity = new FurnaceBlockEntity();
-			else if (blockEntityId == "BlastFurnace") blockEntity = new BlastFurnaceBlockEntity();
-			else if (blockEntityId == "Skull") blockEntity = new SkullBlockEntity();
-			else if (blockEntityId == "ItemFrame") blockEntity = new ItemFrameBlockEntity();
-			else if (blockEntityId == "Bed") blockEntity = new BedBlockEntity();
-			else if (blockEntityId == "Banner") blockEntity = new BannerBlockEntity();
-			else if (blockEntityId == "FlowerPot") blockEntity = new FlowerPotBlockEntity();
-			else if (blockEntityId == "Beacon") blockEntity = new BeaconBlockEntity();
-			else if (blockEntityId == "MobSpawner") blockEntity = new MobSpawnerBlockEntity();
-			else if (blockEntityId == "ShulkerBox") blockEntity = new ShulkerBoxBlockEntity();
-			else if (blockEntityId == "StructureBlock") blockEntity = new StructureBlockBlockEntity();
-
-			return blockEntity;
-		}
+		return blockEntity;
 	}
 }

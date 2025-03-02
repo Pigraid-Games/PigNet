@@ -207,7 +207,7 @@ namespace MiNET.Entities.Behaviors
 				var blockAccess = new CachedBlockAccess(source.Level);
 
 				var entityCoords = new HashSet<BlockCoordinates>();
-				foreach (var entry in source.Level.GetEntites())
+				foreach (var entry in source.Level.GetEntities())
 				{
 					var position = (BlockCoordinates) entry.KnownPosition;
 					if (position == target) continue;

@@ -44,6 +44,7 @@ using MiNET.LevelDB;
 using MiNET.Utils;
 using MiNET.Utils.IO;
 using MiNET.Utils.Vectors;
+using Newtonsoft.Json;
 
 namespace MiNET.Worlds;
 
@@ -277,7 +278,7 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 				Z = coordinates.Z
 			};
 
-			byte[] chunkDataKey = Combine(index, new byte[] { 0x2f, 0 });
+			byte[] chunkDataKey = Combine(index, [0x2f, 0]);
 			for (byte y = 0; y < 16; y++)
 			{
 				chunkDataKey[^1] = y;
@@ -310,8 +311,6 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 			byte[] blockEntityBytes = Db.Get(Combine(index, 0x31));
 			sw.Stop();
 
-			//Log.Debug($"Read chunk from LevelDB {coordinates.X}, {coordinates.Z} in {sw.ElapsedMilliseconds} ms.");
-
 			if (blockEntityBytes != null && version.First() >= 10)
 			{
 				Memory<byte> data = blockEntityBytes.AsMemory();
@@ -332,28 +331,16 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 
 					chunkColumn.SetBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) blockEntityTag);
 
-					if (blockEntityTag["id"].StringValue == "Skull" && blockEntityTag["SkullType"].ByteValue > 0)
-					{
-						Block blockObject = chunkColumn.GetBlockObject(x & 0x0f, y, z & 0x0f);
+					if (blockEntityTag["id"].StringValue != "Skull" || blockEntityTag["SkullType"].ByteValue <= 0) continue;
+					Block blockObject = chunkColumn.GetBlockObject(x & 0x0f, y, z & 0x0f);
 
-						if (blockObject is SkullBase block)
-						{
-							var newBlock = (SkullBase) BlockFactory.GetBlockById(1219 + blockEntityTag["SkullType"].ByteValue);
-							newBlock.FacingDirection = block.FacingDirection;
-							chunkColumn.SetBlock(x & 0x0f, y, z & 0x0f, newBlock);
-						}
-					}
+					if (blockObject is not SkullBase block) continue;
+					var newBlock = (SkullBase) BlockFactory.GetBlockById(1219 + blockEntityTag["SkullType"].ByteValue);
+					newBlock.FacingDirection = block.FacingDirection;
+					chunkColumn.SetBlock(x & 0x0f, y, z & 0x0f, newBlock);
 				} while (position < data.Length);
 			}
 			//todo find out how to get block entities on chunk format 7
-			//Memory<byte> data = blockEntityBytes.AsMemory();
-			//string jsonString = System.Text.Encoding.UTF8.GetString(data.Span);
-			//LegacyBlockEntities info = JsonConvert.DeserializeObject<LegacyBlockEntities>(jsonString);
-			//if (info != null)
-			//{
-			//Log.Warn(info.IsEmpty);
-			//Log.Warn(info.Length);
-			//}
 		}
 
 		if (chunkColumn == null)
@@ -364,21 +351,15 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 			chunkColumn?.RecalcHeight();
 		}
 
-		if (chunkColumn != null)
+		if (chunkColumn == null) return null;
+		if (Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
 		{
-			if (Dimension == Dimension.Overworld && Config.GetProperty("CalculateLights", false))
-			{
-				var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
-				new SkyLightCalculations().RecalculateSkyLight(chunkColumn, blockAccess);
-				//TODO: Block lights.
-			}
-
-			chunkColumn.IsDirty = false;
-			//chunkColumn.NeedSave = isGenerated;
+			var blockAccess = new SkyLightBlockAccess(this, chunkColumn);
+			new SkyLightCalculations().RecalculateSkyLight(chunkColumn, blockAccess);
+			//TODO: Block lights.
 		}
 
-		//Log.Debug($"Read chunk {coordinates.X}, {coordinates.Z} in {sw.ElapsedMilliseconds} ms. Was generated: {isGenerated}");
-
+		chunkColumn.IsDirty = false;
 		return chunkColumn;
 	}
 
@@ -495,7 +476,7 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 		byte[] bytes = file.SaveToBuffer(NbtCompression.None);
 
 		using FileStream stream = File.Create(levelFileName);
-		stream.Write(new ReadOnlySpan<byte>(new byte[] { 0x08, 0, 0, 0 }));
+		stream.Write(new ReadOnlySpan<byte>([0x08, 0, 0, 0]));
 		stream.Write(BitConverter.GetBytes(bytes.Length));
 		stream.Write(bytes);
 		stream.Flush();
@@ -510,7 +491,7 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 		byte[] version = Db.Get(versionKey);
 		if (version == null) Db.Put(versionKey, new byte[] { 13 });
 
-		byte[] chunkDataKey = Combine(index, new byte[] { 0x2f, 0 });
+		byte[] chunkDataKey = Combine(index, [0x2f, 0]);
 		for (byte y = 0; y < 16; y++)
 		{
 			chunkDataKey[^1] = y;
@@ -527,6 +508,7 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 		Db.Put(Combine(index, 0x2D), data2D);
 
 		// Block entities
+		int i = 0;
 		foreach (NbtCompound blockEntityNbt in chunk.BlockEntities.Values)
 		{
 			var nbtClone = (NbtCompound) blockEntityNbt.Clone();
@@ -535,19 +517,15 @@ public class LevelDbProvider : IWorldProvider, ICachingWorldProvider, ICloneable
 			var nbt = new NbtFile
 			{
 				BigEndian = false,
-				UseVarInt = false
+				UseVarInt = false,
+				RootTag = nbtClone
 			};
-			nbt.RootTag = nbtClone;
 
 			byte[] blockEntity = nbt.SaveToBuffer(NbtCompression.None);
 			Db.Put(Combine(index, 0x31), blockEntity);
+			i++;
 		}
-
-		// Entities  TODO
-		//foreach ()
-		//{
-		//	Db.Put(Combine(index, 0x32), saveToBuffer);
-		//}
+		Log.Debug($"Saved {i} block entities");
 		chunk.IsDirty = false;
 		chunk.NeedSave = false;
 	}

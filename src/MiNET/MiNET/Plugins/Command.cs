@@ -109,16 +109,20 @@ public class Parser
 public class Parameter
 {
 	public string Name { get; set; }
-	public string Type { get; set; }
+	public CommandParameterType Type { get; set; }
 
-	[JsonProperty("enum_type")] public string EnumType { get; set; }
+	[JsonProperty(propertyName: "enum_type")]
+	public string EnumType { get; set; }
 
-	[JsonProperty("enum_values")] public string[] EnumValues { get; set; }
+	[JsonProperty(propertyName: "enum_values")]
+	public string[] EnumValues { get; set; }
 
 	public bool Optional { get; set; }
 
-	[JsonProperty("target_data")] public TargetData TargetData { get; set; }
+	[JsonProperty(propertyName: "target_data")]
+	public TargetData TargetData { get; set; }
 }
+
 
 public class TargetData
 {

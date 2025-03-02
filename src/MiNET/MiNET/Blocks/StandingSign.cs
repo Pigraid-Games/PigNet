@@ -71,7 +71,6 @@ public class StandingSignBase : Block
 			itemInHand.Count--;
 			player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
 		}
-		world.SetBlock(this);
 		world.BroadcastSound(Coordinates, LevelSoundEventType.Place, GetRuntimeId());
 		OpenSign(player);
 		return false;

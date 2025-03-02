@@ -272,158 +272,175 @@ public class PluginManager
 		}
 	}
 
-	public static CommandSet GenerateCommandSet(MethodInfo[] methods)
-	{
-		var commands = new CommandSet();
-
-		foreach (MethodInfo method in methods)
+			public static CommandSet GenerateCommandSet(MethodInfo[] methods)
 		{
-			var commandAttribute = Attribute.GetCustomAttribute(method, typeof(CommandAttribute), false) as CommandAttribute;
-			if (commandAttribute == null) continue;
+			CommandSet commands = new CommandSet();
 
-			AuthorizeAttribute authorizeAttribute = Attribute.GetCustomAttribute(method, typeof(AuthorizeAttribute), false) as AuthorizeAttribute ?? new AuthorizeAttribute();
-
-			if (string.IsNullOrEmpty(commandAttribute.Name)) commandAttribute.Name = method.Name;
-
-			var overload = new Overload
+			foreach (MethodInfo method in methods)
 			{
-				Description = commandAttribute.Description ?? "Bullshit",
-				Method = method,
-				Input = new Input()
-			};
+				CommandAttribute commandAttribute = Attribute.GetCustomAttribute(method, typeof(CommandAttribute), false) as CommandAttribute;
+				if (commandAttribute == null) continue;
 
-			string commandName = commandAttribute.Name.ToLowerInvariant();
-			string[] split = commandName.Split(' ');
-			Parameter subCommmandParam = null;
-			if (split.Length > 1)
-			{
-				subCommmandParam = new Parameter();
-				subCommmandParam.Name = "subcommand";
-				subCommmandParam.Type = "stringenum";
-				subCommmandParam.EnumType = "SubCommand" + commandName.Replace(" ", "-");
-				subCommmandParam.EnumValues = new[] { split[1] };
-				commandName = split[0];
-			}
-			if (commands.ContainsKey(commandName))
-			{
-				Command command = commands[commandName];
-				command.Versions.First().Overloads.Add(commandAttribute.Overload ?? Guid.NewGuid().ToString(), overload);
-			}
-			else
-				commands.Add(commandName, new Command
+				AuthorizeAttribute authorizeAttribute = Attribute.GetCustomAttribute(method, typeof(AuthorizeAttribute), false) as AuthorizeAttribute ?? new AuthorizeAttribute();
+
+				if (string.IsNullOrEmpty(commandAttribute.Name))
 				{
-					Name = commandName,
-					Versions = new[]
-					{
-						new Version
-						{
-							Permission = authorizeAttribute.Permission.ToString().ToLowerInvariant(),
-							CommandPermission = authorizeAttribute.Permission,
-							ErrorMessage = authorizeAttribute.ErrorMessage,
-							Aliases = commandAttribute.Aliases ?? new string[0],
-							Description = commandAttribute.Description ?? "",
-							Overloads = new Dictionary<string, Overload> { { "default", overload } }
-						}
-					}
-				});
-
-
-			var inputParams = new List<Parameter>();
-			if (subCommmandParam != null) inputParams.Add(subCommmandParam);
-
-			ParameterInfo[] parameters = method.GetParameters();
-			bool isFirstParam = true;
-			foreach (ParameterInfo parameter in parameters)
-			{
-				if (isFirstParam && typeof(Player).IsAssignableFrom(parameter.ParameterType)) continue;
-				isFirstParam = false;
-
-				var param = new Parameter();
-				param.Name = ToCamelCase(parameter.Name);
-				param.Type = GetParameterType(parameter);
-				param.Optional = parameter.IsOptional;
-
-				if (param.Type.Equals("bool"))
-				{
-					param.Type = "stringenum";
-					param.EnumType = "bool";
-					param.EnumValues = new[] { "false", "true" };
+					commandAttribute.Name = method.Name;
 				}
-				else if (param.Type.Equals("softenum"))
-					param.EnumType = "string";
-				else if (param.Type.Equals("stringenum"))
-				{
-					if (parameter.ParameterType.IsEnum)
-					{
-						param.EnumValues = parameter.ParameterType.GetEnumNames().Select(s => s.ToLowerInvariant()).ToArray();
 
-						string typeName = parameter.ParameterType.Name;
-						typeName = typeName.Replace("Enum", "");
-						param.EnumType = typeName;
-					}
-					else
+				var overload = new Overload
+				{
+					Description = commandAttribute.Description ?? "Bullshit",
+					Method = method,
+					Input = new Input(),
+				};
+
+				string commandName = commandAttribute.Name.ToLowerInvariant();
+				var split = commandName.Split(' ');
+				Parameter subCommmandParam = null;
+				if (split.Length > 1)
+				{
+					subCommmandParam = new Parameter();
+					subCommmandParam.Name = "subcommand";
+					subCommmandParam.Type = CommandParameterType.EnumFlag;
+					subCommmandParam.EnumType = "SubCommand" + commandName.Replace(" ", "-");
+					subCommmandParam.EnumValues = new[] {split[1]};
+					commandName = split[0];
+				}
+				if (commands.ContainsKey(commandName))
+				{
+					Command command = commands[commandName];
+					command.Versions.First().Overloads.Add(commandAttribute.Overload ?? Guid.NewGuid().ToString(), overload);
+				}
+				else
+				{
+					commands.Add(commandName, new Command
 					{
-						if (parameter.ParameterType == typeof(ItemTypeEnum))
+						Name = commandName,
+						Versions = new[]
 						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "Item";
+							new Version
+							{
+								Permission = authorizeAttribute.Permission.ToString().ToLowerInvariant(),
+								CommandPermission = authorizeAttribute.Permission,
+								ErrorMessage = authorizeAttribute.ErrorMessage,
+								Aliases = commandAttribute.Aliases ?? new string[0],
+								Description = commandAttribute.Description ?? "",
+								Overloads = new Dictionary<string, Overload>
+								{
+									{"default", overload},
+								}
+							},
 						}
-						else if (parameter.ParameterType == typeof(BlockTypeEnum))
+					});
+				}
+
+
+				List<Parameter> inputParams = new List<Parameter>();
+				if (subCommmandParam != null)
+				{
+					inputParams.Add(subCommmandParam);
+				}
+
+				var parameters = method.GetParameters();
+				bool isFirstParam = true;
+				foreach (ParameterInfo parameter in parameters)
+				{
+					if (isFirstParam && typeof(Player).IsAssignableFrom(parameter.ParameterType)) continue;
+					isFirstParam = false;
+
+					var param = new Parameter();
+					param.Name = ToCamelCase(parameter.Name);
+					param.Type = GetParameterType(parameter);
+					param.Optional = parameter.IsOptional;
+
+					if (param.Type == CommandParameterType.Bool)
+					{
+						param.Type = CommandParameterType.EnumFlag;
+						param.EnumType = "bool";
+						param.EnumValues = new string[] {"false", "true"};
+					}
+					else if (param.Type == CommandParameterType.SoftEnumFlag)
+					{
+						param.EnumType = "string";
+					}
+					else if (param.Type == CommandParameterType.EnumFlag)
+					{
+						if (parameter.ParameterType.IsEnum)
 						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "Block";
-						}
-						else if (parameter.ParameterType == typeof(EntityTypeEnum))
-						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "EntityType";
-						}
-						else if (parameter.ParameterType == typeof(CommandNameEnum))
-						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "CommandName";
-						}
-						else if (parameter.ParameterType == typeof(EnchantEnum))
-						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "Enchant";
-						}
-						else if (parameter.ParameterType == typeof(EffectEnum))
-						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "Effect";
-						}
-						else if (parameter.ParameterType == typeof(DimensionEnum))
-						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "Dimension";
-						}
-						else if (parameter.ParameterType == typeof(FeatureEnum))
-						{
-							param.EnumValues = new string[] { };
-							param.EnumType = "Feature";
-						}
-						else
-						{
-							param.EnumValues = null;
+							param.EnumValues = parameter.ParameterType.GetEnumNames().Select(s => s.ToLowerInvariant()).ToArray();
 
 							string typeName = parameter.ParameterType.Name;
 							typeName = typeName.Replace("Enum", "");
 							param.EnumType = typeName;
 						}
+						else
+						{
+							if (parameter.ParameterType == typeof(ItemTypeEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "Item";
+							}
+							else if (parameter.ParameterType == typeof(BlockTypeEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "Block";
+							}
+							else if (parameter.ParameterType == typeof(EntityTypeEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "EntityType";
+							}
+							else if (parameter.ParameterType == typeof(CommandNameEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "CommandName";
+							}
+							else if (parameter.ParameterType == typeof(EnchantEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "Enchant";
+							}
+							else if (parameter.ParameterType == typeof(EffectEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "Effect";
+							}
+							else if (parameter.ParameterType == typeof(DimensionEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "Dimension";
+							}
+							else if (parameter.ParameterType == typeof(FeatureEnum))
+							{
+								param.EnumValues = new string[] { };
+								param.EnumType = "Feature";
+							}
+							else
+							{
+								param.EnumValues = null;
+
+								string typeName = parameter.ParameterType.Name;
+								typeName = typeName.Replace("Enum", "");
+								param.EnumType = typeName;
+							}
+						}
 					}
+					inputParams.Add(param);
 				}
-				inputParams.Add(param);
+
+				if (inputParams.Count == 0)
+				{
+					overload.Input.Parameters = null;
+				}
+				else
+				{
+					overload.Input.Parameters = inputParams.ToArray();
+				}
 			}
 
-			if (inputParams.Count == 0)
-				overload.Input.Parameters = null;
-			else
-				overload.Input.Parameters = inputParams.ToArray();
+			return commands;
 		}
-
-		return commands;
-	}
 
 	public static string ToCamelCase(string s)
 	{
@@ -467,45 +484,45 @@ public class PluginManager
 		return value;
 	}
 
-	private static string GetParameterType(ParameterInfo parameter)
+	private static CommandParameterType GetParameterType(ParameterInfo parameter)
 	{
-		string value = parameter.ParameterType.ToString();
+		var value = CommandParameterType.Value;
 
 		if (parameter.ParameterType == typeof(int))
-			value = "int";
+			value = CommandParameterType.Int;
 		else if (parameter.ParameterType == typeof(short))
-			value = "int";
+			value = CommandParameterType.Int;
 		else if (parameter.ParameterType == typeof(byte))
-			value = "int";
+			value = CommandParameterType.Int;
 		else if (parameter.ParameterType == typeof(float))
-			value = "float";
+			value = CommandParameterType.Float;
 		else if (parameter.ParameterType == typeof(double))
-			value = "float";
+			value = CommandParameterType.Float;
 		else if (parameter.ParameterType == typeof(bool))
-			value = "bool";
+			value = CommandParameterType.Bool;
 		else if (parameter.ParameterType == typeof(string))
-			value = "string";
+			value = CommandParameterType.String;
 		else if (parameter.ParameterType == typeof(string[]))
-			value = "rawtext";
+			value = CommandParameterType.Rawtext;
 		else if (parameter.ParameterType == typeof(Target))
-			value = "target";
+			value = CommandParameterType.Target;
 		else if (parameter.ParameterType == typeof(BlockPos))
-			value = "blockpos";
+			value = CommandParameterType.IntPosition;
 		else if (parameter.ParameterType == typeof(EntityPos))
-			value = "entitypos";
+			value = CommandParameterType.Position;
 		else if (parameter.ParameterType == typeof(RelValue))
-			value = "value";
+			value = CommandParameterType.Value;
 		else if (parameter.ParameterType.IsEnum)
-			value = "stringenum";
+			value = CommandParameterType.EnumFlag;
 		else if (parameter.ParameterType.BaseType == typeof(EnumBase))
-			value = "stringenum";
+			value = CommandParameterType.EnumFlag;
 		else if (parameter.ParameterType.BaseType == typeof(SoftEnumBase))
-			value = "softenum";
+			value = CommandParameterType.SoftEnumFlag;
 		else if (typeof(IParameterSerializer).IsAssignableFrom(parameter.ParameterType))
 			// Custom serialization
-			value = "string";
+			value = CommandParameterType.String;
 		else
-			Log.Warn("No parameter type mapping for type: " + parameter.ParameterType);
+			Log.Warn("No parameter type mapping for type: " + parameter.ParameterType.ToString());
 
 		return value;
 	}
@@ -941,8 +958,7 @@ public class PluginManager
 				if (parameter.ParameterType.IsEnum)
 				{
 					string val = args[argIdx++];
-					var value = Enum.Parse(parameter.ParameterType, val, true) as Enum;
-					if (value == null)
+					if (Enum.Parse(parameter.ParameterType, val, true) is not Enum value)
 					{
 						Log.Error($"Could not convert to valid enum value: {val}");
 						continue;
@@ -952,21 +968,14 @@ public class PluginManager
 					continue;
 				}
 
-				if (IsParams(parameter) && parameter.ParameterType == typeof(string[]))
-				{
-					var strings = new List<string>();
-					for (int j = argIdx++; j < args.Length; j++) strings.Add(args[j]);
-					objectArgs[objArgIdx] = strings.ToArray();
-					continue;
-				}
-
-				return false;
+				if (!IsParams(parameter) || parameter.ParameterType != typeof(string[])) return false;
+				var strings = new List<string>();
+				for (int j = argIdx++; j < args.Length; j++) strings.Add(args[j]);
+				objectArgs[objArgIdx] = strings.ToArray();
 			}
 		}
 		catch (Exception e)
 		{
-			if (Log.IsDebugEnabled) Log.Error("Trying to execute command overload", e);
-
 			return false;
 		}
 
@@ -1016,7 +1025,7 @@ public class PluginManager
 		else if (target.Selector == "allPlayers")
 			target.Players = level.GetAllPlayers();
 		else if (target.Selector == "allEntities")
-			target.Entities = level.GetEntites();
+			target.Entities = level.GetEntities();
 		else if (target.Selector == "randomPlayer")
 		{
 			Player[] players = level.GetAllPlayers();

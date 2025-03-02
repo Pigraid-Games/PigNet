@@ -127,8 +127,8 @@ public class Level : IBlockAccess
 	public long TickTime { get; set; }
 	public int SkylightSubtracted { get; set; }
 	public long StartTimeInTicks { get; private set; }
-	public bool EnableBlockTicking { get; set; } = false;
-	public bool EnableChunkTicking { get; set; } = false;
+	public bool EnableBlockTicking { get; set; }
+	public bool EnableChunkTicking { get; set; }
 
 	public bool AllowBuild { get; set; } = true;
 	public bool AllowBreak { get; set; } = true;
@@ -181,7 +181,7 @@ public class Level : IBlockAccess
 
 	public Block GetBlock(BlockCoordinates coordinates, ChunkColumn tryChunk = null)
 	{
-		ChunkColumn chunk = null;
+		ChunkColumn chunk;
 
 		var chunkCoordinates = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
 		if (tryChunk != null && tryChunk.X == chunkCoordinates.X && tryChunk.Z == chunkCoordinates.Z)
@@ -276,7 +276,7 @@ public class Level : IBlockAccess
 		//IsWorldTimeStarted = false;
 		WorldProvider.Initialize();
 
-		SpawnPoint = SpawnPoint ?? new PlayerLocation(WorldProvider.GetSpawnPoint());
+		SpawnPoint ??= new PlayerLocation(WorldProvider.GetSpawnPoint());
 		TickTime = WorldProvider.GetTime();
 		WorldTime = WorldProvider.GetDayTime();
 		LevelName = WorldProvider.GetName();
@@ -305,18 +305,11 @@ public class Level : IBlockAccess
 				Log.Debug("Checking for safe spawn");
 			}
 
-		//SpawnPoint.Y = 20;
-
 		StartTimeInTicks = DateTime.UtcNow.Ticks;
 
 		_tickTimer = new Stopwatch();
 		_tickTimer.Restart();
 		_tickerHighPrecisionTimer = new HighPrecisionTimer(50, WorldTick, false, false);
-	}
-
-	private void _tickerHighPrecisionTimer_Tick()
-	{
-		WorldTick(null);
 	}
 
 	public virtual void Close()
@@ -506,13 +499,6 @@ public class Level : IBlockAccess
 
 	public void RemoveDuplicatePlayers(string username, long clientId)
 	{
-		//var existingPlayers = Players.Where(player => player.Value.ClientId == clientId && player.Value.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase));
-
-		//foreach (var existingPlayer in existingPlayers)
-		//{
-		//	Log.InfoFormat("Removing staled players on login {0}", username);
-		//	existingPlayer.Value.Disconnect("Duplicate player. Crashed.", false);
-		//}
 	}
 
 	public virtual void BroadcastTitle(string text, TitleType type = TitleType.Title, int fadeIn = 6, int fadeOut = 6, int stayTime = 20, Player sender = null, Player[] sendList = null)
@@ -529,8 +515,8 @@ public class Level : IBlockAccess
 
 	public virtual void BroadcastMessage(string text, MessageType type = MessageType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null, string platformId = null)
 	{
-		if (type == MessageType.Chat || type == MessageType.Raw)
-			foreach (string line in text.Split(new[] { "\n", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+		if (type is MessageType.Chat or MessageType.Raw)
+			foreach (string line in text.Split(["\n", Environment.NewLine], StringSplitOptions.RemoveEmptyEntries))
 			{
 				McpeText message = McpeText.CreateObject();
 				message.type = (byte) type;
@@ -558,12 +544,6 @@ public class Level : IBlockAccess
 
 	private void WorldTick(object sender)
 	{
-		//if (_tickTimer.ElapsedMilliseconds < 40 && LastTickProcessingTime < 50)
-		//{
-		//	if (Log.IsDebugEnabled) Log.Warn($"World tick came too fast: {_tickTimer.ElapsedMilliseconds} ms");
-		//	return;
-		//}
-
 		if (Log.IsDebugEnabled && _tickTimer.ElapsedMilliseconds >= 65) Log.Warn($"Time between world tick too long: {_tickTimer.ElapsedMilliseconds} ms. Last processing time={LastTickProcessingTime}, Avarage={AvarageTickProcessingTime}");
 
 		Measurement worldTickMeasurement = _profiler.Begin("World tick");
@@ -599,11 +579,6 @@ public class Level : IBlockAccess
 
 			// Save dirty chunks
 			if (TickTime % (SaveInterval * 20) == 0) WorldProvider.SaveChunks();
-			/*for (int i = 0; i < players.Length; i++)
-				{
-					players[i].SavePlayerInventory();
-				}*/
-			// Unload chunks not needed
 			if (UnloadInterval > 0 && TickTime % (UnloadInterval * 20) == 0)
 			{
 				var cacheProvider = WorldProvider as ICachingWorldProvider;
@@ -687,7 +662,8 @@ public class Level : IBlockAccess
 							chunkTickMeasurement?.End();
 						}
 
-						if (EnableBlockTicking && RandomTickSpeed > 0)
+						if (!EnableBlockTicking || RandomTickSpeed <= 0) return;
+						{
 							for (int s = 0; s < 16; s++)
 							for (int i = 0; i < RandomTickSpeed; i++)
 							{
@@ -699,14 +675,10 @@ public class Level : IBlockAccess
 
 								var blockCoordinates = new BlockCoordinates(x + (spawnState.ChunkX * 16), y + (s * 16), z + (spawnState.ChunkZ * 16));
 								Block block = GetBlock(blockCoordinates, chunk);
-								//Stopwatch sw = Stopwatch.StartNew();
 								block.OnTick(this, true);
-								//if(sw.ElapsedMilliseconds > 50)
-								//{
-								//	if (Log.IsDebugEnabled) Log.Warn($"Took a long time ({sw.ElapsedMilliseconds}) with block tick on {block}");
-								//}
 								blockTickMeasurement?.End();
 							}
+						}
 					});
 				}
 			}
@@ -719,9 +691,9 @@ public class Level : IBlockAccess
 			foreach (KeyValuePair<BlockCoordinates, long> blockEvent in BlockWithTicks)
 				try
 				{
-					if (blockEvent.Value <= TickTime)
-						if (BlockWithTicks.TryRemove(blockEvent.Key, out _))
-							GetBlock(blockEvent.Key).OnTick(this, false);
+					if (blockEvent.Value > TickTime) continue;
+					if (BlockWithTicks.TryRemove(blockEvent.Key, out _))
+						GetBlock(blockEvent.Key).OnTick(this, false);
 				}
 				catch (Exception e)
 				{
@@ -757,9 +729,6 @@ public class Level : IBlockAccess
 			// Send player movements
 			BroadCastMovement(players, entities);
 
-			//TODO: We don't want to trigger sending here. But right now
-			// it seems better for performance since the send-tick is one for all
-			// sessions, so we need to refactor that first.
 			var tasks = new List<Task>();
 			foreach (Player player in players)
 				if (player.NetworkHandler is RakSession session)
@@ -800,8 +769,6 @@ public class Level : IBlockAccess
 		double f1 = 1.0F - ((Math.Cos(f * ((float) Math.PI * 2F)) * 2.0F) + 0.5F);
 		f1 = BiomeUtils.Clamp((float) f1, 0.0F, 1.0F);
 		f1 = 1.0F - f1;
-		//f1 = (float)((double)f1 * (1.0D - (double)(this.getRainStrength(p_72967_1_) * 5.0F) / 16.0D));
-		//f1 = (float)((double)f1 * (1.0D - (double)(this.getThunderStrength(p_72967_1_) * 5.0F) / 16.0D));
 		f1 = 1.0F - f1;
 		return (int) (f1 * 11.0F);
 	}
@@ -816,25 +783,23 @@ public class Level : IBlockAccess
 		if (f > 1.0F) --f;
 
 		float f1 = 1.0F - (float) ((Math.Cos(f * Math.PI) + 1.0D) / 2.0D);
-		f = f + ((f1 - f) / 3.0F);
+		f += ((f1 - f) / 3.0F);
 		return f;
 	}
 
 	public Player[] GetSpawnedPlayers()
 	{
-		if (Players == null) return new Player[0]; // HACK
-
-		return Players.Values.Where(player => player.IsSpawned).ToArray();
+		return Players == null ? [] : // HACK
+			Players.Values.Where(player => player.IsSpawned).ToArray();
 	}
 
 	public Player[] GetAllPlayers()
 	{
-		if (Players == null) return new Player[0]; // HACK
-
-		return Players.Values.ToArray();
+		return Players == null ? [] : // HACK
+			Players.Values.ToArray();
 	}
 
-	public Entity[] GetEntites()
+	public Entity[] GetEntities()
 	{
 		lock (Entities) return Entities.Values.ToArray();
 	}
@@ -850,15 +815,17 @@ public class Level : IBlockAccess
 	{
 		DateTime now = DateTime.UtcNow;
 
-		if (players.Length == 0) return;
-
-		if (players.Length <= 1 && entities.Length == 0) return;
+		switch (players.Length)
+		{
+			case 0:
+			case <= 1 when entities.Length == 0:
+				return;
+		}
 
 		DateTime lastSendTime = _lastSendTime;
 		_lastSendTime = DateTime.UtcNow;
 
 		int playerMoveCount = 0;
-		int entiyMoveCount = 0;
 
 		var movePackets = new List<Packet>();
 
@@ -895,9 +862,9 @@ public class Level : IBlockAccess
 			player.LastSentPosition = (PlayerLocation) player.KnownPosition.Clone();
 		}
 
-		if (playerMoveCount == 0 && entiyMoveCount == 0) return;
+		if (playerMoveCount == 0) return;
 
-		if (players.Length == 1 && entiyMoveCount == 0) return;
+		if (players.Length == 1) return;
 
 		if (movePackets.Count == 0) return;
 
@@ -1464,13 +1431,8 @@ public class Level : IBlockAccess
 	}
 
 
-	public ChunkColumn[] GetLoadedChunks()
-	{
-		var cacheProvider = WorldProvider as ICachingWorldProvider;
-		if (cacheProvider != null) return cacheProvider.GetCachedChunks();
-
-		return new ChunkColumn[0];
-	}
+	public ChunkColumn[] GetLoadedChunks() => WorldProvider is ICachingWorldProvider cacheProvider ? cacheProvider.GetCachedChunks() : [];
+	
 
 	public void ClearLoadedChunks()
 	{
