@@ -2067,8 +2067,18 @@ public abstract class Packet
 			string name = ReadString();
 			short legacyId = ReadShort();
 			bool component = ReadBool();
-			var version = ReadVarInt();
-			var components = ReadNbt();
+			int version = ReadVarInt();
+			Nbt components = ReadNbt();
+			
+			byte[] componentValue = [];
+
+			if (component && components.NbtFile.RootTag["components"] != null)
+			{
+				using var stream = new MemoryStream();
+				var file = new NbtFile((components.NbtFile.RootTag["components"] as NbtCompound)!);
+				file.SaveToStream(stream, NbtCompression.None);
+				componentValue = stream.ToArray();
+			}
 			
 			
 			result.Add(new Itemstate
@@ -2076,8 +2086,8 @@ public abstract class Packet
 				Id = legacyId,
 				Name = name,
 				ComponentBased = component,
-				Version = version
-				//Components = component ? SerializeNbtCompound(components.NbtFile) : null
+				Version = version,
+				Components = componentValue
 			});
 		}
 
@@ -2101,7 +2111,7 @@ public abstract class Packet
 			Write(itemstate.Id);
 			Write(itemstate.ComponentBased);
 			WriteVarInt(itemstate.Version);
-			Write(new Nbt
+			var nbt = new Nbt
 			{
 				NbtFile = new NbtFile
 				{
@@ -2109,7 +2119,19 @@ public abstract class Packet
 					UseVarInt = true,
 					RootTag = new NbtCompound("")
 				}
-			});
+			};
+			if (itemstate.ComponentBased && itemstate.Components.Length != 0)
+			{
+				using var stream = new MemoryStream(itemstate.Components);
+				var file = new NbtFile();
+				file.LoadFromStream(stream, NbtCompression.None);
+				var componentNbt = new NbtCompound("")
+				{
+					(file.RootTag as NbtCompound)!
+				};
+				nbt.NbtFile.RootTag = componentNbt;
+			}
+			Write(nbt);
 		}
 	}
 

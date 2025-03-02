@@ -86,4 +86,7 @@ public class Itemstate
 
 	[JsonProperty("version")]
 	public int Version { get; set; }
+	
+	[JsonProperty("components")]
+	public byte[]  Components { get; set; }
 }

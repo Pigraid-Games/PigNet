@@ -27,23 +27,22 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\blockstates.json" />
-    <EmbeddedResource Include="Resources\itemstates.json" />
     <EmbeddedResource Include="Resources\item_id_map.json" />
     <EmbeddedResource Include="Resources\block_meta_map.json" />
+    <EmbeddedResource Include="Resources\itemstates.json" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="jose-jwt" Version="5.1.0" />
+    <PackageReference Include="jose-jwt" Version="5.1.1" />
     <PackageReference Include="LibNoise.NetStandart" Version="0.2.0" />
-    <PackageReference Include="log4net" Version="3.0.3" />
+    <PackageReference Include="log4net" Version="3.0.4" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageReference Include="MiNET.astar" Version="1.0.14" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="MiNET.LevelDB" Version="1.0.49" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.4" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-preview.1.25080.5" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Net\MCPE Protocol.xml" />
@@ -79,5 +78,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>MCPE Protocol.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj" />
   </ItemGroup>
 </Project>
