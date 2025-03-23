@@ -24,12 +24,14 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using MiNET.Entities;
 using MiNET.Entities.Hostile;
@@ -49,6 +51,7 @@ namespace MiNET.Plugins.Commands;
 
 public class VanillaCommands
 {
+	
 	public enum DayNight
 	{
 		Day = 1000,
@@ -158,39 +161,6 @@ public class VanillaCommands
 				break;
 		}
 		commander.Inventory.OffHandInventory.SetItem(item);
-	}
-
-	[Command(Name = "animate")]
-	public void Animate(Player commander, Target target, string name)
-	{
-		Player pTarget = target.Players?.FirstOrDefault();
-		if (pTarget == null) return;
-
-		{
-			McpeAnimateEntity packet = McpeAnimateEntity.CreateObject();
-			packet.animationName = name;
-			packet.entities = [EntityManager.EntityIdSelf];
-			pTarget.SendPacket(packet);
-		}
-		{
-			McpeAnimateEntity packet = McpeAnimateEntity.CreateObject();
-			packet.animationName = name;
-			packet.entities = [pTarget.EntityId];
-			commander.Level.RelayBroadcast(pTarget, packet);
-		}
-	}
-	
-	[Command(Name = "animate")]
-	public void Animate(Player commander, string name)
-	{
-		commander.SendAnimation(name);
-	}
-
-	[Command(Name = "stopanimate")]
-	public void StopAnimate(Player commander)
-	{
-		commander.Level.DespawnFromAll(commander);
-		commander.Level.SpawnToAll(commander);
 	}
 
 	[Command(Name = "save-all", Description = "Saves the whole world")]

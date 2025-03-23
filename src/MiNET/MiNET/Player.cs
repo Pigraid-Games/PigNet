@@ -1509,20 +1509,28 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		bool oldNoAi = NoAi;
 		SetNoAi(true);
 
-		if (useLoadingScreen) SendChangeDimension(Dimension.Nether);
+		if (useLoadingScreen)
+		{
+			SendChangeDimension(Dimension.Nether);
+			SendPlayerStatus(3);
+		}
 		if (toLevel == null && levelFunc != null) toLevel = levelFunc();
 
 		Action transferFunc = delegate
 		{
-			if (useLoadingScreen) SendChangeDimension(Dimension.Overworld);
+			if (useLoadingScreen)
+			{
+				SendChangeDimension(Dimension.Overworld);
+				SendPlayerStatus(3);
+			}
 			Level.RemovePlayer(this);
 
 			Level = toLevel; // Change level
 			SpawnPosition = spawnPoint ?? Level?.SpawnPoint;
 
-			HungerManager.ResetHunger();
+			//HungerManager.ResetHunger();
 
-			HealthManager.ResetHealth();
+			//HealthManager.ResetHealth();
 
 			BroadcastSetEntityData();
 
@@ -1555,17 +1563,16 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			});
 			SetPosition(SpawnPosition);
 		};
-
 		transferFunc();
 	}
 
-	private void SendChangeDimension(Dimension dimension, bool respawn = false, Vector3 position = new())
+	public void SendChangeDimension(Dimension dimension, bool respawn = false, Vector3 position = new())
 	{
 		McpeChangeDimension changeDimension = McpeChangeDimension.CreateObject();
 		changeDimension.dimension = (int) dimension;
 		changeDimension.position = position;
 		changeDimension.respawn = respawn;
-		changeDimension.NoBatch = true; // This is here because the client crashes otherwise.
+		//changeDimension.NoBatch = true; // This is here because the client crashes otherwise.
 		SendPacket(changeDimension);
 	}
 
@@ -1639,7 +1646,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		SendPacket(creativeContent);
 	}
 
-	private void SendChunkRadiusUpdate()
+	public void SendChunkRadiusUpdate()
 	{
 		McpeChunkRadiusUpdate packet = McpeChunkRadiusUpdate.CreateObject();
 		packet.chunkRadius = ChunkRadius;

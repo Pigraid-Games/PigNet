@@ -265,13 +265,13 @@ public class ArmorInventory
 
 	public void SendMobArmorEquipmentPacket(Player[] receivers = null)
 	{
-		var packet = McpeMobArmorEquipment.CreateObject();
+		McpeMobArmorEquipment packet = McpeMobArmorEquipment.CreateObject();
 		packet.helmet = GetHeadItem();
 		packet.chestplate = GetChestItem();
 		packet.leggings = GetLegsItem();
 		packet.boots = GetFeetItem();
 		packet.runtimeEntityId = Entity.EntityId;
-		Entity.Level.RelayBroadcast(packet);
+		//Entity.Level.RelayBroadcast(packet);
 
 		if (Entity is not Player player)
 			return;

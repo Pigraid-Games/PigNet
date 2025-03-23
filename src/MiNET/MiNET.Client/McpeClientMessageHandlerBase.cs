@@ -795,7 +795,7 @@ namespace MiNET.Client
 
 		public void HandleMcpeServerboundLoadingScreen(McpeServerboundLoadingScreen message)
 		{
-
+			
 		}
 
 		public void HandleMcpeCloseForm(McpeCloseForm message)
