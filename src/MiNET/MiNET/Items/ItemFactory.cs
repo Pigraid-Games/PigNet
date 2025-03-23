@@ -704,8 +704,6 @@ public class ItemPrismarineShard() : Item("minecraft:prismarine_shard", 409);
 
 public class ItemShulkerShell() : Item("minecraft:shulker_shell", 445);
 
-public class ItemTotemOfUndying() : Item("minecraft:totem_of_undying", 450);
-
 public class ItemTurtleShellPiece() : Item("minecraft:scute", 468);
 
 public class ItemBalloon() : Item("minecraft:balloon", 448);
@@ -735,8 +733,6 @@ public class ItemNetherSprouts() : Item("minecraft:nether_sprouts", 760);
 public class ItemSoulCampfire() : Item("minecraft:soul_campfire", 801);
 
 public class ItemEndCrystal() : Item("minecraft:end_crystal", 426);
-
-public class ItemSpyglass() : Item("minecraft:spyglass", 624);
 
 public class ItemGlowFrame() : Item("minecraft:glow_frame", 621);
 

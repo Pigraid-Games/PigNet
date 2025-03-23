@@ -55,6 +55,9 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using System.IO.Compression;
+using System.Threading.Tasks;
+using Iced.Intel;
+using JetBrains.Annotations;
 using MiNET.BlockEntities;
 using MiNET.Net.RakNet;
 using MiNET.Sounds;
@@ -200,7 +203,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		ConnectionInfo serverInfo = Server.ConnectionInfo;
 		Interlocked.Increment(ref serverInfo.ConnectionsInConnectPhase);
-
+		
 		SendPlayerStatus(0);
 		SendResourcePacksInfo();
 	}
@@ -210,7 +213,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		var jsonSerializerSettings = new JsonSerializerSettings
 		{
 			PreserveReferencesHandling = PreserveReferencesHandling.None,
-			Formatting = Formatting.Indented,
+			Formatting = Formatting.Indented
 		};
 
 		string result = JsonConvert.SerializeObject(message, jsonSerializerSettings);
@@ -242,7 +245,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		pk.skin = message.skin;
 		pk.oldSkinName = Skin.SkinId;
 		pk.skinName = message.skinName;
-		pk.isVerified = true;
 		Skin = message.skin;
 		Level.RelayBroadcast(pk);
 	}
@@ -901,7 +903,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			KnownPosition = (PlayerLocation) SpawnPosition.Clone();
 			NameTag = (string) Username.Clone();
 
-			// Check if the user already exist, that case bumpt the old one
+			// Check if the user already exist, that case bump the old one
 			Level.RemoveDuplicatePlayers(Username, ClientId);
 
 			Level.EntityManager.AddEntity(this);
@@ -1028,16 +1030,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public void InitializePlayer()
 	{
-		// Send set health
-
 		SendSetEntityData();
-
 		SendPlayerStatus(3);
-
-		//send time again
 		SendSetTime();
+		
 		IsSpawned = true;
-
 		SetPosition(SpawnPosition);
 
 		LastUpdatedTime = DateTime.UtcNow;
@@ -3149,6 +3146,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		McpePlayerList playerList = McpePlayerList.CreateObject();
 		playerList.records = new PlayerRemoveRecords { this };
+
 		Level.RelayBroadcast(Level.CreateMcpeBatch(playerList.Encode())); // Replace with records, to remove need for player and encode
 		playerList.records = null;
 		playerList.PutPool();

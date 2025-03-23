@@ -47,6 +47,7 @@ using MiNET.Utils;
 using MiNET.Utils.Diagnostics;
 using MiNET.Utils.IO;
 using MiNET.Utils.Nbt;
+using MiNET.Utils.Skins;
 using MiNET.Utils.Vectors;
 using static MiNET.WeatherManager;
 
@@ -372,9 +373,7 @@ public class Level : IBlockAccess
 
 			if (Players.TryAdd(newPlayer.EntityId, newPlayer))
 			{
-				foreach (Entity entity in Entities.Values.ToArray()) entity.SpawnToPlayers(new[] { newPlayer });
-
-				newPlayer.Skin.IsVerified = true;
+				foreach (Entity entity in Entities.Values.ToArray()) entity.SpawnToPlayers([newPlayer]);
 				SpawnToAll(newPlayer);
 			}
 
@@ -418,7 +417,7 @@ public class Level : IBlockAccess
 
 			newPlayer.SpawnToPlayers(players);
 
-			foreach (Player spawnedPlayer in players) spawnedPlayer.SpawnToPlayers(new[] { newPlayer });
+			foreach (Player spawnedPlayer in players) spawnedPlayer.SpawnToPlayers([newPlayer]);
 
 			McpePlayerList playerListMessage = McpePlayerList.CreateObject();
 			playerListMessage.records = new PlayerAddRecords(spawnedPlayers);

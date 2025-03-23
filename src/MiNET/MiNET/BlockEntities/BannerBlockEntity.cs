@@ -40,7 +40,7 @@ public class BannerBlockEntity() : BlockEntity("Banner")
 			new NbtInt("x", Coordinates.X),
 			new NbtInt("y", Coordinates.Y),
 			new NbtInt("z", Coordinates.Z),
-			new NbtString("id", Id),
+			new NbtString("id", Id)
 		};
 
 		if (Patterns.Count > 0)

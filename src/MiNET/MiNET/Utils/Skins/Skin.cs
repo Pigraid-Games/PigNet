@@ -86,17 +86,17 @@ public class Skin : ICloneable
 	public byte[] Data { get; set; }
 	public string GeometryName { get; set; }
 	public string GeometryData { get; set; }
-	public string GeometryDataVersion { get; set; }
+	public string GeometryDataVersion { get; set; } = "0.0.0";
 
 	public string ArmSize { get; set; }
 
 	public string SkinColor { get; set; }
 
 	public string AnimationData { get; set; }
-	public List<Animation> Animations { get; set; } = new();
+	public List<Animation> Animations { get; set; } = [];
 
-	public List<PersonaPiece> PersonaPieces { get; set; } = new();
-	public List<SkinPiece> SkinPieces { get; set; } = new();
+	public List<PersonaPiece> PersonaPieces { get; set; } = [];
+	public List<SkinPiece> SkinPieces { get; set; } = [];
 	public bool IsVerified { get; set; } = true;
 	public bool IsPrimaryUser { get; set; }
 	public bool isOverride { get; set; } = true;

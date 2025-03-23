@@ -1,5 +1,4 @@
 ﻿#region LICENSE
-
 // The contents of this file are subject to the Common Public Attribution
 // License Version 1.0. (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -18,34 +17,16 @@
 // The Original Developer is the Initial Developer.  The Initial Developer of
 // the Original Code is Niclas Olofsson.
 // 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
+// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2025 Niclas Olofsson.
 // All Rights Reserved.
-
 #endregion
 
-using System;
-using System.Net;
-using MiNET.Utils;
+namespace MiNET.Items;
 
-namespace MiNET;
-
-public class PlayerFactory
+public class ItemTotemOfUndying : Item
 {
-	public virtual Player CreatePlayer(MiNetServer server, IPEndPoint endPoint, PlayerInfo playerInfo)
+	public ItemTotemOfUndying() : base("minecraft:totem_of_undying", 450)
 	{
-		var player = new Player(server, endPoint)
-		{
-			MaxViewDistance = Config.GetProperty("ViewDistance", 22),
-			MoveRenderDistance = Config.GetProperty("MoveRenderDistance", 1)
-		};
-		OnPlayerCreated(new PlayerEventArgs(player));
-		return player;
-	}
-
-	public event EventHandler<PlayerEventArgs> PlayerCreated;
-
-	protected virtual void OnPlayerCreated(PlayerEventArgs e)
-	{
-		PlayerCreated?.Invoke(this, e);
+		MaxStackSize = 1;
 	}
 }
