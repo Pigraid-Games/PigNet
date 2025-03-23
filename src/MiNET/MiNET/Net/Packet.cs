@@ -2072,7 +2072,7 @@ public abstract class Packet
 			
 			byte[] componentValue = [];
 
-			if (component && components.NbtFile.RootTag["components"] != null)
+			if (components.NbtFile.RootTag["components"] != null)
 			{
 				using var stream = new MemoryStream();
 				var file = new NbtFile((components.NbtFile.RootTag["components"] as NbtCompound)!);
@@ -2120,7 +2120,7 @@ public abstract class Packet
 					RootTag = new NbtCompound("")
 				}
 			};
-			if (itemstate.ComponentBased && itemstate.Components.Length != 0)
+			if (itemstate.Components.Length != 0)
 			{
 				using var stream = new MemoryStream(itemstate.Components);
 				var file = new NbtFile();

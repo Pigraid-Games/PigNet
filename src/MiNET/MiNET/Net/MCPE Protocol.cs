@@ -8728,7 +8728,7 @@ public partial class McpeLevelEventGeneric : Packet<McpeLevelEventGeneric>
 
 		eventId = ReadSignedVarInt();
 		//eventData = ReadNbt(); todo wrong
-		for (byte i = 0; i < 62; i++) //shhhh
+		for (byte i = 0; i < 60; i++) //shhhh
 			ReadByte();
 
 		AfterDecode();

@@ -28,7 +28,7 @@ using MiNET.Worlds;
 
 namespace MiNET.Items.Food;
 
-public abstract class FoodItem(string name, short id, short metadata, int foodPoints, double saturationRestore)
+public class FoodItem(string name, short id, short metadata, int foodPoints, double saturationRestore)
 	: Item(name, id, metadata)
 {
 	private bool _isUsing;
