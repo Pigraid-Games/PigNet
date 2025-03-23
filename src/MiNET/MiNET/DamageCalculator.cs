@@ -174,7 +174,9 @@ public class DamageCalculator
 				ItemMaterial.Chain => 2,
 				ItemMaterial.Iron => 2,
 				ItemMaterial.Diamond => 3,
-				_ => throw new ArgumentOutOfRangeException()
+				ItemMaterial.Netherite => 4,
+				ItemMaterial.None => 0,
+				_ => 0
 			};
 			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece1, tool, cause);
 
@@ -186,7 +188,9 @@ public class DamageCalculator
 				ItemMaterial.Chain => 5,
 				ItemMaterial.Iron => 6,
 				ItemMaterial.Diamond => 8,
-				_ => throw new ArgumentOutOfRangeException()
+				ItemMaterial.Netherite => 9,
+				ItemMaterial.None => 0,
+				_ => 0
 			};
 			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece2, tool, cause);
 
@@ -208,6 +212,9 @@ public class DamageCalculator
 				case ItemMaterial.Diamond:
 					armorValue += 6;
 					break;
+				case ItemMaterial.Netherite:
+					armorValue += 7; 
+					break;
 			}
 			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece3, tool, cause);
 
@@ -219,7 +226,9 @@ public class DamageCalculator
 				ItemMaterial.Chain => 1,
 				ItemMaterial.Iron => 2,
 				ItemMaterial.Diamond => 3,
-				_ => throw new ArgumentOutOfRangeException()
+				ItemMaterial.Netherite => 4,
+				ItemMaterial.None => 0,
+				_ => 0
 			};
 			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece4, tool, cause);
 		}

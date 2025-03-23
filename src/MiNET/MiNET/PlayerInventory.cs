@@ -160,26 +160,17 @@ namespace MiNET
 			for (int si = 0; si < Slots.Count; si++)
 			{
 				Item existingItem = Slots[si];
-				if (existingItem.Equals(item) && existingItem.Count < existingItem.MaxStackSize && existingItem.ExtraData == item.ExtraData)
-				{
-					int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
-					existingItem.Count += (byte) take;
-					item.Count -= (byte) take;
-					if (update)
-						SendSetSlot(si);
+				// TODO: We need to also check the ExtraData when doing this.
+				if (existingItem.Id != item.Id || existingItem.Metadata != item.Metadata || existingItem.Count >= existingItem.MaxStackSize) continue;
+				int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
+				existingItem.Count += (byte) take;
+				item.Count -= (byte) take;
+				if (update) SendSetSlot(si);
 
-					if (item.Count <= 0)
-					{
-						return true;
-					}
-				}
+				if (item.Count <= 0) return true;
 			}
 
-			for (int si = 0; si < Slots.Count; si++)
-			{
-				if (FirstEmptySlot(item, update, si))
-					return true;
-			}
+			for (int si = 0; si < Slots.Count; si++) if (FirstEmptySlot(item, update, si)) return true;
 
 			return false;
 		}
@@ -188,15 +179,11 @@ namespace MiNET
 		{
 			Item existingItem = Slots[si];
 
-			if (existingItem is ItemAir || existingItem.Id == 0 || existingItem.Id == -1)
-			{
-				Slots[si] = (Item) item.Clone();
-				item.Count = 0;
-				if (update) SendSetSlot(si);
-				return true;
-			}
-
-			return false;
+			if (existingItem is not ItemAir && existingItem.Id != 0 && existingItem.Id != -1) return false;
+			Slots[si] = (Item) item.Clone();
+			item.Count = 0;
+			if (update) SendSetSlot(si);
+			return true;
 		}
 
 		public bool AddItem(Item item, bool update)
