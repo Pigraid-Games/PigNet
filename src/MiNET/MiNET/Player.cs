@@ -1596,6 +1596,14 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		SendPacket(mcpeSetActorData);
 	}
 
+	public void SendEntityEvent(int runtimeEntityId, byte eventId)
+	{
+		McpeEntityEvent mcpeEntityEvent = McpeEntityEvent.CreateObject();
+		mcpeEntityEvent.runtimeEntityId = runtimeEntityId;
+		mcpeEntityEvent.eventId = eventId;
+		SendPacket(mcpeEntityEvent);
+	}
+
 	public void SendSetDifficulty()
 	{
 		McpeSetDifficulty mcpeSetDifficulty = McpeSetDifficulty.CreateObject();
@@ -2671,6 +2679,17 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		mcpeRespawn.x = SpawnPosition.X;
 		mcpeRespawn.y = SpawnPosition.Y;
 		mcpeRespawn.z = SpawnPosition.Z;
+		SendPacket(mcpeRespawn);
+	}
+
+	public void SendRespawn(PlayerLocation position, McpeRespawn.RespawnState state)
+	{
+		McpeRespawn mcpeRespawn = McpeRespawn.CreateObject();
+		mcpeRespawn.runtimeEntityId = EntityId;
+		mcpeRespawn.x = position.X;
+		mcpeRespawn.y = position.Y;
+		mcpeRespawn.z = position.Z;
+		mcpeRespawn.state = (byte) state;
 		SendPacket(mcpeRespawn);
 	}
 
