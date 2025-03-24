@@ -2,6 +2,8 @@
 MiNET (Pigraid edition)
 =====
 
+Current Supported Minecraft Version: 1.21.62
+
 ## What is this?
 
 This is fork of [MiNET](https://github.com/NiclasOlofsson/MiNET), that includes additional changes and features:
