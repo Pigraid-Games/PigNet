@@ -240,36 +240,83 @@ public class HealthManager
 		OnPlayerTakeHit(new HealthEventArgs(this, source, Entity));
 	}
 
+	/// <summary>
+	/// Percentage of upward (Y-axis) knockback retained. 0.01f = 1%.
+	/// Example: 0.89f = 89% of the original vertical force.
+	/// </summary>
+	public float VerticalReduction { get; set; } = 0.89f;
+
+	/// <summary>
+	/// Percentage of horizontal (Z-axis) knockback retained. 0.01f = 1%.
+	/// Example: 0.95f = 95% of the original horizontal force.
+	/// </summary>
+	public float HorizontalReduction { get; set; } = 0.95f;
+
+	/// <summary>
+	/// Base knockback force applied to an entity.
+	/// Higher values increase knockback distance.
+	/// </summary>
+	public float KnockbackMultiplier { get; set; } = 0.4f;
+
+	/// <summary>
+	/// The maximum allowed upward (Y-axis) knockback force.
+	/// Prevents launching entities too high.
+	/// </summary>
+	public float MaxVerticalKnockback { get; set; } = 0.4f;
+
+	/// <summary>
+	/// Range of randomness added when source and target are too close to avoid division by zero.
+	/// A small value ensures stable but slightly randomized knockback direction.
+	/// </summary>
+	public double RandomOffsetRange { get; set; } = 0.01d;
+
+	/// <summary>
+	/// Minimum threshold distance between entities for applying knockback.
+	/// Prevents issues with zero or near-zero distances.
+	/// </summary>
+	public double MinForceThreshold { get; set; } = 0.00010d;
+
+	/// <summary>
+	/// Knockback multiplier applied for each level of the Knockback enchantment on the attacking item.
+	/// Controls how strongly enchantment increases knockback.
+	/// </summary>
+	public float KnockbackEnchantMultiplier { get; set; } = 0.5f;
+
+	/// <summary>
+	/// Additional vertical force added per level of Knockback enchantment.
+	/// Adds a slight upward push when enchantment is applied.
+	/// </summary>
+	public float KnockbackEnchantYBonus { get; set; } = 0.1f;
+
 	public virtual void DoKnockback(Entity source, Item tool)
 	{
 		double dx = source.KnownPosition.X - Entity.KnownPosition.X;
 
 		var rand = new Random();
 		double dz;
-		for (dz = source.KnownPosition.Z - Entity.KnownPosition.Z; dx * dx + dz * dz < 0.00010; dz = (rand.NextDouble() - rand.NextDouble()) * 0.01D)
+		for (dz = source.KnownPosition.Z - Entity.KnownPosition.Z;
+			dx * dx + dz * dz < MinForceThreshold;
+			dz = (rand.NextDouble() - rand.NextDouble()) * RandomOffsetRange)
 		{
-			dx = (rand.NextDouble() - rand.NextDouble()) * 0.01D;
+			dx = (rand.NextDouble() - rand.NextDouble()) * RandomOffsetRange;
 		}
 
 		double knockbackForce = Math.Sqrt(dx * dx + dz * dz);
-		const float KnockbackMultiplier = 0.4F;
 
-		double motX = 0;
-		motX -= dx / knockbackForce * KnockbackMultiplier;
-		double motY = KnockbackMultiplier * 0.89; // reduced by 11% (vertical)
-		double motZ = 0;
-		motZ -= (dz / knockbackForce * KnockbackMultiplier) * 0.95; // reduced by 5% (horizontal)
-		if (motY > 0.4)
-		{
-			motY = 0.4;
-		}
+		double motX = -dx / knockbackForce * KnockbackMultiplier;
+		double motY = KnockbackMultiplier * VerticalReduction;
+		double motZ = -dz / knockbackForce * KnockbackMultiplier * HorizontalReduction;
 
-		var velocity = new Vector3((float) motX, (float) motY + 0.0f, (float) motZ);
+		if (motY > MaxVerticalKnockback)
+			motY = MaxVerticalKnockback;
+
+		var velocity = new Vector3((float)motX, (float)motY, (float)motZ);
 
 		if (tool != null)
 		{
-			var knockback = tool.GetEnchantingLevel(EnchantingType.Knockback);
-			velocity += Vector3.Normalize(velocity) * new Vector3(knockback * 0.5f, 0.1f, knockback * 0.5f);
+			short knockback = tool.GetEnchantingLevel(EnchantingType.Knockback);
+			Vector3 bonus = Vector3.Normalize(velocity) * new Vector3(knockback * KnockbackEnchantMultiplier, KnockbackEnchantYBonus, knockback * KnockbackEnchantMultiplier);
+			velocity += bonus;
 		}
 
 		Entity.Knockback(velocity);
@@ -320,9 +367,9 @@ public class HealthManager
 					Health = 2;
 
 					player.RemoveAllEffects();
-					player.SetEffect(new Regeneration() { Duration = 900, Level = 1 });
-					player.SetEffect(new FireResistance() { Duration = 800 });
-					player.SetEffect(new Absorption() { Duration = 100, Level = 1 });
+					player.SetEffect(new Regeneration { Duration = 900, Level = 1 });
+					player.SetEffect(new FireResistance { Duration = 800 });
+					player.SetEffect(new Absorption { Duration = 100, Level = 1 });
 
 					var sound = new Sound((short) LevelEventType.SoundTotemUsed, player.KnownPosition);
 					sound.Spawn(player.Level);
