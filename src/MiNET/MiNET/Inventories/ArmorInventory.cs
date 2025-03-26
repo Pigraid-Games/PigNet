@@ -318,7 +318,7 @@ public class ArmorInventory
 		var packet = McpeLevelSoundEvent.CreateObject();
 		packet.position = Entity.KnownPosition;
 		packet.soundId = (uint) levelEventType;
-		packet.blockId = 0;
+		packet.extraData = 0;
 		player.SendPacket(packet);
 	}
 

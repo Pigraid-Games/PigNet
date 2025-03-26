@@ -23,6 +23,7 @@
 
 #endregion
 
+using System;
 using System.Numerics;
 
 namespace MiNET.Sounds;
@@ -145,7 +146,13 @@ public class RemedySound(Vector3 position, int pitch = 0) : Sound((short) LevelS
 
 public class UnfectSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Unfect, position, pitch);
 
-public class LevelupSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.Levelup, position, pitch);
+public class LevelUpSound : Sound
+{
+	public LevelUpSound(Vector3 position, int xpLevel) : base((short) LevelSoundEventType.LevelUp, position, xpLevel, SoundType.LevelSoundEvent)
+	{
+		ExtraData = unchecked(0x10000000 * (Math.Min(30, xpLevel) / 5));
+	}
+}
 
 public class BowHitSound(Vector3 position, int pitch = 0) : Sound((short) LevelSoundEventType.BowHit, position, pitch);
 

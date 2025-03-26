@@ -1624,7 +1624,7 @@ public class Level : IBlockAccess
 		McpeLevelSoundEvent packet = McpeLevelSoundEvent.CreateObject();
 		packet.position = position;
 		packet.soundId = (uint) sound;
-		packet.blockId = blockId;
+		packet.extraData = blockId;
 		RelayBroadcast(sender, packet);
 	}
 

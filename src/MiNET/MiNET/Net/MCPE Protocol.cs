@@ -8628,10 +8628,10 @@ public partial class McpeBiomeDefinitionList : Packet<McpeBiomeDefinitionList>
 
 public partial class McpeLevelSoundEvent : Packet<McpeLevelSoundEvent>
 {
-	public int blockId; // = null;
-	public string entityType; // = null;
+	public int extraData = -1; // = null;
+	public string entityType = ":"; // = null;
 	public bool isBabyMob; // = null;
-	public bool isGlobal; // = null;
+	public bool disableRelativeVolume; // = null;
 	public Vector3 position; // = null;
 
 	public uint soundId; // = null;
@@ -8650,10 +8650,10 @@ public partial class McpeLevelSoundEvent : Packet<McpeLevelSoundEvent>
 
 		WriteUnsignedVarInt(soundId);
 		Write(position);
-		WriteSignedVarInt(blockId);
-		Write(entityType);
-		Write(isBabyMob);
-		Write(isGlobal);
+		WriteSignedVarInt(extraData);
+		Write(":");
+		Write(false);
+		Write(disableRelativeVolume);
 
 		AfterEncode();
 	}
@@ -8669,10 +8669,10 @@ public partial class McpeLevelSoundEvent : Packet<McpeLevelSoundEvent>
 
 		soundId = ReadUnsignedVarInt();
 		position = ReadVector3();
-		blockId = ReadSignedVarInt();
+		extraData = ReadSignedVarInt();
 		entityType = ReadString();
 		isBabyMob = ReadBool();
-		isGlobal = ReadBool();
+		disableRelativeVolume = ReadBool();
 
 		AfterDecode();
 	}
@@ -8686,10 +8686,10 @@ public partial class McpeLevelSoundEvent : Packet<McpeLevelSoundEvent>
 
 		soundId = default;
 		position = default;
-		blockId = default;
+		extraData = default;
 		entityType = default;
 		isBabyMob = default;
-		isGlobal = default;
+		disableRelativeVolume = default;
 	}
 }
 

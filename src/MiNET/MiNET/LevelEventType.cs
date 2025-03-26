@@ -205,7 +205,7 @@ public enum LevelSoundEventType
 	Twinkle = 59,
 	Remedy = 60,
 	Unfect = 61,
-	Levelup = 62,
+	LevelUp = 62,
 	BowHit = 63,
 	BulletHit = 64,
 	ExtinguishFire = 65,

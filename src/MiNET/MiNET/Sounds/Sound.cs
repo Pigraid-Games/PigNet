@@ -23,34 +23,54 @@
 
 #endregion
 
+using System;
 using System.Numerics;
 using MiNET.Net;
 using MiNET.Worlds;
 
 namespace MiNET.Sounds;
 
-public class Sound
+public enum SoundType
 {
-	public Sound(short id, Vector3 position, int pitch = 0)
-	{
-		Id = id;
-		Position = position;
-		Pitch = pitch;
-	}
+	LevelEvent,
+	LevelSoundEvent
+}
 
-	public short Id { get; }
-	public int Pitch { get; set; }
-	public Vector3 Position { get; set; }
+public class Sound(short id, Vector3 position, int pitch = 0, SoundType soundType = SoundType.LevelEvent)
+{
+	public short Id { get; } = id;
+	public int Pitch { get; set; } = pitch;
+	public Vector3 Position { get; set; } = position;
+	public SoundType SoundType { get; set; } = soundType;
+	public int ExtraData { get; set; }
 
 
 	public virtual void Spawn(Level level)
 	{
-		McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-		levelEvent.eventId = Id;
-		levelEvent.data = Pitch;
-		levelEvent.position = Position;
-
-		level.RelayBroadcast(levelEvent);
+		switch (SoundType)
+		{
+			case SoundType.LevelEvent:
+			{
+				McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
+				levelEvent.eventId = Id;
+				levelEvent.data = Pitch;
+				levelEvent.position = Position;
+				level.RelayBroadcast(levelEvent);
+				break;
+			}
+			case SoundType.LevelSoundEvent:
+			{
+				McpeLevelSoundEvent levelSoundEvent = McpeLevelSoundEvent.CreateObject();
+				levelSoundEvent.soundId = (uint) Id;
+				levelSoundEvent.position = Position;
+				levelSoundEvent.disableRelativeVolume = false;
+				levelSoundEvent.extraData = ExtraData;
+				level.RelayBroadcast(levelSoundEvent);
+				break;
+			}
+			default:
+				throw new ArgumentOutOfRangeException();
+		}
 	}
 
 	public virtual void SpawnToPlayers(Player[] players)
@@ -58,12 +78,29 @@ public class Sound
 		if (players == null) return;
 		if (players.Length == 0) return;
 
-		McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-		levelEvent.eventId = Id;
-		levelEvent.data = Pitch;
-		levelEvent.position = Position;
-		levelEvent.AddReferences(players.Length - 1);
+		switch (SoundType)
+		{
+			case SoundType.LevelEvent:
+			{
+				McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
+				levelEvent.eventId = Id;
+				levelEvent.data = Pitch;
+				levelEvent.position = Position;
+				levelEvent.AddReferences(players.Length - 1);
+				foreach (Player player in players) player.SendPacket(levelEvent);
+				break;
+			}
+			case SoundType.LevelSoundEvent:
+			{
+				McpeLevelSoundEvent levelSoundEvent = McpeLevelSoundEvent.CreateObject();
+				levelSoundEvent.soundId = (uint) Id;
+				levelSoundEvent.position = Position;
+				levelSoundEvent.disableRelativeVolume = false;
+				levelSoundEvent.extraData = ExtraData;
+				foreach (Player player in players) player.SendPacket(levelSoundEvent);
+				break;
+			}
+		}
 
-		foreach (Player player in players) player.SendPacket(levelEvent);
 	}
 }

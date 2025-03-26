@@ -2977,18 +2977,18 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		SendPacket(message);
 	}
 
-	public void SendSound(Sound sound, bool isGlobal = false)
+	public void SendSound(Sound sound, bool disableRelativeVolume = false)
 	{
-		SendSound(sound.Position, (LevelSoundEventType) sound.Id, isGlobal);
+		SendSound(sound.Position, (LevelSoundEventType) sound.Id, disableRelativeVolume);
 	}
 
-	public void SendSound(BlockCoordinates position, LevelSoundEventType sound, bool isGlobal = false, int blockId = 0)
+	public void SendSound(BlockCoordinates position, LevelSoundEventType sound, bool disableRelativeVolume = false, int blockId = 0)
 	{
 		McpeLevelSoundEvent packet = McpeLevelSoundEvent.CreateObject();
 		packet.position = position;
 		packet.soundId = (uint) sound;
-		packet.blockId = blockId;
-		packet.isGlobal = isGlobal;
+		packet.extraData = blockId;
+		packet.disableRelativeVolume = disableRelativeVolume;
 		SendPacket(packet);
 	}
 
