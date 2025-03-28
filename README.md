@@ -2,7 +2,7 @@
 MiNET (Pigraid edition)
 =====
 
-Current Supported Minecraft Version: 1.21.62
+Current Supported Minecraft Version: 1.21.70
 
 ## What is this?
 
@@ -14,7 +14,7 @@ This is fork of [MiNET](https://github.com/NiclasOlofsson/MiNET), that includes 
  - Rebuilt resources and formats for easier updating
  - Emotes
  - New Inventory System
-  
+ - No more MCPE Protocol.cs. Each packet has it's own file, and also, we are using the naming convention of [Mojang Bedrock Protocol](https://mojang.github.io/bedrock-protocol-docs/html/packets.html)
  - And more
 
 **ResourcePacks** - Resource packs made for the latest game version should work also here. If you got pack with .mcpack extension, just rename it to .zip and it's good to go.
