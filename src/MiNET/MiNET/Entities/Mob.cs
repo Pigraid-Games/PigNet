@@ -33,6 +33,7 @@ using MiNET.Blocks;
 using MiNET.Entities.Behaviors;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Skins;
 using MiNET.Utils.Vectors;
@@ -77,7 +78,7 @@ namespace MiNET.Entities
 		public virtual void BroadcastArmor()
 		{
 			McpeMobArmorEquipment armorEquipment = McpeMobArmorEquipment.CreateObject();
-			armorEquipment.runtimeEntityId = EntityId;
+			armorEquipment.runtimeActorId = EntityId;
 			armorEquipment.helmet = Helmet;
 			armorEquipment.chestplate = Chest;
 			armorEquipment.leggings = Leggings;

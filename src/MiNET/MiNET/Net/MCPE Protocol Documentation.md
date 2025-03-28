@@ -717,26 +717,6 @@ Wiki: [Tick Sync](https://github.com/NiclasOlofsson/MiNET/wiki//Protocol-TickSyn
 
 -----------------------------------------------------------------------
 
-### Level Sound Event Old (0x18)
-
-Wiki: [Level Sound Event Old](https://github.com/NiclasOlofsson/MiNET/wiki//Protocol-LevelSoundEventOld)
-
-**Sent from server:** true  
-**Sent from client:** true
-
-#### Fields
-
-| Name        | Type         | Size |
-|:------------|:-------------|:-----|
-| Sound ID    | byte         |      |
-| Position    | Vector3      |      |
-| Block Id    | SignedVarInt |      |
-| Entity Type | SignedVarInt |      |
-| Is baby mob | bool         |      |
-| Is global   | bool         |      |
-
------------------------------------------------------------------------
-
 ### Level Event (0x19)
 
 Wiki: [Level Event](https://github.com/NiclasOlofsson/MiNET/wiki//Protocol-LevelEvent)
@@ -2414,26 +2394,6 @@ Wiki: [Available Entity Identifiers](https://github.com/NiclasOlofsson/MiNET/wik
 | Name     | Type | Size |
 |:---------|:-----|:-----|
 | NamedTag | Nbt  |      |
-
------------------------------------------------------------------------
-
-### Level Sound Event V2 (0x78)
-
-Wiki: [Level Sound Event V2](https://github.com/NiclasOlofsson/MiNET/wiki//Protocol-LevelSoundEventV2)
-
-**Sent from server:** true  
-**Sent from client:** true
-
-#### Fields
-
-| Name        | Type         | Size |
-|:------------|:-------------|:-----|
-| Sound ID    | byte         |      |
-| Position    | Vector3      |      |
-| Block Id    | SignedVarInt |      |
-| Entity Type | string       |      |
-| Is baby mob | bool         |      |
-| Is global   | bool         |      |
 
 -----------------------------------------------------------------------
 

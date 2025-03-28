@@ -29,6 +29,8 @@ using MiNET.Effects;
 using MiNET.Entities.Passive;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 
@@ -61,11 +63,11 @@ namespace MiNET.Entities.Projectiles
 			IsCritical = false;
 			BroadcastSetEntityData();
 
-			McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-			entityEvent.runtimeEntityId = EntityId;
-			entityEvent.eventId = 39;
-			entityEvent.data = 14;
-			Level.RelayBroadcast(entityEvent);
+			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+			actorEvent.runtimeEntityId = EntityId;
+			actorEvent.eventId = ActorEvent.Shake;
+			actorEvent.data = 14;
+			Level.RelayBroadcast(actorEvent);
 			Level.BroadcastSound(blockCollided.Coordinates, LevelSoundEventType.BowHit);
 		}
 
@@ -114,12 +116,12 @@ namespace MiNET.Entities.Projectiles
 						if (player.Inventory.SetFirstEmptySlot(ItemFactory.GetItem("minecraft:arrow", EffectValue), true))
 						{
 							var takeItemEntity = McpeTakeItemActor.CreateObject();
-							takeItemEntity.runtimeEntityId = EntityId;
+							takeItemEntity.runtimeActorId = EntityId;
 							takeItemEntity.target = player.EntityId;
 							Level.RelayBroadcast(takeItemEntity);
 
 							var takeItemEntity2 = McpeTakeItemActor.CreateObject();
-							takeItemEntity2.runtimeEntityId = EntityId;
+							takeItemEntity2.runtimeActorId = EntityId;
 							takeItemEntity2.target = EntityManager.EntityIdSelf;
 							player.SendPacket(takeItemEntity2);
 						}

@@ -24,17 +24,14 @@
 #endregion
 
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 
 namespace MiNET.Entities.ImageProviders
 {
 	public class RandomColorMapImageProvider : IMapImageProvider
 	{
-		private WannabeRandom _random = new WannabeRandom();
-
-		public RandomColorMapImageProvider()
-		{
-		}
+		private WannabeRandom _random = new();
 
 		public virtual byte[] GetData(MapInfo mapInfo, bool forced)
 		{

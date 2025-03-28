@@ -26,9 +26,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\blockstates.json" />
     <EmbeddedResource Include="Resources\item_id_map.json" />
     <EmbeddedResource Include="Resources\block_meta_map.json" />
+    <EmbeddedResource Include="Resources\blockstates.json" />
     <EmbeddedResource Include="Resources\itemstates.json" />
   </ItemGroup>
   <ItemGroup>
@@ -78,6 +78,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>MCPE Protocol.tt</DependentUpon>
     </Compile>
+    <Compile Remove="Net\McpeCommandBlockUpdate.cs" />
+    <Compile Remove="Net\McpeAvailableCommands.cs" />
+    <Compile Remove="Net\McpeMoveEntityDelta.cs" />
+    <Compile Remove="Net\McpeCommandOutput.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj" />

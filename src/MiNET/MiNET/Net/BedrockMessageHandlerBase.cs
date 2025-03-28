@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using log4net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;

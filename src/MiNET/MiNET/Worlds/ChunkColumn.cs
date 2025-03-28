@@ -11,6 +11,7 @@ using fNbt;
 using log4net;
 using MiNET.Blocks;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.IO;
 using MiNET.Utils.Nbt;
 using MiNET.Utils.Vectors;

@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 
 namespace MiNET.Particles
@@ -38,7 +39,7 @@ namespace MiNET.Particles
 		public override void Spawn()
 		{
 			McpeLevelEvent particleEvent = McpeLevelEvent.CreateObject();
-			particleEvent.eventId = 2004;
+			particleEvent.eventId = LevelEventType.ParticlesMobBlockSpawn;
 			particleEvent.position = Position;
 			particleEvent.data = Data;
 			Level.RelayBroadcast(particleEvent);

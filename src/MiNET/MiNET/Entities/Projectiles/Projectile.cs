@@ -29,6 +29,8 @@ using System.Numerics;
 using MiNET.Blocks;
 using MiNET.Entities.World;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Particles;
 using MiNET.Utils.Metadata;
 using MiNET.Utils.Vectors;
@@ -137,8 +139,8 @@ public class Projectile : Entity
 				damage += Level.Random.Next((int) (damage / 2 + 2));
 
 				McpeAnimate animate = McpeAnimate.CreateObject();
-				animate.runtimeEntityId = entityCollided.EntityId;
-				animate.actionId = 4;
+				animate.runtimeActorId = entityCollided.EntityId;
+				animate.actionId = AnimatePacketAction.MagicCriticalHit;
 				Level.RelayBroadcast(animate);
 			}
 
@@ -267,14 +269,14 @@ public class Projectile : Entity
 		if (new Random().Next(5) == 0)
 		{
 			McpeSetActorMotion motions = McpeSetActorMotion.CreateObject();
-			motions.runtimeEntityId = EntityId;
+			motions.runtimeActorId = EntityId;
 			motions.velocity = Velocity;
 			Level.RelayBroadcast(motions);
 		}
 
 		if (LastSentPosition != null)
 		{
-			McpeMoveEntityDelta move = McpeMoveEntityDelta.CreateObject();
+			McpeMoveActorDelta move = McpeMoveActorDelta.CreateObject();
 			move.runtimeEntityId = EntityId;
 			move.prevSentPosition = LastSentPosition;
 			move.currentPosition = (PlayerLocation) KnownPosition.Clone();

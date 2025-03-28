@@ -33,6 +33,7 @@ using log4net;
 using MiNET.Blocks;
 using MiNET.Client;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Nbt;
 using MiNET.Utils.Vectors;
@@ -118,10 +119,10 @@ namespace MiNET.Console
 		}
 
 
-		public override void HandleMcpeBlockEntityData(McpeBlockEntityData message)
+		public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
 		{
-			BlockCoordinates coordinates = message.coordinates;
-			Nbt nbt = message.namedtag;
+			BlockCoordinates coordinates = message.blockPositin;
+			Nbt nbt = message.actorDataTags;
 			ChunkColumn chunk = _worldProvider.GenerateChunkColumn((ChunkCoordinates) coordinates, true);
 			if(chunk == null)
 			{

@@ -28,6 +28,8 @@ using fNbt;
 using log4net;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
@@ -96,11 +98,11 @@ namespace MiNET.Entities.Projectiles
 
 		public override void DespawnEntity()
 		{
-			McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-			entityEvent.runtimeEntityId = EntityId;
-			entityEvent.eventId = 25;
-			entityEvent.data = 0;
-			Level.RelayBroadcast(entityEvent);
+			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+			actorEvent.runtimeEntityId = EntityId;
+			actorEvent.eventId = ActorEvent.FireworksExplode;
+			actorEvent.data = 0;
+			Level.RelayBroadcast(actorEvent);
 
 			Level.BroadcastSound(KnownPosition.ToVector3(), LevelSoundEventType.Blast);
 

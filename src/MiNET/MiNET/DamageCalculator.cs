@@ -32,6 +32,8 @@ using MiNET.Entities;
 using MiNET.Entities.Projectiles;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 
 namespace MiNET;
@@ -120,8 +122,8 @@ public class DamageCalculator
 		int fallDamage = new Random().Next((int) (damage / 2 + 2));
 
 		McpeAnimate animate = McpeAnimate.CreateObject();
-		animate.runtimeEntityId = target.EntityId;
-		animate.actionId = 4;
+		animate.runtimeActorId = target.EntityId;
+		animate.actionId = AnimatePacketAction.MagicCriticalHit;
 		player.Level.RelayBroadcast(animate);
 		return fallDamage;
 	}

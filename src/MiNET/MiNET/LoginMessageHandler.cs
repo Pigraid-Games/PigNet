@@ -34,8 +34,8 @@ using System.Threading;
 using fNbt;
 using Jose;
 using log4net;
-using MiNET.Blocks;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
@@ -449,7 +449,7 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	{
 	}
 
-	public void HandleMcpeMoveEntity(McpeMoveEntity message)
+	public void HandleMcpeMoveEntity(McpeMoveActor message)
 	{
 	}
 
@@ -487,12 +487,12 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	{
 	}
 
-	public void HandleMcpePacketViolationWarning(McpePacketViolationWarning message)
+	public void HandleMcpePacketViolationWarning(McpeViolationWarning message)
 	{
 	}
 
 	/// <inheritdoc />
-	public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message)
+	public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocks message)
 	{
 			
 	}
@@ -509,7 +509,7 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 			
 	}
 
-	public void HandleMcpeEntityEvent(McpeEntityEvent message)
+	public void HandleMcpeEntityEvent(McpeActorEvent message)
 	{
 	}
 
@@ -533,7 +533,7 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	{
 	}
 
-	public void HandleMcpeTakeItemActor(McpeEntityPickRequest message)
+	public void HandleMcpeTakeItemActor(McpeActorPickRequest message)
 	{
 	}
 
@@ -573,15 +573,7 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	{
 	}
 
-	public void HandleMcpeCraftingEvent(McpeCraftingEvent message)
-	{
-	}
-
-	public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
-	{
-	}
-
-	public void HandleMcpeBlockEntityData(McpeBlockEntityData message)
+	public void HandleMcpeBlockEntityData(McpeBlockActorData message)
 	{
 	}
 
@@ -645,22 +637,6 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	{
 	}
 
-	public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
-	{
-	}
-
-	public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
-	{
-	}
-
-	public void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
-	{
-	}
-
-	public void HandleMcpeScriptCustomEvent(McpeScriptCustomEvent message)
-	{
-	}
-
 	public void HandleMcpeEmote(McpeEmotePacket message)
 	{
 	}
@@ -669,7 +645,7 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	{
 	}
 
-	public void HandleMcpePermissionRequest(McpePermissionRequest message)
+	public void HandleMcpePermissionRequest(McpeRequestPermission message)
 	{
 	}
 

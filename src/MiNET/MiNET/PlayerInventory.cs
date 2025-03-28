@@ -34,6 +34,7 @@ using MiNET.Entities.World;
 using MiNET.Inventories;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Worlds;
 
@@ -75,23 +76,18 @@ namespace MiNET
 		{
 			if (Player.GameMode != GameMode.Survival) return;
 
-			var itemInHand = GetItemInHand();
+			Item itemInHand = GetItemInHand();
 
-			var unbreakingLevel = itemInHand.GetEnchantingLevel(EnchantingType.Unbreaking);
-			if (unbreakingLevel > 0)
-			{
-				if (new Random().Next(1 + unbreakingLevel) != 0) return;
-			}
+			short unbreakingLevel = itemInHand.GetEnchantingLevel(EnchantingType.Unbreaking);
+			if (unbreakingLevel > 0) if (new Random().Next(1 + unbreakingLevel) != 0) return;
 
 
 			if (itemInHand.DamageItem(Player, reason, target, block))
 			{
 				Slots[InHandSlot] = new ItemAir();
 
-				var sound = McpeLevelSoundEventOld.CreateObject();
-				sound.soundId = 5;
-				sound.blockId = -1;
-				sound.entityType = 1;
+				McpeLevelSoundEvent sound = McpeLevelSoundEvent.CreateObject();
+				sound.soundId = (uint) LevelSoundEventType.Break;
 				sound.position = Player.KnownPosition;
 				Player.Level.RelayBroadcast(sound);
 			}
@@ -100,7 +96,7 @@ namespace MiNET
 			{
 				if (itemInHand.ExtraData.Get<NbtInt>("Damage") != null)
 				{
-					itemInHand.ExtraData.Get<NbtInt>("Damage").Value = itemInHand.Damage;
+					itemInHand.ExtraData.Get<NbtInt>("Damage")!.Value = itemInHand.Damage;
 				}
 			}
 
@@ -118,7 +114,7 @@ namespace MiNET
 
 		public virtual void UpdateInventorySlot(int slot, Item item, bool forceReplace = false)
 		{
-			var existing = Slots[slot];
+			Item existing = Slots[slot];
 			if (forceReplace || existing.Id != item.Id)
 			{
 				Slots[slot] = item;
@@ -214,7 +210,7 @@ namespace MiNET
 			if (sendToPlayer)
 			{
 				var order = McpeMobEquipment.CreateObject();
-				order.runtimeEntityId = EntityManager.EntityIdSelf;
+				order.runtimeActorId = EntityManager.EntityIdSelf;
 				order.item = GetItemInHand();
 				order.selectedSlot = (byte) InHandSlot;
 				order.slot = (byte) InHandSlot;
@@ -222,7 +218,7 @@ namespace MiNET
 			}
 
 			var broadcast = McpeMobEquipment.CreateObject();
-			broadcast.runtimeEntityId = Player.EntityId;
+			broadcast.runtimeActorId = Player.EntityId;
 			broadcast.item = GetItemInHand();
 			broadcast.selectedSlot = (byte) InHandSlot;
 			broadcast.slot = (byte) InHandSlot;
@@ -335,7 +331,7 @@ namespace MiNET
 			{
 				item = Player.Inventory.OffHandInventory.GetItem();
 				var sendOffHandSlot = McpeMobEquipment.CreateObject();
-				sendOffHandSlot.runtimeEntityId = Player.EntityId;
+				sendOffHandSlot.runtimeActorId = Player.EntityId;
 				sendOffHandSlot.selectedSlot = 0;
 				sendOffHandSlot.slot = 0;
 				sendOffHandSlot.windowsId = (byte) inventoryId;
@@ -348,7 +344,7 @@ namespace MiNET
 			}
 
 			var sendSlot = McpeInventorySlot.CreateObject();
-			sendSlot.inventoryId = inventoryId;
+			sendSlot.containerId = inventoryId;
 			sendSlot.slot = (uint) slot;
 			sendSlot.item = item;
 			Player.SendPacket(sendSlot);

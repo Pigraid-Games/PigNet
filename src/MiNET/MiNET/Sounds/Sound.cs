@@ -26,6 +26,7 @@
 using System;
 using System.Numerics;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 
 namespace MiNET.Sounds;
@@ -52,7 +53,7 @@ public class Sound(short id, Vector3 position, int pitch = 0, SoundType soundTyp
 			case SoundType.LevelEvent:
 			{
 				McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-				levelEvent.eventId = Id;
+				levelEvent.eventId = (LevelEventType) Id;
 				levelEvent.data = Pitch;
 				levelEvent.position = Position;
 				level.RelayBroadcast(levelEvent);
@@ -83,7 +84,7 @@ public class Sound(short id, Vector3 position, int pitch = 0, SoundType soundTyp
 			case SoundType.LevelEvent:
 			{
 				McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-				levelEvent.eventId = Id;
+				levelEvent.eventId = (LevelEventType) Id;
 				levelEvent.data = Pitch;
 				levelEvent.position = Position;
 				levelEvent.AddReferences(players.Length - 1);

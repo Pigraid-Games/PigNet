@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -29,8 +30,8 @@ namespace MiNET.Entities.Projectiles
 		{
 			base.DespawnEntity();
 
-			var particleEvent = McpeLevelEvent.CreateObject();
-			particleEvent.eventId = (short) LevelEventType.WindExplosion;
+			McpeLevelEvent particleEvent = McpeLevelEvent.CreateObject();
+			particleEvent.eventId = LevelEventType.WindExplosion;
 			particleEvent.position = KnownPosition;
 			particleEvent.data = Data;
 			Level.RelayBroadcast(Level.GetAllPlayers(), particleEvent);

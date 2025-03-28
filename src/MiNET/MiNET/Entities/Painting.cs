@@ -25,6 +25,7 @@
 
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -55,7 +56,7 @@ namespace MiNET.Entities
 			painting.coordinates = (BlockCoordinates) KnownPosition;
 			painting.direction = FacingDirection;
 			painting.entityIdSelf = EntityId;
-			painting.runtimeEntityId = EntityId;
+			painting.runtimeActorId = EntityId;
 			painting.title = PaintingData.Title;
 
 			Level.RelayBroadcast(players, painting);

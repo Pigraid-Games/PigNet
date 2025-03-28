@@ -31,6 +31,8 @@ using MiNET.Entities.Behaviors;
 using MiNET.Items;
 using MiNET.Items.Food;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
 using MiNET.Utils.Nbt;
@@ -165,7 +167,7 @@ namespace MiNET.Entities.Passive
 
 				if (!IsTamed)
 				{
-					Random random = new Random();
+					var random = new Random();
 					if (random.Next(100) < Temper || player.GameMode == GameMode.Creative)
 					{
 						// Tamed
@@ -173,11 +175,11 @@ namespace MiNET.Entities.Passive
 						IsTamed = true;
 						BroadcastSetEntityData();
 
-						McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-						entityEvent.runtimeEntityId = EntityId;
-						entityEvent.eventId = 7;
-						entityEvent.data = 0;
-						Level.RelayBroadcast(entityEvent);
+						McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+						actorEvent.runtimeEntityId = EntityId;
+						actorEvent.eventId = ActorEvent.TamingSucceeded;
+						actorEvent.data = 0;
+						Level.RelayBroadcast(actorEvent);
 					}
 					else
 					{
@@ -208,7 +210,7 @@ namespace MiNET.Entities.Passive
 				player.Vehicle = EntityId;
 
 				McpeSetActorLink link = McpeSetActorLink.CreateObject();
-				link.linkType = (byte) McpeSetActorLink.LinkActions.Ride;
+				link.linkType = ActorLinkType.Riding;
 				link.riderId = player.EntityId;
 				link.riddenId = EntityId;
 				Level.RelayBroadcast(link);
@@ -225,7 +227,7 @@ namespace MiNET.Entities.Passive
 				IsRiding = false;
 
 				McpeSetActorLink link = McpeSetActorLink.CreateObject();
-				link.linkType = (byte) McpeSetActorLink.LinkActions.Remove;
+				link.linkType = ActorLinkType.None;
 				link.riderId = player.EntityId;
 				link.riddenId = EntityId;
 				Level.RelayBroadcast(link);
@@ -282,11 +284,11 @@ namespace MiNET.Entities.Passive
 				}
 				else if (_rideTime > 120)
 				{
-					McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-					entityEvent.runtimeEntityId = _horse.EntityId;
-					entityEvent.eventId = 6;
-					entityEvent.data = 0;
-					_horse.Level.RelayBroadcast(entityEvent);
+					McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+					actorEvent.runtimeEntityId = _horse.EntityId;
+					actorEvent.eventId = ActorEvent.TamingFailed;
+					actorEvent.data = 0;
+					_horse.Level.RelayBroadcast(actorEvent);
 					_horse.Unmount(_horse.Rider);
 				}
 
@@ -335,9 +337,9 @@ namespace MiNET.Entities.Passive
 			player.SetOpenInventory(this);
 
 			McpeUpdateEquipment equ = McpeUpdateEquipment.CreateObject();
-			equ.entityId = _horse.EntityId;
-			equ.windowId = 2;
-			equ.windowType = 12;
+			equ.actorId = _horse.EntityId;
+			equ.containerId = 2;
+			equ.containerType = 12;
 
 			Nbt nbt = new Nbt
 			{
@@ -354,7 +356,7 @@ namespace MiNET.Entities.Passive
 
 			McpeInventoryContent containerSetContent = McpeInventoryContent.CreateObject();
 			containerSetContent.inventoryId = 2;
-			containerSetContent.input = new ItemStacks()
+			containerSetContent.slots = new ItemStacks()
 			{
 				Slot0,
 				Slot1

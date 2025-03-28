@@ -24,6 +24,7 @@
 #endregion
 
 using log4net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Plugins;
 
@@ -94,9 +95,6 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeSetLocalPlayerAsInitialized msg:
 				handler.HandleMcpeSetLocalPlayerAsInitialized(msg);
 				break;
-			case McpeScriptCustomEvent msg:
-				handler.HandleMcpeScriptCustomEvent(msg);
-				break;
 			case McpeUpdateBlock _:
 				// DO NOT USE. Will dissapear from MCPE any release. 
 				// It is a bug that it leaks these messages.
@@ -110,13 +108,13 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeAnimate msg:
 				handler.HandleMcpeAnimate(msg);
 				break;
-			case McpeEntityEvent msg:
+			case McpeActorEvent msg:
 				handler.HandleMcpeEntityEvent(msg);
 				break;
 			case McpeText msg:
 				handler.HandleMcpeText(msg);
 				break;
-			case McpeRemoveEntity _:
+			case McpeRemoveActor _:
 				// Do nothing right now, but should clear out the entities and stuff
 				// from this players internal structure.
 				break;
@@ -135,11 +133,8 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeRespawn msg:
 				handler.HandleMcpeRespawn(msg);
 				break;
-			case McpeBlockEntityData msg:
+			case McpeBlockActorData msg:
 				handler.HandleMcpeBlockEntityData(msg);
-				break;
-			case McpeAdventureSettings msg:
-				handler.HandleMcpeAdventureSettings(msg);
 				break;
 			case McpePlayerAction msg:
 				handler.HandleMcpePlayerAction(msg);
@@ -152,9 +147,6 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 				break;
 			case McpeMobArmorEquipment msg:
 				handler.HandleMcpeMobArmorEquipment(msg);
-				break;
-			case McpeCraftingEvent msg:
-				handler.HandleMcpeCraftingEvent(msg);
 				break;
 			case McpeInventoryTransaction msg:
 				handler.HandleMcpeInventoryTransaction(msg);
@@ -192,7 +184,7 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeBlockPickRequest msg:
 				handler.HandleMcpeBlockPickRequest(msg);
 				break;
-			case McpeEntityPickRequest msg:
+			case McpeActorPickRequest msg:
 				handler.HandleMcpeTakeItemActor(msg);
 				break;
 			case McpeModalFormResponse msg:
@@ -201,7 +193,7 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeCommandBlockUpdate msg:
 				handler.HandleMcpeCommandBlockUpdate(msg);
 				break;
-			case McpeMoveEntity msg:
+			case McpeMoveActor msg:
 				handler.HandleMcpeMoveEntity(msg);
 				break;
 			case McpeSetActorMotion msg:
@@ -216,11 +208,8 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeNpcRequest msg:
 				handler.HandleMcpeNpcRequest(msg);
 				break;
-			case McpePacketViolationWarning msg:
+			case McpeViolationWarning msg:
 				handler.HandleMcpePacketViolationWarning(msg);
-				break;
-			case McpeNetworkStackLatency msg:
-				handler.HandleMcpeNetworkStackLatency(msg);
 				break;
 			case McpePlayerSkin msg:
 				handler.HandleMcpePlayerSkin(msg);
@@ -234,7 +223,7 @@ public class BedrockMessageHandler : BedrockMessageHandlerBase
 			case McpeEmoteList msg:
 				handler.HandleMcpeEmoteList(msg);
 				break;
-			case McpePermissionRequest msg:
+			case McpeRequestPermission msg:
 				handler.HandleMcpePermissionRequest(msg);
 				break;
 			case McpeSetInventoryOptions msg:

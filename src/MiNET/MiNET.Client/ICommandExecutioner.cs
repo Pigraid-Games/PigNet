@@ -27,6 +27,7 @@ using System;
 using System.Threading.Tasks;
 using log4net;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 
 namespace MiNET.Client
@@ -164,7 +165,7 @@ namespace MiNET.Client
 				case McpeUpdateBlock mcpePacket:
 					HandleMcpeUpdateBlock(caller, mcpePacket);
 					break;
-				case McpeUpdateSubChunkBlocksPacket mcpePacket:
+				case McpeUpdateSubChunkBlocks mcpePacket:
 					HandleMcpeUpdateSubChunkBlocksPacket(caller, mcpePacket);
 					break;
 				default:
@@ -191,7 +192,7 @@ namespace MiNET.Client
 			}
 		}
 
-		public void HandleMcpeUpdateSubChunkBlocksPacket(BedrockTraceHandler caller, McpeUpdateSubChunkBlocksPacket message) //for blocks with two updates
+		public void HandleMcpeUpdateSubChunkBlocksPacket(BedrockTraceHandler caller, McpeUpdateSubChunkBlocks message) //for blocks with two updates
 		{
 			foreach (var block in message.layerZeroUpdates)
 			{

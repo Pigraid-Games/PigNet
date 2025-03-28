@@ -25,6 +25,7 @@
 
 using System;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 
 namespace MiNET.Entities.ImageProviders
@@ -36,11 +37,6 @@ namespace MiNET.Entities.ImageProviders
 		public byte[] MapData { get; set; }
 		public McpeClientboundMapItemData ClientboundMapItemData { get; set; }
 		public McpeWrapper Batch { get; set; }
-
-		public MapImageProvider()
-		{
-		}
-
 
 		public virtual byte[] GetData(MapInfo mapInfo, bool forced)
 		{

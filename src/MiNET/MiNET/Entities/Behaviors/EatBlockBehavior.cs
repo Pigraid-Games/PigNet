@@ -26,6 +26,8 @@
 using System.Numerics;
 using MiNET.Blocks;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Particles;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
@@ -58,10 +60,10 @@ namespace MiNET.Entities.Behaviors
 
 			_entity.Velocity *= new Vector3(0, 1, 0);
 
-			McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-			entityEvent.runtimeEntityId = _entity.EntityId;
-			entityEvent.eventId = 10;
-			_entity.Level.RelayBroadcast(entityEvent);
+			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+			actorEvent.runtimeEntityId = _entity.EntityId;
+			actorEvent.eventId = ActorEvent.EatGrass;
+			_entity.Level.RelayBroadcast(actorEvent);
 
 			return true;
 		}

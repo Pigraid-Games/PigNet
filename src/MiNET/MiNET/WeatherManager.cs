@@ -2,6 +2,7 @@
 using System.Numerics;
 using MiNET.Entities.World;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -23,16 +24,16 @@ namespace MiNET
 		public virtual void setWeather(weatherTypes types, float downfallStrength = 1.0f)
 		{
 			McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-			if (types == weatherTypes.clear) { levelEvent.eventId = (int) LevelEventType.StopRaining; downfallStrength = 0; }
-			if (types == weatherTypes.rain) { levelEvent.eventId = (int) LevelEventType.StartRaining; }
-			if (types == weatherTypes.thunder) { levelEvent.eventId = (int) LevelEventType.StartThunderstorm; }
+			if (types == weatherTypes.clear) { levelEvent.eventId =  LevelEventType.StopRaining; downfallStrength = 0; }
+			if (types == weatherTypes.rain) { levelEvent.eventId =  LevelEventType.StartRaining; }
+			if (types == weatherTypes.thunder) { levelEvent.eventId =  LevelEventType.StartThunderstorm; }
 			levelEvent.data = getStrength(downfallStrength);
 			Level.RelayBroadcast(levelEvent);
 
 			if (Level.Weather == weatherTypes.thunder) //need to stop both rain and thunder to stop thunder
 			{
 				McpeLevelEvent levelEvent2 = McpeLevelEvent.CreateObject();
-				levelEvent2.eventId = (int) LevelEventType.StopThunderstorm;
+				levelEvent2.eventId = LevelEventType.StopThunderstorm;
 				Level.RelayBroadcast(levelEvent2);
 			}
 

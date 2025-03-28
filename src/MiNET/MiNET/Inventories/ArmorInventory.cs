@@ -6,6 +6,7 @@ using log4net;
 using MiNET.Entities;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
@@ -259,7 +260,7 @@ public class ArmorInventory
 	{
 		var armorContent = McpeInventoryContent.CreateObject();
 		armorContent.inventoryId = 0x78;
-		armorContent.input = GetAll();
+		armorContent.slots = GetAll();
 		player.SendPacket(armorContent);
 	}
 
@@ -270,7 +271,7 @@ public class ArmorInventory
 		packet.chestplate = GetChestItem();
 		packet.leggings = GetLegsItem();
 		packet.boots = GetFeetItem();
-		packet.runtimeEntityId = Entity.EntityId;
+		packet.runtimeActorId = Entity.EntityId;
 		//Entity.Level.RelayBroadcast(packet);
 
 		if (Entity is not Player player)

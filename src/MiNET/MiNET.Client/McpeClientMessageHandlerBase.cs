@@ -26,12 +26,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Threading;
 using Jose;
 using log4net;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.Metadata;
@@ -114,47 +117,29 @@ namespace MiNET.Client
 
 		public virtual void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
 		{
-			//McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-			//response.responseStatus = 3;
-			//SendPackage(response);
-
 			if (message.texturepacks.Count != 0)
 			{
 				var resourcePackIds = new ResourcePackIds();
-
-				foreach (ResourcePackInfo packInfo in message.texturepacks)
-				{
-					resourcePackIds.Add(packInfo.UUID.ToString());
-				}
-
+				resourcePackIds.AddRange(message.texturepacks.Select(packInfo => packInfo.UUID.ToString()));
 				var response = new McpeResourcePackClientResponse();
-				response.responseStatus = 2;
+				response.responseStatus = ResourcePackResponse.Downloading;
 				response.resourcepackids = resourcePackIds;
 				Client.SendPacket(response);
 			}
 			else
 			{
 				var response = new McpeResourcePackClientResponse();
-				response.responseStatus = 3;
+				response.responseStatus = ResourcePackResponse.DownloadingFinished;
 				Client.SendPacket(response);
 			}
 		}
 
 		public virtual void HandleMcpeResourcePackStack(McpeResourcePackStack message)
 		{
-			//if (message.resourcepackidversions.Count != 0)
-			//{
-			//	McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-			//	response.responseStatus = 2;
-			//	response.resourcepackidversions = message.resourcepackidversions;
-			//	SendPackage(response);
-			//}
-			//else
-			{
-				var response = new McpeResourcePackClientResponse();
-				response.responseStatus = 4;
-				Client.SendPacket(response);
-			}
+
+			var response = new McpeResourcePackClientResponse();
+			response.responseStatus = ResourcePackResponse.ResourcePackStackFinished;
+			Client.SendPacket(response);
 		}
 
 		public virtual void HandleMcpeText(McpeText message)
@@ -197,15 +182,15 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeAddEntity(McpeAddEntity message)
+		public virtual void HandleMcpeAddEntity(McpeAddActor message)
 		{
 		}
 
-		public virtual void HandleMcpeRemoveEntity(McpeRemoveEntity message)
+		public virtual void HandleMcpeRemoveEntity(McpeRemoveActor message)
 		{
 		}
 
-		public virtual void HandleMcpeAddItemEntity(McpeAddItemEntity message)
+		public virtual void HandleMcpeAddItemEntity(McpeAddItemActor message)
 		{
 		}
 
@@ -213,13 +198,13 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeMoveEntity(McpeMoveEntity message)
+		public virtual void HandleMcpeMoveEntity(McpeMoveActor message)
 		{
 		}
 
 		public virtual void HandleMcpeMovePlayer(McpeMovePlayer message)
 		{
-			if (message.runtimeEntityId != Client.EntityId) return;
+			if (message.playerRuntimeId != Client.EntityId) return;
 
 			Client.CurrentLocation = new PlayerLocation(message.x, message.y, message.z);
 
@@ -242,10 +227,6 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
-		{
-		}
-
 		public virtual void HandleMcpeLevelEvent(McpeLevelEvent message)
 		{
 		}
@@ -254,7 +235,7 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeEntityEvent(McpeEntityEvent message)
+		public virtual void HandleMcpeEntityEvent(McpeActorEvent message)
 		{
 			Log.Warn($"got entity event: {message.runtimeEntityId} / {message.eventId} / {message.data}");
 
@@ -262,7 +243,7 @@ namespace MiNET.Client
 
 		public virtual void HandleMcpeMobEffect(McpeMobEffect message)
 		{
-			Log.Warn($"I got effect: {message.runtimeEntityId} / {message.eventId} / {message.effectId} / {message.amplifier} / {message.particles} / {message.duration} / {message.tick}");
+			Log.Warn($"I got effect: {message.runtimeActorId} / {message.eventId} / {message.effectId} / {message.amplifier} / {message.particles} / {message.duration} / {message.tick}");
 		}
 
 		public virtual void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
@@ -275,7 +256,7 @@ namespace MiNET.Client
 
 		public virtual void HandleMcpeMobEquipment(McpeMobEquipment message)
 		{
-			Log.Warn($"Entity with {message.runtimeEntityId} is holding {message.item}");
+			Log.Warn($"Entity with {message.runtimeActorId} is holding {message.item}");
 		}
 
 		public virtual void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message)
@@ -376,20 +357,11 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeCraftingEvent(McpeCraftingEvent message)
-		{
-		}
-
 		public virtual void HandleMcpeGuiDataPickItem(McpeGuiDataPickItem message)
 		{
 		}
 
-		public virtual void HandleMcpeAdventureSettings(McpeAdventureSettings message)
-		{
-			Client.UserPermission = (CommandPermission) message.commandPermission;
-		}
-
-		public virtual void HandleMcpeBlockEntityData(McpeBlockEntityData message)
+		public virtual void HandleMcpeBlockEntityData(McpeBlockActorData message)
 		{
 		}
 
@@ -409,9 +381,9 @@ namespace MiNET.Client
 		{
 			Thread.Sleep(3000);
 
-			var action = McpePlayerAction.CreateObject();
-			action.runtimeEntityId = Client.EntityId;
-			action.actionId = (int) PlayerAction.DimensionChangeAck;
+			McpePlayerAction action = McpePlayerAction.CreateObject();
+			action.runtimeActorId = Client.EntityId;
+			action.actionId = PlayerActionType.ChangeDimensionAck;
 			Client.SendPacket(action);
 		}
 
@@ -427,11 +399,7 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeTelemetryEvent(McpeTelemetryEvent message)
-		{
-		}
-
-		public virtual void HandleMcpeSpawnExperienceOrb(McpeSpawnExperienceOrb message)
+		public virtual void HandleMcpeTelemetryEvent(McpeLegacyTelemetryEvent message)
 		{
 		}
 
@@ -511,7 +479,7 @@ namespace MiNET.Client
 			if (_resourcePackDataInfos.Count == 0)
 			{
 				var response = new McpeResourcePackClientResponse();
-				response.responseStatus = 3;
+				response.responseStatus = ResourcePackResponse.DownloadingFinished;
 				Client.SendPacket(response);
 			}
 		}
@@ -604,7 +572,7 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
+		public virtual void HandleMcpeMoveEntityDelta(McpeMoveActorDelta message)
 		{
 		}
 
@@ -616,28 +584,11 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
-		{
-			var packet = McpeNetworkStackLatency.CreateObject();
-			packet.timestamp = message.timestamp;
-			packet.unknownFlag = 0;
-
-			Client.SendPacket(packet);
-		}
-
-		public virtual void HandleMcpeScriptCustomEvent(McpeScriptCustomEvent message)
-		{
-		}
-
 		public virtual void HandleMcpeSpawnParticleEffect(McpeSpawnParticleEffect message)
 		{
 		}
 
 		public virtual void HandleMcpeAvailableEntityIdentifiers(McpeAvailableEntityIdentifiers message)
-		{
-		}
-
-		public virtual void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
 		{
 		}
 
@@ -661,10 +612,6 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeVideoStreamConnect(McpeVideoStreamConnect message)
-		{
-		}
-
 		public virtual void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
 		{
 		}
@@ -678,11 +625,11 @@ namespace MiNET.Client
 		{
 		}
 
-		public virtual void HandleMcpeStructureTemplateDataExportRequest(McpeStructureTemplateDataExportRequest message)
+		public virtual void HandleMcpeStructureTemplateDataExportRequest(McpeStructureTemplateDataRequest message)
 		{
 		}
 
-		public virtual void HandleMcpeStructureTemplateDataExportResponse(McpeStructureTemplateDataExportResponse message)
+		public virtual void HandleMcpeStructureTemplateDataExportResponse(McpeStructureTemplateDataResponse message)
 		{
 		}
 
@@ -721,13 +668,13 @@ namespace MiNET.Client
 		}
 
 		/// <inheritdoc />
-		public virtual void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message)
+		public virtual void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocks message)
 		{
 			
 		}
 
 		/// <inheritdoc />
-		public void HandleMcpeSubChunkPacket(McpeSubChunkPacket message)
+		public void HandleMcpeSubChunkPacket(McpeSubChunk message)
 		{
 			
 		}
@@ -748,10 +695,6 @@ namespace MiNET.Client
 		public void HandleMcpeUpdateAdventureSettings(McpeUpdateAdventureSettings message)
 		{
 			
-		}
-
-		public virtual void HandleMcpeAlexEntityAnimation(McpeAlexEntityAnimation message)
-		{
 		}
 
 		public virtual void HandleFtlCreatePlayer(FtlCreatePlayer message)
@@ -778,7 +721,7 @@ namespace MiNET.Client
 
 		}
 
-		public void HandleMcpePermissionRequest(McpePermissionRequest message)
+		public void HandleMcpePermissionRequest(McpeRequestPermission message)
 		{
 
 		}
@@ -798,7 +741,7 @@ namespace MiNET.Client
 			
 		}
 
-		public void HandleMcpeCloseForm(McpeCloseForm message)
+		public void HandleMcpeCloseForm(McpeClientboundCloseForm message)
 		{
 
 		}

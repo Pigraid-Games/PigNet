@@ -39,6 +39,8 @@ using MiNET.Crafting;
 using MiNET.Entities;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
 using MiNET.Utils.Vectors;
@@ -158,11 +160,6 @@ namespace MiNET.Client
 				Log.Debug($"Executing command handler: {executioner.GetType().FullName}");
 				Task.Run(() => executioner.Execute(this, text));
 			}
-
-			if (text.Equals(".do"))
-			{
-				Client.SendCraftingEvent();
-			}
 		}
 
 		public override void HandleMcpeInventorySlot(McpeInventorySlot message)
@@ -177,13 +174,13 @@ namespace MiNET.Client
 
 		public override void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
-			Log.Error($"Set container content on Window ID: 0x{message.inventoryId:x2}, Count: {message.input.Count}, ContainerName: {message.ContainerName.ContainerId} - {message.ContainerName.DynamicId}");
+			Log.Error($"Set container content on Window ID: 0x{message.inventoryId:x2}, Count: {message.slots.Count}, ContainerName: {message.fullContainerName.ContainerId} - {message.fullContainerName.DynamicId}");
 
 			CallPacketHandlers(message);
 
 			if (Client.IsEmulator) return;
 
-			ItemStacks slots = message.input;
+			ItemStacks slots = message.slots;
 
 			//if (message.inventoryId == 0x79)
 			//{
@@ -263,7 +260,7 @@ namespace MiNET.Client
 			Log.Warn("Received creative groups exported to newResources/creativeGroups.txt\n");
 		}
 
-		public override void HandleMcpeAddItemEntity(McpeAddItemEntity message)
+		public override void HandleMcpeAddItemEntity(McpeAddItemActor message)
 		{
 			CallPacketHandlers(message);
 		}
@@ -273,7 +270,7 @@ namespace MiNET.Client
 			CallPacketHandlers(message);
 		}
 
-		public override void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message)
+		public override void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocks message)
 		{
 			CallPacketHandlers(message);
 		}
@@ -349,7 +346,7 @@ namespace MiNET.Client
 			Log.DebugFormat("Links count: {0}", message.links?.Count);
 		}
 
-		public override void HandleMcpeAddEntity(McpeAddEntity message)
+		public override void HandleMcpeAddEntity(McpeAddActor message)
 		{
 			if (Client.IsEmulator) return;
 
@@ -448,17 +445,17 @@ namespace MiNET.Client
 					//	}
 
 					//})
-					.ContinueWith(task =>
+					.ContinueWith(_ =>
 					{
 						Log.Warn("Sending sneak for player");
 
 						McpePlayerAction action = McpePlayerAction.CreateObject();
-						action.runtimeEntityId = Client.EntityId;
-						action.actionId = (int) PlayerAction.StartSneak;
+						action.runtimeActorId = Client.EntityId;
+						action.actionId = PlayerActionType.StartSneaking;
 						Client.SendPacket(action);
 					})
-					.ContinueWith(t => Task.Delay(2000).Wait())
-					.ContinueWith(task =>
+					.ContinueWith(_ => Task.Delay(2000).Wait())
+					.ContinueWith(_ =>
 					{
 						Log.Warn("Sending transaction for horse");
 
@@ -479,7 +476,7 @@ namespace MiNET.Client
 			}
 		}
 
-		public override void HandleMcpeRemoveEntity(McpeRemoveEntity message)
+		public override void HandleMcpeRemoveEntity(McpeRemoveActor message)
 		{
 			Log.DebugFormat("McpeAddPlayer Entity ID: {0}", message.entityIdSelf);
 			Client.Entities.TryRemove(message.entityIdSelf, out _);
@@ -488,13 +485,13 @@ namespace MiNET.Client
 		public override void HandleMcpeLevelEvent(McpeLevelEvent message)
 		{
 			int data = message.data;
-			if (message.eventId == (int) LevelEventType.ParticlesDestroyBlock)
+			if (message.eventId == LevelEventType.ParticlesDestroyBlock)
 			{
 				int blockId = data & 0xff;
 				int metadata = data >> 12;
 				Log.Debug($"BlockID={blockId}, Metadata={metadata}");
 			}
-			else if (message.eventId == (int)LevelEventType.ParticlesPotionSplash)
+			else if (message.eventId == LevelEventType.ParticlesPotionSplash)
 			{
 				Log.Warn($"Got effect with data: {message.data}");
 				var r = (message.data >> 16) & 0xFF;
@@ -534,7 +531,7 @@ namespace MiNET.Client
 			writer.WriteLine("{");
 			writer.Indent++;
 
-			foreach (Recipe recipe in message.recipes)
+			foreach (Recipe recipe in message.craftingEntries)
 			{
 				var shapelessRecipe = recipe as ShapelessRecipe;
 				if (shapelessRecipe != null)
@@ -632,12 +629,12 @@ namespace MiNET.Client
 			//Environment.Exit(0);
 		}
 
-		public override void HandleMcpeBlockEntityData(McpeBlockEntityData message)
+		public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
 		{
-			Log.DebugFormat("X: {0}", message.coordinates.X);
-			Log.DebugFormat("Y: {0}", message.coordinates.Y);
-			Log.DebugFormat("Z: {0}", message.coordinates.Z);
-			Log.DebugFormat("NBT:\n{0}", message.namedtag.NbtFile.RootTag);
+			Log.DebugFormat("X: {0}", message.blockPositin.X);
+			Log.DebugFormat("Y: {0}", message.blockPositin.Y);
+			Log.DebugFormat("Z: {0}", message.blockPositin.Z);
+			Log.DebugFormat("NBT:\n{0}", message.actorDataTags.NbtFile.RootTag);
 		}
 
 		public override void HandleMcpeLevelChunk(McpeLevelChunk message)
@@ -647,7 +644,7 @@ namespace MiNET.Client
 
 			if (message.blobHashes != null)
 			{
-				var hits = new ulong[message.blobHashes.Length];
+				ulong[] hits = new ulong[message.blobHashes.Length];
 
 				for (int i = 0; i < message.blobHashes.Length; i++)
 				{
@@ -657,37 +654,16 @@ namespace MiNET.Client
 				}
 
 				var status = McpeClientCacheBlobStatus.CreateObject();
-				status.hashHits = hits;
+				//status.hashHits = hits;
 				Client.SendPacket(status);
 			}
 			else
 			{
-				Client.Chunks.GetOrAdd(new ChunkCoordinates(message.chunkX, message.chunkZ), coordinates =>
+				Client.Chunks.GetOrAdd(new ChunkCoordinates(message.chunkX, message.chunkZ), _ =>
 				{
 					Log.Debug($"Chunk X={message.chunkX}, Z={message.chunkZ}, size={message.chunkData.Length}, Count={Client.Chunks.Count}");
-					if (BlockstateGenerator.running == false){ Console.WriteLine($"[McpeLevelChunk] Got chunk | X: {message.chunkX,-4} | Z: {message.chunkZ,-4} |"); ; }
-						//broken, chunkData have weird values. Expected header something like: 09 01 02 08
-						//Log.Debug($"{Packet.HexDump(message.Bytes)}");
-						ChunkColumn chunk = null;
-					/*try
-					{
-						chunk = ClientUtils.DecodeChunkColumn((int) message.subChunkCount, message.chunkData);
-						if (chunk != null)
-						{
-							chunk.X = coordinates.X;
-							chunk.Z = coordinates.Z;
-							chunk.RecalcHeight();
-							Log.DebugFormat("Chunk X={0}, Z={1}", chunk.X, chunk.Z);
-							foreach (KeyValuePair<BlockCoordinates, NbtCompound> blockEntity in chunk.BlockEntities)
-							{
-								Log.Debug($"Blockentity: {blockEntity.Value}");
-							}
-						}
-					}
-					catch (Exception e)
-					{
-						Log.Error("Reading chunk", e);
-					}*/
+					if (BlockstateGenerator.running == false) Console.WriteLine($"[McpeLevelChunk] Got chunk | X: {message.chunkX,-4} | Z: {message.chunkZ,-4} |");
+					ChunkColumn chunk = null;
 
 					return chunk;
 				});

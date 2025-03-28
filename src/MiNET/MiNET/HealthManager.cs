@@ -28,12 +28,11 @@ using System.ComponentModel;
 using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
-using log4net;
 using MiNET.Blocks;
 using MiNET.Effects;
 using MiNET.Entities;
 using MiNET.Items;
-using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
 using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
@@ -406,7 +405,7 @@ public class HealthManager
 			Entity.DespawnEntity();
 
 			if (!Entity.Level.KeepInventory) player.DropInventory();
-			player.SendRespawn(player.SpawnPosition, McpeRespawn.RespawnState.Search);
+			player.SendRespawn(player.SpawnPosition, PlayerRespawnState.SearchingForSpawn);
 		}
 		else
 		{

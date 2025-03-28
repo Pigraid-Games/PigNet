@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using log4net;
 using MiNET.Client;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.IO;
 using MiNET.Utils.Vectors;
@@ -120,7 +121,7 @@ namespace MiNET.Console
 			_client.Chunks.TryAdd(chunkCoordinates, null); // register to receive chunks. 
 
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
-			movePlayerPacket.runtimeEntityId = _client.EntityId;
+			movePlayerPacket.playerRuntimeId = _client.EntityId;
 			movePlayerPacket.x = playerCoords.X;
 			movePlayerPacket.y = 255;
 			movePlayerPacket.z = playerCoords.Z;

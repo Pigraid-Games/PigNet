@@ -25,6 +25,8 @@
 
 using System.Numerics;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -50,10 +52,10 @@ public partial class Anvil : Block
 	{
 		player.UsingAnvil = true;
 		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-		containerOpen.windowId = 14;
-		containerOpen.type = 5;
-		containerOpen.coordinates = blockCoordinates;
-		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+		containerOpen.containerId = 14;
+		containerOpen.containerType = ContainerType.Anvil;
+		containerOpen.position = blockCoordinates;
+		containerOpen.runtimeActorId = EntityManager.EntityIdSelf;
 		player.SendPacket(containerOpen);
 
 		return true;

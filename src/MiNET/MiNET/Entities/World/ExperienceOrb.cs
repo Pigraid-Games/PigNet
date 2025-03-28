@@ -1,6 +1,6 @@
 ﻿using System;
 using MiNET.Blocks;
-using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Sounds;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
@@ -33,11 +33,6 @@ namespace MiNET.Entities.World
 			};
 		}
 
-		public override void SpawnEntity()
-		{
-			base.SpawnEntity();
-		}
-
 		public override void OnTick(Entity[] entities)
 		{
 			if (Level.GetBlock(KnownPosition) is Air)
@@ -56,14 +51,14 @@ namespace MiNET.Entities.World
 				}
 				if (IsColliding(player))
 				{
-					player.ExperienceManager.AddExperience(xpValue, true);
+					player.ExperienceManager.AddExperience(xpValue);
 					var sound = new Sound((short) LevelEventType.SoundExperienceOrbPickup, player.KnownPosition);
 					sound.Spawn(player.Level);
 					DespawnEntity();
 				}
 			}
 
-			var entityData = McpeMoveEntity.CreateObject();
+			var entityData = McpeMoveActor.CreateObject();
 			entityData.runtimeEntityId = EntityId;
 			entityData.position = KnownPosition;
 			Level.RelayBroadcast(entityData);

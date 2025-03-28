@@ -30,6 +30,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using log4net;
+using MiNET.Net.EnumerationsTable;
 using MiNET.Worlds;
 
 namespace MiNET.Utils;
@@ -265,8 +266,6 @@ public class Config
 			case "3":
 			case "hard":
 				return Difficulty.Hard;
-			case "hardcore":
-				return Difficulty.Hardcore;
 			default:
 				return defaultValue;
 		}

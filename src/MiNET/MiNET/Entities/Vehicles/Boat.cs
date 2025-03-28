@@ -25,6 +25,8 @@
 
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 
@@ -55,7 +57,7 @@ namespace MiNET.Entities.Vehicles
 			player.Vehicle = EntityId;
 
 			McpeSetActorLink link = McpeSetActorLink.CreateObject();
-			link.linkType = (byte) McpeSetActorLink.LinkActions.Ride;
+			link.linkType = ActorLinkType.Riding;
 			link.riderId = player.EntityId;
 			link.riddenId = EntityId;
 			Level.RelayBroadcast(link);

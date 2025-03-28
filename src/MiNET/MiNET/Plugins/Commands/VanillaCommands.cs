@@ -24,14 +24,12 @@
 #endregion
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using log4net;
 using MiNET.Entities;
 using MiNET.Entities.Hostile;
@@ -41,6 +39,8 @@ using MiNET.Entities.World;
 using MiNET.Items;
 using MiNET.Items.Custom;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Plugins.Attributes;
 using MiNET.UI;
 using MiNET.Utils;
@@ -708,7 +708,7 @@ public class VanillaCommands
 				break;
 		}
 
-		commander.Level.BroadcastMessage($"{targetPlayer.Username} changed to game mode {gameMode}.", MessageType.Raw);
+		commander.Level.BroadcastMessage($"{targetPlayer.Username} changed to game mode {gameMode}.", TextPacketType.Raw);
 
 		return $"Set {targetPlayer.Username} game mode to {gameMode}.";
 	}
@@ -777,7 +777,7 @@ public class VanillaCommands
 		if (player.Players != null)
 			foreach (Player p in player.Players)
 			{
-				p.SendMessage(string.Format(ChatFormatting.Italic + ChatColors.Gray + "{0} whisper to you: {1}", commander.Username, msg), MessageType.Raw);
+				p.SendMessage(string.Format(ChatFormatting.Italic + ChatColors.Gray + "{0} whisper to you: {1}", commander.Username, msg), TextPacketType.Raw);
 				return $"You whisper to {p.Username}: {msg}";
 			}
 		else

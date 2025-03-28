@@ -28,6 +28,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using MiNET.Items.Armor;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -56,7 +57,7 @@ public class ItemStick : Item
 			if (currentSpeed < 7f / 20f) velocity = Vector3.Normalize(velocity) * 1.2f;
 
 			McpeSetActorMotion motions = McpeSetActorMotion.CreateObject();
-			motions.runtimeEntityId = EntityManager.EntityIdSelf;
+			motions.runtimeActorId = EntityManager.EntityIdSelf;
 			motions.velocity = velocity;
 
 			player.SendPacket(motions);
@@ -64,7 +65,7 @@ public class ItemStick : Item
 		else if (player.Inventory.ArmorInventory.GetChestItem() is ItemElytra)
 		{
 			McpeSetActorMotion motions = McpeSetActorMotion.CreateObject();
-			motions.runtimeEntityId = EntityManager.EntityIdSelf;
+			motions.runtimeActorId = EntityManager.EntityIdSelf;
 			var velocity = new Vector3(0, 2, 0);
 			motions.velocity = velocity;
 			player.SendPacket(motions);

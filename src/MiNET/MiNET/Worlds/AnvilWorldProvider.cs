@@ -39,6 +39,7 @@ using MiNET.BlockEntities;
 using MiNET.Blocks;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 
@@ -345,9 +346,15 @@ public class AnvilWorldProvider : IWorldProvider, ICachingWorldProvider, IClonea
 	public Vector3 GetSpawnPoint()
 	{
 		var spawnPoint = new Vector3(LevelInfo.SpawnX, LevelInfo.SpawnY + 2 /* + WaterOffsetY*/, LevelInfo.SpawnZ);
-		if (Dimension == Dimension.TheEnd)
-			spawnPoint = new Vector3(100, 49, 0);
-		else if (Dimension == Dimension.Nether) spawnPoint = new Vector3(0, 80, 0);
+		switch (Dimension)
+		{
+			case Dimension.TheEnd:
+				spawnPoint = new Vector3(100, 49, 0);
+				break;
+			case Dimension.Nether:
+				spawnPoint = new Vector3(0, 80, 0);
+				break;
+		}
 
 		if (spawnPoint.Y > 256) spawnPoint.Y = 255;
 

@@ -26,6 +26,8 @@
 using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -62,10 +64,10 @@ public partial class Beacon : Block
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
 		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-		containerOpen.windowId = 5 + 9;
-		containerOpen.type = 13;
-		containerOpen.coordinates = blockCoordinates;
-		containerOpen.runtimeEntityId = -1;
+		containerOpen.containerId = 5 + 9;
+		containerOpen.containerType = ContainerType.Beacon;
+		containerOpen.position = blockCoordinates;
+		containerOpen.runtimeActorId = -1;
 		player.SendPacket(containerOpen);
 
 		return true;

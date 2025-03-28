@@ -23,22 +23,18 @@
 
 #endregion
 
-namespace MiNET
-{
-	public class Popup
-	{
-		public long Id { get; set; }
-		internal long CurrentTick { get; set; }
-		public MessageType MessageType { get; set; }
-		public string Message { get; set; }
-		public long Duration { get; set; }
-		public long DisplayDelay { get; set; }
-		public long TransitionDelay { get; set; }
-		public int Priority { get; set; }
+using MiNET.Net.EnumerationsTable;
 
-		public Popup()
-		{
-			MessageType = MessageType.Popup;
-		}
-	}
+namespace MiNET;
+
+public class Popup
+{
+	public long Id { get; set; }
+	internal long CurrentTick { get; set; }
+	public TextPacketType MessageType { get; set; } = TextPacketType.Popup;
+	public string Message { get; set; }
+	public long Duration { get; set; }
+	public long DisplayDelay { get; set; }
+	public long TransitionDelay { get; set; }
+	public int Priority { get; set; }
 }

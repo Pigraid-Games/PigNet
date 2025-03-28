@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -37,7 +38,7 @@ namespace MiNET.Entities.ImageProviders
 	public class TextMapImageProvider : IMapImageProvider
 	{
 		private static FontCollection _fontCollection;
-		private static Font _font = null;
+		private static Font _font;
 
 		static TextMapImageProvider()
 		{
@@ -57,7 +58,7 @@ namespace MiNET.Entities.ImageProviders
 			Text = text;
 		}
 
-		private byte[] _mapData = null;
+		private byte[] _mapData;
 
 		public virtual byte[] GetData(MapInfo mapInfo, bool forced)
 		{

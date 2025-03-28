@@ -28,6 +28,7 @@ using fNbt;
 using log4net;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 using MiNET.Utils;
 
@@ -39,7 +40,7 @@ namespace MiNET.Crafting
 
 		public static Recipes Recipes { get; private set; }
 
-		public static Dictionary<int, Item> resultMap = new Dictionary<int, Item>();
+		public static Dictionary<int, Item> resultMap = new();
 
 		public static bool resultMapLocked = false;
 
@@ -47,17 +48,6 @@ namespace MiNET.Crafting
 
 		public static McpeWrapper GetCraftingData()
 		{
-			if (_craftingData == null)
-			{
-				var craftingData = McpeCraftingData.CreateObject();
-				craftingData.recipes = Recipes;
-				craftingData.isClean = true;
-				var packet = Level.CreateMcpeBatch(craftingData.Encode());
-				craftingData.PutPool();
-				packet.MarkPermanent(true);
-				_craftingData = packet;
-			}
-
 			return _craftingData;
 		}
 

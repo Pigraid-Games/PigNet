@@ -41,7 +41,10 @@ using MiNET.Entities.Passive;
 using MiNET.Entities.World;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
+using MiNET.Plugins;
 using MiNET.Sounds;
 using MiNET.Utils;
 using MiNET.Utils.Diagnostics;
@@ -512,13 +515,13 @@ public class Level : IBlockAccess
 		RelayBroadcast(sender, sendList, mcpeSetTitle);
 	}
 
-	public virtual void BroadcastMessage(string text, MessageType type = MessageType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null, string platformId = null)
+	public virtual void BroadcastMessage(string text, TextPacketType type = TextPacketType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null, string platformId = null)
 	{
-		if (type is MessageType.Chat or MessageType.Raw)
+		if (type is TextPacketType.Chat or TextPacketType.Raw)
 			foreach (string line in text.Split(["\n", Environment.NewLine], StringSplitOptions.RemoveEmptyEntries))
 			{
 				McpeText message = McpeText.CreateObject();
-				message.type = (byte) type;
+				message.type = type;
 				message.source = sender == null ? "" : sender.NameTag;
 				message.xuid = sender?.CertificateData.ExtraData.Xuid;
 				message.platformChatId = platformId;
@@ -530,7 +533,7 @@ public class Level : IBlockAccess
 		else
 		{
 			McpeText message = McpeText.CreateObject();
-			message.type = (byte) type;
+			message.type = type;
 			message.source = sender == null ? "" : sender.Username;
 			message.xuid = sender?.CertificateData.ExtraData.Xuid;
 			message.platformChatId = platformId;
@@ -836,7 +839,7 @@ public class Level : IBlockAccess
 				{
 					var knownPosition = (PlayerLocation) player.KnownPosition.Clone();
 
-					McpeMoveEntity move = McpeMoveEntity.CreateObject();
+					McpeMoveActor move = McpeMoveActor.CreateObject();
 					move.runtimeEntityId = player.EntityId;
 					move.flags = 2;
 					move.position = knownPosition;
@@ -847,7 +850,7 @@ public class Level : IBlockAccess
 				{
 					var knownPosition = (PlayerLocation) player.KnownPosition.Clone();
 
-					McpeMoveEntityDelta move = McpeMoveEntityDelta.CreateObject();
+					McpeMoveActorDelta move = McpeMoveActorDelta.CreateObject();
 					move.runtimeEntityId = player.EntityId;
 					move.prevSentPosition = player.LastSentPosition;
 					move.currentPosition = knownPosition;
@@ -1193,11 +1196,11 @@ public class Level : IBlockAccess
 
 		if (Log.IsDebugEnabled) Log.Debug($"Nbt: {nbt.NbtFile.RootTag}");
 
-		McpeBlockEntityData entityData = McpeBlockEntityData.CreateObject();
-		entityData.namedtag = nbt;
-		entityData.coordinates = blockEntity.Coordinates;
+		McpeBlockActorData actorData = McpeBlockActorData.CreateObject();
+		actorData.actorDataTags = nbt;
+		actorData.blockPositin = blockEntity.Coordinates;
 
-		RelayBroadcast(entityData);
+		RelayBroadcast(actorData);
 	}
 
 	public void RemoveBlockEntity(BlockCoordinates blockCoordinates)
@@ -1309,11 +1312,19 @@ public class Level : IBlockAccess
 
 	private void DropExperience(BlockCoordinates coordinates, int amount)
 	{
-		var dropPosition = new Vector3(coordinates.X + 0.5f, coordinates.Y + 0.5f, coordinates.Z + 0.5f);
-		McpeSpawnExperienceOrb packet = McpeSpawnExperienceOrb.CreateObject();
-		packet.count = amount;
-		packet.position = dropPosition;
-		RelayBroadcast(packet);
+		var random = new Random();
+		for (int i = 0; i < amount; i++)
+		{
+			var xpOrb = new ExperienceOrb(this)
+			{
+				KnownPosition = new PlayerLocation(
+					coordinates.X + 0.5f + (float)(random.NextDouble() * 0.2 - 0.1),
+					coordinates.Y + 0.5f + (float)(random.NextDouble() * 0.2 - 0.1),
+					coordinates.Z + 0.5f + (float)(random.NextDouble() * 0.2 - 0.1)
+				),
+			};
+			xpOrb.SpawnEntity();
+		}
 	}
 
 	private void RevertBlockAction(Player player, Block block, BlockEntity blockEntity)
@@ -1340,10 +1351,10 @@ public class Level : IBlockAccess
 				}
 			};
 
-			McpeBlockEntityData entityData = McpeBlockEntityData.CreateObject();
-			entityData.namedtag = nbt;
-			entityData.coordinates = blockEntity.Coordinates;
-			player.SendPacket(entityData);
+			McpeBlockActorData actorData = McpeBlockActorData.CreateObject();
+			actorData.actorDataTags = nbt;
+			actorData.blockPositin = blockEntity.Coordinates;
+			player.SendPacket(actorData);
 		}
 	}
 
@@ -1376,7 +1387,7 @@ public class Level : IBlockAccess
 		if (AutoSmelt) drop = drop.GetSmelt() ?? drop;
 
 		var random = new Random();
-		var itemEntity = new ItemEntity(this, drop)
+		var itemEntity = new ItemActor(this, drop)
 		{
 			KnownPosition =
 			{
@@ -1603,7 +1614,7 @@ public class Level : IBlockAccess
 	public void BroadcastSound(Sound sound, Player[] receivers)
 	{
 		McpeLevelEvent packet = McpeLevelEvent.CreateObject();
-		packet.eventId = sound.Id;
+		packet.eventId = (LevelEventType) sound.Id;
 		packet.data = sound.Pitch * 1000;
 		packet.position = sound.Position;
 		foreach (Player player in receivers) player.SendPacket(packet);

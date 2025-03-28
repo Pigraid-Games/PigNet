@@ -26,6 +26,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 
 namespace MiNET.Effects;
@@ -83,7 +84,7 @@ public class Effect
 	public virtual void SendAdd(Player player)
 	{
 		McpeMobEffect message = McpeMobEffect.CreateObject();
-		message.runtimeEntityId = EntityManager.EntityIdSelf;
+		message.runtimeActorId = EntityManager.EntityIdSelf;
 		message.eventId = 1;
 		message.effectId = (int) EffectId;
 		message.duration = Duration;
@@ -98,7 +99,7 @@ public class Effect
 	public virtual void SendUpdate(Player player)
 	{
 		McpeMobEffect message = McpeMobEffect.CreateObject();
-		message.runtimeEntityId = EntityManager.EntityIdSelf;
+		message.runtimeActorId = EntityManager.EntityIdSelf;
 		message.eventId = 2;
 		message.effectId = (int) EffectId;
 		message.duration = Duration;
@@ -111,7 +112,7 @@ public class Effect
 	public virtual void SendRemove(Player player)
 	{
 		McpeMobEffect message = McpeMobEffect.CreateObject();
-		message.runtimeEntityId = EntityManager.EntityIdSelf;
+		message.runtimeActorId = EntityManager.EntityIdSelf;
 		message.eventId = 3;
 		message.effectId = (int) EffectId;
 		message.tick = player.CurrentTick;

@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using MiNET.Blocks;
+using MiNET.Net.EnumerationsTable;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 

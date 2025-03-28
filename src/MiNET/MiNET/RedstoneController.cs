@@ -59,7 +59,7 @@ public static class RedstoneController
 			}
 			stateBlock.OpenBit = openBit;
 			level.SetBlock(stateBlock);
-			var sound = new Sound((short) LevelEventType.SoundOpenDoor, coordinates);
+			var sound = new Sound((short)LevelEventType.SoundOpenDoor, coordinates);
 			sound.Spawn(level);
 		}
 	}

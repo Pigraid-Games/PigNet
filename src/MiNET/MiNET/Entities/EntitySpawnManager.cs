@@ -32,6 +32,7 @@ using log4net;
 using MiNET.Blocks;
 using MiNET.Entities.Hostile;
 using MiNET.Entities.Passive;
+using MiNET.Net.EnumerationsTable;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;

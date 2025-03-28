@@ -1,5 +1,6 @@
 ﻿using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 
 namespace MiNET.Inventories;
 
@@ -23,7 +24,7 @@ public class OffHandInventory(Player player)
 	public void SendUpdate()
 	{
 		McpeMobEquipment sendMobEquipment = McpeMobEquipment.CreateObject();
-		sendMobEquipment.runtimeEntityId = Holder.EntityId;
+		sendMobEquipment.runtimeActorId = Holder.EntityId;
 		sendMobEquipment.selectedSlot = 0;
 		sendMobEquipment.slot = 0;
 		sendMobEquipment.windowsId = WindowId;
@@ -31,7 +32,7 @@ public class OffHandInventory(Player player)
 		Holder.Level.RelayBroadcast(sendMobEquipment);
 
 		McpeInventorySlot sendSlotUpdate = McpeInventorySlot.CreateObject();
-		sendSlotUpdate.inventoryId = InventoryId;
+		sendSlotUpdate.containerId = InventoryId;
 		sendSlotUpdate.slot = 0;
 		sendSlotUpdate.storageItem = _item;
 		Holder.SendPacket(sendSlotUpdate);

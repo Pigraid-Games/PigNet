@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Numerics;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 
 namespace MiNET.Particles
@@ -23,7 +24,7 @@ namespace MiNET.Particles
 		public override void Spawn()
 		{
 			McpeLevelEvent particleEvent = McpeLevelEvent.CreateObject();
-			particleEvent.eventId = (int)LevelEventType.ParticlesPotionSplash;
+			particleEvent.eventId = LevelEventType.ParticlesPotionSplash;
 			particleEvent.position = Position;
 			particleEvent.data = Data;
 			Level.RelayBroadcast(particleEvent);

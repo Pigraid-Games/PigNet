@@ -27,6 +27,7 @@ using log4net;
 using MiNET.Entities.ImageProviders;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Worlds;
 

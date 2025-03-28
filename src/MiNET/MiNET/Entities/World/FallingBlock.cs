@@ -28,6 +28,7 @@ using System.Numerics;
 using log4net;
 using MiNET.Blocks;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
 using MiNET.Utils.Vectors;
@@ -67,34 +68,34 @@ namespace MiNET.Entities.World
 
 		public override void SpawnToPlayers(Player[] players)
 		{
-			foreach (var player in players)
+			foreach (Player player in players)
 			{
-				var updateBlock = McpeUpdateBlockSynced.CreateObject();
-				updateBlock.coordinates = (BlockCoordinates) KnownPosition;
+				McpeUpdateBlockSynced updateBlock = McpeUpdateBlockSynced.CreateObject();
+				updateBlock.blockPosition = (BlockCoordinates) KnownPosition;
 				updateBlock.blockRuntimeId = (uint) new Air().GetRuntimeId();
-				updateBlock.blockPriority = 3;
+				updateBlock.flags = 3;
 				updateBlock.dataLayerId = 0;
-				updateBlock.unknown0 = EntityId;
-				updateBlock.unknown1 = 1;
+				updateBlock.runtimeEntityId = EntityId;
+				updateBlock.runtimeEntitySyncMessageId = 1;
 
-				var addEntity = McpeAddEntity.CreateObject();
-				addEntity.entityType = EntityTypeId;
-				addEntity.entityIdSelf = EntityId;
-				addEntity.runtimeEntityId = EntityId;
-				addEntity.x = KnownPosition.X;
-				addEntity.y = KnownPosition.Y;
-				addEntity.z = KnownPosition.Z;
-				addEntity.pitch = KnownPosition.Pitch;
-				addEntity.yaw = KnownPosition.Yaw;
-				addEntity.headYaw = KnownPosition.HeadYaw;
-				addEntity.metadata = GetMetadata();
-				addEntity.speedX = Velocity.X;
-				addEntity.speedY = Velocity.Y;
-				addEntity.speedZ = Velocity.Z;
-				addEntity.attributes = GetEntityAttributes();
+				McpeAddActor addActor = McpeAddActor.CreateObject();
+				addActor.entityType = EntityTypeId;
+				addActor.entityIdSelf = EntityId;
+				addActor.runtimeEntityId = EntityId;
+				addActor.x = KnownPosition.X;
+				addActor.y = KnownPosition.Y;
+				addActor.z = KnownPosition.Z;
+				addActor.pitch = KnownPosition.Pitch;
+				addActor.yaw = KnownPosition.Yaw;
+				addActor.headYaw = KnownPosition.HeadYaw;
+				addActor.metadata = GetMetadata();
+				addActor.speedX = Velocity.X;
+				addActor.speedY = Velocity.Y;
+				addActor.speedZ = Velocity.Z;
+				addActor.attributes = GetEntityAttributes();
 
 				player.SendPacket(updateBlock);
-				player.SendPacket(addEntity);
+				player.SendPacket(addActor);
 			}
 		}
 
@@ -110,12 +111,12 @@ namespace MiNET.Entities.World
 			else
 			{
 				var updateBlock = McpeUpdateBlockSynced.CreateObject();
-				updateBlock.coordinates = new BlockCoordinates(KnownPosition);
+				updateBlock.blockPosition = new BlockCoordinates(KnownPosition);
 				updateBlock.blockRuntimeId = (uint) _original;
-				updateBlock.blockPriority = 3;
+				updateBlock.flags = 3;
 				updateBlock.dataLayerId = 0;
-				updateBlock.unknown0 = EntityId;
-				updateBlock.unknown1 = 2;
+				updateBlock.runtimeEntityId = EntityId;
+				updateBlock.runtimeEntitySyncMessageId = 2;
 
 				Level.RelayBroadcast(updateBlock);
 

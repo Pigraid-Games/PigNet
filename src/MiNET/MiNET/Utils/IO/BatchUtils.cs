@@ -27,6 +27,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 
 namespace MiNET.Utils.IO;

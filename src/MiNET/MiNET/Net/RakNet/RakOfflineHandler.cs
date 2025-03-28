@@ -29,6 +29,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
+using MiNET.Net.Packets.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Nbt;
 using Newtonsoft.Json;

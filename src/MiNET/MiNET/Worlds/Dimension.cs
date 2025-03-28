@@ -23,11 +23,12 @@
 
 #endregion
 
-namespace MiNET.Worlds;
-
-public enum Dimension
+namespace MiNET.Worlds
 {
-	Overworld = 0,
-	Nether = 1,
-	TheEnd = 2
+	public enum Dimension
+	{
+		Overworld = 0,
+		Nether = 1,
+		TheEnd = 2
+	}
 }

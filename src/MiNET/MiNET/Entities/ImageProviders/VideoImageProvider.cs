@@ -26,6 +26,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 
 namespace MiNET.Entities.ImageProviders

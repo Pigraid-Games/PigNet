@@ -31,6 +31,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using MiNET.Net.Packets.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Collections;
 using MiNET.Utils.IO;

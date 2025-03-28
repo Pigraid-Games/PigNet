@@ -27,6 +27,7 @@ using MiNET.Blocks;
 using MiNET.Entities.Behaviors;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 
 namespace MiNET.Entities.Hostile
@@ -65,7 +66,7 @@ namespace MiNET.Entities.Hostile
 		protected virtual void SendEquipment()
 		{
 			McpeMobEquipment message = McpeMobEquipment.CreateObject();
-			message.runtimeEntityId = EntityId;
+			message.runtimeActorId = EntityId;
 			message.item = ItemInHand;
 			message.slot = 0;
 			Level.RelayBroadcast(message);
@@ -74,7 +75,7 @@ namespace MiNET.Entities.Hostile
 		protected virtual void SendArmor()
 		{
 			McpeMobArmorEquipment armorEquipment = McpeMobArmorEquipment.CreateObject();
-			armorEquipment.runtimeEntityId = EntityId;
+			armorEquipment.runtimeActorId = EntityId;
 			armorEquipment.helmet = Helmet;
 			armorEquipment.chestplate = Chest;
 			armorEquipment.leggings =Leggings;

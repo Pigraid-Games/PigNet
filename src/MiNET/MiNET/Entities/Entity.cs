@@ -34,6 +34,8 @@ using log4net;
 using MiNET.Blocks;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
 using MiNET.Utils.Vectors;
@@ -554,6 +556,10 @@ namespace MiNET.Entities
 			Timer3 = 117,
 			BodyRotationBlocked = 118,
 			RendersWhenInvisible = 119,
+			BodyRotationAxisAligned = 120,
+			Collidable = 121,
+			WasdAirControlled = 122,
+			Count = 123
 		}
 
 		protected virtual BitArray GetFlags()
@@ -667,23 +673,24 @@ namespace MiNET.Entities
 
 		public virtual void SpawnToPlayers(Player[] players)
 		{
-			var addEntity = McpeAddEntity.CreateObject();
-			addEntity.entityType = EntityTypeId;
-			addEntity.entityIdSelf = EntityId;
-			addEntity.runtimeEntityId = EntityId;
-			addEntity.x = KnownPosition.X;
-			addEntity.y = KnownPosition.Y;
-			addEntity.z = KnownPosition.Z;
-			addEntity.pitch = KnownPosition.Pitch;
-			addEntity.yaw = KnownPosition.Yaw;
-			addEntity.headYaw = KnownPosition.HeadYaw;
-			addEntity.metadata = GetMetadata();
-			addEntity.speedX = Velocity.X;
-			addEntity.speedY = Velocity.Y;
-			addEntity.speedZ = Velocity.Z;
-			addEntity.attributes = GetEntityAttributes();
+			McpeAddActor addActor = McpeAddActor.CreateObject();
+			addActor.entityType = EntityTypeId;
+			addActor.entityIdSelf = EntityId;
+			addActor.runtimeEntityId = EntityId;
+			addActor.x = KnownPosition.X;
+			addActor.y = KnownPosition.Y;
+			addActor.z = KnownPosition.Z;
+			addActor.pitch = KnownPosition.Pitch;
+			addActor.yaw = KnownPosition.Yaw;
+			addActor.headYaw = KnownPosition.HeadYaw;
+			addActor.metadata = GetMetadata();
+			addActor.speedX = Velocity.X;
+			addActor.speedY = Velocity.Y;
+			addActor.speedZ = Velocity.Z;
+			addActor.syncdata = new PropertySyncData { intProperties = new Dictionary<uint, int> { { 0, 0 } } }; //todo
+			addActor.attributes = GetEntityAttributes();
 
-			Level.RelayBroadcast(players, addEntity);
+			Level.RelayBroadcast(players, addActor);
 		}
 
 		public virtual EntityAttributes GetEntityAttributes()
@@ -732,9 +739,9 @@ namespace MiNET.Entities
 
 		public virtual void DespawnFromPlayers(Player[] players)
 		{
-			McpeRemoveEntity mcpeRemoveEntity = McpeRemoveEntity.CreateObject();
-			mcpeRemoveEntity.entityIdSelf = EntityId;
-			Level.RelayBroadcast(players, mcpeRemoveEntity);
+			McpeRemoveActor mcpeRemoveActor = McpeRemoveActor.CreateObject();
+			mcpeRemoveActor.entityIdSelf = EntityId;
+			Level.RelayBroadcast(players, mcpeRemoveActor);
 		}
 
 		public virtual void SetEntityData(MetadataDictionary message)
@@ -749,16 +756,16 @@ namespace MiNET.Entities
 		public virtual void BroadcastSetEntityData(MetadataDictionary metadata)
 		{
 			McpeSetActorData mcpeSetActorData = McpeSetActorData.CreateObject();
-			mcpeSetActorData.runtimeEntityId = EntityId;
+			mcpeSetActorData.runtimeActorId = EntityId;
 			mcpeSetActorData.metadata = metadata;
 			Level?.RelayBroadcast(mcpeSetActorData);
 		}
 
 		public virtual void BroadcastEntityEvent()
 		{
-			var entityEvent = McpeEntityEvent.CreateObject();
+			McpeActorEvent entityEvent = McpeActorEvent.CreateObject();
 			entityEvent.runtimeEntityId = EntityId;
-			entityEvent.eventId = (byte) (HealthManager.Health <= 0 ? 3 : 2);
+			entityEvent.eventId = (ActorEvent) (HealthManager.Health <= 0 ? 3 : 2);
 			Level.RelayBroadcast(entityEvent);
 		}
 
@@ -945,7 +952,7 @@ namespace MiNET.Entities
 
 				if (LastSentPosition != null)
 				{
-					McpeMoveEntityDelta move = McpeMoveEntityDelta.CreateObject();
+					McpeMoveActorDelta move = McpeMoveActorDelta.CreateObject();
 					move.runtimeEntityId = EntityId;
 					move.prevSentPosition = LastSentPosition;
 					move.currentPosition = (PlayerLocation) KnownPosition.Clone();
@@ -974,13 +981,11 @@ namespace MiNET.Entities
 		{
 		}
 
-		public virtual void DoMouseOverInteraction(byte actionId, Player player)
+		public virtual void DoMouseOverInteraction(Player player)
 		{
-			if (!string.IsNullOrEmpty(player.ButtonText))
-			{
-				player.ButtonText = null;
-				player.SendSetEntityData();
-			}
+			if (string.IsNullOrEmpty(player.ButtonText)) return;
+			player.ButtonText = null;
+			player.SendSetEntityData();
 		}
 
 		public virtual void Mount(Entity rider)

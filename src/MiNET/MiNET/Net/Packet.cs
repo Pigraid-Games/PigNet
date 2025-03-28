@@ -42,6 +42,7 @@ using MiNET.Blocks;
 using MiNET.Crafting;
 using MiNET.Items;
 using MiNET.Net.Items;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.IO;
@@ -50,7 +51,7 @@ using MiNET.Utils.Nbt;
 using MiNET.Utils.Skins;
 using MiNET.Utils.Vectors;
 using Newtonsoft.Json;
-using static MiNET.Net.McpePlayerAuthInput;
+using static MiNET.Net.Packets.Mcpe.McpePlayerAuthInput;
 
 namespace MiNET.Net;
 
@@ -742,7 +743,7 @@ public abstract class Packet
 
 	public void Write(Nbt nbt)
 	{
-		Write(nbt, _writer.BaseStream, nbt.NbtFile.UseVarInt || this is McpeBlockEntityData || this is McpeUpdateEquipment);
+		Write(nbt, _writer.BaseStream, nbt.NbtFile.UseVarInt || this is McpeBlockActorData || this is McpeUpdateEquipment);
 	}
 
 	public static void Write(Nbt nbt, Stream stream, bool useVarInt)

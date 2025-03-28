@@ -26,6 +26,7 @@
 using System;
 using System.Numerics;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
 using MiNET.Utils.Vectors;
@@ -84,7 +85,7 @@ namespace MiNET.Entities.World
 				}
 
 				var entityData = McpeSetActorData.CreateObject();
-				entityData.runtimeEntityId = EntityId;
+				entityData.runtimeActorId = EntityId;
 				entityData.metadata = GetMetadata();
 				Level.RelayBroadcast(entityData);
 			}

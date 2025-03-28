@@ -29,6 +29,7 @@ using fNbt;
 using MiNET.Blocks;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Worlds;
 
 namespace MiNET.BlockEntities;
@@ -184,14 +185,14 @@ public class FurnaceBlockEntity : BlockEntity
 		foreach (Player observer in Inventory.Observers)
 		{
 			McpeContainerSetData cookTimeSetData = McpeContainerSetData.CreateObject();
-			cookTimeSetData.windowId = Inventory.WindowsId;
-			cookTimeSetData.property = 0;
+			cookTimeSetData.containerId = Inventory.WindowsId;
+			cookTimeSetData.id = 0;
 			cookTimeSetData.value = CookTime;
 			observer.SendPacket(cookTimeSetData);
 
 			McpeContainerSetData burnTimeSetData = McpeContainerSetData.CreateObject();
-			burnTimeSetData.windowId = Inventory.WindowsId;
-			burnTimeSetData.property = 1;
+			burnTimeSetData.containerId = Inventory.WindowsId;
+			burnTimeSetData.id = 1;
 			burnTimeSetData.value = BurnTick;
 			observer.SendPacket(burnTimeSetData);
 		}

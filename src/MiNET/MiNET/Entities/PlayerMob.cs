@@ -29,6 +29,8 @@ using System.Text;
 using log4net;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
@@ -94,14 +96,14 @@ namespace MiNET.Entities
 			LastUpdatedTime = DateTime.UtcNow;
 
 			var package = McpeMovePlayer.CreateObject();
-			package.runtimeEntityId = EntityId;
+			package.playerRuntimeId = EntityId;
 			package.x = position.X;
 			package.y = position.Y + 1.62f;
 			package.z = position.Z;
 			package.yaw = position.HeadYaw;
 			package.headYaw = position.Yaw;
 			package.pitch = position.Pitch;
-			package.mode = (byte) (teleport ? 1 : 0);
+			package.mode = (PositionMode) (teleport ? 1 : 0);
 
 			Level.RelayBroadcast(package);
 		}
@@ -149,13 +151,13 @@ namespace MiNET.Entities
 				Level.RelayBroadcast(players, message);
 
 				var mobEquipment = McpeMobEquipment.CreateObject();
-				mobEquipment.runtimeEntityId = EntityId;
+				mobEquipment.runtimeActorId = EntityId;
 				mobEquipment.item = ItemInHand;
 				mobEquipment.slot = 0;
 				Level.RelayBroadcast(players, mobEquipment);
 
 				var armorEquipment = McpeMobArmorEquipment.CreateObject();
-				armorEquipment.runtimeEntityId = EntityId;
+				armorEquipment.runtimeActorId = EntityId;
 				armorEquipment.helmet = Helmet;
 				armorEquipment.chestplate = Chest;
 				armorEquipment.leggings = Leggings;
@@ -163,7 +165,7 @@ namespace MiNET.Entities
 				Level.RelayBroadcast(players, armorEquipment);
 
 				var setEntityData = McpeSetActorData.CreateObject();
-				setEntityData.runtimeEntityId = EntityId;
+				setEntityData.runtimeActorId = EntityId;
 				setEntityData.metadata = GetMetadata();
 				Level?.RelayBroadcast(players, setEntityData);
 		}
@@ -225,7 +227,7 @@ namespace MiNET.Entities
 				playerList.PutPool();
 			}
 
-			McpeRemoveEntity mcpeRemovePlayer = McpeRemoveEntity.CreateObject();
+			McpeRemoveActor mcpeRemovePlayer = McpeRemoveActor.CreateObject();
 			mcpeRemovePlayer.entityIdSelf = EntityId;
 			Level.RelayBroadcast(players, mcpeRemovePlayer);
 		}
@@ -257,7 +259,7 @@ namespace MiNET.Entities
 		protected virtual void SendEquipment()
 		{
 			McpeMobEquipment message = McpeMobEquipment.CreateObject();
-			message.runtimeEntityId = EntityId;
+			message.runtimeActorId = EntityId;
 			message.item = ItemInHand;
 			message.slot = 0;
 			Level.RelayBroadcast(message);
@@ -266,7 +268,7 @@ namespace MiNET.Entities
 		protected virtual void SendArmor()
 		{
 			McpeMobArmorEquipment armorEquipment = McpeMobArmorEquipment.CreateObject();
-			armorEquipment.runtimeEntityId = EntityId;
+			armorEquipment.runtimeActorId = EntityId;
 			armorEquipment.helmet = Helmet;
 			armorEquipment.chestplate = Chest;
 			armorEquipment.leggings = Leggings;

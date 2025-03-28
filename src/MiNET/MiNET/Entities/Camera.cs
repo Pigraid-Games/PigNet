@@ -25,6 +25,7 @@
 
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
@@ -59,8 +60,8 @@ namespace MiNET.Entities
 		public override void DoInteraction(int actionId, Player player)
 		{
 			McpeCamera camera = McpeCamera.CreateObject();
-			camera.unknown1 = EntityId;
-			camera.unknown2 = player.EntityId;
+			camera.cameraId = EntityId;
+			camera.targetPlayerId = player.EntityId;
 			player.Level.RelayBroadcast(camera);
 
 			_countdown = Age + 100;

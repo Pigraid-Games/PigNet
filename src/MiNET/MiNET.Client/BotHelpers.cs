@@ -30,6 +30,7 @@ using System.Threading.Tasks;
 using log4net;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
@@ -89,7 +90,7 @@ namespace MiNET.Client
 			Action<Task, Item, int> doMobEquipmentTask = (t, item, selectedSlot) =>
 			{
 				McpeMobEquipment message = new McpeMobEquipment();
-				message.runtimeEntityId = client.EntityId;
+				message.runtimeActorId = client.EntityId;
 				message.item = item;
 				message.selectedSlot = (byte) selectedSlot;
 				message.slot = (byte) (selectedSlot + 9);
@@ -140,7 +141,7 @@ namespace MiNET.Client
 				{
 					// First just rotate towards target pos
 					McpeMovePlayer movePlayerPacket = McpeMovePlayer.CreateObject();
-					movePlayerPacket.runtimeEntityId = client.EntityId;
+					movePlayerPacket.playerRuntimeId = client.EntityId;
 					movePlayerPacket.x = client.CurrentLocation.X;
 					movePlayerPacket.y = client.CurrentLocation.Y;
 					movePlayerPacket.z = client.CurrentLocation.Z;
@@ -163,7 +164,7 @@ namespace MiNET.Client
 						client.CurrentLocation = new PlayerLocation(Vector3.Lerp(originalPosition, targetPosition, 1 - weight));
 
 						McpeMovePlayer movePlayerPacket = McpeMovePlayer.CreateObject();
-						movePlayerPacket.runtimeEntityId = client.EntityId;
+						movePlayerPacket.playerRuntimeId = client.EntityId;
 						movePlayerPacket.x = client.CurrentLocation.X;
 						movePlayerPacket.y = client.CurrentLocation.Y;
 						movePlayerPacket.z = client.CurrentLocation.Z;
@@ -180,7 +181,7 @@ namespace MiNET.Client
 						client.CurrentLocation = new PlayerLocation(targetPosition);
 
 						McpeMovePlayer movePlayerPacket = McpeMovePlayer.CreateObject();
-						movePlayerPacket.runtimeEntityId = client.EntityId;
+						movePlayerPacket.playerRuntimeId = client.EntityId;
 						movePlayerPacket.x = client.CurrentLocation.X;
 						movePlayerPacket.y = client.CurrentLocation.Y;
 						movePlayerPacket.z = client.CurrentLocation.Z;

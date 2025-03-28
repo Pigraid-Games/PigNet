@@ -47,6 +47,9 @@ using MiNET.Crafting;
 using MiNET.Entities;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
+using MiNET.Net.Packets.RakNet;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
@@ -242,135 +245,6 @@ namespace MiNET.Client
 		public bool HasSpawned { get; set; }
 
 		public ShapedRecipe _recipeToSend = null;
-
-		public void SendCraftingEvent2()
-		{
-			var recipe = _recipeToSend;
-
-			if (recipe != null)
-			{
-				Log.Error("Sending crafting event: " + recipe.Id);
-
-				McpeCraftingEvent crafting = McpeCraftingEvent.CreateObject();
-				crafting.windowId = 0;
-				crafting.recipeType = 1;
-				crafting.recipeId = recipe.Id;
-
-				{
-					ItemStacks slotData = new ItemStacks();
-					for (uint i = 0; i < recipe.Input.Length; i++)
-					{
-						slotData.Add(recipe.Input[i]);
-
-						McpeInventorySlot sendSlot = McpeInventorySlot.CreateObject();
-						sendSlot.inventoryId = 0;
-						sendSlot.slot = i;
-						sendSlot.item = recipe.Input[i];
-						SendPacket(sendSlot);
-
-						//McpeContainerSetSlot setSlot = McpeContainerSetSlot.CreateObject();
-						//setSlot.item = recipe.Input[i];
-						//setSlot.windowId = 0;
-						//setSlot.slot = (short) (i);
-						//SendPackage(setSlot);
-						//Log.Error("Set set slot");
-					}
-					crafting.input = slotData;
-
-					{
-						McpeMobEquipment eq = McpeMobEquipment.CreateObject();
-						eq.runtimeEntityId = EntityId;
-						eq.slot = 9;
-						eq.selectedSlot = 0;
-						eq.item = recipe.Input[0];
-						SendPacket(eq);
-						Log.Error("Set eq slot");
-					}
-				}
-				{
-					ItemStacks slotData = new ItemStacks {recipe.Result.First()};
-					crafting.result = slotData;
-				}
-
-				SendPacket(crafting);
-			}
-
-
-			//{
-			//	McpeContainerSetSlot setSlot = McpeContainerSetSlot.CreateObject();
-			//	setSlot.item = new MetadataSlot(new ItemStack(new ItemDiamondAxe(0), 1));
-			//	setSlot.windowId = 0;
-			//	setSlot.slot = 0;
-			//	SendPackage(setSlot);
-			//}
-			//{
-			//	McpePlayerEquipment eq = McpePlayerEquipment.CreateObject();
-			//	eq.entityId = _entityId;
-			//	eq.slot = 9;
-			//	eq.selectedSlot = 0;
-			//	eq.item = new MetadataSlot(new ItemStack(new ItemDiamondAxe(0), 1));
-			//	SendPackage(eq);
-			//}
-		}
-
-		public void SendCraftingEvent()
-		{
-			var recipe = _recipeToSend;
-
-			if (recipe != null)
-			{
-				{
-					//McpeContainerSetSlot setSlot = McpeContainerSetSlot.CreateObject();
-					//setSlot.item = new ItemBlock(new Block(17), 0) {Count = 1};
-					//setSlot.windowId = 0;
-					//setSlot.slot = 0;
-					//SendPackage(setSlot);
-				}
-				{
-					McpeMobEquipment eq = McpeMobEquipment.CreateObject();
-					eq.runtimeEntityId = EntityId;
-					eq.slot = 9;
-					eq.selectedSlot = 0;
-					eq.item = new ItemBlock(new Block(17), 0) {Count = 1};
-					SendPacket(eq);
-				}
-
-				Log.Error("Sending crafting event: " + recipe.Id);
-
-				McpeCraftingEvent crafting = McpeCraftingEvent.CreateObject();
-				crafting.windowId = 0;
-				crafting.recipeType = 1;
-				crafting.recipeId = recipe.Id;
-
-				{
-					ItemStacks slotData = new ItemStacks {new ItemBlock(new Block(17), 0) {Count = 1}};
-					crafting.input = slotData;
-				}
-				{
-					ItemStacks slotData = new ItemStacks {new ItemBlock(new Block(5), 0) {Count = 1}};
-					crafting.result = slotData;
-				}
-
-				SendPacket(crafting);
-
-				//{
-				//	McpeContainerSetSlot setSlot = McpeContainerSetSlot.CreateObject();
-				//	setSlot.item = new MetadataSlot(new ItemStack(new ItemBlock(new Block(5), 0), 4));
-				//	setSlot.windowId = 0;
-				//	setSlot.slot = 0;
-				//	SendPackage(setSlot);
-				//}
-
-				{
-					McpeMobEquipment eq = McpeMobEquipment.CreateObject();
-					eq.runtimeEntityId = EntityId;
-					eq.slot = 10;
-					eq.selectedSlot = 1;
-					eq.item = new ItemBlock(new Block(5), 0) {Count = 1};
-					SendPacket(eq);
-				}
-			}
-		}
 
 		private string SerializeCompound(NbtCompound compound)
 		{
@@ -803,8 +677,8 @@ namespace MiNET.Client
 
 		public void SendChat(string text)
 		{
-			var packet = McpeText.CreateObject();
-			packet.type = (byte) MessageType.Chat;
+			McpeText packet = McpeText.CreateObject();
+			packet.type = TextPacketType.Chat;
 			packet.source = Username;
 			packet.message = text;
 
@@ -818,15 +692,15 @@ namespace MiNET.Client
 			if (CurrentLocation.Y < 0)
 				CurrentLocation.Y = 64f;
 
-			var movePlayerPacket = McpeMovePlayer.CreateObject();
-			movePlayerPacket.runtimeEntityId = EntityId;
+			McpeMovePlayer movePlayerPacket = McpeMovePlayer.CreateObject();
+			movePlayerPacket.playerRuntimeId = EntityId;
 			movePlayerPacket.x = CurrentLocation.X;
 			movePlayerPacket.y = CurrentLocation.Y;
 			movePlayerPacket.z = CurrentLocation.Z;
 			movePlayerPacket.yaw = CurrentLocation.Yaw;
 			movePlayerPacket.pitch = CurrentLocation.Pitch;
 			movePlayerPacket.headYaw = CurrentLocation.HeadYaw;
-			movePlayerPacket.mode = 1;
+			movePlayerPacket.mode = PositionMode.Respawn;
 			movePlayerPacket.onGround = false;
 
 			SendPacket(movePlayerPacket);
@@ -838,35 +712,22 @@ namespace MiNET.Client
 
 			if (CurrentLocation.Y < 0) CurrentLocation.Y = 64f;
 
-			var movePlayerPacket = McpeMovePlayer.CreateObject();
+			McpeMovePlayer movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-			movePlayerPacket.runtimeEntityId = EntityId;
+			movePlayerPacket.playerRuntimeId = EntityId;
 			movePlayerPacket.x = CurrentLocation.X;
 			movePlayerPacket.y = CurrentLocation.Y;
 			movePlayerPacket.z = CurrentLocation.Z;
 			movePlayerPacket.yaw = CurrentLocation.Yaw;
 			movePlayerPacket.pitch = CurrentLocation.Pitch;
 			movePlayerPacket.headYaw = CurrentLocation.HeadYaw;
-			movePlayerPacket.mode = 1;
+			movePlayerPacket.mode = PositionMode.Respawn;
 			movePlayerPacket.onGround = false;
 
 			if (Connection.ConnectionInfo.IsEmulator)
 			{
-				//var batch = McpeWrapper.CreateObject();
-				//batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-				//batch.payload = Compression.CompressPacketsForWrapper(new List<Packet> {movePlayerPacket});
-
-				//Packet message = null;
-				//if (Session.CustomMessageHandler != null) message = Session.CustomMessageHandler.HandleOrderedSend(batch);
-
-				//Reliability reliability = message.ReliabilityHeader.Reliability;
-				//if (reliability == Reliability.Undefined) reliability = Reliability.Reliable; // Questionable practice
-
-				//if (reliability == Reliability.ReliableOrdered) message.ReliabilityHeader.OrderingIndex = Interlocked.Increment(ref Session.OrderingIndex);
-				//await Session.SendPacketAsync(message);
-
 				Session.SendPacket(movePlayerPacket);
-				await Session.SendQueueAsync(0);
+				await Session.SendQueueAsync();
 			}
 			else
 			{

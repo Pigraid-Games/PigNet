@@ -41,6 +41,7 @@ using fNbt;
 using log4net;
 using MiNET.Blocks;
 using MiNET.LevelDB;
+using MiNET.Net.EnumerationsTable;
 using MiNET.Utils;
 using MiNET.Utils.IO;
 using MiNET.Utils.Vectors;

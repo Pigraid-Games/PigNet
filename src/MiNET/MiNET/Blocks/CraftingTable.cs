@@ -25,6 +25,8 @@
 
 using System.Numerics;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -43,10 +45,10 @@ public partial class CraftingTable : Block
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
 		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-		containerOpen.windowId = 13;
-		containerOpen.type = 1;
-		containerOpen.coordinates = Coordinates;
-		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+		containerOpen.containerId = 13;
+		containerOpen.containerType = ContainerType.Workbench;
+		containerOpen.position = Coordinates;
+		containerOpen.runtimeActorId = EntityManager.EntityIdSelf;
 		player.SendPacket(containerOpen);
 
 		return true;

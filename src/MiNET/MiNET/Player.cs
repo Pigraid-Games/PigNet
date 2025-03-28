@@ -55,12 +55,12 @@ using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using System.IO.Compression;
-using System.Threading.Tasks;
-using Iced.Intel;
-using JetBrains.Annotations;
 using MiNET.BlockEntities;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Net.RakNet;
 using MiNET.Sounds;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -260,7 +260,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			return;
 		}
 		CurrentForm = null;
-		form.FromJson(message.data, this);
+		form.FromJson(message.jsonResponse, this);
 	}
 
 	public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message) => SetGameMode((GameMode) message.gamemode);
@@ -272,7 +272,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		switch (message.responseStatus)
 		{
-			case 2:
+			case ResourcePackResponse.Downloading:
 			{
 				foreach (string packId in message.resourcepackids)
 				{
@@ -292,15 +292,18 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				}
 				return;
 			}
-			case 3:
+			case ResourcePackResponse.DownloadingFinished:
 				SendResourcePackStack();
 				return;
-			case 4:
+			case ResourcePackResponse.ResourcePackStackFinished:
 				MiNetServer.FastThreadPool.QueueUserWorkItem(() => { Start(null); });
 				PlayerPackData.Clear();
 				PlayerPackDataB.Clear();
 				PlayerPackMap.Clear();
 				return;
+			case ResourcePackResponse.Cancel:
+				// TODO: Kick player if the resource pack is obligatory
+				break;
 		}
 	}
 
@@ -411,19 +414,19 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpeSetActorData(McpeSetActorData message)
 	{
 		// Only used by EDU NPC so far.
-		if (Level.TryGetEntity(message.runtimeEntityId, out Entity entity)) entity.SetEntityData(message.metadata);
+		if (Level.TryGetEntity(message.runtimeActorId, out Entity entity)) entity.SetEntityData(message.metadata);
 	}
 
 	public void HandleMcpeNpcRequest(McpeNpcRequest message)
 	{
 		// Only used by EDU NPC.
 
-		if (!Level.TryGetEntity(message.runtimeEntityId, out Entity entity)) return;
+		if (!Level.TryGetEntity(message.runtimeActorId, out Entity entity)) return;
 		// 0 is edit
 		// 0 is exec command
 		// 2 is exec link
 
-		if (message.unknown0 != 0) return;
+		if (message.requestType != 0) return;
 		var metadata = new MetadataDictionary();
 		//metadata[42] = new MetadataString(message.unknown1); todo whats this
 		entity.SetEntityData(metadata);
@@ -433,7 +436,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		lock (_mapInfoSync)
 		{
-			long mapId = message.mapId;
+			long mapId = message.mapUniqueId;
 
 			Log.Trace($"Requested map with ID: {mapId} 0x{mapId:X2}");
 
@@ -467,7 +470,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		MiNetServer.FastThreadPool.QueueUserWorkItem(SendChunksForKnownPosition);
 	}
 
-	public void HandleMcpeMoveEntity(McpeMoveEntity message)
+	public void HandleMcpeMoveEntity(McpeMoveActor message)
 	{
 		if (Vehicle != message.runtimeEntityId || !Level.TryGetEntity(message.runtimeEntityId, out Entity entity)) return;
 		entity.KnownPosition = message.position;
@@ -480,9 +483,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		if (Level == null) return;
 
 		McpeAnimate msg = McpeAnimate.CreateObject();
-		msg.runtimeEntityId = EntityId;
+		msg.runtimeActorId = EntityId;
 		msg.actionId = message.actionId;
-		msg.unknownFloat = message.unknownFloat;
+		msg.rowingTime = message.rowingTime;
 
 		Level.RelayBroadcast(this, msg);
 	}
@@ -512,7 +515,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 					double breakTime = Math.Ceiling(target.Hardness * toolTypeFactor * 20);
 
 					McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-					breakEvent.eventId = 3600;
+					breakEvent.eventId = LevelEventType.SimTimeStep;
 					breakEvent.position = message.coordinates;
 					breakEvent.data = (int) (65535 / breakTime);
 					Log.Debug("Break speed: " + breakEvent.data);
@@ -527,7 +530,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				int data = target.GetRuntimeId() | ((byte) (message.face << 24));
 
 				McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-				breakEvent.eventId = 2014;
+				breakEvent.eventId = LevelEventType.ParticlesCrackBlock;
 				breakEvent.position = message.coordinates;
 				breakEvent.data = data;
 				Level.RelayBroadcast(breakEvent);
@@ -537,7 +540,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			case PlayerAction.StopBreak:
 			{
 				McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-				breakEvent.eventId = 3601;
+				breakEvent.eventId = LevelEventType.StopBlockCracking;
 				breakEvent.position = message.coordinates;
 				Level.RelayBroadcast(breakEvent);
 				break;
@@ -704,29 +707,22 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		}
 	}
 
-	public void HandleMcpeBlockEntityData(McpeBlockEntityData message)
+	public void HandleMcpeBlockEntityData(McpeBlockActorData message)
 	{
 		if (Log.IsDebugEnabled)
 		{
-			Log.DebugFormat("x:  {0}", message.coordinates.X);
-			Log.DebugFormat("y:  {0}", message.coordinates.Y);
-			Log.DebugFormat("z:  {0}", message.coordinates.Z);
-			Log.DebugFormat("NBT {0}", message.namedtag.NbtFile);
+			Log.DebugFormat("x:  {0}", message.blockPositin.X);
+			Log.DebugFormat("y:  {0}", message.blockPositin.Y);
+			Log.DebugFormat("z:  {0}", message.blockPositin.Z);
+			Log.DebugFormat("NBT {0}", message.actorDataTags.NbtFile);
 		}
 
-		BlockEntity blockEntity = Level.GetBlockEntity(message.coordinates);
+		BlockEntity blockEntity = Level.GetBlockEntity(message.blockPositin);
 
 		if (blockEntity == null) return;
 
-		blockEntity.SetCompound((NbtCompound) message.namedtag.NbtFile.RootTag);
+		blockEntity.SetCompound((NbtCompound) message.actorDataTags.NbtFile.RootTag);
 		Level.SetBlockEntity(blockEntity);
-	}
-
-	public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
-	{
-		uint flags = message.flags;
-		IsAutoJump = (flags & 0x20) == 0x20;
-		IsFlying = (flags & 0x200) == 0x200;
 	}
 
 	public void SendEntitiesAnimation(string animationName, long[] entityIds)
@@ -1074,7 +1070,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public void HandleMcpeRespawn(McpeRespawn message)
 	{
-		if (message.state == (byte) McpeRespawn.RespawnState.ClientReady)
+		if (message.state == PlayerRespawnState.ClientReadyToSpawn)
 		{
 			HealthManager.ResetHealth();
 
@@ -1111,8 +1107,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			mcpeRespawn.x = SpawnPosition.X;
 			mcpeRespawn.y = SpawnPosition.Y;
 			mcpeRespawn.z = SpawnPosition.Z;
-			mcpeRespawn.state = (byte) McpeRespawn.RespawnState.Ready;
-			mcpeRespawn.runtimeEntityId = EntityId;
+			mcpeRespawn.state = PlayerRespawnState.ReadyToSpawn;
+			mcpeRespawn.runtimeActorId = EntityId;
 			SendPacket(mcpeRespawn);
 		}
 		else
@@ -1126,14 +1122,14 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		LastUpdatedTime = DateTime.UtcNow;
 
 		McpeMovePlayer packet = McpeMovePlayer.CreateObject();
-		packet.runtimeEntityId = EntityManager.EntityIdSelf;
+		packet.playerRuntimeId = EntityManager.EntityIdSelf;
 		packet.x = position.X;
 		packet.y = position.Y + 1.62f;
 		packet.z = position.Z;
 		packet.yaw = position.Yaw;
 		packet.headYaw = position.HeadYaw;
 		packet.pitch = position.Pitch;
-		packet.mode = (byte) (teleport ? 1 : 0);
+		packet.mode = (PositionMode) (teleport ? 1 : 0);
 
 		SendPacket(packet);
 	}
@@ -1144,14 +1140,14 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		LastUpdatedTime = DateTime.UtcNow;
 
 		McpeMovePlayer packet = McpeMovePlayer.CreateObject();
-		packet.runtimeEntityId = EntityManager.EntityIdSelf;
+		packet.playerRuntimeId = EntityManager.EntityIdSelf;
 		packet.x = newPosition.X;
 		packet.y = newPosition.Y + 1.62f;
 		packet.z = newPosition.Z;
 		packet.yaw = newPosition.Yaw;
 		packet.headYaw = newPosition.HeadYaw;
 		packet.pitch = newPosition.Pitch;
-		packet.mode = 1;
+		packet.mode = PositionMode.Respawn;
 
 		SendPacket(packet);
 	}
@@ -1569,7 +1565,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendChangeDimension(Dimension dimension, bool respawn = false, Vector3 position = new())
 	{
 		McpeChangeDimension changeDimension = McpeChangeDimension.CreateObject();
-		changeDimension.dimension = (int) dimension;
+		changeDimension.dimensionId = (int) dimension;
 		changeDimension.position = position;
 		changeDimension.respawn = respawn;
 		//changeDimension.NoBatch = true; // This is here because the client crashes otherwise.
@@ -1579,7 +1575,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public override void BroadcastSetEntityData(MetadataDictionary metadata)
 	{
 		McpeSetActorData mcpeSetActorData = McpeSetActorData.CreateObject();
-		mcpeSetActorData.runtimeEntityId = EntityManager.EntityIdSelf;
+		mcpeSetActorData.runtimeActorId = EntityManager.EntityIdSelf;
 		mcpeSetActorData.metadata = metadata;
 		mcpeSetActorData.tick = CurrentTick;
 		SendPacket(mcpeSetActorData);
@@ -1590,7 +1586,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendSetEntityData()
 	{
 		McpeSetActorData mcpeSetActorData = McpeSetActorData.CreateObject();
-		mcpeSetActorData.runtimeEntityId = EntityManager.EntityIdSelf;
+		mcpeSetActorData.runtimeActorId = EntityManager.EntityIdSelf;
 		mcpeSetActorData.metadata = GetMetadata();
 		mcpeSetActorData.tick = CurrentTick;
 		SendPacket(mcpeSetActorData);
@@ -1598,10 +1594,10 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public void SendEntityEvent(int runtimeEntityId, byte eventId)
 	{
-		McpeEntityEvent mcpeEntityEvent = McpeEntityEvent.CreateObject();
-		mcpeEntityEvent.runtimeEntityId = runtimeEntityId;
-		mcpeEntityEvent.eventId = eventId;
-		SendPacket(mcpeEntityEvent);
+		McpeActorEvent mcpeActorEvent = McpeActorEvent.CreateObject();
+		mcpeActorEvent.runtimeEntityId = runtimeEntityId;
+		mcpeActorEvent.eventId = (ActorEvent) eventId;
+		SendPacket(mcpeActorEvent);
 	}
 
 	public void SendSetDifficulty()
@@ -1617,7 +1613,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		// TODO: We need to move the inventoryIds in an enum or something more clean
 		McpeInventoryContent inventoryContent = McpeInventoryContent.CreateObject();
 		inventoryContent.inventoryId = 0x00;
-		inventoryContent.input = Inventory.GetSlots();
+		inventoryContent.slots = Inventory.GetSlots();
 		SendPacket(inventoryContent);
 
 		Inventory.ArmorInventory.SendArmorContentPacket(this);
@@ -1625,11 +1621,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		McpeInventoryContent uiContent = McpeInventoryContent.CreateObject();
 		uiContent.inventoryId = 0x7c;
-		uiContent.input = Inventory.GetUiSlots();
+		uiContent.slots = Inventory.GetUiSlots();
 		SendPacket(uiContent);
 
 		McpeMobEquipment mobEquipment = McpeMobEquipment.CreateObject();
-		mobEquipment.runtimeEntityId = EntityManager.EntityIdSelf;
+		mobEquipment.runtimeActorId = EntityManager.EntityIdSelf;
 		mobEquipment.item = Inventory.GetItemInHand();
 		mobEquipment.slot = (byte) Inventory.InHandSlot;
 		mobEquipment.selectedSlot = (byte) Inventory.InHandSlot;
@@ -1639,7 +1635,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendCraftingRecipes()
 	{
 		McpeCraftingData craftingData = McpeCraftingData.CreateObject();
-		craftingData.recipes = RecipeManager.Recipes;
+		craftingData.craftingEntries = RecipeManager.Recipes;
 		SendPacket(craftingData);
 	}
 
@@ -1836,19 +1832,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				.Any(block => block.IsSolid)));
 	}
 
-	// NOTE: This shouldn't be here I guess, it's handling a level thing but in the player class
-	public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
-	{
-		McpeLevelSoundEventOld sound = McpeLevelSoundEventOld.CreateObject();
-		sound.soundId = message.soundId;
-		sound.position = message.position;
-		sound.blockId = message.blockId;
-		sound.entityType = message.entityType;
-		sound.isBabyMob = message.isBabyMob;
-		sound.isGlobal = message.isGlobal;
-		Level.RelayBroadcast(sound);
-	}
-
 	public void HandleMcpePlayerAuthInput(McpePlayerAuthInput message)
 	{
 		CurrentTick = message.Tick;
@@ -1983,7 +1966,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 						double breakTime = Math.Ceiling(target.Hardness * toolTypeFactor * 20);
 						McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-						breakEvent.eventId = 3600;
+						breakEvent.eventId = LevelEventType.StartBlockCracking;
 						breakEvent.position = action.BlockCoordinates;
 						breakEvent.data = (int) (65535 / breakTime);
 						Level.RelayBroadcast(breakEvent);
@@ -1997,7 +1980,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 					int data = target.GetRuntimeId() | ((byte) (action.Facing << 24));
 
 					McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-					breakEvent.eventId = 2014;
+					breakEvent.eventId = LevelEventType.ParticlesCrackBlock;
 					breakEvent.position = action.BlockCoordinates;
 					breakEvent.data = data;
 					Level.RelayBroadcast(breakEvent);
@@ -2007,7 +1990,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				case PlayerAction.StopBreak:
 				{
 					McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-					breakEvent.eventId = 3601;
+					breakEvent.eventId = LevelEventType.StopBlockCracking;
 					breakEvent.position = action.BlockCoordinates;
 					Level.RelayBroadcast(breakEvent);
 					break;
@@ -2145,15 +2128,15 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			// open inventory
 
 			McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-			containerOpen.windowId = inventory.WindowsId;
-			containerOpen.type = inventory.Type;
-			containerOpen.coordinates = inventoryCoord;
-			containerOpen.runtimeEntityId = -1;
+			containerOpen.containerId = inventory.WindowsId;
+			containerOpen.containerType = (ContainerType) inventory.Type;
+			containerOpen.position = inventoryCoord;
+			containerOpen.runtimeActorId = -1;
 			SendPacket(containerOpen);
 
 			McpeInventoryContent containerSetContent = McpeInventoryContent.CreateObject();
 			containerSetContent.inventoryId = inventory.WindowsId;
-			containerSetContent.input = inventory.Slots;
+			containerSetContent.slots = inventory.Slots;
 			SendPacket(containerSetContent);
 		}
 	}
@@ -2168,7 +2151,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		else
 		{
 			McpeInventorySlot sendSlot = McpeInventorySlot.CreateObject();
-			sendSlot.inventoryId = inventory.WindowsId;
+			sendSlot.containerId = inventory.WindowsId;
 			sendSlot.slot = slot;
 			sendSlot.item = itemStack;
 			SendPacket(sendSlot);
@@ -2393,6 +2376,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public readonly List<byte[]> HiddenPlayers = [];
 	private McpeSetPlayerGameType gameType;
+	private IMcpeMessageHandler _iMcpeMessageHandlerImplementation;
 
 	public void HidePlayer(Player player)
 	{
@@ -2411,9 +2395,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		if(player.IsConnected) player.SpawnToPlayers([this]);
 	}
 
-	public ItemEntity DropItem(Item item)
+	public ItemActor DropItem(Item item)
 	{
-		var itemEntity = new ItemEntity(Level, item)
+		var itemEntity = new ItemActor(Level, item)
 		{
 			Velocity = KnownPosition.GetDirection().Normalize() * 0.3f,
 			KnownPosition = KnownPosition + new Vector3(0f, 1.62f, 0f)
@@ -2423,7 +2407,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		return itemEntity;
 	}
 
-	public bool PickUpItem(ItemEntity item) => Inventory.SetFirstEmptySlot(item.Item, true);
+	public bool PickUpItem(ItemActor item) => Inventory.SetFirstEmptySlot(item.Item, true);
 
 	public void HandleMcpeContainerClose(McpeContainerClose message)
 	{
@@ -2441,7 +2425,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 					inventory.InventoryChange -= OnInventoryChange;
 					inventory.RemoveObserver(this);
 
-					if (message != null && message.windowId != inventory.WindowsId) return;
+					if (message != null && message.containerId != inventory.WindowsId) return;
 
 					// close container 
 					if (inventory.Type == 0 && !inventory.IsOpen())
@@ -2454,7 +2438,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 					}
 
 					McpeContainerClose closePacket = McpeContainerClose.CreateObject();
-					closePacket.windowId = inventory.WindowsId;
+					closePacket.containerId = inventory.WindowsId;
 					closePacket.server = message == null;
 					SendPacket(closePacket);
 
@@ -2482,7 +2466,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				default:
 				{
 					McpeContainerClose closePacket = McpeContainerClose.CreateObject();
-					closePacket.windowId = 0;
+					closePacket.containerId = 0;
 					closePacket.server = message == null;
 					SendPacket(closePacket);
 					break;
@@ -2494,7 +2478,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpeEmote(McpeEmotePacket message)
 	{
 		McpeEmotePacket msg = McpeEmotePacket.CreateObject();
-		msg.runtimeEntityId = EntityId;
+		msg.runtimeActorId = EntityId;
 		msg.xuid = message.xuid;
 		msg.platformId = message.platformId;
 		msg.emoteId = message.emoteId;
@@ -2502,11 +2486,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		Level.RelayBroadcast(this, msg);
 	}
 
-	public void HandleMcpePermissionRequest(McpePermissionRequest message)
+	public void HandleMcpePermissionRequest(McpeRequestPermission message)
 	{
 		//TODO Figure out how to get player from runtimeId to send abilities packet
 
-		switch (message.permission)
+		switch (message.permissionLevel)
 		{
 			case 0:
 			{
@@ -2543,11 +2527,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpeInteract(McpeInteract message)
 	{
 		Entity target;
-		long runtimeEntityId = message.targetRuntimeEntityId;
+		long runtimeEntityId = message.targetRuntimeActorId;
 		if (runtimeEntityId == EntityManager.EntityIdSelf) target = this;
 		else if (!Level.TryGetEntity(runtimeEntityId, out target)) return;
 
-		if (message.actionId != 4)
+		if (message.actionId != InteractPacketAction.InteractUpdate)
 		{
 			Log.Debug($"Interact Action ID: {message.actionId}");
 			Log.Debug($"Interact Target Entity ID: {runtimeEntityId}");
@@ -2565,8 +2549,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			case McpeInteract.Actions.MouseOver:
 			{
 				// Mouse over
-				DoMouseOverInteraction(message.actionId, this);
-				target.DoMouseOverInteraction(message.actionId, this);
+				DoMouseOverInteraction(this);
+				target.DoMouseOverInteraction(this);
 				break;
 			}
 			case McpeInteract.Actions.OpenInventory:
@@ -2574,9 +2558,10 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				if (target == this)
 				{
 					McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-					containerOpen.windowId = 0;
-					containerOpen.type = 255;
-					containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+					containerOpen.containerId = 0;
+					//containerOpen.containerType = 255;
+					containerOpen.containerType = ContainerType.Inventory;
+					containerOpen.runtimeActorId = EntityManager.EntityIdSelf;
 					SendPacket(containerOpen);
 				}
 				else if (IsRiding) // Riding; Open inventory
@@ -2586,12 +2571,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 				break;
 			}
-			case McpeInteract.Actions.RightClick:
-				break;
-			case McpeInteract.Actions.LeftClick:
-				break;
-			case McpeInteract.Actions.OpenNpc:
-				break;
 			default:
 				throw new ArgumentOutOfRangeException();
 		}
@@ -2617,15 +2596,15 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		Inventory.SetInventorySlot(Inventory.InHandSlot, item, true);
 	}
 
-	public void HandleMcpeTakeItemActor(McpeEntityPickRequest message)
+	public void HandleMcpeTakeItemActor(McpeActorPickRequest message)
 	{
 		if (GameMode != GameMode.Creative) return;
-		if (!Level.Entities.TryGetValue((long) message.runtimeEntityId, out Entity entity)) return;
+		if (!Level.Entities.TryGetValue((long) message.runtimeActorId, out Entity entity)) return;
 		Item item = ItemFactory.GetItem("minecraft:spawn_egg", (short) EntityHelpers.ToEntityType(entity.EntityTypeId));
 		Inventory.SetInventorySlot(Inventory.InHandSlot, item);
 	}
 	
-	public void HandleMcpeEntityEvent(McpeEntityEvent message)
+	public void HandleMcpeEntityEvent(McpeActorEvent message)
 	{
 		// NOTE: Is this really used ? Tried to trigger it, never saw any console logs. 2025-03-02
 		Log.Debug("Entity Id:" + message.runtimeEntityId);
@@ -2634,12 +2613,12 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			
 		switch (message.eventId)
 		{
-			case 34:
+			case ActorEvent.AddPlayerLevels:
 			{
 				ExperienceManager.RemoveExperienceLevels(message.data);
 				break;
 			}
-			case 57:
+			case ActorEvent.Feed:
 			{
 				int data = message.data;
 				if (data != 0) BroadcastEntityEvent(57, data);
@@ -2675,21 +2654,21 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendRespawn()
 	{
 		McpeRespawn mcpeRespawn = McpeRespawn.CreateObject();
-		mcpeRespawn.runtimeEntityId = EntityId;
+		mcpeRespawn.runtimeActorId = EntityId;
 		mcpeRespawn.x = SpawnPosition.X;
 		mcpeRespawn.y = SpawnPosition.Y;
 		mcpeRespawn.z = SpawnPosition.Z;
 		SendPacket(mcpeRespawn);
 	}
 
-	public void SendRespawn(PlayerLocation position, McpeRespawn.RespawnState state)
+	public void SendRespawn(PlayerLocation position, PlayerRespawnState state)
 	{
 		McpeRespawn mcpeRespawn = McpeRespawn.CreateObject();
-		mcpeRespawn.runtimeEntityId = EntityId;
+		mcpeRespawn.runtimeActorId = EntityId;
 		mcpeRespawn.x = position.X;
 		mcpeRespawn.y = position.Y;
 		mcpeRespawn.z = position.Z;
-		mcpeRespawn.state = (byte) state;
+		mcpeRespawn.state = state;
 		SendPacket(mcpeRespawn);
 	}
 
@@ -2961,7 +2940,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		McpeModalFormRequest message = McpeModalFormRequest.CreateObject();
 		message.formId = form.Id;
-		message.formData = form.ToJson();
+		message.formUiJson = form.ToJson();
 		SendPacket(message);
 	}
 
@@ -2995,7 +2974,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendSetDownfall(int downfall)
 	{
 		McpeLevelEvent levelEvent = McpeLevelEvent.CreateObject();
-		levelEvent.eventId = 3001;
+		levelEvent.eventId = LevelEventType.StartRaining;
 		levelEvent.data = downfall;
 		SendPacket(levelEvent);
 	}
@@ -3003,20 +2982,20 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendTitle(string text, TitleType type = TitleType.Title, int fadeIn = 6, int fadeOut = 6, int stayTime = 20, Player sender = null)
 		=> Level.BroadcastTitle(text, type, fadeIn, fadeOut, stayTime, sender, [this]);
 	
-	public void SendMessage(string text, MessageType type = MessageType.Chat, Player sender = null, bool needsTranslation = false, string[] parameters = null, string platformId = null) 
+	public void SendMessage(string text, TextPacketType type = TextPacketType.Chat, Player sender = null, bool needsTranslation = false, string[] parameters = null, string platformId = null) 
 		=> Level.BroadcastMessage(text, type, sender, [this], needsTranslation, parameters, platformId: platformId);
 
 	public void SendMovePlayer(bool teleport = false)
 	{
 		McpeMovePlayer packet = McpeMovePlayer.CreateObject();
-		packet.runtimeEntityId = EntityManager.EntityIdSelf;
+		packet.playerRuntimeId = EntityManager.EntityIdSelf;
 		packet.x = KnownPosition.X;
 		packet.y = KnownPosition.Y + 1.62f;
 		packet.z = KnownPosition.Z;
 		packet.yaw = KnownPosition.Yaw;
 		packet.headYaw = KnownPosition.HeadYaw;
 		packet.pitch = KnownPosition.Pitch;
-		packet.mode = (byte) (teleport ? 1 : 0);
+		packet.mode = (PositionMode) (teleport ? 1 : 0);
 
 		SendPacket(packet);
 	}
@@ -3082,7 +3061,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				if (popup.CurrentTick >= popup.DisplayDelay)
 				{
 					// Tip is ontop
-					if (popup.MessageType == MessageType.Tip && !hasDisplayedTip)
+					if (popup.MessageType == TextPacketType.Tip && !hasDisplayedTip)
 					{
 						if (popup.CurrentTick <= popup.Duration + popup.DisplayDelay - 30)
 							if (popup.CurrentTick % 20 == 0 || popup.CurrentTick == popup.Duration + popup.DisplayDelay - 30)
@@ -3091,7 +3070,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 					}
 
 					// Popup is below
-					if (popup.MessageType == MessageType.Popup && !hasDisplayedPopup)
+					if (popup.MessageType == TextPacketType.Popup && !hasDisplayedPopup)
 					{
 						if (popup.CurrentTick <= popup.Duration + popup.DisplayDelay - 30)
 							if (popup.CurrentTick % 20 == 0 || popup.CurrentTick == popup.Duration + popup.DisplayDelay - 30)
@@ -3127,7 +3106,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public override void Knockback(Vector3 velocity)
 	{
 		McpeSetActorMotion motions = McpeSetActorMotion.CreateObject();
-		motions.runtimeEntityId = EntityManager.EntityIdSelf;
+		motions.runtimeActorId = EntityManager.EntityIdSelf;
 		motions.velocity = velocity;
 		motions.tick = CurrentTick;
 		SendPacket(motions);
@@ -3273,25 +3252,25 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void BroadcastEntityEvent(int eventId, int data = 0)
 	{
 		{
-			McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-			entityEvent.runtimeEntityId = EntityManager.EntityIdSelf;
-			entityEvent.eventId = (byte) eventId;
-			entityEvent.data = data;
-			SendPacket(entityEvent);
+			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+			actorEvent.runtimeEntityId = EntityManager.EntityIdSelf;
+			actorEvent.eventId = (ActorEvent) eventId;
+			actorEvent.data = data;
+			SendPacket(actorEvent);
 		}
 		{
-			McpeEntityEvent entityEvent = McpeEntityEvent.CreateObject();
-			entityEvent.runtimeEntityId = EntityId;
-			entityEvent.eventId = (byte) eventId;
-			entityEvent.data = data;
-			Level.RelayBroadcast(this, entityEvent);
+			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+			actorEvent.runtimeEntityId = EntityId;
+			actorEvent.eventId = (ActorEvent) eventId;
+			actorEvent.data = data;
+			Level.RelayBroadcast(this, actorEvent);
 		}
 	}
 
 	public void BroadcastDeathMessage(Player player, DamageCause lastDamageCause)
 	{
 		string deathMessage = string.Format(HealthManager.GetDescription(lastDamageCause), Username, player == null ? "" : player.Username);
-		Level.BroadcastMessage(deathMessage, type: MessageType.Raw);
+		Level.BroadcastMessage(deathMessage, type: TextPacketType.Raw);
 		Log.Debug(deathMessage);
 	}
 	
@@ -3381,7 +3360,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		if (IsRiding)
 		{
 			McpeSetActorLink link = McpeSetActorLink.CreateObject();
-			link.linkType = (byte) McpeSetActorLink.LinkActions.Ride;
+			link.linkType = ActorLinkType.Riding;
 			link.riderId = EntityId;
 			link.riddenId = Vehicle;
 			Level.RelayBroadcast(players, link);
@@ -3394,7 +3373,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendEquipmentForPlayer(Player[] receivers = null)
 	{
 		McpeMobEquipment mcpePlayerEquipment = McpeMobEquipment.CreateObject();
-		mcpePlayerEquipment.runtimeEntityId = EntityId;
+		mcpePlayerEquipment.runtimeActorId = EntityId;
 		mcpePlayerEquipment.item = Inventory.GetItemInHand();
 		mcpePlayerEquipment.slot = 0;
 		if (receivers == null)
@@ -3405,7 +3384,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public override void DespawnFromPlayers(Player[] players)
 	{
-		McpeRemoveEntity mcpeRemovePlayer = McpeRemoveEntity.CreateObject();
+		McpeRemoveActor mcpeRemovePlayer = McpeRemoveActor.CreateObject();
 		mcpeRemovePlayer.entityIdSelf = EntityId;
 		Level.RelayBroadcast(this, players, mcpeRemovePlayer);
 	}
@@ -3414,29 +3393,27 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		McpeCorrectPlayerMovement packet = McpeCorrectPlayerMovement.CreateObject();
 		packet.Type = (byte) (Vehicle == 0 ? 0 : 3);
-		packet.Postition = KnownPosition;
-		packet.Velocity = Velocity;
-		packet.OnGround = !IsGliding && IsOnGround;
-		packet.Tick = CurrentTick;
+		packet.position = KnownPosition;
+		packet.velocity = Velocity;
+		packet.onGround = !IsGliding && IsOnGround;
+		packet.tick = CurrentTick;
 		SendPacket(packet);
 	}
 	
 	// Unhandled packets
 	public void HandleMcpeClientCacheStatus(McpeClientCacheStatus message) => Log.Warn($"Cache status: {(message.enabled ? "Enabled" : "Disabled")}");
-	public void HandleMcpePacketViolationWarning(McpePacketViolationWarning message) => Log.Error($"Client reported a level {message.severity} packet violation of type {message.violationType} for packet 0x{message.packetId:X2}: {message.reason}");
-	public void HandleMcpeCraftingEvent(McpeCraftingEvent message) => Log.Debug($"Player {Username} crafted item on window 0x{message.windowId:X2} on type: {message.recipeType}");
-	public void HandleMcpePlayerInput(McpePlayerInput message) => Log.Debug($"Player input: x={message.motionX}, z={message.motionZ}, jumping={message.jumping}, sneaking={message.sneaking}"); 
+	public void HandleMcpePacketViolationWarning(McpeViolationWarning message) => Log.Error($"Client reported a level {message.severity} packet violation of type {message.violationType} for packet 0x{message.packetId:X2}: {message.reason}");
+	public void HandleMcpePlayerInput(McpePlayerInput message) => Log.Debug($"Player input: x={message.move.X}, y={message.move.Y}, jumping={message.jumping}, sneaking={message.sneaking}"); 
 	public void HandleMcpeSetActorMotion(McpeSetActorMotion message) { }
 	public void HandleMcpeLogin(McpeLogin message) { }
 	public void HandleMcpeLevelSoundEvent(McpeLevelSoundEvent message) { }
 	public void HandleMcpeRequestNetworkSettings(McpeRequestNetworkSettings message) { }
-	public void HandleMcpeScriptCustomEvent(McpeScriptCustomEvent message) { }
 	public void HandleMcpeCommandBlockUpdate(McpeCommandBlockUpdate message) { }
 	public void HandleMcpeServerSettingsRequest(McpeServerSettingsRequest message) {}
 	public void HandleMcpeLabTable(McpeLabTable message) {}
 	public void HandleMcpeNetworkSettings(McpeNetworkSettings message) { }
 	public void HandleMcpeUpdatePlayerGameType(McpeUpdatePlayerGameType message) { }
-	public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message) { }
+	public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocks message) { }
 	public void HandleMcpeSubChunkRequestPacket(McpeSubChunkRequestPacket message) { }
 	public void HandleMcpeRequestAbility(McpeRequestAbility message) {}
 	public void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message) { }
@@ -3446,7 +3423,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpeEmoteList(McpeEmoteList message) { }
 	public void HandleMcpePhotoTransfer(McpePhotoTransfer message) { }
 	public void HandleMcpePurchaseReceipt(McpePurchaseReceipt message) { }
-	public void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message) { }
 	
 	// Events
 
@@ -3514,14 +3490,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		ItemTransaction?.Invoke(this, e);
 		return !e.Cancel;
-	}
-
-	public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
-	{
-		McpeNetworkStackLatency packet = McpeNetworkStackLatency.CreateObject();
-		packet.timestamp = message.timestamp;
-		packet.unknownFlag = 1;
-		SendPacket(packet);
 	}
 
 	public void HandleMcpeSetInventoryOptions(McpeSetInventoryOptions message)

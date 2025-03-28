@@ -24,6 +24,7 @@
 #endregion
 
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 
 namespace MiNET.Entities.ImageProviders

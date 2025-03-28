@@ -27,6 +27,8 @@ using System.Numerics;
 using MiNET.Items;
 using MiNET.Items.Tools;
 using MiNET.Net;
+using MiNET.Net.EnumerationsTable;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
 
@@ -56,10 +58,10 @@ public partial class Loom : Block
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
 		McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-		containerOpen.windowId = 24;
-		containerOpen.type = 24;
-		containerOpen.coordinates = blockCoordinates;
-		containerOpen.runtimeEntityId = EntityManager.EntityIdSelf;
+		containerOpen.containerId = 24;
+		containerOpen.containerType = ContainerType.Loom;
+		containerOpen.position = blockCoordinates;
+		containerOpen.runtimeActorId = EntityManager.EntityIdSelf;
 		player.SendPacket(containerOpen);
 
 		return true;

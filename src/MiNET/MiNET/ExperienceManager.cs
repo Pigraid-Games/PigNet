@@ -1,6 +1,7 @@
 ﻿using MiNET.Net;
 using MiNET.Worlds;
 using System;
+using MiNET.Net.Packets.Mcpe;
 
 namespace MiNET
 {

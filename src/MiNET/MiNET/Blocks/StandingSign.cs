@@ -29,6 +29,7 @@ using System.Numerics;
 using MiNET.BlockEntities;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.Packets.Mcpe;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using MiNET.Worlds;
