@@ -10,11 +10,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other", "Other", "{DFC6A100
 		Redstone.md = Redstone.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiNET", "MiNET\MiNET.csproj", "{A40D7181-E216-4C45-AEF8-AB66B42B1D2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PigNet", "PigNet\PigNet.csproj", "{A40D7181-E216-4C45-AEF8-AB66B42B1D2D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiNET.Console", "MiNET.Console\MiNET.Console.csproj", "{E86CFF0F-B037-470E-8B6D-8EA05831F83E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PigNet.Console", "PigNet.Console\PigNet.Console.csproj", "{E86CFF0F-B037-470E-8B6D-8EA05831F83E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiNET.Client", "MiNET.Client\MiNET.Client.csproj", "{AA9B416E-430D-4C73-9D68-55962DACE662}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PigNet.Client", "PigNet.Client\PigNet.Client.csproj", "{AA9B416E-430D-4C73-9D68-55962DACE662}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiNET.LevelDB", "..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj", "{630839F1-456A-4EC7-BAE7-7ED1AE8268F8}"
 EndProject
