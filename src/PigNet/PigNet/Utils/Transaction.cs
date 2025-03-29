@@ -302,5 +302,5 @@ public class CraftTransactionRecord : TransactionRecord
 public class FullContainerName
 {
 	public byte ContainerId { get; set; }
-	public int DynamicId { get; set; } = 0;
+	public int DynamicId { get; set; }
 }

@@ -2052,7 +2052,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		if (HealthManager.IsDead) return;
 
-		switch (message.windowsId)
+		switch (message.containerId)
 		{
 			case 0:
 			{

@@ -334,7 +334,7 @@ namespace PigNet
 				sendOffHandSlot.runtimeActorId = Player.EntityId;
 				sendOffHandSlot.selectedSlot = 0;
 				sendOffHandSlot.slot = 0;
-				sendOffHandSlot.windowsId = (byte) inventoryId;
+				sendOffHandSlot.containerId = (byte) inventoryId;
 				sendOffHandSlot.item = item;
 				Player.Level.RelayBroadcast(sendOffHandSlot);
 			}

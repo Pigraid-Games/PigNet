@@ -26,10 +26,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using log4net;
 using PigNet.Entities;
 using PigNet.Entities.Hostile;
@@ -44,6 +46,7 @@ using PigNet.Net.Packets.Mcpe;
 using PigNet.Plugins.Attributes;
 using PigNet.UI;
 using PigNet.Utils;
+using PigNet.Utils.Skins;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
@@ -157,18 +160,89 @@ public class VanillaCommands
 		commander.Level.RelayBroadcast([commander], pk);
 	}
 
+	public enum CustomItems
+	{
+		HiveWings,
+		CupLove,
+		PigraidSpecial
+	}
+
+	[Command(Name = "Ride")]
+	[Authorize(Permission = 4)]
+	public async void Ride(Player commander, CustomItems name)
+	{
+		if (name != CustomItems.PigraidSpecial)
+		{
+			commander.SendMessage("Not supported");
+			return;
+		}
+
+		try
+		{
+			string pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			if (pluginDirectory == null)
+			{
+				commander.SendMessage("Couldn't find the plugin directory");
+				return;
+			}
+
+			byte[] skinData = Skin.GetTextureFromFile(Path.Combine(pluginDirectory, "pigraid_special.png"));
+			string skinString = File.ReadAllText(Path.Combine(pluginDirectory, "pigraid_special.json"));
+
+			var random = new Random();
+			string newName = $"goemetry.{DateTime.Now.Ticks}.{random.NextDouble()}";
+
+			skinString = skinString.Replace("goemetry.unknown", newName);
+
+			GeometryModel goemetryModel = Skin.Parse(skinString);
+
+			var backling = new PlayerMob(string.Empty, commander.Level)
+			{
+				KnownPosition = commander.KnownPosition,
+				Skin =
+				{
+					Data = skinData,
+					SkinResourcePatch = new SkinResourcePatch { Geometry = new GeometryIdentifier { Default = newName } },
+					GeometryName = newName,
+					GeometryData = Skin.ToJson(goemetryModel),
+					IsVerified = true
+				}
+			};
+			backling.SpawnEntity();
+			backling.AddToPlayerList();
+			
+			McpeSetActorLink link = McpeSetActorLink.CreateObject();
+			link.linkType = ActorLinkType.Riding;
+			link.riderId = backling.EntityId;
+			link.riddenId = commander.EntityId;
+			
+			commander.SendPacket(link);
+			commander.Level.RelayBroadcast(commander, link);
+
+			await Task.Delay(200);
+			backling.RemoveFromPlayerList();
+		}
+		catch (Exception e)
+		{
+			commander.SendMessage(e.ToString());
+		}
+	}
+	
 	[Command(Name = "CustomItem", Description = "Spawns the custom elytra in the chest slot")]
 	[Authorize(Permission = 4)]
-	public void CustomItem(Player commander, string name)
+	public void CustomItem(Player commander, CustomItems name)
 	{
 		Item item;
 		switch (name)
 		{
-			case "pigraid:cuplove":
+			case CustomItems.CupLove:
 				item = new ItemCupLove();
 				break;
-			case "hivebackbling:ender_wings":
+			case CustomItems.HiveWings:
 				item = new ItemHiveEnderWings();
+				break;
+			case CustomItems.PigraidSpecial:
+				item = new ItemPigraidSpecial();
 				break;
 			default:
 				commander.SendMessage("Couldn't find the custom item");

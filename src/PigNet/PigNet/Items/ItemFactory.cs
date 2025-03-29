@@ -404,6 +404,7 @@ public class ItemFactory
 		{ 1112, (_, _) => new ItemBoltArmorTrim() },
 		{ 1113, (_, _) => new ItemCupLove() },
 		{ 1114, (_, _) => new ItemHiveEnderWings() },
+		{ 1300, (_, _) => new ItemPigraidSpecial() },
 		{ 1115, (_, _) => new ItemDecoratedPot() },
 		{ 1116, (_, _) => new ItemTrialKey() }
 	};
