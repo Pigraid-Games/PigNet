@@ -54,34 +54,56 @@ public class CustomForm : Form
 		List<object> parsedResult = JsonConvert.DeserializeObject<List<object>>(json);
 		Log.Debug($"Form JSON\n{JsonConvert.SerializeObject(parsedResult, jsonSerializerSettings)}");
 
-		if (parsedResult == null) return; // Pressed [x]
+		if (parsedResult == null) return; // Player closed the form (pressed [X])
 
-		for (int i = 0; i < Content.Count; i++)
+		int interactiveIndex = 0;
+
+		foreach (CustomElement element in Content)
 		{
-			CustomElement element = Content[i];
+			if (element is Label) continue;
+
+			if (interactiveIndex >= parsedResult.Count)
+			{
+				Log.Warn("Interactive elements count mismatch.");
+				return;
+			}
+
+			object value = parsedResult[interactiveIndex++];
+
 			switch (element)
 			{
 				case Input input:
-					input.Value = (string) parsedResult[i];
+					input.Value = value as string ?? "";
 					break;
+
 				case Toggle toggle:
-					toggle.Value = (bool) parsedResult[i];
+					if (value is bool boolVal)
+						toggle.Value = boolVal;
 					break;
+
 				case Slider slider:
-					slider.Value = (float) (double) parsedResult[i];
+					if (value is double doubleVal)
+						slider.Value = (float)doubleVal;
 					break;
-				case StepSlider slider:
-					slider.Value = (int) (long) parsedResult[i];
+
+				case StepSlider stepSlider:
+					if (value is long longVal)
+						stepSlider.Value = (int)longVal;
 					break;
+
 				case Dropdown dropdown:
-					dropdown.Value = (int) (long) parsedResult[i];
+					if (value is long dropdownVal)
+						dropdown.Value = (int)dropdownVal;
+					break;
+
+				default:
+					Log.Warn($"Unknown form element type: {element.GetType().Name}");
 					break;
 			}
 		}
-
 		Execute(player);
 	}
-
+	
 	public void Execute(Player player)
 	{
 		ExecuteAction?.Invoke(player, this);
