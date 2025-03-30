@@ -34,6 +34,8 @@ If you discover issues or have solutions, please don't hesitate to submit an iss
 
 ## 🔌 **Plugins**
 
+* [Scoreboard Library](https://github.com/Pigraid-Games/ScoreboardLibrary)
+
 More basic plugins are on the way to assist newcomers soon!
 
 ---
