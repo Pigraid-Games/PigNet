@@ -1,33 +1,42 @@
+# 🐷 **PigNet (Pigraid Edition)**
 
-MiNET (Pigraid edition)
-=====
+**Current Supported Minecraft Version:** 1.21.70
 
-Current Supported Minecraft Version: 1.21.70
+## 📖 **What is PigNet?**
 
-## What is this?
+**PigNet** is a fork of [MiNET](https://github.com/NiclasOlofsson/MiNET), customized and maintained primarily for the Pigraid Studio and its Minecraft network, Pigraid Network.
 
-This is fork of [MiNET](https://github.com/NiclasOlofsson/MiNET), that includes additional changes and features:
+🙏 **Special thanks** to all the amazing contributors of MiNET and especially to [Laz1444](https://github.com/laz1444), whose work significantly influenced this project!
 
- - Latest Minecraft Bedrock Edition support
- - 1.13 world format support
- - Basic redstone functions
- - Rebuilt resources and formats for easier updating
- - Emotes
- - New Inventory System
- - No more MCPE Protocol.cs. Each packet has it's own file, and also, we are using the naming convention of [Mojang Bedrock Protocol](https://mojang.github.io/bedrock-protocol-docs/html/packets.html)
- - And more
+## 🚀 **What's New?**
 
-**ResourcePacks** - Resource packs made for the latest game version should work also here. If you got pack with .mcpack extension, just rename it to .zip and it's good to go.
+PigNet introduces a variety of enhancements, including:
 
-## Stability
-Since this software is used and maintained for our server purposes, this may not contain all features, updates and fixes.
+- ✅ **Full Support for Latest Minecraft Bedrock Edition**
+- 🌎 **1.13 World Format Compatibility**
+- ⚙️ **Basic Redstone Functionalities**
+- 📦 **Completely Rebuilt Resources and Formats** *(making future updates smoother!)*
+- 🕺 **Emotes Support**
+- 🎒 **New and Improved Inventory System**
+- 📡 **Packet Cleanup & Complete Implementation** *(Aligned with [Mojang Bedrock Protocol Naming](https://mojang.github.io/bedrock-protocol-docs/html/packets.html))*
 
-But if you found something you can always open an issue or pull request if you have solution.
+**Note:** No more `MCPE Protocol.cs`. Each packet is neatly organized into individual files following Mojang's packet naming conventions.
 
-## Plugins
-Here are few plugins for MiNET that you can try:
+## 🎨 **Resource Packs**
 
- - [Chairs](https://github.com/CobwebSMP/Chairs)
- - [MiPermissionsNET](https://github.com/CupidonSauce173/MiPermissionsNET)
- - [WorldEdit](https://github.com/CobwebSMP/WorldEdit)
+Resource packs made for the latest game version should work seamlessly with PigNet. Simply rename packs with `.mcpack` extensions to `.zip`, and you're ready to go!
+
+## ⚠️ **Stability and Development**
+
+While PigNet sees active use within Pigraid Network, it might not contain every possible feature, fix, or update required for all production environments. Continuous improvements and refinements are ongoing!
+
+If you discover issues or have solutions, please don't hesitate to submit an issue or a pull request.
+
+## 🔌 **Plugins**
+
+More basic plugins are on the way to assist newcomers soon!
+
+---
+
+🎉 **Happy Gaming with PigNet!**
 
