@@ -40,32 +40,23 @@ using PigNet.Worlds;
 
 namespace PigNet
 {
-	public class PlayerInventory
+	public class PlayerInventory(Player player)
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(PlayerInventory));
 
 		public const int HotbarSize = 9;
 		public const int InventorySize = HotbarSize + 36;
-		public Player Player { get; }
+		public Player Player { get; } = player;
 
-		public List<Item> Slots { get; }
+		public List<Item> Slots { get; } = Enumerable.Repeat((Item) new ItemAir(), InventorySize).ToList();
 
-		public int InHandSlot { get; set; }
+		public int InHandSlot { get; set; } = 0;
 
-		public CursorInventory UiInventory { get; set; } = new CursorInventory();
+		public CursorInventory UiInventory { get; set; } = new();
 
-		public ArmorInventory ArmorInventory { get; set; }
+		public ArmorInventory ArmorInventory { get; set; } = new(player);
 
-		public OffHandInventory OffHandInventory { get; set; }
-
-		public PlayerInventory(Player player)
-		{
-			Player = player;
-			Slots = Enumerable.Repeat((Item) new ItemAir(), InventorySize).ToList();
-			InHandSlot = 0;
-			ArmorInventory = new ArmorInventory(player);
-			OffHandInventory = new OffHandInventory(player);
-		}
+		public OffHandInventory OffHandInventory { get; set; } = new(player);
 
 		public virtual Item GetItemInHand()
 		{

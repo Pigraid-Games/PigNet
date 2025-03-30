@@ -27,10 +27,10 @@ namespace PigNet.Net.Packets.Mcpe;
 
 public class McpeMobEquipment : Packet<McpeMobEquipment>
 {
-	public Item item;
 	public long runtimeActorId;
-	public byte selectedSlot;
+	public Item item;
 	public byte slot;
+	public byte selectedSlot;
 	public byte containerId;
 
 	public McpeMobEquipment()

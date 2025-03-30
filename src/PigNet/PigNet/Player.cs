@@ -2052,9 +2052,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		if (HealthManager.IsDead) return;
 
-		switch (message.containerId)
+		switch ((ContainerId) message.containerId)
 		{
-			case 0:
+			case ContainerId.Inventory:
 			{
 				byte selectedHotbarSlot = message.selectedSlot;
 				if (selectedHotbarSlot > 8)
@@ -2067,15 +2067,15 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 				Inventory.SetHeldItemSlot(selectedHotbarSlot, false);
 				if (Log.IsDebugEnabled)
-					Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()} RuntimeID: {Inventory.GetItemInHand().RuntimeId}");
+					Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()} RuntimeID: {Inventory.GetItemInHand().RuntimeId} in hand");
 				break;
 			}
-			case 119 when message.slot != 1:
-				Log.Error($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
-				return;
-			case 119:
+			case ContainerId.Offhand:
 			{
-				if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
+				if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item} and selectedSlot {message.selectedSlot}");
+				Inventory.OffHandInventory.SetItem(message.item);
+				if (Log.IsDebugEnabled)
+					Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()} RuntimeID: {Inventory.GetItemInHand().RuntimeId} in offhand");
 				break;
 			}
 		}

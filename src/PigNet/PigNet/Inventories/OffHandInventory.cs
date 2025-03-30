@@ -1,17 +1,15 @@
 ﻿using PigNet.Items;
-using PigNet.Net.EnumerationsTable;
 using PigNet.Net.Packets.Mcpe;
-using PigNet.Utils;
 
 namespace PigNet.Inventories;
 
 public class OffHandInventory(Player player)
 {
-	private const byte ContainerId = (byte)Net.EnumerationsTable.ContainerId.Offhand;
-	private const byte ContainerType = (byte)ContainerEnumName.OffhandContainer;
+	public static readonly byte WindowId = 119;
+	public static readonly byte InventoryId = 34;
 
 	private Item _item = new ItemAir();
-	public Player Holder { get; } = player;
+	public Player Holder { get; set; } = player;
 
 	public Item GetItem() => _item;
 
@@ -26,15 +24,14 @@ public class OffHandInventory(Player player)
 	{
 		McpeMobEquipment sendMobEquipment = McpeMobEquipment.CreateObject();
 		sendMobEquipment.runtimeActorId = Holder.EntityId;
-		sendMobEquipment.selectedSlot = 0;
-		sendMobEquipment.slot = 0;
-		sendMobEquipment.containerId = ContainerId;
+		sendMobEquipment.containerId = WindowId;
+		sendMobEquipment.slot = 1;
 		sendMobEquipment.item = _item;
-		Holder.Level.RelayBroadcast(Holder, sendMobEquipment);
+		Holder.Level.RelayBroadcast(sendMobEquipment);
 
 		McpeInventorySlot sendSlotUpdate = McpeInventorySlot.CreateObject();
-		sendSlotUpdate.containerId = ContainerType;
-		sendSlotUpdate.slot = 0;
+		sendSlotUpdate.containerId = InventoryId;
+		sendSlotUpdate.slot = 1;
 		sendSlotUpdate.storageItem = _item;
 		Holder.SendPacket(sendSlotUpdate);
 	}

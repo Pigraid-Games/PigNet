@@ -40,6 +40,7 @@ using PigNet.Entities.Vehicles;
 using PigNet.Entities.World;
 using PigNet.Items;
 using PigNet.Items.Custom;
+using PigNet.Items.Weapons;
 using PigNet.Net;
 using PigNet.Net.EnumerationsTable;
 using PigNet.Net.Packets.Mcpe;
@@ -79,7 +80,7 @@ public class VanillaCommands
 			return;
 		}
 		
-		commander.SendMessage($"Life Status: {pTarget.HealthManager.IsDead}");
+		commander.SendMessage($"IsDead: {pTarget.HealthManager.IsDead}");
 	}
 	
 
@@ -166,67 +167,6 @@ public class VanillaCommands
 		CupLove,
 		PigraidSpecial
 	}
-
-	[Command(Name = "Ride")]
-	[Authorize(Permission = 4)]
-	public async void Ride(Player commander, CustomItems name)
-	{
-		if (name != CustomItems.PigraidSpecial)
-		{
-			commander.SendMessage("Not supported");
-			return;
-		}
-
-		try
-		{
-			string pluginDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			if (pluginDirectory == null)
-			{
-				commander.SendMessage("Couldn't find the plugin directory");
-				return;
-			}
-
-			byte[] skinData = Skin.GetTextureFromFile(Path.Combine(pluginDirectory, "pigraid_special.png"));
-			string skinString = File.ReadAllText(Path.Combine(pluginDirectory, "pigraid_special.json"));
-
-			var random = new Random();
-			string newName = $"goemetry.{DateTime.Now.Ticks}.{random.NextDouble()}";
-
-			skinString = skinString.Replace("goemetry.unknown", newName);
-
-			GeometryModel goemetryModel = Skin.Parse(skinString);
-
-			var backling = new PlayerMob(string.Empty, commander.Level)
-			{
-				KnownPosition = commander.KnownPosition,
-				Skin =
-				{
-					Data = skinData,
-					SkinResourcePatch = new SkinResourcePatch { Geometry = new GeometryIdentifier { Default = newName } },
-					GeometryName = newName,
-					GeometryData = Skin.ToJson(goemetryModel),
-					IsVerified = true
-				}
-			};
-			backling.SpawnEntity();
-			backling.AddToPlayerList();
-			
-			McpeSetActorLink link = McpeSetActorLink.CreateObject();
-			link.linkType = ActorLinkType.Riding;
-			link.riderId = backling.EntityId;
-			link.riddenId = commander.EntityId;
-			
-			commander.SendPacket(link);
-			commander.Level.RelayBroadcast(commander, link);
-
-			await Task.Delay(200);
-			backling.RemoveFromPlayerList();
-		}
-		catch (Exception e)
-		{
-			commander.SendMessage(e.ToString());
-		}
-	}
 	
 	[Command(Name = "CustomItem", Description = "Spawns the custom elytra in the chest slot")]
 	[Authorize(Permission = 4)]
@@ -250,6 +190,7 @@ public class VanillaCommands
 				break;
 		}
 		commander.Inventory.OffHandInventory.SetItem(item);
+		commander.Inventory.SetFirstEmptySlot(item, true);
 	}
 
 	[Command(Name = "save-all", Description = "Saves the whole world")]

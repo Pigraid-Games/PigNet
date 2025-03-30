@@ -29,7 +29,5 @@ public class ItemPigraidSpecial : ArmorChestplateBase
 	{
 		MaxStackSize = 1;
 		Durability = 1;
-		ItemMaterial = ItemMaterial.Diamond;
-		ItemType = ItemType.Chestplate;
 	}
 }
