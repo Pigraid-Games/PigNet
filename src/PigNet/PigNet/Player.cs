@@ -883,8 +883,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				if (!IsConnected) return;
 
 				if (Level != null) return; // Already called this method.
-
-				Level = Server.LevelManager.GetLevel(this, Dimension.Overworld.ToString());
+				
+				string defaultLevel = Config.GetProperty("WorldDirectory", "Worlds").Trim(); // default level
+				Level = Server.LevelManager.GetLevel(defaultLevel);
 			}
 
 			if (Level == null)

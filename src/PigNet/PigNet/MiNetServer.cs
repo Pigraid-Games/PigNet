@@ -17,16 +17,11 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Numerics;
 using log4net;
 using Microsoft.IO;
-using Newtonsoft.Json;
 using PigNet.Net;
 using PigNet.Net.RakNet;
 using PigNet.Plugins;

@@ -144,7 +144,7 @@ public class PluginManager
 				}
 		}
 
-		DebugPrintCommands();
+		//DebugPrintCommands();
 	}
 
 	public void LoadPlugin(object plugin)
@@ -229,7 +229,7 @@ public class PluginManager
 		LoadCommands(instance.GetType());
 		Commands = GenerateCommandSet(_pluginCommands.Keys.ToArray());
 
-		DebugPrintCommands();
+		//DebugPrintCommands();
 	}
 
 	private void DebugPrintCommands()

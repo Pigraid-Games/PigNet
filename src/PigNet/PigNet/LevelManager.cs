@@ -40,59 +40,41 @@ public class LevelManager
 	public List<Level> Levels { get; set; } = [];
 	public EntityManager EntityManager { get; set; } = new();
 	public IWorldGenerator Generator { get; set; } = new SuperflatGenerator(Dimension.Overworld);
+	
+	private readonly object _levelLock = new();
 
-	public virtual Level GetLevel(Player player, string name)
+	public virtual Level GetLevel(string name)
 	{
-		Level level = Levels.FirstOrDefault(l => l.LevelId.Equals(name, StringComparison.InvariantCultureIgnoreCase));
-		if (level == null)
+		Log.Warn("Searching for level: " + name + "");
+		lock (_levelLock)
 		{
+			foreach (Level currentLevel in Levels)
+				if (currentLevel.LevelName.Equals(name) || currentLevel.LevelId.Equals(name, StringComparison.InvariantCultureIgnoreCase)) return currentLevel;
+
+			// Game and level configuration
 			GameMode gameMode = Config.GetProperty("GameMode", GameMode.Survival);
 			Difficulty difficulty = Config.GetProperty("Difficulty", Difficulty.Normal);
 			int viewDistance = Config.GetProperty("ViewDistance", 11);
 
-			IWorldProvider worldProvider;
-
-			switch (Config.GetProperty("WorldProvider", "leveldb").ToLower().Trim())
+			IWorldProvider worldProvider = Config.GetProperty("WorldProvider", "leveldb").ToLower().Trim() switch
 			{
-				case "leveldb":
-					worldProvider = new LevelDbProvider()
-					{
-						MissingChunkProvider = Generator,
-					};
-					break;
-				case "cool":
-					worldProvider = new CoolWorldProvider();
-					break;
-				case "experimental":
-					worldProvider = new ExperimentalWorldProvider();
-					break;
-				case "anvil":
-					worldProvider = new AnvilWorldProvider
-					{
-						MissingChunkProvider = Generator,
-						ReadSkyLight = !Config.GetProperty("CalculateLights", false),
-						ReadBlockLight = !Config.GetProperty("CalculateLights", false),
-					};
-					break;
-				case "flat":
-				case "flatland":
-				default:
-					worldProvider = new AnvilWorldProvider
-					{
-						MissingChunkProvider = Generator,
-						ReadSkyLight = !Config.GetProperty("CalculateLights", false),
-						ReadBlockLight = !Config.GetProperty("CalculateLights", false),
-					};
-					break;
-			}
+				"leveldb" => new LevelDbProvider { MissingChunkProvider = Generator },
+				"cool" => new CoolWorldProvider(),
+				"experimental" => new ExperimentalWorldProvider(),
+				_ => new AnvilWorldProvider
+				{
+					MissingChunkProvider = Generator,
+					ReadSkyLight = !Config.GetProperty("CalculateLights", false),
+					ReadBlockLight = !Config.GetProperty("CalculateLights", false),
+				}
+			};
 
-			level = new Level(this, name, worldProvider, EntityManager, gameMode, difficulty, viewDistance)
+			var level = new Level(this, name, worldProvider, EntityManager, gameMode, difficulty, viewDistance)
 			{
 				EnableBlockTicking = Config.GetProperty("EnableBlockTicking", false),
 				EnableChunkTicking = Config.GetProperty("EnableChunkTicking", false),
 				SaveInterval = Config.GetProperty("Save.Interval", 300),
 				UnloadInterval = Config.GetProperty("Unload.Interval", 0),
-
 				DrowningDamage = Config.GetProperty("GameRule.DrowningDamage", true),
 				CommandblockOutput = Config.GetProperty("GameRule.CommandblockOutput", true),
 				DoTiledrops = Config.GetProperty("GameRule.DoTiledrops", true),
@@ -115,44 +97,13 @@ public class LevelManager
 				RedstoneEnabled = Config.GetProperty("RedstoneEnabled", true),
 				DoShowDeathMessage = Config.GetProperty("GameRule.ShowDeathMessages", true),
 			};
+
 			level.Initialize();
-
-			//if (Config.GetProperty("CalculateLights", false))
-			//{
-			//	{
-			//		AnvilWorldProvider wp = level.WorldProvider as AnvilWorldProvider;
-			//		if (wp != null)
-			//		{
-			//			wp.Locked = true;
-			////			wp.PruneAir();
-			////			wp.MakeAirChunksAroundWorldToCompensateForBadRendering();
-			//			Stopwatch sw = new Stopwatch();
-
-			//			var chunkCount = 0;
-			//			sw.Restart();
-			//			SkyLightCalculations.Calculate(level);
-			//			sw.Stop();
-			//			chunkCount = wp._chunkCache.Where(chunk => chunk.Value != null).ToArray().Length;
-			//			Log.Debug($"Recalculated sky light for {chunkCount} chunks, {chunkCount * 16 * 16 * 256} blocks. Time {sw.ElapsedMilliseconds}ms");
-
-			//			int count = wp.LightSources.Count;
-			//			sw.Restart();
-			//			RecalculateBlockLight(level, wp);
-
-			//			chunkCount = wp._chunkCache.Where(chunk => chunk.Value != null).ToArray().Length;
-			//			Log.Debug($"Recalculated sky and block light for {chunkCount} chunks, {chunkCount * 16 * 16 * 256} blocks and {count} light sources. Time {sw.ElapsedMilliseconds}ms. Touched {BlockLightCalculations.touches}");
-
-			//			wp.Locked = false;
-			//		}
-			//	}
-			//}
-
 			Levels.Add(level);
 
 			OnLevelCreated(new LevelCancelEventArgs(null, level));
+			return level;
 		}
-
-		return level;
 	}
 
 	public static void RecalculateBlockLight(Level level, AnvilWorldProvider wp)
@@ -343,7 +294,7 @@ public class SpreadLevelManager : LevelManager
 		Log.Warn("DONE Creating and caching worlds");
 	}
 
-	public override Level GetLevel(Player player, string name)
+	public override Level GetLevel(string name)
 	{
 		var rand = new Random();
 

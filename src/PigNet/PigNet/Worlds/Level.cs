@@ -294,9 +294,7 @@ public class Level : IBlockAccess
 			if (Dimension == Dimension.Overworld)
 			{
 				ChunkCoordinates chunkCoordinates = new ChunkCoordinates(SpawnPoint) / 8;
-				foreach (McpeWrapper chunk in GenerateChunks(chunkCoordinates, new Dictionary<ChunkCoordinates, McpeWrapper>(), 1))
-					if (chunk != null)
-						i++;
+				i += GenerateChunks(chunkCoordinates, new Dictionary<ChunkCoordinates, McpeWrapper>(), 1).Count(chunk => chunk != null);
 
 				Log.Info($"World pre-cache {i} chunks completed in {chunkLoading.ElapsedMilliseconds}ms");
 			}
