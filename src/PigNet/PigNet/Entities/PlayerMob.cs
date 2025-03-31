@@ -143,7 +143,7 @@ namespace PigNet.Entities
 			playerSkin.skinName = "";
 			playerSkin.isVerified = true;
 			
-			if(players != null || players.Length == 0) Level.RelayBroadcast(players, playerSkin);
+			if(players != null && players.Length != 0) Level.RelayBroadcast(players, playerSkin);
 			else Level.RelayBroadcast(playerSkin);
 		}
 

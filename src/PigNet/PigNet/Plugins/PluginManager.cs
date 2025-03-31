@@ -354,76 +354,78 @@ public class PluginManager
 					param.Type = GetParameterType(parameter);
 					param.Optional = parameter.IsOptional;
 
-					if (param.Type == CommandParameterType.Bool)
+					switch (param.Type)
 					{
-						param.Type = CommandParameterType.EnumFlag;
-						param.EnumType = "bool";
-						param.EnumValues = new string[] {"false", "true"};
-					}
-					else if (param.Type == CommandParameterType.SoftEnumFlag)
-					{
-						param.EnumType = "string";
-					}
-					else if (param.Type == CommandParameterType.EnumFlag)
-					{
-						if (parameter.ParameterType.IsEnum)
+						case CommandParameterType.Bool:
+							param.Type = CommandParameterType.EnumFlag;
+							param.EnumType = "bool";
+							param.EnumValues = new string[] {"false", "true"};
+							break;
+						case CommandParameterType.SoftEnumFlag:
+							param.EnumType = "string";
+							break;
+						case CommandParameterType.EnumFlag:
 						{
-							param.EnumValues = parameter.ParameterType.GetEnumNames().Select(s => s.ToLowerInvariant()).ToArray();
-
-							string typeName = parameter.ParameterType.Name;
-							typeName = typeName.Replace("Enum", "");
-							param.EnumType = typeName;
-						}
-						else
-						{
-							if (parameter.ParameterType == typeof(ItemTypeEnum))
+							if (parameter.ParameterType.IsEnum)
 							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "Item";
-							}
-							else if (parameter.ParameterType == typeof(BlockTypeEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "Block";
-							}
-							else if (parameter.ParameterType == typeof(EntityTypeEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "EntityType";
-							}
-							else if (parameter.ParameterType == typeof(CommandNameEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "CommandName";
-							}
-							else if (parameter.ParameterType == typeof(EnchantEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "Enchant";
-							}
-							else if (parameter.ParameterType == typeof(EffectEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "Effect";
-							}
-							else if (parameter.ParameterType == typeof(DimensionEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "Dimension";
-							}
-							else if (parameter.ParameterType == typeof(FeatureEnum))
-							{
-								param.EnumValues = new string[] { };
-								param.EnumType = "Feature";
-							}
-							else
-							{
-								param.EnumValues = null;
+								param.EnumValues = parameter.ParameterType.GetEnumNames().Select(s => s.ToLowerInvariant()).ToArray();
 
 								string typeName = parameter.ParameterType.Name;
 								typeName = typeName.Replace("Enum", "");
 								param.EnumType = typeName;
 							}
+							else
+							{
+								if (parameter.ParameterType == typeof(ItemTypeEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "Item";
+								}
+								else if (parameter.ParameterType == typeof(BlockTypeEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "Block";
+								}
+								else if (parameter.ParameterType == typeof(EntityTypeEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "EntityType";
+								}
+								else if (parameter.ParameterType == typeof(CommandNameEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "CommandName";
+								}
+								else if (parameter.ParameterType == typeof(EnchantEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "Enchant";
+								}
+								else if (parameter.ParameterType == typeof(EffectEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "Effect";
+								}
+								else if (parameter.ParameterType == typeof(DimensionEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "Dimension";
+								}
+								else if (parameter.ParameterType == typeof(FeatureEnum))
+								{
+									param.EnumValues = new string[] { };
+									param.EnumType = "Feature";
+								}
+								else
+								{
+									param.EnumValues = null;
+
+									string typeName = parameter.ParameterType.Name;
+									typeName = typeName.Replace("Enum", "");
+									param.EnumType = typeName;
+								}
+							}
+							break;
 						}
 					}
 					inputParams.Add(param);
