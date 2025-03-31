@@ -26,6 +26,7 @@
 using System;
 using System.Numerics;
 using System.Text;
+using JetBrains.Annotations;
 using log4net;
 using PigNet.Net.RakNet;
 using PigNet.Items;
@@ -131,6 +132,19 @@ namespace PigNet.Entities
 			layers.Add(baseLayer);
 
 			return layers;
+		}
+
+		public virtual void SendSkin([CanBeNull] Player[] players = null)
+		{
+			McpePlayerSkin playerSkin = McpePlayerSkin.CreateObject();
+			playerSkin.uuid = ClientUuid;
+			playerSkin.skin = Skin;
+			playerSkin.oldSkinName = "";
+			playerSkin.skinName = "";
+			playerSkin.isVerified = true;
+			
+			if(players != null || players.Length == 0) Level.RelayBroadcast(players, playerSkin);
+			else Level.RelayBroadcast(playerSkin);
 		}
 
 		public override void SpawnToPlayers(Player[] players)

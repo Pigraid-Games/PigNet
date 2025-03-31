@@ -34,6 +34,7 @@ namespace PigNet.Utils.Skins;
 
 public class Description : ICloneable
 {
+	[JsonProperty(PropertyName = "identifier")]
 	public string Identifier { get; set; }
 
 	[JsonProperty(PropertyName = "texture_height")]

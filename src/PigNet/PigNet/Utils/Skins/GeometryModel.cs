@@ -41,7 +41,7 @@ public class GeometryModel : ICloneable
 	public object Clone()
 	{
 		var model = (GeometryModel) MemberwiseClone();
-		model.Geometry = new List<Geometry>();
+		model.Geometry = [];
 		foreach (Geometry records in Geometry) model.Geometry.Add((Geometry) records.Clone());
 
 		return model;
@@ -58,36 +58,14 @@ public class GeometryModel : ICloneable
 
 		Geometry geometry = Geometry.First(g => g.Description.Identifier == fullName);
 		geometry.Name = fullName;
-
-		//if (fullName.Contains(":"))
-		//{
-		//	geometry.BaseGeometry = fullName.Split(':')[1];
-		//}
-
+		
 		return geometry;
 	}
 
-	public Geometry CollapseToDerived(Geometry derived)
+	public static Geometry CollapseToDerived(Geometry derived)
 	{
-		if (derived == null) throw new ArgumentNullException(nameof(derived));
+		ArgumentNullException.ThrowIfNull(derived);
 
 		return derived;
-
-		/*var collapsed = (Geometry) derived.Clone();
-
-		if (collapsed.BaseGeometry != null)
-		{
-			Geometry baseGeometry = (Geometry) FindGeometry(collapsed.BaseGeometry).Clone();
-
-			foreach (var bone in baseGeometry.Bones)
-			{
-				if (collapsed.Bones.SingleOrDefault(b => b.Name == bone.Name) == null)
-				{
-					collapsed.Bones.Add(bone);
-				}
-			}
-		}
-
-		return collapsed;*/
 	}
 }
