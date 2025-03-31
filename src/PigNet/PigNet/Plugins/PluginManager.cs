@@ -486,7 +486,7 @@ public class PluginManager
 
 	private static CommandParameterType GetParameterType(ParameterInfo parameter)
 	{
-		var value = CommandParameterType.Value;
+		CommandParameterType value = CommandParameterType.Value;
 
 		if (parameter.ParameterType == typeof(int))
 			value = CommandParameterType.Int;
@@ -522,7 +522,7 @@ public class PluginManager
 			// Custom serialization
 			value = CommandParameterType.String;
 		else
-			Log.Warn("No parameter type mapping for type: " + parameter.ParameterType.ToString());
+			Log.Warn("No parameter type mapping for type: " + parameter.ParameterType);
 
 		return value;
 	}

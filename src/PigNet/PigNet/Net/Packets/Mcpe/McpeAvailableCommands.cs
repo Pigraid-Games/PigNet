@@ -295,45 +295,37 @@ public class McpeAvailableCommands : Packet<McpeAvailableCommands>
 				return;
 			}
 
-			var commands = CommandSet;
+			CommandSet commands = CommandSet;
 
-			List<string> stringList = new List<string>();
+			List<string> stringList = [];
 			{
-				foreach (var command in commands.Values)
+				foreach (Command command in commands.Values)
 				{
-					var aliases = command.Versions[0].Aliases.Concat(new string[] { command.Name }).ToArray();
-					foreach (var alias in aliases)
+					string[] aliases = command.Versions[0].Aliases.Concat([command.Name]).ToArray();
+					foreach (string alias in aliases)
 					{
-						if (!stringList.Contains(alias))
-						{
-							stringList.Add(alias);
-						}
+						if (!stringList.Contains(alias)) stringList.Add(alias);
 					}
 
-					var overloads = command.Versions[0].Overloads;
-					foreach (var overload in overloads.Values)
+					Dictionary<string, Overload> overloads = command.Versions[0].Overloads;
+					foreach (Overload overload in overloads.Values)
 					{
-						var parameters = overload.Input.Parameters;
+						Parameter[] parameters = overload.Input.Parameters;
 						if (parameters == null) continue;
-						foreach (var parameter in parameters)
+						foreach (Parameter parameter in parameters)
 						{
-							if (parameter.Type == CommandParameterType.EnumFlag)
+							if (parameter.Type != CommandParameterType.EnumFlag) continue;
+							if (parameter.EnumValues == null) continue;
+							foreach (string enumValue in parameter.EnumValues)
 							{
-								if (parameter.EnumValues == null) continue;
-								foreach (var enumValue in parameter.EnumValues)
-								{
-									if (!stringList.Contains(enumValue))
-									{
-										stringList.Add(enumValue);
-									}
-								}
+								if (!stringList.Contains(enumValue)) stringList.Add(enumValue);
 							}
 						}
 					}
 				}
 
 				WriteUnsignedVarInt((uint) stringList.Count); // Enum values
-				foreach (var s in stringList)
+				foreach (string s in stringList)
 				{
 					Write(s);
 					//Log.Debug($"String: {s}, {(short) stringList.IndexOf(s)} ");
@@ -343,108 +335,98 @@ public class McpeAvailableCommands : Packet<McpeAvailableCommands>
 			WriteUnsignedVarInt(0); // Chained sub command value names
 			WriteUnsignedVarInt(0); // Postfixes
 
-			List<string> enumList = new List<string>();
-			foreach (var command in commands.Values)
+			List<string> enumList = [];
+			foreach (Command command in commands.Values)
 			{
 				if (command.Versions[0].Aliases.Length > 0)
 				{
 					string aliasEnum = command.Name + "CommandAliases";
-					if (!enumList.Contains(aliasEnum))
-					{
-						enumList.Add(aliasEnum);
-					}
+					if (!enumList.Contains(aliasEnum)) enumList.Add(aliasEnum);
 				}
 
-				var overloads = command.Versions[0].Overloads;
-				foreach (var overload in overloads.Values)
+				Dictionary<string, Overload> overloads = command.Versions[0].Overloads;
+				foreach (Overload overload in overloads.Values)
 				{
-					var parameters = overload.Input.Parameters;
+					Parameter[] parameters = overload.Input.Parameters;
 					if (parameters == null) continue;
-					foreach (var parameter in parameters)
+					foreach (Parameter parameter in parameters)
 					{
-						if (parameter.Type == CommandParameterType.EnumFlag)
-						{
-							if (parameter.EnumValues == null) continue;
+						if (parameter.Type != CommandParameterType.EnumFlag) continue;
+						if (parameter.EnumValues == null) continue;
 
-							if (!enumList.Contains(parameter.EnumType))
-							{
-								enumList.Add(parameter.EnumType);
-							}
-						}
+						if (!enumList.Contains(parameter.EnumType)) enumList.Add(parameter.EnumType);
 					}
 				}
 			}
 
 			//WriteUnsignedVarInt(0); // Enum indexes
 			WriteUnsignedVarInt((uint) enumList.Count); // Enum indexes
-			List<string> writtenEnumList = new List<string>();
-			foreach (var command in commands.Values)
+			List<string> writtenEnumList = [];
+			foreach (Command command in commands.Values)
 			{
 				if (command.Versions[0].Aliases.Length > 0)
 				{
-					var aliases = command.Versions[0].Aliases.Concat(new string[] { command.Name }).ToArray();
+					string[] aliases = command.Versions[0].Aliases.Concat([command.Name]).ToArray();
 					string aliasEnum = command.Name + "CommandAliases";
 					if (!enumList.Contains(aliasEnum)) continue;
 					if (writtenEnumList.Contains(aliasEnum)) continue;
 
 					Write(aliasEnum);
 					WriteUnsignedVarInt((uint) aliases.Length);
-					foreach (var enumValue in aliases)
+					foreach (string enumValue in aliases)
 					{
 						if (!stringList.Contains(enumValue)) Log.Error($"Expected enum value: {enumValue} in string list, but didn't find it.");
-						if (stringList.Count <= byte.MaxValue)
+						switch (stringList.Count)
 						{
-							Write((byte) stringList.IndexOf(enumValue));
-						}
-						else if (stringList.Count <= short.MaxValue)
-						{
-							Write((short) stringList.IndexOf(enumValue));
-						}
-						else
-						{
-							Write((int) stringList.IndexOf(enumValue));
+							case <= byte.MaxValue:
+								Write((byte) stringList.IndexOf(enumValue));
+								break;
+							case <= short.MaxValue:
+								Write((short) stringList.IndexOf(enumValue));
+								break;
+							default:
+								Write(stringList.IndexOf(enumValue));
+								break;
 						}
 
 						//Log.Debug($"EnumType: {aliasEnum}, {enumValue}, {stringList.IndexOf(enumValue)} ");
 					}
 				}
 
-				var overloads = command.Versions[0].Overloads;
-				foreach (var overload in overloads.Values)
+				Dictionary<string, Overload> overloads = command.Versions[0].Overloads;
+				foreach (Overload overload in overloads.Values)
 				{
-					var parameters = overload.Input.Parameters;
+					Parameter[] parameters = overload.Input.Parameters;
 					if (parameters == null) continue;
-					foreach (var parameter in parameters)
+					foreach (Parameter parameter in parameters)
 					{
-						if (parameter.Type == CommandParameterType.EnumFlag)
+						if (parameter.Type != CommandParameterType.EnumFlag) continue;
+						if (parameter.EnumValues == null) continue;
+
+						if (!enumList.Contains(parameter.EnumType)) continue;
+						if (writtenEnumList.Contains(parameter.EnumType)) continue;
+
+						writtenEnumList.Add(parameter.EnumType);
+
+						Write(parameter.EnumType);
+						WriteUnsignedVarInt((uint) parameter.EnumValues.Length);
+						foreach (var enumValue in parameter.EnumValues)
 						{
-							if (parameter.EnumValues == null) continue;
-
-							if (!enumList.Contains(parameter.EnumType)) continue;
-							if (writtenEnumList.Contains(parameter.EnumType)) continue;
-
-							writtenEnumList.Add(parameter.EnumType);
-
-							Write(parameter.EnumType);
-							WriteUnsignedVarInt((uint) parameter.EnumValues.Length);
-							foreach (var enumValue in parameter.EnumValues)
+							if (!stringList.Contains(enumValue)) Log.Error($"Expected enum value: {enumValue} in string list, but didn't find it.");
+							switch (stringList.Count)
 							{
-								if (!stringList.Contains(enumValue)) Log.Error($"Expected enum value: {enumValue} in string list, but didn't find it.");
-								if (stringList.Count <= byte.MaxValue)
-								{
+								case <= byte.MaxValue:
 									Write((byte) stringList.IndexOf(enumValue));
-								}
-								else if (stringList.Count <= short.MaxValue)
-								{
+									break;
+								case <= short.MaxValue:
 									Write((short) stringList.IndexOf(enumValue));
-								}
-								else
-								{
-									Write((int) stringList.IndexOf(enumValue));
-								}
-
-								//Log.Debug($"EnumType: {parameter.EnumType}, {enumValue}, {stringList.IndexOf(enumValue)} ");
+									break;
+								default:
+									Write(stringList.IndexOf(enumValue));
+									break;
 							}
+
+							//Log.Debug($"EnumType: {parameter.EnumType}, {enumValue}, {stringList.IndexOf(enumValue)} ");
 						}
 					}
 				}
@@ -453,7 +435,7 @@ public class McpeAvailableCommands : Packet<McpeAvailableCommands>
 			WriteUnsignedVarInt(0); // Chained sub command data
 
 			WriteUnsignedVarInt((uint) commands.Count);
-			foreach (var command in commands.Values)
+			foreach (Command command in commands.Values)
 			{
 				Write(command.Name);
 				Write(command.Versions[0].Description);
@@ -463,25 +445,22 @@ public class McpeAvailableCommands : Packet<McpeAvailableCommands>
 				if (command.Versions[0].Aliases.Length > 0)
 				{
 					string aliasEnum = command.Name + "CommandAliases";
-					Write((int) enumList.IndexOf(aliasEnum));
+					Write(enumList.IndexOf(aliasEnum));
 				}
-				else
-				{
-					Write((int) -1); // Enum index
-				}
+				else Write(-1); // Enum index
 
 				WriteUnsignedVarInt(0); // Chained sub command data
 
 				//Log.Warn($"Writing command {command.Name}");
 
-				var overloads = command.Versions[0].Overloads;
+				Dictionary<string, Overload> overloads = command.Versions[0].Overloads;
 				WriteUnsignedVarInt((uint) overloads.Count); // Overloads
-				foreach (var overload in overloads.Values)
+				foreach (Overload overload in overloads.Values)
 				{
 					Write(false); // isChaining
 					//Log.Warn($"Writing command: {command.Name}");
 
-					var parameters = overload.Input.Parameters;
+					Parameter[] parameters = overload.Input.Parameters;
 					if (parameters == null)
 					{
 						WriteUnsignedVarInt(0); // Parameter count
@@ -489,25 +468,25 @@ public class McpeAvailableCommands : Packet<McpeAvailableCommands>
 					}
 
 					WriteUnsignedVarInt((uint) parameters.Length); // Parameter count
-					foreach (var parameter in parameters)
+					foreach (Parameter parameter in parameters)
 					{
 						//Log.Debug($"Writing command overload parameter {command.Name}, {parameter.Name}, {parameter.Type}");
 
 						Write(parameter.Name); // parameter name
-						if (parameter.Type == CommandParameterType.EnumFlag && parameter.EnumValues != null)
+						switch (parameter.Type)
 						{
-							Write((short) enumList.IndexOf(parameter.EnumType));
-							Write((short) 0x30);
-						}
-						else if (parameter.Type == CommandParameterType.SoftEnumFlag && parameter.EnumValues != null)
-						{
-							Write((short) 0); // soft enum index below
-							Write((short) 0x0410);
-						}
-						else
-						{
-							Write((short) parameter.Type); // param type
-							Write((short) 0x10);
+							case CommandParameterType.EnumFlag when parameter.EnumValues != null:
+								Write((short) enumList.IndexOf(parameter.EnumType));
+								Write((short) 0x30);
+								break;
+							case CommandParameterType.SoftEnumFlag when parameter.EnumValues != null:
+								Write((short) 0); // soft enum index below
+								Write((short) 0x0410);
+								break;
+							default:
+								Write((short) parameter.Type); // param type
+								Write((short) 0x10);
+								break;
 						}
 
 						Write(parameter.Optional); // optional
