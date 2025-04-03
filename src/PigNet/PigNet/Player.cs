@@ -1071,6 +1071,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public void HandleMcpeRespawn(McpeRespawn message)
 	{
+		OnPlayerRespawn(new PlayerRespawnEventArgs(this, Level));
 		if (message.state == PlayerRespawnState.ClientReadyToSpawn)
 		{
 			HealthManager.ResetHealth();
@@ -3440,6 +3441,13 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		PlayerJoin?.Invoke(this, e);
 	}
+	
+	public event EventHandler<PlayerRespawnEventArgs> PlayerRespawn;
+
+	private void OnPlayerRespawn(PlayerRespawnEventArgs e)
+	{
+		PlayerRespawn?.Invoke(this, e);
+	}
 
 	public event EventHandler<PlayerEventArgs> LocalPlayerIsInitialized;
 
@@ -3557,6 +3565,11 @@ public class PlayerDamageToEntityEventArgs : LevelCancelEventArgs
 		Damager = damager;
 		Level = entity?.Level;
 	}
+}
+
+public class PlayerRespawnEventArgs(Player player, Level level) : LevelCancelEventArgs(player, level)
+{
+	public Player Player { get; }
 }
 
 public class ItemDropEventArgs(Player player, Level level, Item item) : LevelCancelEventArgs(player, level)
