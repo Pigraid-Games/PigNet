@@ -28,7 +28,6 @@ using System.Numerics;
 using System.Text;
 using JetBrains.Annotations;
 using log4net;
-using PigNet.Net.RakNet;
 using PigNet.Items;
 using PigNet.Net;
 using PigNet.Net.EnumerationsTable;
@@ -39,152 +38,192 @@ using PigNet.Utils.Skins;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
-namespace PigNet.Entities
+namespace PigNet.Entities;
+
+public class PlayerMob : Mob
 {
-	public class PlayerMob : Mob
+	private static readonly ILog Log = LogManager.GetLogger(typeof(PlayerMob));
+
+	public UUID ClientUuid { get; private set; }
+	public Skin Skin { get; set; }
+
+	public Item ItemInHand { get; set; }
+
+	public PlayerMob(string name, Level level) : base(EntityType.Player, level)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(PlayerMob));
+		ClientUuid = new UUID(Guid.NewGuid().ToByteArray());
 
-		public UUID ClientUuid { get; private set; }
-		public Skin Skin { get; set; }
+		Width = 0.6;
+		Length = 0.6;
+		Height = 1.80;
 
-		public Item ItemInHand { get; set; }
+		IsSpawned = false;
 
-		public PlayerMob(string name, Level level) : base(EntityType.Player, level)
+		NameTag = name;
+
+
+		var resourcePatch = new SkinResourcePatch() { Geometry = new GeometryIdentifier() {Default = "geometry.humanoid.customSlim" } };
+		Skin = new Skin
 		{
-			ClientUuid = new UUID(Guid.NewGuid().ToByteArray());
+			SkinId = $"{Guid.NewGuid().ToString()}.CustomSlim",
+			SkinResourcePatch = resourcePatch,
+			Slim = true,
+			Height = 32,
+			Width = 64,
+			Data = Encoding.Default.GetBytes(new string('Z', 8192)),
+		};
 
-			Width = 0.6;
-			Length = 0.6;
-			Height = 1.80;
+		ItemInHand = new ItemAir();
 
-			IsSpawned = false;
+		HideNameTag = false;
+		IsAlwaysShowName = true;
 
-			NameTag = name;
-
-
-			var resourcePatch = new SkinResourcePatch() { Geometry = new GeometryIdentifier() {Default = "geometry.humanoid.customSlim" } };
-			Skin = new Skin
-			{
-				SkinId = $"{Guid.NewGuid().ToString()}.CustomSlim",
-				SkinResourcePatch = resourcePatch,
-				Slim = true,
-				Height = 32,
-				Width = 64,
-				Data = Encoding.Default.GetBytes(new string('Z', 8192)),
-			};
-
-			ItemInHand = new ItemAir();
-
-			HideNameTag = false;
-			IsAlwaysShowName = true;
-
-			IsInWater = true;
-			NoAi = true;
-			HealthManager.IsOnFire = false;
-			Velocity = Vector3.Zero;
-			PositionOffset = 1.62f;
-			if (EntityId == -1)
-			{
-				EntityId = DateTime.UtcNow.Ticks;
-			}
+		IsInWater = true;
+		NoAi = true;
+		HealthManager.IsOnFire = false;
+		Velocity = Vector3.Zero;
+		PositionOffset = 1.62f;
+		if (EntityId == -1)
+		{
+			EntityId = DateTime.UtcNow.Ticks;
 		}
+	}
 
-		[Wired]
-		public void SetPosition(PlayerLocation position, bool teleport = true)
+	[Wired]
+	public void SetPosition(PlayerLocation position, bool teleport = true)
+	{
+		KnownPosition = position;
+		LastUpdatedTime = DateTime.UtcNow;
+
+		var package = McpeMovePlayer.CreateObject();
+		package.playerRuntimeId = EntityId;
+		package.x = position.X;
+		package.y = position.Y + 1.62f;
+		package.z = position.Z;
+		package.yaw = position.HeadYaw;
+		package.headYaw = position.Yaw;
+		package.pitch = position.Pitch;
+		package.mode = (PositionMode) (teleport ? 1 : 0);
+
+		Level.RelayBroadcast(package);
+	}
+
+	public override MetadataDictionary GetMetadata()
+	{
+		var metadata = base.GetMetadata();
+
+		return metadata;
+	}
+
+	private AbilityLayers GetAbilities()
+	{
+		var layers = new AbilityLayers();
+
+		var baseLayer = new AbilityLayer()
 		{
-			KnownPosition = position;
-			LastUpdatedTime = DateTime.UtcNow;
+			Type = AbilityLayerType.Base,
+			Abilities = PlayerAbility.All,
+			Values = 0,
+			FlySpeed = 0,
+			WalkSpeed = 0
+		};
 
-			var package = McpeMovePlayer.CreateObject();
-			package.playerRuntimeId = EntityId;
-			package.x = position.X;
-			package.y = position.Y + 1.62f;
-			package.z = position.Z;
-			package.yaw = position.HeadYaw;
-			package.headYaw = position.Yaw;
-			package.pitch = position.Pitch;
-			package.mode = (PositionMode) (teleport ? 1 : 0);
+		layers.Add(baseLayer);
 
-			Level.RelayBroadcast(package);
-		}
+		return layers;
+	}
 
-		public override MetadataDictionary GetMetadata()
-		{
-			var metadata = base.GetMetadata();
-
-			return metadata;
-		}
-
-		private AbilityLayers GetAbilities()
-		{
-			var layers = new AbilityLayers();
-
-			var baseLayer = new AbilityLayer()
-			{
-				Type = AbilityLayerType.Base,
-				Abilities = PlayerAbility.All,
-				Values = 0,
-				FlySpeed = 0,
-				WalkSpeed = 0
-			};
-
-			layers.Add(baseLayer);
-
-			return layers;
-		}
-
-		public virtual void SendSkin([CanBeNull] Player[] players = null)
-		{
-			McpePlayerSkin playerSkin = McpePlayerSkin.CreateObject();
-			playerSkin.uuid = ClientUuid;
-			playerSkin.skin = Skin;
-			playerSkin.oldSkinName = "";
-			playerSkin.skinName = "";
-			playerSkin.isVerified = true;
+	public virtual void SendSkin([CanBeNull] Player[] players = null)
+	{
+		McpePlayerSkin playerSkin = McpePlayerSkin.CreateObject();
+		playerSkin.uuid = ClientUuid;
+		playerSkin.skin = Skin;
+		playerSkin.oldSkinName = "";
+		playerSkin.skinName = "";
+		playerSkin.isVerified = true;
 			
-			if(players != null && players.Length != 0) Level.RelayBroadcast(players, playerSkin);
-			else Level.RelayBroadcast(playerSkin);
-		}
+		if(players != null && players.Length != 0) Level.RelayBroadcast(players, playerSkin);
+		else Level.RelayBroadcast(playerSkin);
+	}
 
-		public override void SpawnToPlayers(Player[] players)
+	public override void SpawnToPlayers(Player[] players)
+	{
+		var message = McpeAddPlayer.CreateObject();
+		message.uuid = ClientUuid;
+		message.username = NameTag;
+		message.entityIdSelf = EntityId;
+		message.runtimeEntityId = EntityId;
+		message.x = KnownPosition.X;
+		message.y = KnownPosition.Y;
+		message.z = KnownPosition.Z;
+		message.yaw = KnownPosition.Yaw;
+		message.headYaw = KnownPosition.HeadYaw;
+		message.pitch = KnownPosition.Pitch;
+		message.metadata = GetMetadata();
+		message.layers = GetAbilities();
+		Level.RelayBroadcast(players, message);
+
+		var mobEquipment = McpeMobEquipment.CreateObject();
+		mobEquipment.runtimeActorId = EntityId;
+		mobEquipment.item = ItemInHand;
+		mobEquipment.slot = 0;
+		Level.RelayBroadcast(players, mobEquipment);
+
+		var armorEquipment = McpeMobArmorEquipment.CreateObject();
+		armorEquipment.runtimeActorId = EntityId;
+		armorEquipment.helmet = Helmet;
+		armorEquipment.chestplate = Chest;
+		armorEquipment.leggings = Leggings;
+		armorEquipment.boots = Boots;
+		Level.RelayBroadcast(players, armorEquipment);
+
+		var setEntityData = McpeSetActorData.CreateObject();
+		setEntityData.runtimeActorId = EntityId;
+		setEntityData.metadata = GetMetadata();
+		Level?.RelayBroadcast(players, setEntityData);
+	}
+
+	public void RemoveFromPlayerList()
+	{
+		var fake = new Player(null, null)
 		{
-				var message = McpeAddPlayer.CreateObject();
-				message.uuid = ClientUuid;
-				message.username = NameTag;
-				message.entityIdSelf = EntityId;
-				message.runtimeEntityId = EntityId;
-				message.x = KnownPosition.X;
-				message.y = KnownPosition.Y;
-				message.z = KnownPosition.Z;
-				message.yaw = KnownPosition.Yaw;
-				message.headYaw = KnownPosition.HeadYaw;
-				message.pitch = KnownPosition.Pitch;
-				message.metadata = GetMetadata();
-				message.layers = GetAbilities();
-				Level.RelayBroadcast(players, message);
+			ClientUuid = ClientUuid,
+			EntityId = EntityId,
+			NameTag = NameTag,
+			Skin = Skin
+		};
 
-				var mobEquipment = McpeMobEquipment.CreateObject();
-				mobEquipment.runtimeActorId = EntityId;
-				mobEquipment.item = ItemInHand;
-				mobEquipment.slot = 0;
-				Level.RelayBroadcast(players, mobEquipment);
+		var players = Level.GetSpawnedPlayers();
 
-				var armorEquipment = McpeMobArmorEquipment.CreateObject();
-				armorEquipment.runtimeActorId = EntityId;
-				armorEquipment.helmet = Helmet;
-				armorEquipment.chestplate = Chest;
-				armorEquipment.leggings = Leggings;
-				armorEquipment.boots = Boots;
-				Level.RelayBroadcast(players, armorEquipment);
+		var playerList = McpePlayerList.CreateObject();
+		playerList.records = new PlayerRemoveRecords {fake};
+		Level.RelayBroadcast(players, Level.CreateMcpeBatch(playerList.Encode()));
+		playerList.records = null;
+		playerList.PutPool();
+	}
 
-				var setEntityData = McpeSetActorData.CreateObject();
-				setEntityData.runtimeActorId = EntityId;
-				setEntityData.metadata = GetMetadata();
-				Level?.RelayBroadcast(players, setEntityData);
-		}
+	public void AddToPlayerList()
+	{
+		Player fake = new Player(null, null)
+		{
+			ClientUuid = ClientUuid,
+			EntityId = EntityId,
+			NameTag = NameTag,
+			Skin = Skin,
+			PlayerInfo = new PlayerInfo()
+		};
 
-		public void RemoveFromPlayerList()
+		var players = Level.GetSpawnedPlayers();
+
+		McpePlayerList playerList = McpePlayerList.CreateObject();
+		playerList.records = new PlayerAddRecords {fake};
+		Level.RelayBroadcast(players, Level.CreateMcpeBatch(playerList.Encode()));
+		playerList.records = null;
+		playerList.PutPool();
+	}
+
+	public override void DespawnFromPlayers(Player[] players)
+	{
 		{
 			var fake = new Player(null, null)
 			{
@@ -194,100 +233,61 @@ namespace PigNet.Entities
 				Skin = Skin
 			};
 
-			var players = Level.GetSpawnedPlayers();
-
-			var playerList = McpePlayerList.CreateObject();
+			McpePlayerList playerList = McpePlayerList.CreateObject();
 			playerList.records = new PlayerRemoveRecords {fake};
 			Level.RelayBroadcast(players, Level.CreateMcpeBatch(playerList.Encode()));
 			playerList.records = null;
 			playerList.PutPool();
 		}
 
-		public void AddToPlayerList()
-		{
-			Player fake = new Player(null, null)
-			{
-				ClientUuid = ClientUuid,
-				EntityId = EntityId,
-				NameTag = NameTag,
-				Skin = Skin,
-				PlayerInfo = new PlayerInfo()
-			};
+		McpeRemoveActor mcpeRemovePlayer = McpeRemoveActor.CreateObject();
+		mcpeRemovePlayer.entityIdSelf = EntityId;
+		Level.RelayBroadcast(players, mcpeRemovePlayer);
+	}
 
-			var players = Level.GetSpawnedPlayers();
+	public override void OnTick(Entity[] entities)
+	{
+		OnTicking(new PlayerEventArgs(null));
 
-			McpePlayerList playerList = McpePlayerList.CreateObject();
-			playerList.records = new PlayerAddRecords {fake};
-			Level.RelayBroadcast(players, Level.CreateMcpeBatch(playerList.Encode()));
-			playerList.records = null;
-			playerList.PutPool();
-		}
+		// Do nothing of the mob stuff
 
-		public override void DespawnFromPlayers(Player[] players)
-		{
-			{
-				var fake = new Player(null, null)
-				{
-					ClientUuid = ClientUuid,
-					EntityId = EntityId,
-					NameTag = NameTag,
-					Skin = Skin
-				};
+		OnTicked(new PlayerEventArgs(null));
+	}
 
-				McpePlayerList playerList = McpePlayerList.CreateObject();
-				playerList.records = new PlayerRemoveRecords {fake};
-				Level.RelayBroadcast(players, Level.CreateMcpeBatch(playerList.Encode()));
-				playerList.records = null;
-				playerList.PutPool();
-			}
+	public event EventHandler<PlayerEventArgs> Ticking;
 
-			McpeRemoveActor mcpeRemovePlayer = McpeRemoveActor.CreateObject();
-			mcpeRemovePlayer.entityIdSelf = EntityId;
-			Level.RelayBroadcast(players, mcpeRemovePlayer);
-		}
+	protected virtual void OnTicking(PlayerEventArgs e)
+	{
+		Ticking?.Invoke(this, e);
+	}
 
-		public override void OnTick(Entity[] entities)
-		{
-			OnTicking(new PlayerEventArgs(null));
+	public event EventHandler<PlayerEventArgs> Ticked;
 
-			// Do nothing of the mob stuff
-
-			OnTicked(new PlayerEventArgs(null));
-		}
-
-		public event EventHandler<PlayerEventArgs> Ticking;
-
-		protected virtual void OnTicking(PlayerEventArgs e)
-		{
-			Ticking?.Invoke(this, e);
-		}
-
-		public event EventHandler<PlayerEventArgs> Ticked;
-
-		protected virtual void OnTicked(PlayerEventArgs e)
-		{
-			Ticked?.Invoke(this, e);
-		}
+	protected virtual void OnTicked(PlayerEventArgs e)
+	{
+		Ticked?.Invoke(this, e);
+	}
 
 
-		protected virtual void SendEquipment()
-		{
-			McpeMobEquipment message = McpeMobEquipment.CreateObject();
-			message.runtimeActorId = EntityId;
-			message.item = ItemInHand;
-			message.slot = 0;
-			Level.RelayBroadcast(message);
-		}
+	public virtual void SendEquipment(Player[] players = null)
+	{
+		McpeMobEquipment mobEquipment = McpeMobEquipment.CreateObject();
+		mobEquipment.runtimeActorId = EntityId;
+		mobEquipment.item = ItemInHand;
+		mobEquipment.slot = 0;
+		if(players == null) Level.RelayBroadcast(mobEquipment);
+		else Level.RelayBroadcast(players, mobEquipment);
+	}
 
-		protected virtual void SendArmor()
-		{
-			McpeMobArmorEquipment armorEquipment = McpeMobArmorEquipment.CreateObject();
-			armorEquipment.runtimeActorId = EntityId;
-			armorEquipment.helmet = Helmet;
-			armorEquipment.chestplate = Chest;
-			armorEquipment.leggings = Leggings;
-			armorEquipment.boots = Boots;
-			Level.RelayBroadcast(armorEquipment);
-		}
+	public virtual void SendArmor(Player[] players = null)
+	{
+		McpeMobArmorEquipment armorEquipment = McpeMobArmorEquipment.CreateObject();
+		armorEquipment.runtimeActorId = EntityId;
+		armorEquipment.helmet = Helmet;
+		armorEquipment.chestplate = Chest;
+		armorEquipment.leggings = Leggings;
+		armorEquipment.boots = Boots;
+		if(players == null) Level.RelayBroadcast(armorEquipment);
+		else Level.RelayBroadcast(players, armorEquipment);
 	}
 }

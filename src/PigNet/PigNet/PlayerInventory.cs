@@ -47,7 +47,6 @@ namespace PigNet
 		public const int HotbarSize = 9;
 		public const int InventorySize = HotbarSize + 36;
 		public Player Player { get; } = player;
-
 		public List<Item> Slots { get; } = Enumerable.Repeat((Item) new ItemAir(), InventorySize).ToList();
 
 		public int InHandSlot { get; set; } = 0;
@@ -65,7 +64,7 @@ namespace PigNet
 
 		public virtual void DamageItemInHand(ItemDamageReason reason, Entity target, Block block)
 		{
-			if (Player.GameMode != GameMode.Survival) return;
+			if (Player is not { GameMode: GameMode.Survival }) return;
 
 			Item itemInHand = GetItemInHand();
 
@@ -100,7 +99,7 @@ namespace PigNet
 			if (item == null || item.Count <= 0) item = new ItemAir();
 
 			UpdateInventorySlot(slot, item, forceReplace);
-			Player.SendPlayerInventory();
+			if(Player != null) Player.SendPlayerInventory();
 		}
 
 		public virtual void UpdateInventorySlot(int slot, Item item, bool forceReplace = false)
@@ -321,7 +320,7 @@ namespace PigNet
 			else if (inventoryId == 119)
 			{
 				item = Player.Inventory.OffHandInventory.GetItem();
-				var sendOffHandSlot = McpeMobEquipment.CreateObject();
+				McpeMobEquipment sendOffHandSlot = McpeMobEquipment.CreateObject();
 				sendOffHandSlot.runtimeActorId = Player.EntityId;
 				sendOffHandSlot.selectedSlot = 0;
 				sendOffHandSlot.slot = 0;
@@ -334,7 +333,8 @@ namespace PigNet
 				item = Slots[slot];
 			}
 
-			var sendSlot = McpeInventorySlot.CreateObject();
+			if (Player == null) return;
+			McpeInventorySlot sendSlot = McpeInventorySlot.CreateObject();
 			sendSlot.containerId = inventoryId;
 			sendSlot.slot = (uint) slot;
 			sendSlot.item = item;

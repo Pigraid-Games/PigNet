@@ -85,7 +85,17 @@ namespace PigNet.Entities
 			armorEquipment.boots = Boots;
 			Level.RelayBroadcast(armorEquipment);
 		}
-
+		
+		public virtual void BroadcastArmor(Player[] players)
+		{
+			McpeMobArmorEquipment armorEquipment = McpeMobArmorEquipment.CreateObject();
+			armorEquipment.runtimeActorId = EntityId;
+			armorEquipment.helmet = Helmet;
+			armorEquipment.chestplate = Chest;
+			armorEquipment.leggings = Leggings;
+			armorEquipment.boots = Boots;
+			Level.RelayBroadcast(players, armorEquipment);
+		}
 
 		public virtual void SetTarget(Entity target)
 		{
