@@ -121,7 +121,7 @@ namespace PigNet.Console
 
 		public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
 		{
-			BlockCoordinates coordinates = message.blockPositin;
+			BlockCoordinates coordinates = message.blockPosition;
 			Nbt nbt = message.actorDataTags;
 			ChunkColumn chunk = _worldProvider.GenerateChunkColumn((ChunkCoordinates) coordinates, true);
 			if(chunk == null)

@@ -5,7 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
+using fNbt;
 using log4net;
+using Newtonsoft.Json;
+using PigNet.Net;
 using PigNet.Utils;
 
 namespace PigNet.Blocks;
@@ -15,14 +19,23 @@ public interface ICustomBlockFactory
 	Block GetBlockById(int blockId);
 }
 
+public class R12ToCurrentBlockMapEntry(string id, short meta, BlockStateContainer state)
+{
+	public string StringId { get; set; } = id;
+	public short Meta { get; set; } = meta;
+	public BlockStateContainer State { get; set; } = state;
+}
+
 public static class BlockFactory
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(BlockFactory));
-
+	
+	public static ICustomBlockFactory CustomBlockFactory { get; set; }
 	public static readonly ConcurrentDictionary<int, byte> TransparentBlocks = new();
 	public static readonly ConcurrentDictionary<int, byte> LuminousBlocks = new();
 	private static readonly Dictionary<string, int> NameToId;
 	public static readonly BlockPalette BlockPalette;
+	public static HashSet<BlockStateContainer> BlockStates { get; set; }
 
 	private static readonly ConcurrentDictionary<int, int> LegacyToRuntimeId = new();
 
@@ -30,11 +43,11 @@ public static class BlockFactory
 	{
 		{ 0, () => new Air() },
 		{ 1, () => new Stone() },
-		{ 2, () => new Grass() },
+		{ 2, () => new GrassBlock() },
 		{ 3, () => new Dirt() },
 		{ 4, () => new Cobblestone() },
-		{ 5, () => new Planks() },
-		{ 6, () => new Sapling() },
+		{ 5, () => new PlanksBase() },
+		{ 6, () => new SaplingBase() },
 		{ 7, () => new Bedrock() },
 		{ 8, () => new FlowingWater() },
 		{ 9, () => new Water() },
@@ -45,8 +58,8 @@ public static class BlockFactory
 		{ 14, () => new GoldOre() },
 		{ 15, () => new IronOre() },
 		{ 16, () => new CoalOre() },
-		{ 17, () => new Log() },
-		{ 18, () => new Leaves() },
+		{ 17, () => new LogBase() },
+		{ 18, () => new LeavesBase() },
 		{ 19, () => new Sponge() },
 		{ 20, () => new Glass() },
 		{ 21, () => new LapisOre() },
@@ -70,7 +83,7 @@ public static class BlockFactory
 		{ 40, () => new RedMushroom() },
 		{ 41, () => new GoldBlock() },
 		{ 42, () => new IronBlock() },
-		{ 43, () => new DoubleStoneSlab() },
+		{ 43, () => new DoubleSlabBase() },
 		{ 44, () => new StoneSlab() },
 		{ 45, () => new BrickBlock() },
 		{ 46, () => new Tnt() },
@@ -112,7 +125,7 @@ public static class BlockFactory
 		{ 82, () => new Clay() },
 		{ 83, () => new Reeds() },
 		{ 84, () => new Jukebox() },
-		{ 85, () => new Fence() },
+		{ 85, () => new FenceBase() },
 		{ 86, () => new Pumpkin() },
 		{ 87, () => new Netherrack() },
 		{ 88, () => new SoulSand() },
@@ -170,7 +183,7 @@ public static class BlockFactory
 		{ 140, () => new FlowerPot() },
 		{ 141, () => new Carrots() },
 		{ 142, () => new Potatoes() },
-		{ 143, () => new WoodenButton() },
+		{ 143, () => new WoodenButtonBase() },
 		{ 144, () => new Skull() },
 		{ 145, () => new Anvil() },
 		{ 146, () => new TrappedChest() },
@@ -184,7 +197,7 @@ public static class BlockFactory
 		{ 154, () => new Hopper() },
 		{ 155, () => new QuartzBlock() },
 		{ 156, () => new QuartzStairs() },
-		{ 157, () => new DoubleWoodenSlab() },
+		{ 157, () => new DoubleWoodenSlabBase() },
 		{ 158, () => new WoodenSlab() },
 		{ 159, () => new StainedHardenedClay() },
 		{ 160, () => new StainedGlassPane() },
@@ -201,7 +214,7 @@ public static class BlockFactory
 		{ 172, () => new HardenedClay() },
 		{ 173, () => new CoalBlock() },
 		{ 174, () => new PackedIce() },
-		{ 175, () => new DoublePlant() },
+		{ 175, () => new DoublePlanBase() },
 		{ 176, () => new StandingBanner() },
 		{ 177, () => new WallBanner() },
 		{ 178, () => new DaylightDetectorInverted() },
@@ -240,26 +253,26 @@ public static class BlockFactory
 		{ 216, () => new BoneBlock() },
 		{ 217, () => new StructureVoid() },
 		{ 218, () => new ShulkerBox() },
-		{ 219, () => new PurpleGlazedTerracotta() },
-		{ 220, () => new WhiteGlazedTerracotta() },
-		{ 221, () => new OrangeGlazedTerracotta() },
-		{ 222, () => new MagentaGlazedTerracotta() },
-		{ 223, () => new LightBlueGlazedTerracotta() },
-		{ 224, () => new YellowGlazedTerracotta() },
-		{ 225, () => new LimeGlazedTerracotta() },
-		{ 226, () => new PinkGlazedTerracotta() },
-		{ 227, () => new GrayGlazedTerracotta() },
-		{ 228, () => new SilverGlazedTerracotta() },
+		{ 219, () => new PurpleGlazedTerracottaBase() },
+		{ 220, () => new WhiteGlazedTerracottaBase() },
+		{ 221, () => new OrangeGlazedTerracottaBase() },
+		{ 222, () => new MagentaGlazedTerracottaBase() },
+		{ 223, () => new LightBlueGlazedTerracottaBase() },
+		{ 224, () => new YellowGlazedTerracottaBase() },
+		{ 225, () => new LimeGlazedTerracottaBase() },
+		{ 226, () => new PinkGlazedTerracottaBase() },
+		{ 227, () => new GrayGlazedTerracottaBase() },
+		{ 228, () => new SilverGlazedTerracottaBase() },
 		{ 229, () => new CyanGlazedTerracotta() },
 		{ 231, () => new BlueGlazedTerracotta() },
 		{ 232, () => new BrownGlazedTerracotta() },
-		{ 233, () => new GreenGlazedTerracotta() },
-		{ 234, () => new RedGlazedTerracotta() },
-		{ 235, () => new BlackGlazedTerracotta() },
-		{ 236, () => new Concrete() },
+		{ 233, () => new GreenGlazedTerracottaBase() },
+		{ 234, () => new RedGlazedTerracottaBase() },
+		{ 235, () => new BlackGlazedTerracottaBase() },
+		{ 236, () => new ConcreteBase() },
 		{ 237, () => new ConcretePowder() },
 		{ 240, () => new ChorusPlant() },
-		{ 241, () => new StainedGlass() },
+		{ 241, () => new StainedGlassBase() },
 		{ 243, () => new Podzol() },
 		{ 244, () => new Beetroot() },
 		{ 245, () => new Stonecutter() },
@@ -270,7 +283,7 @@ public static class BlockFactory
 		{ 251, () => new Observer() },
 		{ 252, () => new StructureBlock() },
 		{ 255, () => new Reserved6() },
-		{ 256, () => new DoubleStoneSlab() },
+		{ 256, () => new DoubleSlabBase() },
 		{ 257, () => new PrismarineStairs() },
 		{ 258, () => new DarkPrismarineStairs() },
 		{ 259, () => new PrismarineBricksStairs() },
@@ -291,11 +304,11 @@ public static class BlockFactory
 		{ 392, () => new CoralFanHang3() },
 		{ 393, () => new Kelp() },
 		{ 394, () => new DriedKelpBlock() },
-		{ 395, () => new AcaciaButton() },
+		{ 395, () => new AcaciaButtonBase() },
 		{ 396, () => new BirchButton() },
-		{ 397, () => new DarkOakButton() },
-		{ 398, () => new JungleButton() },
-		{ 399, () => new SpruceButton() },
+		{ 397, () => new DarkOakButtonBase() },
+		{ 398, () => new JungleButtonBase() },
+		{ 399, () => new SpruceButtonBase() },
 		{ 400, () => new AcaciaTrapdoor() },
 		{ 401, () => new BirchTrapdoor() },
 		{ 402, () => new DarkOakTrapdoor() },
@@ -373,10 +386,14 @@ public static class BlockFactory
 	};
 
 	private static readonly object LockObj = new();
+	
+	private static readonly List<R12ToCurrentBlockMapEntry> LegacyStateMap = new();
+	private static readonly Dictionary<string, int> IdMapping = new(StringComparer.OrdinalIgnoreCase);
 
 	static BlockFactory()
 	{
-		for (int i = 0; i < byte.MaxValue * 16; ++i) LegacyToRuntimeId.TryAdd(i, -1);
+		for (int i = 0; i < byte.MaxValue * 16; ++i)
+			LegacyToRuntimeId.TryAdd(i, -1);
 
 		NameToId = BuildNameToId();
 
@@ -390,7 +407,9 @@ public static class BlockFactory
 			{
 				using Stream stream = assembly.GetManifestResourceStream("PigNet.Resources.blockstates.json");
 				if (stream == null)
-					Log.Error("Blockstates JSON resource is missing or could not be loaded.");
+				{
+					Log.Error("blockstates.json resource is missing.");
+				}
 				else
 				{
 					using var reader = new StreamReader(stream);
@@ -398,16 +417,177 @@ public static class BlockFactory
 				}
 			}
 			else
+			{
 				Log.Error("Assembly containing blockstates.json could not be found.");
+			}
 
-			foreach (BlockStateContainer blockStateContainer in BlockPalette.Values) LegacyToRuntimeId.TryAdd((blockStateContainer.Id << 4) | (byte) blockStateContainer.Data, blockStateContainer.RuntimeId);
+			// Load block_id_map.json
+			LoadIdMapping(assembly);
+
+			// Load r12_to_current_block_map.bin
+			LoadR12Mapping(assembly);
+
+			// Fill LegacyToRuntimeId properly based on R12 mapping
+			BuildLegacyMappings();
+
+			// Cache NBT states per block
+			CacheBlockStatesNbt();
 		}
 
-		BlockStates = [..BlockPalette.Values.ToArray()];
+		BlockStates = [.. BlockPalette.Values.ToArray()];
+	}
+	
+	private static void LoadIdMapping(Assembly assembly)
+	{
+		using Stream idMappingStream = assembly.GetManifestResourceStream("PigNet.Resources.block_id_map.json");
+		if (idMappingStream == null)
+		{
+			Log.Error("block_id_map.json is missing.");
+			return;
+		}
+
+		using var reader = new StreamReader(idMappingStream);
+		var parsed = JsonConvert.DeserializeObject<Dictionary<string, int>>(reader.ReadToEnd());
+		foreach (var pair in parsed)
+		{
+			IdMapping[pair.Key] = pair.Value;
+		}
 	}
 
-	public static ICustomBlockFactory CustomBlockFactory { get; set; }
-	public static HashSet<BlockStateContainer> BlockStates { get; set; }
+	private static void LoadR12Mapping(Assembly assembly)
+	{
+		using Stream r12MapStream = assembly.GetManifestResourceStream("PigNet.Resources.r12_to_current_block_map.bin");
+		if (r12MapStream == null)
+		{
+			Log.Error("r12_to_current_block_map.bin is missing.");
+			return;
+		}
+
+		while (r12MapStream.Position < r12MapStream.Length)
+		{
+			var length = VarInt.ReadUInt32(r12MapStream);
+			var stringBytes = new byte[length];
+			r12MapStream.Read(stringBytes, 0, stringBytes.Length);
+			var stringId = Encoding.UTF8.GetString(stringBytes);
+
+			var metaBytes = new byte[2];
+			r12MapStream.Read(metaBytes, 0, metaBytes.Length);
+			var meta = BitConverter.ToInt16(metaBytes);
+
+			var compound = Packet.ReadNbtCompound(r12MapStream, true);
+
+			LegacyStateMap.Add(new R12ToCurrentBlockMapEntry(stringId, meta, GetBlockStateContainer(compound)));
+		}
+	}
+	
+	private static void BuildLegacyMappings()
+	{
+		var idToStatesMap = new Dictionary<string, List<int>>(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var container in BlockPalette.Values)
+		{
+			if (!idToStatesMap.TryGetValue(container.Name, out var list))
+			{
+				list = new List<int>();
+				idToStatesMap[container.Name] = list;
+			}
+			list.Add(container.RuntimeId);
+		}
+
+		foreach (var entry in LegacyStateMap)
+		{
+			if (!IdMapping.TryGetValue(entry.StringId, out int blockId))
+				continue;
+
+			if (!idToStatesMap.TryGetValue(entry.State.Name, out var matchingStates))
+				continue;
+
+			foreach (var match in matchingStates)
+			{
+				var networkState = BlockPalette[match];
+
+				var thisStates = new HashSet<IBlockState>(entry.State.States);
+				var otherStates = new HashSet<IBlockState>(networkState.States);
+
+				otherStates.IntersectWith(thisStates);
+
+				if (otherStates.Count != thisStates.Count) continue;
+				BlockPalette[match].Id = blockId;
+				BlockPalette[match].Data = entry.Meta;
+				BlockPalette[match].ItemInstance = new ItemPickInstance
+				{
+					Id = (short)blockId,
+					Metadata = entry.Meta,
+					WantNbt = false
+				};
+				LegacyToRuntimeId.TryUpdate((blockId << 4) | (byte)entry.Meta, match);
+				break;
+			}
+		}
+	}
+
+	private static void CacheBlockStatesNbt()
+	{
+		foreach (var record in BlockPalette.Values)
+		{
+			var states = new List<NbtTag>();
+			foreach (IBlockState state in record.States)
+			{
+				NbtTag stateTag = state switch
+				{
+					BlockStateByte b => new NbtByte(b.Name, b.Value),
+					BlockStateInt i => new NbtInt(i.Name, i.Value),
+					BlockStateString s => new NbtString(s.Name, s.Value),
+					_ => throw new ArgumentOutOfRangeException(nameof(state))
+				};
+				states.Add(stateTag);
+			}
+
+			var nbt = new NbtFile
+			{
+				BigEndian = false,
+				UseVarInt = true,
+				RootTag = new NbtCompound("states", states)
+			};
+
+			record.StatesCacheNbt = nbt.SaveToBuffer(NbtCompression.None);
+		}
+	}
+	
+	private static BlockStateContainer GetBlockStateContainer(NbtTag tag)
+	{
+		return new BlockStateContainer
+		{
+			Name = tag["name"].StringValue,
+			States = GetBlockStates(tag)
+		};
+	}
+
+	private static List<IBlockState> GetBlockStates(NbtTag tag)
+	{
+		var result = new List<IBlockState>();
+
+		if (tag["states"] is NbtCompound compound)
+		{
+			foreach (var stateEntry in compound)
+			{
+				switch (stateEntry)
+				{
+					case NbtInt nbtInt:
+						result.Add(new BlockStateInt { Name = nbtInt.Name, Value = nbtInt.Value });
+						break;
+					case NbtByte nbtByte:
+						result.Add(new BlockStateByte { Name = nbtByte.Name, Value = nbtByte.Value });
+						break;
+					case NbtString nbtString:
+						result.Add(new BlockStateString { Name = nbtString.Name, Value = nbtString.Value });
+						break;
+				}
+			}
+		}
+
+		return result;
+	}
 
 	private static Dictionary<string, int> BuildNameToId()
 	{

@@ -1,96 +1,99 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
-using fNbt;
+﻿using PigNet.Blocks;
+using PigNet.Entities;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
-namespace PigNet.Items;
+namespace PigNet.Items.Armor;
 
-public abstract class ArmorHelmetBase : Item
+public enum ArmorType
 {
-	protected ArmorHelmetBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
+	Helmet,
+	Chestplate,
+	Leggings,
+	Boots
+}
+
+public abstract class ArmorBase : Item
+{
+	protected ArmorType ArmorType { get; set; }
+
+	protected ArmorBase(ArmorType armorType) : base()
 	{
-		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
+		ArmorType = armorType;
+
+		MaxStackSize = 1;
+		Durability = CalculateDurability();
 	}
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetHeadItem());
+		SwithItem(player);
+	}
 
-		UniqueId = Environment.TickCount;
-		player.Inventory.ArmorInventory.SetHeadItem(this);
+	public override bool DamageItem(Player player, ItemDamageReason reason, Entity target, Block block)
+	{
+		return ++Metadata >= Durability;
+	}
+
+	private int CalculateDurability()
+	{
+		int armor = ArmorType switch
+		{
+			ArmorType.Helmet => 11,
+			ArmorType.Chestplate => 16,
+			ArmorType.Leggings => 15,
+			ArmorType.Boots => 13,
+			_ => 0
+		};
+
+		int material = ItemMaterial switch
+		{
+			ItemMaterial.Leather => 5,
+			ItemMaterial.Gold => 7,
+			ItemMaterial.Chain => 15,
+			ItemMaterial.Iron => 15,
+			ItemMaterial.Turtle => 25,
+			ItemMaterial.Diamond => 33,
+			ItemMaterial.Netherite => 37,
+			_ => 0
+		};
+
+		return armor * material;
+	}
+
+	private void SwithItem(Player player)
+	{
+		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
+		player.Inventory.SetInventorySlot(slot, player.Inventory.GetArmorSlot(ArmorType));
+
+		UniqueId = GetUniqueId();
+		player.Inventory.SetArmorSlot(ArmorType, this);
+
+		PlayEquipSound(player);
+	}
+
+	private void PlayEquipSound(Player player)
+	{
+		var soundType = (ItemMaterial, ItemType) switch
+		{
+			(ItemMaterial.Leather, _) => LevelSoundEventType.EquipLeather,
+			(ItemMaterial.Chain, _) => LevelSoundEventType.EquipChain,
+			(ItemMaterial.Gold, _) => LevelSoundEventType.EquipGold,
+			(ItemMaterial.Iron, _) => LevelSoundEventType.EquipIron,
+			(ItemMaterial.Diamond, _) => LevelSoundEventType.EquipDiamond,
+			(ItemMaterial.Netherite, _) => LevelSoundEventType.EquipNetherite,
+			(_, ItemType.Elytra) => LevelSoundEventType.EquipElytra,
+			_ => LevelSoundEventType.EquipGeneric
+		};
+
+		player.Level.BroadcastSound(player.GetEyesPosition(), soundType);
 	}
 }
 
-public abstract class ArmorChestplateBase : Item
-{
-	protected ArmorChestplateBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
-	{
-		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
-	}
+public abstract class ItemArmorHelmetBase() : ArmorBase(ArmorType.Helmet);
 
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetChestItem());
-		UniqueId = Environment.TickCount;
-		player.Inventory.ArmorInventory.SetChestItem(this);
-	}
-}
+public abstract class ItemArmorChestplateBase() : ArmorBase(ArmorType.Chestplate);
 
-public abstract class ArmorLeggingsBase : Item
-{
-	protected ArmorLeggingsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
-	{
-		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
-	}
+public abstract class ItemArmorLeggingsBase() : ArmorBase(ArmorType.Leggings);
 
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetLegsItem());
-		UniqueId = Environment.TickCount;
-		player.Inventory.ArmorInventory.SetLegsItem(this);
-	}
-}
-
-public abstract class ArmorBootsBase : Item
-{
-	protected ArmorBootsBase(string name, short id, short metadata = 0, int count = 1) : base(name, id, metadata, count)
-	{
-		ExtraData = [new NbtInt("Damage", 0), new NbtInt("RepairCost", 1)];
-	}
-
-	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
-	{
-		byte slot = (byte) player.Inventory.Slots.IndexOf(this);
-		player.Inventory.SetInventorySlot(slot, player.Inventory.ArmorInventory.GetFeetItem());
-		UniqueId = Environment.TickCount;
-		player.Inventory.ArmorInventory.SetFeetItem(this);
-	}
-}
+public abstract class ItemArmorBootsBase() : ArmorBase(ArmorType.Boots);

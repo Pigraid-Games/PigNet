@@ -162,7 +162,7 @@ public class CraftNotImplementedDeprecatedAction : ItemStackAction
 
 public class CraftResultDeprecatedAction : ItemStackAction
 {
-	public ItemStacks ResultItems { get; set; } = new();
+	public ItemStacks ResultItems { get; set; } = new ItemStacks();
 	public byte TimesCrafted { get; set; }
 }
 
@@ -301,6 +301,7 @@ public class CraftTransactionRecord : TransactionRecord
 
 public class FullContainerName
 {
-	public byte ContainerId { get; set; }
+	public static readonly FullContainerName Unknown = new() { ContainerId = ContainerId.Unknown };
+	public ContainerId ContainerId { get; set; }
 	public int DynamicId { get; set; }
 }

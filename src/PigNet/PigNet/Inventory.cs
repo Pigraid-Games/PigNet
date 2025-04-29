@@ -25,76 +25,71 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using fNbt;
 using log4net;
 using PigNet.BlockEntities;
+using PigNet.Inventories;
 using PigNet.Items;
+using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils;
 using PigNet.Utils.Vectors;
+using PigNet.Worlds;
 
-namespace PigNet
+namespace PigNet;
+
+public interface IInventory
 {
-	public interface IInventory
+	public WindowType Type { get; }
+	public ItemStacks Slots { get; }
+	public WindowId WindowId { get; }
+
+	public long RuntimeEntityId { get; }
+	public BlockCoordinates Coordinates { get; }
+
+	public bool IsOpen { get; }
+
+	public bool Open(Player player);
+	public bool Close(Player player, bool closedByPlayer = false);
+	public void Clear();
+}
+
+public class ContainerInventory : CommonInventory
 	{
-	}
+		public event EventHandler<InventoryChangeEventArgs> InventoryChanged;
 
-	public class Inventory : IInventory
-	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Inventory));
+		public override bool IsOpen => !Observers.IsEmpty;
 
-		public event Action<Player, Inventory, byte, Item> InventoryChange;
-
-		public int Id { get; set; }
-		public byte Type { get; set; }
-		public ItemStacks Slots { get; set; }
-		public short Size { get; set; }
-		public BlockCoordinates Coordinates { get; set; }
-		public BlockEntity BlockEntity { get; set; }
-		public byte WindowsId { get; set; }
-
-		public Inventory(int id, BlockEntity blockEntity, short inventorySize, NbtList slots)
+		public ContainerInventory(ItemStacks items, long runtimeEntityId) 
+			: base(items, default, runtimeEntityId)
 		{
-			Id = id;
-			BlockEntity = blockEntity;
-			Size = inventorySize;
-			Coordinates = BlockEntity.Coordinates;
 
-			Slots = new ItemStacks();
-			for (byte i = 0; i < Size; i++)
-			{
-				Slots.Add(new ItemAir());
-			}
-
-			for (byte i = 0; i < slots.Count; i++)
-			{
-				var nbtItem = (NbtCompound) slots[i];
-
-				Item item = ItemFactory.GetItem(nbtItem["id"].ShortValue, nbtItem["Damage"].ShortValue, nbtItem["Count"].ByteValue);
-				byte slotIdx = nbtItem["Slot"].ByteValue;
-				Log.Debug($"Chest item {slotIdx}: {item}");
-				Slots[slotIdx] = item;
-			}
 		}
 
-		public void SetSlot(Player player, byte slot, Item itemStack)
+		public ContainerInventory(ItemStacks items, BlockCoordinates coordinates) 
+			: base(items, coordinates, EntityManager.EntityIdUndefined)
+		{
+
+		}
+
+		public virtual void SetSlot(Player player, byte slot, Item itemStack)
 		{
 			Slots[slot] = itemStack;
 
-			NbtCompound compound = BlockEntity.GetCompound();
-			compound["Items"] = GetSlots();
-
 			OnInventoryChange(player, slot, itemStack);
+			BroadcastSetSlot(player, slot);
 		}
 
-		public Item GetSlot(byte slot)
+		public virtual Item GetSlot(byte slot)
 		{
 			return Slots[slot];
 		}
 
-		public void DecreaseSlot(byte slot)
+		public bool DecreaseSlot(byte slot)
 		{
 			var slotData = Slots[slot];
-			if (slotData is ItemAir) return;
+			if (slotData is ItemAir) return false;
+			var count = slotData.Count;
 
 			slotData.Count--;
 
@@ -105,15 +100,19 @@ namespace PigNet
 
 			SetSlot(null, slot, slotData);
 
+			if (count <= 0) return false;
+
 			OnInventoryChange(null, slot, slotData);
+			BroadcastSetSlot(slot);
+			return true;
 		}
 
-		public void IncreaseSlot(byte slot, short itemId, short metadata)
+		public void IncreaseSlot(byte slot, string id, short metadata)
 		{
-			Item slotData = Slots[slot];
+			var slotData = Slots[slot];
 			if (slotData is ItemAir)
 			{
-				slotData = ItemFactory.GetItem(itemId, metadata, 1);
+				slotData = ItemFactory.GetItem(id, metadata, 1);
 			}
 			else
 			{
@@ -125,35 +124,59 @@ namespace PigNet
 			OnInventoryChange(null, slot, slotData);
 		}
 
-		public bool IsOpen()
+		public virtual void Close()
 		{
-			return InventoryChange != null;
+			foreach (var observer in Observers.ToArray())
+			{
+				Close(observer);
+			}
 		}
 
-
-		private NbtList GetSlots()
+		public override void Clear()
 		{
-			NbtList slots = new NbtList("Items");
-			for (byte i = 0; i < Size; i++)
+			base.Clear();
+
+			foreach (var observer in Observers)
 			{
-				var slot = Slots[i];
-				slots.Add(new NbtCompound
-				{
-					new NbtByte("Count", slot.Count),
-					new NbtByte("Slot", i),
-					new NbtShort("id", slot.Id),
-					new NbtShort("Damage", slot.Metadata),
-				});
+				SendContent(observer);
+			}
+		}
+
+		protected virtual void BroadcastSetSlot(int slot)
+		{
+			BroadcastSetSlot(null, slot);
+		}
+
+		protected virtual void BroadcastSetSlot(Player sender, int slot)
+		{
+			var item = Slots[slot];
+
+			foreach (var observer in Observers)
+			{
+				if (observer == sender) continue;
+
+				SendSetSlot(observer, slot, item, WindowId);
+			}
+		}
+
+		protected override bool OnInventoryOpen(Player player, bool open)
+		{
+			var opened = base.OnInventoryOpen(player, open);
+
+			if (opened)
+			{
+				AddObserver(player);
 			}
 
-			return slots;
+			return opened;
 		}
 
-		protected virtual void OnInventoryChange(Player player, byte slot, Item itemStack)
+		protected override void OnInventoryClose(Player player)
 		{
-			InventoryChange?.Invoke(player, this, slot, itemStack);
-		}
+			base.OnInventoryClose(player);
 
+			RemoveObserver(player);
+		}
 
 		// Below is a workaround making it possible to send
 		// updates to only peopele that is looking at this inventory.
@@ -161,16 +184,215 @@ namespace PigNet
 
 		public ConcurrentBag<Player> Observers { get; } = new ConcurrentBag<Player>();
 
-		public void AddObserver(Player player)
+		protected virtual void AddObserver(Player player)
 		{
 			Observers.Add(player);
 		}
 
-		public void RemoveObserver(Player player)
+		protected virtual void RemoveObserver(Player player)
 		{
 			// Need to arrange for this to work when players get disconnected
 			// from crash. It will leak players for sure.
 			Observers.TryTake(out player);
 		}
+
+		protected virtual void OnInventoryChange(Player player, byte slot, Item itemStack)
+		{
+			InventoryChanged?.Invoke(this, new InventoryChangeEventArgs(player, this, slot, itemStack));
+		}
 	}
-}
+
+	public class Inventory : CommonInventory
+	{
+		private bool _isOpen;
+
+		public override bool IsOpen => _isOpen;
+
+		public Inventory(BlockCoordinates coordinates, WindowType type)
+			: this(new ItemStacks(0), coordinates, type)
+		{
+
+		}
+
+		public Inventory(ItemStacks items, BlockCoordinates coordinates, WindowType type)
+			: base(items, coordinates, EntityManager.EntityIdSelf)
+		{
+			Type = type;
+		}
+
+		public Inventory(int size, long runtimeEntityId, WindowType type)
+			: base(ItemStacks.CreateAir(size), default, runtimeEntityId)
+		{
+			Type = type;
+		}
+
+		protected override bool OnInventoryOpen(Player player, bool open)
+		{
+			if (_isOpen) return false;
+
+			var opened = base.OnInventoryOpen(player, open);
+
+			if (opened)
+			{
+				_isOpen = true;
+			}
+
+			return opened;
+		}
+
+		protected override void OnInventoryClose(Player player)
+		{
+			base.OnInventoryClose(player);
+
+			_isOpen = false;
+		}
+	}
+
+	public abstract class CommonInventory : IInventory
+	{
+		private static readonly ILog Log = LogManager.GetLogger(typeof(Inventory));
+
+		public event EventHandler<InventoryOpenEventArgs> InventoryOpen;
+		public event EventHandler<InventoryOpenedEventArgs> InventoryOpened;
+		public event EventHandler<InventoryEventArgs> InventoryClose;
+		public event EventHandler<InventoryClosedEventArgs> InventoryClosed;
+
+		public WindowType Type { get; set; }
+		public virtual ItemStacks Slots { get; set; }
+		public WindowId WindowId { get; set; } = GetNewWindowId();
+
+		public long RuntimeEntityId { get; set; }
+		public BlockCoordinates Coordinates { get; set; }
+
+		public abstract bool IsOpen { get; }
+
+		protected CommonInventory(ItemStacks items, BlockCoordinates coordinates, long runtimeEntityId)
+		{
+			Slots = items;
+			Coordinates = coordinates;
+			RuntimeEntityId = runtimeEntityId;
+		}
+
+		public virtual bool Open(Player player)
+		{
+			var openedInventory = player.GetOpenInventory();
+
+			if (this == openedInventory) return true;
+			if (openedInventory != null)
+			{
+				player.CloseOpenedInventory();
+			}
+
+			var open = !IsOpen;
+			if (!OnInventoryOpen(player, open)) return false;
+
+			player.SetOpenInventory(this);
+
+			SendOpen(player);
+			SendContent(player);
+
+			OnInventoryOpened(player, open);
+
+			return true;
+		}
+
+		public virtual bool Close(Player player, bool closedByPlayer = false)
+		{
+			var openedInventory = player.GetOpenInventory();
+
+			if (openedInventory != this)
+			{
+				return false;
+			}
+
+			OnInventoryClose(player);
+
+			player.SetOpenInventory(null);
+
+			SendClose(player, closedByPlayer);
+
+			player.Inventory.CloseUiInventory();
+
+			OnInventoryClosed(player, !IsOpen);
+
+			return true;
+		}
+
+		public void SendContent(Player player)
+		{
+			var containerSetContent = McpeInventoryContent.CreateObject();
+			containerSetContent.inventoryId = (byte) WindowId;
+			containerSetContent.input = Slots;
+			containerSetContent.containerName = FullContainerName.Unknown;
+			player.SendPacket(containerSetContent);
+		}
+
+		protected virtual void SendOpen(Player player)
+		{
+			var containerOpen = McpeContainerOpen.CreateObject();
+			containerOpen.windowId = (byte) WindowId;
+			containerOpen.type = (sbyte) Type;
+			containerOpen.coordinates = Coordinates;
+			containerOpen.runtimeEntityId = RuntimeEntityId;
+			player.SendPacket(containerOpen);
+		}
+
+		protected virtual void SendClose(Player player, bool closedByPlayer)
+		{
+			var closePacket = McpeContainerClose.CreateObject();
+			closePacket.windowId = (byte) WindowId;
+			closePacket.windowType = (sbyte) Type;
+			closePacket.server = !closedByPlayer;
+			player.SendPacket(closePacket);
+		}
+
+		protected virtual void SendSetSlot(Player player, int slot)
+		{
+			SendSetSlot(player, slot, Slots[slot], WindowId);
+		}
+
+		protected virtual void SendSetSlot(Player player, int slot, Item item, WindowId windowId)
+		{
+			var sendSlot = McpeInventorySlot.CreateObject();
+			sendSlot.inventoryId = (uint) windowId;
+			sendSlot.slot = (uint) slot;
+			sendSlot.item = item;
+			sendSlot.containerName = FullContainerName.Unknown;
+			player.SendPacket(sendSlot);
+		}
+
+		public virtual void Clear()
+		{
+			Slots.Reset();
+		}
+
+		protected virtual bool OnInventoryOpen(Player player, bool open)
+		{
+			var args = new InventoryOpenEventArgs(player, this, open);
+			InventoryOpen?.Invoke(this, args);
+
+			return !args.Cancel;
+		}
+
+		protected virtual void OnInventoryOpened(Player player, bool opened)
+		{
+			InventoryOpened?.Invoke(this, new InventoryOpenedEventArgs(player, this, opened));
+		}
+
+		protected virtual void OnInventoryClose(Player player)
+		{
+			InventoryClose?.Invoke(this, new InventoryEventArgs(player, this));
+		}
+
+		protected virtual void OnInventoryClosed(Player player, bool closed)
+		{
+			InventoryClosed?.Invoke(this, new InventoryClosedEventArgs(player, this, closed));
+		}
+
+		private static byte _lastWindowId;
+
+		private static WindowId GetNewWindowId()
+		{
+			return (WindowId) (_lastWindowId = (byte) Math.Max((byte) WindowId.First, ++_lastWindowId % (byte) WindowId.Last));
+		}
+	}

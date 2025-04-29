@@ -28,7 +28,7 @@ namespace PigNet.Net.Packets.Mcpe;
 
 public class McpeBlockActorData : Packet<McpeBlockActorData>
 {
-	public BlockCoordinates blockPositin;
+	public BlockCoordinates blockPosition;
 	public Nbt actorDataTags;
 
 	public McpeBlockActorData()
@@ -41,7 +41,7 @@ public class McpeBlockActorData : Packet<McpeBlockActorData>
 	{
 		base.EncodePacket();
 
-		Write(blockPositin);
+		Write(blockPosition);
 		Write(actorDataTags);
 	}
 
@@ -49,7 +49,7 @@ public class McpeBlockActorData : Packet<McpeBlockActorData>
 	{
 		base.DecodePacket();
 
-		blockPositin = ReadBlockCoordinates();
+		blockPosition = ReadBlockCoordinates();
 		actorDataTags = ReadNbt();
 	}
 
@@ -57,7 +57,7 @@ public class McpeBlockActorData : Packet<McpeBlockActorData>
 	{
 		base.ResetPacket();
 
-		blockPositin = default;
+		blockPosition = default;
 		actorDataTags = default;
 	}
 }

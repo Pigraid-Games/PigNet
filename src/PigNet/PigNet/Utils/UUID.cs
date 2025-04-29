@@ -25,18 +25,14 @@
 
 using System;
 using System.Linq;
-using log4net;
 
 namespace PigNet.Utils;
 
 public class UUID
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(UUID));
-
+	private readonly Guid _guid;
 	private readonly ulong _a;
 	private readonly ulong _b;
-
-	private readonly Guid _guid;
 
 	public UUID(byte[] rfc4122Bytes)
 	{
@@ -65,7 +61,7 @@ public class UUID
 
 	public byte[] GetBytes()
 	{
-		byte[] bytes = new byte[0];
+		byte[] bytes = [];
 		return bytes.Concat(BitConverter.GetBytes(_a).Reverse())
 			.Concat(BitConverter.GetBytes(_b).Reverse())
 			.ToArray();
@@ -90,8 +86,7 @@ public class UUID
 	{
 		if (ReferenceEquals(null, obj)) return false;
 		if (ReferenceEquals(this, obj)) return true;
-		if (obj.GetType() != GetType()) return false;
-		return Equals((UUID) obj);
+		return obj.GetType() == GetType() && Equals((UUID) obj);
 	}
 
 	public override int GetHashCode()
@@ -104,15 +99,13 @@ public class UUID
 
 	public override string ToString()
 	{
-		byte[] bytes = new byte[0];
+		byte[] bytes = [];
 		bytes = bytes.Concat(BitConverter.GetBytes(_a))
 			.Concat(BitConverter.GetBytes(_b))
 			.ToArray();
 
 		string hex = string.Join("", bytes.Select(b => b.ToString("x2")));
 
-		return hex.Substring(0, 8) + "-" + hex.Substring(8, 4) + "-" + hex.Substring(12, 4) + "-" + hex.Substring(16, 4) + "-" + hex.Substring(20, 12);
-		//xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx 8-4-4-12
-		//return Id.ToString();
+		return hex[..8] + "-" + hex.Substring(8, 4) + "-" + hex.Substring(12, 4) + "-" + hex.Substring(16, 4) + "-" + hex.Substring(20, 12);
 	}
 }

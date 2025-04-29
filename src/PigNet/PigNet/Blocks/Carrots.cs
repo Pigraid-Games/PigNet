@@ -25,23 +25,17 @@
 
 using System;
 using PigNet.Items;
+using PigNet.Items.Food;
+using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
 public partial class Carrots : Crops
 {
-	public Carrots() : base(141)
+	public override Item[] GetDrops(Level world, Item tool)
 	{
-	}
-
-	public override Item[] GetDrops(Item tool)
-	{
-		if (Growth == 7)
-		{
-			var random = new Random();
-			return new[] { ItemFactory.GetItem(391, 0, (byte) random.Next(1, 5)) };
-		}
-
-		return new[] { ItemFactory.GetItem(391) };
+		if (Growth != 7) return [new ItemCarrot()];
+		var random = new Random();
+		return [new ItemCarrot { Count = (byte) random.Next(1, 5) }];
 	}
 }

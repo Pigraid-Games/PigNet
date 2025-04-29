@@ -21,6 +21,8 @@
 // All Rights Reserved.
 #endregion
 
+using PigNet.Items.Armor;
+
 namespace PigNet.Items.Custom;
 
 public class ItemPigraidSpecial : ArmorChestplateBase

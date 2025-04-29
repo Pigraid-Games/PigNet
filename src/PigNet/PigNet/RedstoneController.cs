@@ -10,9 +10,9 @@ public static class RedstoneController
 	public static void doFenceGate(Level level, BlockCoordinates coordinates, bool openBit)
 	{
 		Block block = level.GetBlock(coordinates);
-		if (block is FenceGateBlocks)
+		if (block is FenceGateBase)
 		{
-			var stateBlock = block as FenceGateBlocks;
+			var stateBlock = block as FenceGateBase;
 			if (boolStateIsSame(openBit, stateBlock.OpenBit)) return;
 			stateBlock.Direction = block.GetDirection();
 			stateBlock.Coordinates = new BlockCoordinates(coordinates);

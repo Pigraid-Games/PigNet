@@ -60,21 +60,18 @@ public static class ChatFormatting
 	public const string Reset = "§r";
 }
 
-public class TextUtils
+public partial class TextUtils
 {
 	private const int LineLength = 30;
 	private const int CharWidth = 6;
 
 	private const char SpaceChar = ' ';
 
-	private static readonly Regex CleanAllFormattingFilter = new("(?:&|§)([0123456789abcdefklmnor])",
-		RegexOptions.Compiled & RegexOptions.IgnoreCase);
+	private static readonly Regex CleanAllFormattingFilter = MyRegex2();
 
-	private static readonly Regex CleanColourFilter = new("(?:&|§)([0123456789abcdef])",
-		RegexOptions.Compiled & RegexOptions.IgnoreCase);
+	private static readonly Regex CleanColourFilter = MyRegex1();
 
-	private static readonly Regex BoldTextRegex = new("(?:&|§)l(.+?)(?:[&|§]r|$)",
-		RegexOptions.Compiled & RegexOptions.IgnoreCase);
+	private static readonly Regex BoldTextRegex = MyRegex();
 
 	private static readonly IDictionary<char, int> CharWidths = new Dictionary<char, int>
 	{
@@ -150,10 +147,7 @@ public class TextUtils
 
 	private static int GetCharWidth(char c)
 	{
-		int width;
-		if (CharWidths.TryGetValue(c, out width))
-			return width;
-		return CharWidth;
+		return CharWidths.TryGetValue(c, out int width) ? width : CharWidth;
 	}
 
 	public static int GetPixelLength(string line)
@@ -164,12 +158,12 @@ public class TextUtils
 		// +1 for each bold character
 
 		MatchCollection boldMatches = BoldTextRegex.Matches(line);
-		if (boldMatches.Count > 0)
-			foreach (Match boldText in boldMatches)
-			{
-				string cleanBoldText = CleanAllFormattingFilter.Replace(boldText.Value, "");
-				length += cleanBoldText.Length;
-			}
+		if (boldMatches.Count <= 0) return length;
+		foreach (Match boldText in boldMatches)
+		{
+			string cleanBoldText = CleanAllFormattingFilter.Replace(boldText.Value, "");
+			length += cleanBoldText.Length;
+		}
 
 		return length;
 	}
@@ -177,10 +171,7 @@ public class TextUtils
 	private static string Strip(string input, bool keepBold = false)
 	{
 		string result;
-		if (keepBold)
-			result = CleanColourFilter.Replace(input, "\u1234");
-		else
-			result = CleanAllFormattingFilter.Replace(input, "\u1236");
+		result = keepBold ? CleanColourFilter.Replace(input, "\u1234") : CleanAllFormattingFilter.Replace(input, "\u1236");
 		return result;
 	}
 
@@ -188,4 +179,11 @@ public class TextUtils
 	{
 		return CleanAllFormattingFilter.Replace(input, "");
 	}
+
+	[GeneratedRegex("(?:&|§)l(.+?)(?:[&|§]r|$)", RegexOptions.None)]
+	private static partial Regex MyRegex();
+	[GeneratedRegex("(?:&|§)([0123456789abcdef])", RegexOptions.None)]
+	private static partial Regex MyRegex1();
+	[GeneratedRegex("(?:&|§)([0123456789abcdefklmnor])", RegexOptions.None)]
+	private static partial Regex MyRegex2();
 }

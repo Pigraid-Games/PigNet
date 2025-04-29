@@ -1,49 +1,63 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE. 
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14 
-// and 15 have been added to cover use of software over a computer network and 
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has 
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2018 Niclas Olofsson. 
-// All Rights Reserved.
-
-#endregion
-
-using PigNet.Items;
+﻿using PigNet.Items;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Reeds : Block
+public partial class Reeds
 {
-	public Reeds() : base(83)
+	public Reeds()
 	{
 		IsSolid = false;
 		IsTransparent = true;
 	}
 
-	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
+	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 	{
-		if (Coordinates.BlockDown() == blockCoordinates) level.BreakBlock(null, this);
+		return CanGrowOn(world, blockCoordinates) && world.GetBlock(blockCoordinates).IsReplaceable;
 	}
 
-	public override Item[] GetDrops(Item tool)
+	public override void DoPhysics(Level level)
 	{
-		return new[] { ItemFactory.GetItem(338) };
+		level.ScheduleBlockTick(this, 1);
+	}
+
+	public override void OnTick(Level level, bool isRandom)
+	{
+		if (!CanGrowOn(level, Coordinates)) level.BreakBlock(this);
+	}
+
+	public override Item GetItem(Level world, bool blockItem = false)
+	{
+		return blockItem ? base.GetItem(world, blockItem) : new ItemSugarCane();
+	}
+
+	private bool CanGrowOn(Level world, BlockCoordinates blockCoordinates)
+	{
+		Block currentBlock = world.GetBlock(blockCoordinates);
+
+		if (currentBlock is Stationary or Flowing)
+			return false;
+
+		BlockCoordinates targetCoordinates = blockCoordinates.BlockDown();
+		Block targetBlock = world.GetBlock(targetCoordinates);
+
+		if (targetBlock is Reeds) return true;
+
+		if (targetBlock is not Sand
+			&& targetBlock is not Dirt
+			&& targetBlock is not DirtWithRoots
+			&& targetBlock is not Mycelium
+			&& targetBlock is not GrassBlock
+			&& targetBlock is not Podzol)
+			return false;
+
+		foreach (var aroundCoords in targetCoordinates.Get2dAroundCoordinates())
+		{
+			Block aroundBlock = world.GetBlock(aroundCoords);
+			if (aroundBlock is Water or FlowingWater) return true;
+		}
+
+		return false;
 	}
 }

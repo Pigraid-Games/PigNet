@@ -32,4 +32,7 @@
     <ProjectReference Include="..\PigNet.Client\PigNet.Client.csproj" />
     <ProjectReference Include="..\PigNet\PigNet.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CRPE-MiNET.fNbt" Version="1.0.21" />
+  </ItemGroup>
 </Project>

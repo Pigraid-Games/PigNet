@@ -25,27 +25,21 @@
 
 using System;
 using PigNet.Items;
+using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
 public partial class CoalOre : Block
 {
-	public CoalOre() : base(16)
+	public CoalOre()
 	{
 		BlastResistance = 15;
 		Hardness = 3;
 	}
 
-	public override Item[] GetDrops(Item tool)
+	public override Item[] GetDrops(Level world, Item tool)
 	{
-		if (tool.ItemMaterial < ItemMaterial.Wood) return new Item[0];
-
-		return new[] { ItemFactory.GetItem(263) };
-	}
-
-	public override Item GetSmelt()
-	{
-		return new ItemCoal();
+		return tool.ItemMaterial < ItemMaterial.Wood ? [] : [new ItemCoal()];
 	}
 
 	public override float GetExperiencePoints()

@@ -225,7 +225,7 @@ public class CoolWorldProvider : IWorldProvider
 			}
 
 			//turn the tops into grass
-			chunk.SetBlock(x, bottomHeight, z, new Grass()); //the top of the base hills
+			chunk.SetBlock(x, bottomHeight, z, new GrassBlock()); //the top of the base hills
 			chunk.SetBlock(x, bottomHeight - 1, z, new Dirt());
 			chunk.SetBlock(x, bottomHeight - 2, z, new Dirt());
 
@@ -237,7 +237,7 @@ public class CoolWorldProvider : IWorldProvider
 
 				if (thisblock != (decimal) Material.Air && blockabove == (decimal) Material.Air)
 				{
-					if (chunk.GetBlockId(x, y, z) == (byte) Material.Dirt || chunk.GetBlockId(x, y, z) == (byte) Material.Air || chunk.GetBlockId(x, y, z) == (byte) Material.Stone) chunk.SetBlock(x, y, z, new Grass());
+					if (chunk.GetBlockId(x, y, z) == (byte) Material.Dirt || chunk.GetBlockId(x, y, z) == (byte) Material.Air || chunk.GetBlockId(x, y, z) == (byte) Material.Stone) chunk.SetBlock(x, y, z, new GrassBlock());
 					if (chunk.GetBlockId(x, y - 1, z) != (decimal) Material.Air)
 						chunk.SetBlock(x, y - 1, z, new Dirt());
 					if (chunk.GetBlockId(x, y - 2, z) != (decimal) Material.Air)

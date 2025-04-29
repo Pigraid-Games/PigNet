@@ -413,7 +413,7 @@ public class ItemFactory
 	{
 		NameToId = BuildNameToId();
 
-		Itemstates = ResourceUtil.ReadResource<Itemstates>("itemstates.json", typeof(Item));
+		Itemstates = ResourceUtil.ReadResource<Itemstates>("itemstates.json", typeof(Item), "Data");
 		Translator = new ItemTranslator(Itemstates);
 	}
 

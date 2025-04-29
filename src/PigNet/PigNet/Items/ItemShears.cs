@@ -46,7 +46,7 @@ public sealed class ItemShears : Item
 		{
 			case ItemDamageReason.BlockBreak:
 			{
-				if (block is not Web && block is not Leaves && block is not Leaves2 && block is not Wool && block is not Vine) return false;
+				if (block is not Web && block is not LeavesBase && block is not Leaves2 && block is not Wool && block is not Vine) return false;
 				Damage++;
 				return Damage >= GetMaxUses() - 1;
 			}

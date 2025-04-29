@@ -32,12 +32,12 @@ public class MapInfo : ICloneable
 {
 	public int Col;
 	public byte[] Data;
-	public MapDecorator[] Decorators = new MapDecorator[0];
+	public MapDecorator[] Decorators = [];
 	public long MapId;
 	public BlockCoordinates Origin = new();
 	public int Row;
 	public int Scale;
-	public MapTrackedObject[] TrackedObjects = new MapTrackedObject[0];
+	public MapTrackedObject[] TrackedObjects = [];
 	public byte UpdateType;
 	public byte X;
 	public int XOffset;

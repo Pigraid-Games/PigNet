@@ -1,4 +1,6 @@
-﻿namespace PigNet.Items.Custom;
+﻿using PigNet.Items.Armor;
+
+namespace PigNet.Items.Custom;
 
 public class ItemCupLove : ArmorChestplateBase
 {

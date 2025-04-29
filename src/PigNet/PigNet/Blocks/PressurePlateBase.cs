@@ -7,7 +7,7 @@ public abstract class PressurePlateBase : Block
 {
 	private BlockCoordinates[] cord = [];
 
-	protected PressurePlateBase(int id) : base(id)
+	protected PressurePlateBase()
 	{
 		IsTransparent = true;
 		IsSolid = false;
@@ -36,13 +36,11 @@ public abstract class PressurePlateBase : Block
 		foreach (Player entity in entities)
 			if ((int) (entity.KnownPosition.X < 0 ? entity.KnownPosition.X - 1 : entity.KnownPosition.X) == Coordinates.X && (int) entity.KnownPosition.Y == Coordinates.Y && (int) (entity.KnownPosition.Z < 0 ? entity.KnownPosition.Z - 1 : entity.KnownPosition.Z) == Coordinates.Z)
 			{
-				if (RedstoneSignal == 0)
-				{
-					RedstoneSignal = 15;
-					level.SetBlock(this);
-					level.BroadcastSound(Coordinates, LevelSoundEventType.PressurePlateOn);
-					foreach (BlockCoordinates bCord in cord) RedstoneController.signal(level, bCord, true);
-				}
+				if (RedstoneSignal != 0) continue;
+				RedstoneSignal = 15;
+				level.SetBlock(this);
+				level.BroadcastSound(Coordinates, LevelSoundEventType.PressurePlateOn);
+				foreach (BlockCoordinates bCord in cord) RedstoneController.signal(level, bCord, true);
 			}
 			else if (RedstoneSignal > 0)
 			{

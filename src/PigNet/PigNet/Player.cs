@@ -46,6 +46,7 @@ using PigNet.Effects;
 using PigNet.Entities;
 using PigNet.Entities.Passive;
 using PigNet.Entities.World;
+using PigNet.Inventories;
 using PigNet.Items;
 using PigNet.Net;
 using PigNet.Net.EnumerationsTable;
@@ -711,13 +712,13 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		if (Log.IsDebugEnabled)
 		{
-			Log.DebugFormat("x:  {0}", message.blockPositin.X);
-			Log.DebugFormat("y:  {0}", message.blockPositin.Y);
-			Log.DebugFormat("z:  {0}", message.blockPositin.Z);
+			Log.DebugFormat("x:  {0}", message.blockPosition.X);
+			Log.DebugFormat("y:  {0}", message.blockPosition.Y);
+			Log.DebugFormat("z:  {0}", message.blockPosition.Z);
 			Log.DebugFormat("NBT {0}", message.actorDataTags.NbtFile);
 		}
 
-		BlockEntity blockEntity = Level.GetBlockEntity(message.blockPositin);
+		BlockEntity blockEntity = Level.GetBlockEntity(message.blockPosition);
 
 		if (blockEntity == null) return;
 
@@ -1633,6 +1634,15 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		mobEquipment.selectedSlot = (byte) Inventory.InHandSlot;
 		SendPacket(mobEquipment);
 	}
+	
+	public void SendPlayerArmor()
+	{
+		McpeInventoryContent armorContent = McpeInventoryContent.CreateObject();
+		armorContent.inventoryId = (byte) WindowId.Armor;
+		armorContent.slots = Inventory.GetArmor();
+		armorContent.fullContainerName = FullContainerName.Unknown;
+		SendPacket(armorContent);
+	}
 
 	public void SendCraftingRecipes()
 	{
@@ -2050,114 +2060,79 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		foreach (StackRequestSlotInfo slot in updatedSlots) Inventory.SendSetSlot(slot.Slot, slot.ContainerId);
 	}
 
-	public void HandleMcpeMobEquipment(McpeMobEquipment message)
+	public virtual void HandleMcpeMobEquipment(McpeMobEquipment message)
 	{
 		if (HealthManager.IsDead) return;
 
-		switch ((ContainerId) message.containerId)
+		if (message.containerId == 0)
 		{
-			case ContainerId.Inventory:
+			byte selectedHotbarSlot = message.selectedSlot;
+			if (selectedHotbarSlot > 8)
 			{
-				byte selectedHotbarSlot = message.selectedSlot;
-				if (selectedHotbarSlot > 8)
-				{
-					Log.Error($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
-					return;
-				}
-
-				if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}, RuntimeID: {message.item.RuntimeId}");
-
-				Inventory.SetHeldItemSlot(selectedHotbarSlot, false);
-				if (Log.IsDebugEnabled)
-					Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()} RuntimeID: {Inventory.GetItemInHand().RuntimeId} in hand");
-				break;
+				Log.Error($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
+				return;
 			}
-			case ContainerId.Offhand:
+
+			if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
+
+			Inventory.SetHeldItemSlot(selectedHotbarSlot, false);
+			if (Log.IsDebugEnabled)
+				Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()}");
+		}
+		else if (message.containerId == (byte) WindowId.Offhand)
+		{
+			if (message.slot != 1)
 			{
-				if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item} and selectedSlot {message.selectedSlot}");
-				Inventory.OffHandInventory.SetItem(message.item);
-				if (Log.IsDebugEnabled)
-					Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()} RuntimeID: {Inventory.GetItemInHand().RuntimeId} in offhand");
-				break;
+				Log.Error($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
+				return;
 			}
+
+			if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
+
+			var offHandItem = Inventory.OffHand;
 		}
 	}
 	
-	public void SetOpenInventory(IInventory inventory) => _openInventory = inventory;
+	public void SetOpenInventory(IInventory inventory)
+	{
+		if (_openInventory is ContainerInventory inv) inv.InventoryChanged -= OnInventoryChanged;
+		if (inventory is ContainerInventory newInv) newInv.InventoryChanged += OnInventoryChanged;
+
+		_openInventory = inventory;
+	}
+	
+	public IInventory GetOpenInventory()
+	{
+		return _openInventory;
+	}
+	
+	public void CloseOpenedInventory()
+	{
+		if (_openInventory == null) return;
+
+		HandleMcpeContainerClose(null);
+	}
 	
 	public void OpenInventory(BlockCoordinates inventoryCoord)
 	{
-		if (Level.GetBlockEntity(inventoryCoord) != null && !Level.BlockEntities.Contains(Level.GetBlockEntity(inventoryCoord))) { Level.BlockEntities.Add(Level.GetBlockEntity(inventoryCoord)); }
-		// https://github.com/pmmp/PocketMine-MP/blob/stable/src/pocketmine/network/mcpe/protocol/types/WindowTypes.php
 		lock (_inventorySync)
 		{
-			if (_openInventory is Inventory openInventory)
-			{
-				if (openInventory.Coordinates.Equals(inventoryCoord)) return;
-				HandleMcpeContainerClose(null);
-			}
-
-			// get inventory from coordinates
-			// - get blockentity
-			// - get inventory from block entity
-
-			Inventory inventory = Level.InventoryManager.GetInventory(inventoryCoord);
-
-			if (inventory == null)
+			if (Level.GetBlockEntity(inventoryCoord) is not ContainerBlockEntityBase blockEntity)
 			{
 				Log.Warn($"No inventory found at {inventoryCoord}");
 				return;
 			}
 
-			// get inventory # from inventory manager
-			// set inventory as active on player
-
-			_openInventory = inventory;
-
-			if (inventory.Type == 0 && !inventory.IsOpen()) // Chest open animation
-			{
-				McpeBlockEvent tileEvent = McpeBlockEvent.CreateObject();
-				tileEvent.coordinates = inventoryCoord;
-				tileEvent.case1 = 1;
-				tileEvent.case2 = 2;
-				Level.RelayBroadcast(tileEvent);
-			}
-
-			// subscribe to inventory changes
-			inventory.InventoryChange += OnInventoryChange;
-			inventory.AddObserver(this);
-
-			// open inventory
-
-			McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-			containerOpen.containerId = inventory.WindowsId;
-			containerOpen.containerType = (ContainerType) inventory.Type;
-			containerOpen.position = inventoryCoord;
-			containerOpen.runtimeActorId = -1;
-			SendPacket(containerOpen);
-
-			McpeInventoryContent containerSetContent = McpeInventoryContent.CreateObject();
-			containerSetContent.inventoryId = inventory.WindowsId;
-			containerSetContent.slots = inventory.Slots;
-			SendPacket(containerSetContent);
+			blockEntity.Open(this);
 		}
 	}
 
-	private void OnInventoryChange(Player player, Inventory inventory, byte slot, Item itemStack)
+	protected virtual void OnInventoryChanged(object sender, InventoryChangeEventArgs args)
 	{
-		if (player == this)
-		{
-			//TODO: This needs to be synced to work properly under heavy load (SG).
-			//Level.SetBlockEntity(inventory.BlockEntity, false);
-		}
-		else
-		{
-			McpeInventorySlot sendSlot = McpeInventorySlot.CreateObject();
-			sendSlot.containerId = inventory.WindowsId;
-			sendSlot.slot = slot;
-			sendSlot.item = itemStack;
-			SendPacket(sendSlot);
-		}
+	}
+
+	public void HandleMcpeInventorySlot(McpeInventorySlot message)
+	{
 	}
 
 	public void HandleMcpeInventoryTransaction(McpeInventoryTransaction message)
@@ -3383,6 +3358,18 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		else
 			Level.RelayBroadcast(this, receivers, mcpePlayerEquipment);
 	}
+	
+	public virtual void SendArmorEquipmentForPlayer(Player[] receivers = null)
+	{
+		McpeMobArmorEquipment mcpePlayerArmorEquipment = McpeMobArmorEquipment.CreateObject();
+		mcpePlayerArmorEquipment.runtimeActorId = EntityId;
+		mcpePlayerArmorEquipment.helmet = Inventory.Helmet;
+		mcpePlayerArmorEquipment.chestplate = Inventory.Chest;
+		mcpePlayerArmorEquipment.leggings = Inventory.Leggings;
+		mcpePlayerArmorEquipment.boots = Inventory.Boots;
+		if (receivers == null) Level.RelayBroadcast(this, mcpePlayerArmorEquipment);
+		else Level.RelayBroadcast(this, receivers, mcpePlayerArmorEquipment);
+	}
 
 	public override void DespawnFromPlayers(Player[] players)
 	{
@@ -3419,7 +3406,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpeSubChunkRequestPacket(McpeSubChunkRequestPacket message) { }
 	public void HandleMcpeRequestAbility(McpeRequestAbility message) {}
 	public void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message) { }
-	public void HandleMcpeInventorySlot(McpeInventorySlot message) { }
 	public void HandleMcpePlayerHotbar(McpePlayerHotbar message) { }
 	public void HandleMcpeInventoryContent(McpeInventoryContent message) { }
 	public void HandleMcpeEmoteList(McpeEmoteList message) { }

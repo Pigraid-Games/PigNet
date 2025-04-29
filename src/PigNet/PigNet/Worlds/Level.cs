@@ -1196,7 +1196,7 @@ public class Level : IBlockAccess
 
 		McpeBlockActorData actorData = McpeBlockActorData.CreateObject();
 		actorData.actorDataTags = nbt;
-		actorData.blockPositin = blockEntity.Coordinates;
+		actorData.blockPosition = blockEntity.Coordinates;
 
 		RelayBroadcast(actorData);
 	}
@@ -1351,7 +1351,7 @@ public class Level : IBlockAccess
 
 			McpeBlockActorData actorData = McpeBlockActorData.CreateObject();
 			actorData.actorDataTags = nbt;
-			actorData.blockPositin = blockEntity.Coordinates;
+			actorData.blockPosition = blockEntity.Coordinates;
 			player.SendPacket(actorData);
 		}
 	}

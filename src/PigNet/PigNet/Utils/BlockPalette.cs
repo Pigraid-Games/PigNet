@@ -94,6 +94,7 @@ public class BlockStateContainer
 	public List<IBlockState> States { get; set; } = new();
 
 	[JsonIgnore] public byte[] StatesCacheNbt { get; set; }
+	public ItemPickInstance ItemInstance { get; set; }
 
 	protected bool Equals(BlockStateContainer other)
 	{
@@ -146,6 +147,13 @@ public class BlockStateContainer
 	{
 		return $"{nameof(Name)}: {Name}, {nameof(Id)}: {Id}, {nameof(Data)}: {Data}, {nameof(RuntimeId)}: {RuntimeId}, {nameof(States)} {{ {string.Join(';', States)} }}";
 	}
+}
+
+public class ItemPickInstance
+{
+	public string Id { get; set; } = null;
+	public short Metadata { get; set; } = -1;
+	public bool WantNbt { get; set; } = false;
 }
 
 public interface IBlockState

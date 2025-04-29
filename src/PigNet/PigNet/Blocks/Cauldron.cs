@@ -1,29 +1,4 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System.Numerics;
+﻿using System.Numerics;
 using log4net;
 using PigNet.Items;
 using PigNet.Utils.Vectors;
@@ -31,11 +6,11 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Cauldron : Block
+public partial class Cauldron
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(Cauldron));
 
-	public Cauldron() : base(118)
+	public Cauldron()
 	{
 		IsTransparent = true;
 		BlastResistance = 10;
@@ -46,33 +21,32 @@ public partial class Cauldron : Block
 	{
 		Item itemInHand = player.Inventory.GetItemInHand();
 
-		if (itemInHand is ItemBucket)
+		if (itemInHand is not ItemBucket) return true; // Handled
+		switch (itemInHand.Metadata)
 		{
-			if (itemInHand.Metadata == 8)
-			{
-				if (FillLevel < 8)
-				{
-					FillLevel = 8;
-					world.SetBlock(this, applyPhysics: false);
-					itemInHand.Metadata = 0;
-					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-				}
-			}
-			else if (itemInHand.Metadata == 0)
-				if (FillLevel > 0)
-				{
-					FillLevel = 0;
-					world.SetBlock(this, applyPhysics: false);
-					itemInHand.Metadata = 8;
-					player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-				}
+			case 8 when FillLevel >= 8:
+				return true; // Handled
+			case 8:
+				FillLevel = 8;
+				world.SetBlock(this, applyPhysics: false);
+				itemInHand.Metadata = 0;
+				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+				break;
+			case 0 when FillLevel <= 0:
+				return true; // Handled
+			case 0:
+				FillLevel = 0;
+				world.SetBlock(this, applyPhysics: false);
+				itemInHand.Metadata = 8;
+				player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
+				break;
 		}
 
 		return true; // Handled
 	}
 
-	public override Item[] GetDrops(Item tool)
+	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new[] { ItemFactory.GetItem(380) };
+		return [new ItemCauldron()];
 	}
 }

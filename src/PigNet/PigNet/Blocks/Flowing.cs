@@ -1,31 +1,5 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Numerics;
-using log4net;
 using PigNet.Items;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
@@ -34,21 +8,23 @@ namespace PigNet.Blocks;
 
 public abstract class Flowing : Block
 {
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Flowing));
-	private readonly int[] _flowCost = new int[4];
-	private readonly bool[] _optimalFlowDirections = new bool[4];
+	public abstract int LiquidDepth { get; set; }
+
+	public string StationeryId { get; }
 
 	private int _adjacentSources;
+	private int[] _flowCost = new int[4];
+	private bool[] _optimalFlowDirections = new bool[4];
 
-	protected Flowing(byte id) : base(id)
+	protected Flowing(string stationeryId)
 	{
+		StationeryId = stationeryId;
+
 		IsSolid = false;
 		IsBuildable = false;
 		IsReplaceable = true;
 		IsTransparent = true;
 	}
-
-	[StateRange(0, 15)] public virtual int LiquidDepth { get; set; }
 
 	public override void BlockAdded(Level level)
 	{
@@ -78,14 +54,11 @@ public abstract class Flowing : Block
 		int y = Coordinates.Y;
 		int z = Coordinates.Z;
 		BlockCoordinates current = Coordinates;
-
-		//int currentDecay = GetFlowDecay(world, x, y, z);
 		int currentDecay = LiquidDepth;
 		byte multiplier = 1;
 
 		if (this is FlowingLava) multiplier = 2;
 
-		bool flag = true;
 		int tickRate = TickRate();
 
 		if (currentDecay > 0)
@@ -103,46 +76,37 @@ public abstract class Flowing : Block
 			{
 				int topFlowDecay = GetFlowDecay(world, current + BlockCoordinates.Up);
 
-				if (topFlowDecay >= 8)
-					newDecay = topFlowDecay;
-				else
-					newDecay = topFlowDecay + 8;
+				if (topFlowDecay >= 8) newDecay = topFlowDecay;
+				else newDecay = topFlowDecay + 8;
 			}
 
 			if (_adjacentSources >= 2 && this is FlowingWater)
 			{
-				if (world.GetBlock(current + BlockCoordinates.Down).IsSolid)
-					newDecay = 0;
-				else if (IsSameMaterial(world.GetBlock(current + BlockCoordinates.Down)) && GetLiquidDepth(world.GetBlock(current + BlockCoordinates.Down)) == 0) newDecay = 0;
+				if (world.GetBlock(current + BlockCoordinates.Down).IsSolid) newDecay = 0;
+				else if (IsSameMaterial(world.GetBlock(current + BlockCoordinates.Down)) && 
+						GetLiquidDepth(world.GetBlock(current + BlockCoordinates.Down)) == 0) newDecay = 0;
 			}
 
-			if (this is FlowingLava && currentDecay < 8 && newDecay < 8 && newDecay > currentDecay && random.Next(4) != 0)
-				//newDecay = currentDecay;
-				//flag = false;
-				tickRate *= 4;
+			if (this is FlowingLava && currentDecay < 8 && newDecay < 8 && newDecay > currentDecay && random.Next(4) != 0) tickRate *= 4;
 
 			if (newDecay == currentDecay)
-			{
-				if (flag) SetToStill(world, current);
-			}
+				SetToStill(world, current);
 			else
 			{
 				currentDecay = newDecay;
-				if (newDecay < 0)
-					world.SetAir(current);
+				if (newDecay < 0) world.SetAir(current);
 				else
 				{
 					LiquidDepth = newDecay;
 					world.SetBlock(this);
 					world.ApplyPhysics(x, y, z);
-					world.ScheduleBlockTick(this, tickRate); // Schedule tick
+					world.ScheduleBlockTick(this, tickRate);
 				}
 			}
 		}
-		else
-			SetToStill(world, current);
+		else SetToStill(world, current);
 
-		if (CanBeFlownInto(world, current + BlockCoordinates.Down) /* || world.GetBlock(x, y - 1, z) is Flowing*/)
+		if (CanBeFlownInto(world, current + BlockCoordinates.Down))
 		{
 			if (this is FlowingLava && (world.GetBlock(x, y - 1, z) is FlowingWater || world.GetBlock(x, y - 1, z) is Water))
 			{
@@ -150,10 +114,8 @@ public abstract class Flowing : Block
 				return;
 			}
 
-			if (currentDecay >= 8)
-				Flow(world, current + BlockCoordinates.Down, currentDecay);
-			else
-				Flow(world, current + BlockCoordinates.Down, currentDecay + 8);
+			if (currentDecay >= 8) Flow(world, current + BlockCoordinates.Down, currentDecay);
+			else Flow(world, current + BlockCoordinates.Down, currentDecay + 8);
 		}
 		else if (currentDecay >= 0 && (currentDecay == 0 || BlocksFluid(world, x, y - 1, z)))
 		{
@@ -161,17 +123,10 @@ public abstract class Flowing : Block
 
 			int newDecay = currentDecay + multiplier;
 			if (currentDecay >= 8) newDecay = 1;
-
 			if (newDecay >= 8) return;
-
-			if (optimalFlowDirections[0])
-				//Flow(world, x - 1, y, z, newDecay);
-				Flow(world, current + BlockCoordinates.Left, newDecay);
-
+			if (optimalFlowDirections[0]) Flow(world, current + BlockCoordinates.Left, newDecay);
 			if (optimalFlowDirections[1]) Flow(world, current + BlockCoordinates.Right, newDecay);
-
 			if (optimalFlowDirections[2]) Flow(world, current + BlockCoordinates.Backwards, newDecay);
-
 			if (optimalFlowDirections[3]) Flow(world, current + BlockCoordinates.Forwards, newDecay);
 		}
 	}
@@ -187,29 +142,30 @@ public abstract class Flowing : Block
 			x2 = x;
 			int z2 = z;
 
-			if (l == 0) x2 = x - 1;
-
-			if (l == 1) ++x2;
-
-			if (l == 2) z2 = z - 1;
-
-			if (l == 3) ++z2;
-
-			if (!BlocksFluid(world, x2, y, z2) && (!IsSameMaterial(world.GetBlock(x2, y, z2)) || GetLiquidDepth(world.GetBlock(x2, y, z2)) != 0))
+			switch (l)
 			{
-				if (BlocksFluid(world, x2, y - 1, z2))
-					_flowCost[l] = CalculateFlowCost(world, x2, y, z2, 1, l);
-				else
-					_flowCost[l] = 0;
+				case 0:
+					x2 = x - 1;
+					break;
+				case 1:
+					++x2;
+					break;
+				case 2:
+					z2 = z - 1;
+					break;
+				case 3:
+					++z2;
+					break;
 			}
+
+			if (BlocksFluid(world, x2, y, z2) || (IsSameMaterial(world.GetBlock(x2, y, z2)) && GetLiquidDepth(world.GetBlock(x2, y, z2)) == 0)) continue;
+			if (BlocksFluid(world, x2, y - 1, z2)) _flowCost[l] = CalculateFlowCost(world, x2, y, z2, 1, l);
+			else _flowCost[l] = 0;
 		}
 
 		l = _flowCost[0];
 
-		for (x2 = 1; x2 < 4; ++x2)
-			if (_flowCost[x2] < l)
-				l = _flowCost[x2];
-
+		for (x2 = 1; x2 < 4; ++x2) if (_flowCost[x2] < l) l = _flowCost[x2];
 		for (x2 = 0; x2 < 4; ++x2) _optimalFlowDirections[x2] = _flowCost[x2] == l;
 
 		return _optimalFlowDirections;
@@ -230,66 +186,57 @@ public abstract class Flowing : Block
 		int cost = 1000;
 
 		for (int direction = 0; direction < 4; ++direction)
-			if ((direction != 0 || prevDirection != 1)
-				&& (direction != 1 || prevDirection != 0)
-				&& (direction != 2 || prevDirection != 3)
-				&& (direction != 3 || prevDirection != 2))
+		{
+			if ((direction == 0 && prevDirection == 1)
+				|| (direction == 1 && prevDirection == 0)
+				|| (direction == 2 && prevDirection == 3)
+				|| (direction == 3 && prevDirection == 2)) continue;
+			int x2 = x;
+			int z2 = z;
+
+			switch (direction)
 			{
-				int x2 = x;
-				int z2 = z;
-
-				if (direction == 0) x2 = x - 1;
-
-				if (direction == 1) ++x2;
-
-				if (direction == 2) z2 = z - 1;
-
-				if (direction == 3) ++z2;
-
-				if (!BlocksFluid(world, x2, y, z2) && (!IsSameMaterial(world.GetBlock(x2, y, z2)) || GetLiquidDepth(world.GetBlock(x2, y, z2)) != 0))
-				{
-					if (!BlocksFluid(world, x2, y - 1, z2)) return accumulatedCost;
-
-					if (accumulatedCost < 4)
-					{
-						int j2 = CalculateFlowCost(world, x2, y, z2, accumulatedCost + 1, direction);
-
-						if (j2 < cost) cost = j2;
-					}
-				}
+				case 0:
+					x2 = x - 1;
+					break;
+				case 1:
+					++x2;
+					break;
+				case 2:
+					z2 = z - 1;
+					break;
+				case 3:
+					++z2;
+					break;
 			}
+
+			if (BlocksFluid(world, x2, y, z2) || (IsSameMaterial(world.GetBlock(x2, y, z2)) && GetLiquidDepth(world.GetBlock(x2, y, z2)) == 0)) continue;
+			if (!BlocksFluid(world, x2, y - 1, z2)) return accumulatedCost;
+
+			if (accumulatedCost >= 4) continue;
+			int j2 = CalculateFlowCost(world, x2, y, z2, accumulatedCost + 1, direction);
+
+			if (j2 < cost) cost = j2;
+		}
 
 		return cost;
 	}
 
 	private void Flow(Level world, BlockCoordinates coord, int decay)
 	{
-		if (CanBeFlownInto(world, coord))
-		{
-			//Block block = world.GetBlock(x, y, z);
-
-			//if (this is FlowingLava)
-			//{
-			//	this.fizz(world, i, j, k);
-			//}
-			//else
-			//{
-			//	block.DoDrop(world, i, j, k, world.getData(i, j, k), 0);
-			//}
-
-			var newBlock = (Flowing) BlockFactory.GetBlockById(Id);
-			newBlock.Coordinates = new BlockCoordinates(coord);
-			newBlock.LiquidDepth = decay;
-			world.SetBlock(newBlock, applyPhysics: true);
-			world.ScheduleBlockTick(newBlock, TickRate());
-		}
+		if (!CanBeFlownInto(world, coord)) return;
+		var newBlock = (Flowing) BlockFactory.GetBlockById(Id);
+		newBlock.Coordinates = new BlockCoordinates(coord);
+		newBlock.LiquidDepth = decay;
+		world.SetBlock(newBlock, applyPhysics: true);
+		world.ScheduleBlockTick(newBlock, TickRate());
 	}
 
 	private bool CanBeFlownInto(Level world, BlockCoordinates coord)
 	{
 		Block block = world.GetBlock(coord);
 
-		return !IsSameMaterial(block) && !(block is FlowingLava) && !(block is Lava) && !BlocksFluid(block);
+		return !IsSameMaterial(block) && (!(block is FlowingLava) && !(block is Lava)) && !BlocksFluid(block);
 	}
 
 
@@ -303,7 +250,6 @@ public abstract class Flowing : Block
 	private bool BlocksFluid(Block block)
 	{
 		return block.IsSolid;
-		//return block.IsBuildable; // block != Blocks.WOODEN_DOOR && block != Blocks.IRON_DOOR_BLOCK && block != Blocks.SIGN_POST && block != Blocks.LADDER && block != Blocks.SUGAR_CANE_BLOCK ? (block.material == Material.PORTAL ? true : block.material.isSolid()) : true;
 	}
 
 
@@ -311,7 +257,7 @@ public abstract class Flowing : Block
 	{
 		var block = (Flowing) world.GetBlock(coord);
 
-		var stillBlock = (Stationary) BlockFactory.GetBlockById((byte) (Id + 1));
+		var stillBlock = (Stationary) BlockFactory.GetBlockById(StationeryId);
 		stillBlock.LiquidDepth = block.LiquidDepth;
 		stillBlock.Coordinates = new BlockCoordinates(coord);
 		world.SetBlock(stillBlock, applyPhysics: false);
@@ -321,11 +267,17 @@ public abstract class Flowing : Block
 	{
 		int blockDecay = GetFlowDecay(world, coord);
 
-		if (blockDecay < 0) return decay;
-
-		if (blockDecay == 0) ++_adjacentSources;
-
-		if (blockDecay >= 8) blockDecay = 0;
+		switch (blockDecay)
+		{
+			case < 0:
+				return decay;
+			case 0:
+				++_adjacentSources;
+				break;
+			case >= 8:
+				blockDecay = 0;
+				break;
+		}
 
 		return decay >= 0 && blockDecay >= decay ? decay : blockDecay;
 	}
@@ -353,57 +305,52 @@ public abstract class Flowing : Block
 
 	private bool IsSameMaterial(Block block)
 	{
-		if (this is FlowingWater && (block is FlowingWater || block is Water)) return true;
-		if (this is FlowingLava && (block is FlowingLava || block is Lava)) return true;
-
-		return false;
+		if (this is FlowingWater && block is FlowingWater or Water) return true;
+		return this is FlowingLava && block is FlowingLava or Lava;
 	}
 
 	private int TickRate()
 	{
-		return this is FlowingWater ? 5 : this is FlowingLava ? 30 : 0;
+		return this is FlowingWater ? 5 : (this is FlowingLava ? 30 : 0);
 	}
 
 	private bool CheckForHarden(Level world, BlockCoordinates coord)
 	{
-		var block = world.GetBlock(coord) as Flowing; // This is "this" isn't it?
+		var block = world.GetBlock(coord) as Flowing;
 
 		bool harden = false;
-		if (block is FlowingLava /* || block is Lava*/)
+		if (block is not FlowingLava) return false;
+		if (IsWater(world, coord + BlockCoordinates.Backwards)) harden = true;
+		if (harden || IsWater(world, coord + BlockCoordinates.Forwards)) harden = true;
+		if (harden || IsWater(world, coord + BlockCoordinates.Left)) harden = true;
+		if (harden || IsWater(world, coord + BlockCoordinates.Right)) harden = true;
+		if (harden || IsWater(world, coord + BlockCoordinates.Up)) harden = true;
+
+		if (!harden) return false;
+		int liquidDepth = block.LiquidDepth;
+
+		switch (liquidDepth)
 		{
-			if (IsWater(world, coord + BlockCoordinates.Backwards)) harden = true;
-
-			if (harden || IsWater(world, coord + BlockCoordinates.Forwards)) harden = true;
-
-			if (harden || IsWater(world, coord + BlockCoordinates.Left)) harden = true;
-
-			if (harden || IsWater(world, coord + BlockCoordinates.Right)) harden = true;
-
-			if (harden || IsWater(world, coord + BlockCoordinates.Up)) harden = true;
-
-			if (harden)
-			{
-				int liquidDepth = block.LiquidDepth;
-
-				if (liquidDepth == 0)
-					world.SetBlock(new Obsidian { Coordinates = new BlockCoordinates(coord) }, true, false);
-				else if (liquidDepth <= 4) world.SetBlock(new Cobblestone { Coordinates = new BlockCoordinates(coord) }, true, false);
-
-				return true;
-			}
+			case 0:
+				world.SetBlock(new Obsidian { Coordinates = new BlockCoordinates(coord) }, true, false);
+				break;
+			case <= 4:
+				world.SetBlock(new Cobblestone { Coordinates = new BlockCoordinates(coord) }, true, false);
+				break;
 		}
 
-		return false;
+		return true;
+
 	}
 
 	private bool IsWater(Level world, BlockCoordinates coord)
 	{
 		Block block = world.GetBlock(coord);
-		return block is FlowingWater || block is Water;
+		return block is FlowingWater or Water;
 	}
 
-	public override Item[] GetDrops(Item tool)
+	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new Item[0];
+		return [];
 	}
 }

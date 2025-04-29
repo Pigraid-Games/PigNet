@@ -23,9 +23,12 @@
 
 #endregion
 
+using System;
 using System.Numerics;
-using log4net;
+using PigNet.Blocks.States;
+using PigNet.Entities;
 using PigNet.Items;
+using PigNet.Particles;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
@@ -33,13 +36,7 @@ namespace PigNet.Blocks;
 
 public partial class Vine : Block
 {
-	private const byte North = 0x01;
-	private const byte East = 0x02;
-	private const byte South = 0x04;
-	private const byte West = 0x08;
-	private static readonly ILog Log = LogManager.GetLogger(typeof(Vine));
-
-	public Vine() : base(106)
+	public Vine()
 	{
 		IsSolid = false;
 		IsTransparent = true;
@@ -53,120 +50,85 @@ public partial class Vine : Block
 	{
 		if (!base.CanPlace(world, player, blockCoordinates, targetCoordinates, face)) return false;
 
-		Block block = world.GetBlock(Coordinates);
-		return !(block is Vine);
+		var onTop = world.GetBlock(Coordinates.BlockUp()) as Vine;
+		if (face == BlockFace.Up || face == BlockFace.Down) return onTop != null;
+
+		return CanPlace(world, this, onTop, face.Opposite().ToDirection());
 	}
 
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
 		if (world.GetBlock(Coordinates) is Vine block) VineDirectionBits = block.VineDirectionBits;
 
-		int direction;
-		switch (face)
+		if (face == BlockFace.Up || face == BlockFace.Down)
 		{
-			case BlockFace.North:
-				direction = North;
+			bool canPlace = false;
+			var onTop = world.GetBlock(Coordinates.BlockUp()) as Vine;
+			foreach (Entity.Direction direction in Enum.GetValues<Entity.Direction>())
+			{
+				if (VineDirectionBits.HasSide(direction)) continue;
+				if (!CanPlace(world, this, onTop, direction)) continue;
+
+				canPlace = true;
+				face = direction.ToBlockFace().Opposite();
 				break;
-			case BlockFace.East:
-				direction = East;
-				break;
-			case BlockFace.South:
-				direction = South;
-				break;
-			case BlockFace.West:
-				direction = West;
-				break;
-			default:
-				return true; // Do nothing
+			}
+
+			if (!canPlace) return true;
 		}
 
-		if ((VineDirectionBits & direction) == direction) return true; // Already have this face covered
+		var vineFace = face.Opposite();
 
-		VineDirectionBits |= direction;
+		if (VineDirectionBits.HasSide(vineFace)) return true;
+
+		VineDirectionBits += vineFace;
 
 		return false;
 	}
 
-	//public override void BreakBlock(Level level, BlockFace face, bool silent = false)
-	//{
-	//	Log.Debug($"Breaking vine face {face}, have direction: {VineDirectionBits}");
-	//	int newValue = GetDirectionBits(level, this);
-	//	switch (face)
-	//	{
-	//		case BlockFace.North:
-	//			newValue &= ~North;
-	//			break;
-	//		case BlockFace.East:
-	//			newValue &= ~East;
-	//			break;
-	//		case BlockFace.South:
-	//			newValue &= ~South;
-	//			break;
-	//		case BlockFace.West:
-	//			newValue &= ~West;
-	//			break;
-	//	}
-	//	Log.Debug($"Breaking vine, new value: {newValue}, old {VineDirectionBits}");
-	//	if (newValue != VineDirectionBits)
-	//	{
-	//		VineDirectionBits = newValue;
-	//		if (VineDirectionBits != 0)
-	//		{
-	//			level.SetBlock(this);
-	//		}
-	//		else
-	//		{
-	//			base.BreakBlock(level, face, silent);
-	//		}
-	//	}
-	//}
 
 	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
 	{
-		int newValue = GetDirectionBits(level, this);
+		VineDirectionBits newValue = GetDirectionBits(level, this);
+		if (newValue == VineDirectionBits) return;
 
-		if (newValue != VineDirectionBits)
+		VineDirectionBits = newValue;
+
+		if (VineDirectionBits == VineDirectionBits.None) level.BreakBlock(null, this);
+		else
 		{
-			VineDirectionBits = newValue;
-
-			if (VineDirectionBits != 0)
-				level.SetBlock(this);
-			else
-				level.BreakBlock(null, this);
+			level.SetBlock(this);
+			UpdateBlocks(level);
+			new DestroyBlockParticle(level, this).Spawn();
 		}
 	}
 
-	private static int GetDirectionBits(Level level, Vine vine)
+	private static VineDirectionBits GetDirectionBits(Level level, Vine vine)
 	{
-		bool hasNorth = (vine.VineDirectionBits & North) == North;
-		bool hasEast = (vine.VineDirectionBits & East) == East;
-		bool hasSouth = (vine.VineDirectionBits & South) == South;
-		bool hasWest = (vine.VineDirectionBits & West) == West;
+		var newVineDirectionBits = VineDirectionBits.None;
 
-		var onTop = level.GetBlock(vine.Coordinates + Level.Up) as Vine;
-		bool hasNorthTop = onTop != null && (onTop.VineDirectionBits & North) == North;
-		bool hasEastTop = onTop != null && (onTop.VineDirectionBits & East) == East;
-		bool hasSouthTop = onTop != null && (onTop.VineDirectionBits & South) == South;
-		bool hasWestTop = onTop != null && (onTop.VineDirectionBits & West) == West;
+		var onTop = level.GetBlock(vine.Coordinates.BlockUp()) as Vine;
+		foreach (Entity.Direction direction in Enum.GetValues<Entity.Direction>())
+		{
+			if (!vine.VineDirectionBits.HasSide(direction)) continue;
+			if (!CanPlace(level, vine, onTop, direction)) continue;
 
-		bool hasFaceBlockNorth = hasNorth && level.GetBlock(vine.Coordinates + Level.South).IsSolid;
-		bool hasFaceBlockEast = hasEast && level.GetBlock(vine.Coordinates + Level.West).IsSolid;
-		bool hasFaceBlockSouth = hasSouth && level.GetBlock(vine.Coordinates + Level.North).IsSolid;
-		bool hasFaceBlockWest = hasWest && level.GetBlock(vine.Coordinates + Level.East).IsSolid;
-
-		int newVineDirectionBits = 0;
-		if (hasNorth && (hasNorthTop || hasFaceBlockNorth)) newVineDirectionBits |= North;
-		if (hasEast && (hasEastTop || hasFaceBlockEast)) newVineDirectionBits |= East;
-		if (hasSouth && (hasSouthTop || hasFaceBlockSouth)) newVineDirectionBits |= South;
-		if (hasWest && (hasWestTop || hasFaceBlockWest)) newVineDirectionBits |= West;
+			newVineDirectionBits += direction;
+		}
 
 		return newVineDirectionBits;
 	}
 
-	public override Item[] GetDrops(Item tool)
+	public override Item[] GetDrops(Level world, Item tool)
 	{
-		if (tool.Id != 359) return new Item[0];
+		return tool.ItemType != ItemType.Sheers ? [] : base.GetDrops(world, tool);
+	}
 
-		return base.GetDrops(tool);
+	private static bool CanPlace(Level level, Vine vine, Vine onTop, Entity.Direction direction)
+	{
+		bool hasSideTop = onTop != null && onTop.VineDirectionBits.HasSide(direction);
+		bool hasFaceBlockSide = level.GetBlock(vine.Coordinates + direction).IsSolid;
+
+		return hasSideTop || hasFaceBlockSide;
 	}
 }

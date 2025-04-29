@@ -28,4 +28,7 @@
   <ItemGroup>
     <Folder Include="Utils" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CRPE-MiNET.fNbt" Version="1.0.21" />
+  </ItemGroup>
 </Project>

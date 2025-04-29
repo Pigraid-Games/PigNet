@@ -73,7 +73,7 @@ public static class VarInt
 			b0 = buf.ReadByte(); // -1 if EOS
 			if (b0 < 0) throw new EndOfStreamException("Not enough bytes for VarInt");
 
-			result |= (uint) (b0 & 0x7f) << (j++ * 7);
+			result |= (uint) (b0 & 0x7f) << j++ * 7;
 
 			if (j > maxSize) throw new OverflowException("VarInt too big");
 		} while ((b0 & 0x80) == 0x80);
@@ -84,7 +84,7 @@ public static class VarInt
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static ulong ReadRawVarInt64(Stream buf, int maxSize, bool printBytes = false)
 	{
-		var bytes = new List<byte>();
+		List<byte> bytes = [];
 
 		ulong result = 0;
 		int j = 0;
@@ -96,9 +96,12 @@ public static class VarInt
 			bytes.Add((byte) b0);
 			if (b0 < 0) throw new EndOfStreamException("Not enough bytes for VarInt");
 
-			result |= (ulong) (b0 & 0x7f) << (j++ * 7);
+			result |= (ulong) (b0 & 0x7f) << j++ * 7;
 
-			if (j > maxSize) throw new OverflowException("VarInt too big");
+			if (j > maxSize)
+			{
+				throw new OverflowException("VarInt too big");
+			}
 		} while ((b0 & 0x80) == 0x80);
 
 		byte[] byteArray = bytes.ToArray();

@@ -11,7 +11,10 @@ public class OffHandInventory(Player player)
 	private Item _item = new ItemAir();
 	public Player Holder { get; set; } = player;
 
-	public Item GetItem() => _item;
+	public Item GetItem()
+	{
+		return _item;
+	}
 
 	public void SetItem(Item item, bool sendUpdate = true)
 	{

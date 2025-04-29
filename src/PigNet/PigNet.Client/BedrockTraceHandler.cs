@@ -518,9 +518,9 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
 	{
-		Log.DebugFormat("X: {0}", message.blockPositin.X);
-		Log.DebugFormat("Y: {0}", message.blockPositin.Y);
-		Log.DebugFormat("Z: {0}", message.blockPositin.Z);
+		Log.DebugFormat("X: {0}", message.blockPosition.X);
+		Log.DebugFormat("Y: {0}", message.blockPosition.Y);
+		Log.DebugFormat("Z: {0}", message.blockPosition.Z);
 		Log.DebugFormat("NBT:\n{0}", message.actorDataTags.NbtFile.RootTag);
 	}
 

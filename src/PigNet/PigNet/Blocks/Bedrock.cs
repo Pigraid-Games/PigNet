@@ -24,20 +24,20 @@
 #endregion
 
 using PigNet.Items;
+using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
 public partial class Bedrock : Block
 {
-	public Bedrock() : base(7)
+	public Bedrock()
 	{
 		Hardness = 60000;
 		BlastResistance = 18000000;
 	}
 
-
-	public override Item[] GetDrops(Item tool)
+	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new Item[0]; //Drop nothing
+		return [];
 	}
 }

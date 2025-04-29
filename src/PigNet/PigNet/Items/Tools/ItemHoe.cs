@@ -49,7 +49,7 @@ public class ItemHoe : Item
 		Block block = world.GetBlock(blockCoordinates);
 		switch (block)
 		{
-			case Grass:
+			case GrassBlock:
 			case Dirt { DirtType: "normal" }:
 			case GrassPath:
 			{
@@ -82,7 +82,7 @@ public class ItemHoe : Item
 		{
 			case ItemDamageReason.BlockInteract:
 			{
-				if (block is not Grass && block is not Dirt && block is not GrassPath) return false;
+				if (block is not GrassBlock && block is not Dirt && block is not GrassPath) return false;
 				Damage++;
 				return Damage >= GetMaxUses() - 1;
 			}

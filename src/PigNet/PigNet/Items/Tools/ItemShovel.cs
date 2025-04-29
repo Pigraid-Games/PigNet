@@ -45,7 +45,7 @@ public class ItemShovel : Item
 	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
 		Block block = world.GetBlock(blockCoordinates);
-		if (block is not Grass) return;
+		if (block is not GrassBlock) return;
 		var grassPath = new GrassPath { Coordinates = blockCoordinates };
 		world.SetBlock(grassPath);
 		player.Inventory.DamageItemInHand(ItemDamageReason.BlockInteract, null, block);
@@ -62,7 +62,7 @@ public class ItemShovel : Item
 			}
 			case ItemDamageReason.BlockInteract:
 			{
-				if (block is not Grass) return false;
+				if (block is not GrassBlock) return false;
 				Damage++;
 				return Damage >= GetMaxUses() - 1;
 			}
