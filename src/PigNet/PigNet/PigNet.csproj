@@ -87,7 +87,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
 </Project>
