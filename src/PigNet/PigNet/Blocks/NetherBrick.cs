@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class NetherBrick : Block
+public partial class NetherBrick
 {
 	public NetherBrick()
 	{

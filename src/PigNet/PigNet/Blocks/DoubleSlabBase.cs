@@ -7,9 +7,8 @@ public abstract class DoubleSlabBase : SlabBase
 {
 	public override Item GetItem(Level world, bool blockItem = false)
 	{
-		var item = ItemFactory.GetItem<ItemBlock>(DoubleSlabToSlabMap[Id]);
+		ItemBlock item = ItemFactory.GetItem<ItemBlock>(DoubleSlabToSlabMap[Id]);
 		item.Block.SetStates(this);
-
 		return item;
 	}
 

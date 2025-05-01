@@ -37,7 +37,7 @@ public class Button : Element
 
 	public void Execute(Player player, SimpleForm form)
 	{
-		player.Level.BroadcastSound(new ClickSound(player.KnownPosition.ToVector3()), [player]);
+		player.Level.BroadcastSound(player.KnownPosition.ToVector3(), LevelSoundEventType.BlockClick);
 		ExecuteAction?.Invoke(player, form);
 	}
 }

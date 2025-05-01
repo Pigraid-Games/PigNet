@@ -25,7 +25,6 @@
 
 using System;
 using PigNet.Items;
-using PigNet.Items.Food;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;

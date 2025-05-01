@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Dropper : Block
+public partial class Dropper
 {
 	public Dropper()
 	{

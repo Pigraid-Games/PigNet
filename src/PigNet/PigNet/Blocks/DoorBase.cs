@@ -7,7 +7,7 @@ namespace PigNet.Blocks;
 
 public abstract class DoorBase : Block
 {
-	public abstract OldDirection3 Direction { get; set; }
+	public abstract CardinalDirection Direction { get; set; }
 	public abstract bool DoorHingeBit { get; set; }
 	public abstract bool OpenBit { get; set; }
 	public abstract bool UpperBlockBit { get; set; }
@@ -28,10 +28,13 @@ public abstract class DoorBase : Block
 
 	public override void BreakBlock(Level level, BlockFace face, bool silent = false)
 	{
-		Block secondPart = level.GetBlock(SecondPartCoordinates);
+		var secondPart = level.GetBlock(SecondPartCoordinates);
 
 		BreakBlockInternal(level, face, silent);
-		if (secondPart is DoorBase secondPartDoor) secondPartDoor.BreakBlockInternal(level, face, silent);
+		if (secondPart is DoorBase secondPartDoor)
+		{
+			secondPartDoor.BreakBlockInternal(level, face, silent);
+		}
 	}
 
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)

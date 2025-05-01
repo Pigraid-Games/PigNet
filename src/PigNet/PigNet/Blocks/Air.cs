@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Air : Block
+public partial class Air
 {
 	public Air()
 	{

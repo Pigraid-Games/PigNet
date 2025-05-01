@@ -8,7 +8,7 @@ using PigNet.Net;
 
 namespace PigNet.Utils;
 
-public class ItemStacks : IEnumerable<Item>
+public class ItemStacks : IEnumerable<Item>, IPacketDataObject
 {
 	private readonly Item[] _items;
 
@@ -36,14 +36,19 @@ public class ItemStacks : IEnumerable<Item>
 
 	public virtual Item this[int index] { get => GetItem(index); set => SetItem(index, value); }
 
+	public virtual IEnumerator<Item> GetEnumerator()
+	{
+		return ((ICollection<Item>) _items).GetEnumerator();
+	}
+
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return _items.GetEnumerator();
 	}
 
-	public virtual IEnumerator<Item> GetEnumerator()
+	public virtual void Write(Packet packet)
 	{
-		return ((ICollection<Item>) _items).GetEnumerator();
+		Write(packet, true);
 	}
 
 	public static ItemStacks CreateAir(int length)
@@ -52,11 +57,6 @@ public class ItemStacks : IEnumerable<Item>
 		stacks.Reset();
 
 		return stacks;
-	}
-
-	public virtual void Write(Packet packet)
-	{
-		Write(packet, true);
 	}
 
 	public virtual void Write(Packet packet, bool writeUniqueId)
@@ -73,7 +73,7 @@ public class ItemStacks : IEnumerable<Item>
 
 	public static ItemStacks Read(Packet packet, bool readUniqueId)
 	{
-		var count = packet.ReadLength();
+		int count = packet.ReadLength();
 		var itemStacks = new ItemStacks(count);
 
 		for (int i = 0; i < count; i++) itemStacks[i] = packet.ReadItem(readUniqueId);
@@ -173,7 +173,7 @@ public class ContainerItemStacks : ItemStacks
 	{
 		foreach (Item[] container in _containers)
 		{
-			var i = Array.IndexOf(container, item);
+			int i = Array.IndexOf(container, item);
 
 			if (i > -1) return i;
 		}
@@ -278,13 +278,13 @@ public class CreativeItemStacks : ItemStacks
 
 	public static new CreativeItemStacks Read(Packet packet)
 	{
-		var count = packet.ReadLength();
+		int count = packet.ReadLength();
 		var metadata = new CreativeItemStacks(count);
 
 		for (int i = 0; i < count; i++)
 		{
-			var networkId = packet.ReadUnsignedVarInt();
-			var item = packet.ReadItem(false);
+			uint networkId = packet.ReadUnsignedVarInt();
+			Item item = packet.ReadItem(false);
 
 			item.UniqueId = (int) networkId;
 			metadata[i] = item;

@@ -25,7 +25,6 @@
 
 using PigNet.Entities.Behaviors;
 using PigNet.Items;
-using PigNet.Items.Food;
 using PigNet.Worlds;
 
 namespace PigNet.Entities.Passive

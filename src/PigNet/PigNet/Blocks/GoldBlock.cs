@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class GoldBlock : Block
+public partial class GoldBlock
 {
 	public GoldBlock()
 	{

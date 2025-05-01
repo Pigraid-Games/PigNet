@@ -1,11 +1,12 @@
 ﻿using System.Numerics;
 using PigNet.Blocks.States;
+using PigNet.Utils;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public abstract partial class TrapdoorBase : Block
+public abstract class TrapdoorBase : Block
 {
 	public abstract OldDirection4 Direction { get; set; }
 	public abstract bool OpenBit { get; set; }

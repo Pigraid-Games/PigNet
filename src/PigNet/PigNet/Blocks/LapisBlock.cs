@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class LapisBlock : Block
+public partial class LapisBlock
 {
 	public LapisBlock()
 	{

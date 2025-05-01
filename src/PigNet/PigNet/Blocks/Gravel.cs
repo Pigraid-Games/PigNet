@@ -7,7 +7,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Gravel : Block
+public partial class Gravel
 {
 	private int _tickRate = 1;
 

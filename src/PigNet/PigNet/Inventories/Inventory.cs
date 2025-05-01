@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using log4net;
 using PigNet.Items;
+using PigNet.Net;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils;
 using PigNet.Utils.Vectors;
@@ -184,7 +185,7 @@ public class Inventory : CommonInventory
 	}
 }
 
-public abstract class CommonInventory : IInventory, PigNet.IInventory
+public abstract class CommonInventory : IInventory
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(Inventory));
 
@@ -208,7 +209,7 @@ public abstract class CommonInventory : IInventory, PigNet.IInventory
 
 	public virtual bool Open(Player player)
 	{
-		PigNet.IInventory openedInventory = player.GetOpenInventory();
+		IInventory openedInventory = player.GetOpenInventory();
 
 		if (openedInventory != null) player.CloseOpenedInventory();
 
@@ -227,7 +228,7 @@ public abstract class CommonInventory : IInventory, PigNet.IInventory
 
 	public virtual bool Close(Player player, bool closedByPlayer = false)
 	{
-		PigNet.IInventory openedInventory = player.GetOpenInventory();
+		IInventory openedInventory = player.GetOpenInventory();
 
 		OnInventoryClose(player);
 

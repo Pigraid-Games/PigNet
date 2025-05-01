@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class DetectorRail : Block
+public partial class DetectorRail
 {
 	public DetectorRail()
 	{

@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class PolishedBlackstoneButton : ButtonBase
+public partial class PolishedBlackstoneButton
 {
 	public PolishedBlackstoneButton()
 	{

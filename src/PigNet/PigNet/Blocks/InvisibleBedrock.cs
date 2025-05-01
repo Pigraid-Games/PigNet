@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class InvisibleBedrock : Block
+public partial class InvisibleBedrock
 {
 	public InvisibleBedrock()
 	{

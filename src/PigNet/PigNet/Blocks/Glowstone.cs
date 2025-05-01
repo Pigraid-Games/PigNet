@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Glowstone : Block
+public partial class Glowstone
 {
 	public Glowstone()
 	{

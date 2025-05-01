@@ -27,239 +27,226 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using fNbt;
+using fNbt.Serialization;
 using log4net;
+using PigNet.BlockEntities;
 using PigNet.Blocks;
 using PigNet.Client;
-using PigNet.Net;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils;
-using PigNet.Utils.Nbt;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
-namespace PigNet.Console
+namespace PigNet.Console;
+
+public class ChunkGeneratorHandler : McpeClientMessageHandlerBase
 {
-	public class ChunkGeneratorHandler : McpeClientMessageHandlerBase
+	private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkGeneratorHandler));
+	private readonly IWorldProvider _worldProvider;
+	private readonly ConcurrentDictionary<BlockCoordinates, BlockEntity> _futureBlockEntities = new();
+
+	private readonly ConcurrentDictionary<CachedChunk, object> _futureChunks = new();
+	private HashSet<IBlockStateContainer> _internalStates;
+	private BlockPalette BlockPalette;
+
+	public ChunkGeneratorHandler(MiNetClient client, IWorldProvider worldProvider) : base(client)
 	{
-		private readonly IWorldProvider _worldProvider;
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkGeneratorHandler));
-		private BlockPalette BlockPalette;
-		private HashSet<BlockStateContainer> _internalStates;
+		_worldProvider = worldProvider;
+	}
 
-		public ChunkGeneratorHandler(MiNetClient client, IWorldProvider worldProvider) : base(client)
+	public override void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
+	{
+		Log.Info($"Server told us to do {message.chunkRadius} chunk radius");
+	}
+
+	public override void HandleMcpePlayStatus(McpePlayStatus message)
+	{
+		base.HandleMcpePlayStatus(message);
+
+		if (Client.PlayerStatus == 0 && Client.UseBlobCache)
 		{
-			_worldProvider = worldProvider;
-		}
-
-		public override void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
-		{
-			Log.Info($"Server told us to do {message.chunkRadius} chunk radius");
-		}
-
-		public override void HandleMcpePlayStatus(McpePlayStatus message)
-		{
-			base.HandleMcpePlayStatus(message);
-
-			if (Client.PlayerStatus == 0 && Client.UseBlobCache)
-			{
-				var packet = McpeClientCacheStatus.CreateObject();
-				packet.enabled = Client.UseBlobCache;
-				Client.SendPacket(packet);
-			}
-		}
-
-		public override void HandleMcpeStartGame(McpeStartGame message)
-		{
-			Client.EntityId = message.runtimeEntityId;
-			Client.NetworkEntityId = message.entityIdSelf;
-			Client.SpawnPoint = message.spawn;
-			Client.CurrentLocation = new PlayerLocation(Client.SpawnPoint, message.rotation.X, message.rotation.X, message.rotation.Y);
-
-			Client.LevelInfo.LevelName = message.levelId;
-			Client.LevelInfo.Version = 19133;
-			Client.LevelInfo.GameType = message.levelSettings.gamemode;
-
-			BlockPalette = message.blockPalette;
-
-			_internalStates = new HashSet<BlockStateContainer>(BlockFactory.BlockPalette.Values);
-
-			Log.Info($"Telling server to do 1 chunk radius");
-			var packet = McpeRequestChunkRadius.CreateObject();
-			Client.ChunkRadius = 1;
-			packet.chunkRadius = Client.ChunkRadius;
+			McpeClientCacheStatus packet = McpeClientCacheStatus.CreateObject();
+			packet.enabled = Client.UseBlobCache;
 			Client.SendPacket(packet);
 		}
+	}
+
+	public override void HandleMcpeStartGame(McpeStartGame message)
+	{
+		Client.EntityId = message.runtimeEntityId;
+		Client.NetworkEntityId = message.entityIdSelf;
+		Client.SpawnPoint = message.spawn;
+		Client.CurrentLocation = new PlayerLocation(Client.SpawnPoint, message.rotation.X, message.rotation.X, message.rotation.Y);
+
+		Client.LevelInfo.LevelName = message.levelId;
+		Client.LevelInfo.NbtVersion = 19133;
+		Client.LevelInfo.GameType = message.levelSettings.gamemode;
+
+		BlockPalette = message.blockPalette;
+
+		_internalStates = new HashSet<IBlockStateContainer>(BlockFactory.BlockPalette);
+
+		Log.Info("Telling server to do 1 chunk radius");
+		McpeRequestChunkRadius packet = McpeRequestChunkRadius.CreateObject();
+		Client.ChunkRadius = 1;
+		packet.chunkRadius = Client.ChunkRadius;
+		Client.SendPacket(packet);
+	}
 
 
-		public override void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
+	public override void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
+	{
+		Client.SpawnPoint = message.coordinates;
+		Client.LevelInfo.Spawn = message.coordinates;
+	}
+
+	public override void HandleMcpeUpdateBlock(McpeUpdateBlock message)
+	{
+	}
+
+
+	public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
+	{
+		BlockCoordinates coordinates = message.blockPosition;
+		var blockEntity = NbtConvert.FromNbt<BlockEntity>(message.actorDataTags.NbtFile.RootTag);
+		ChunkColumn chunk = _worldProvider.GenerateChunkColumn((ChunkCoordinates) coordinates, true);
+		if (chunk == null)
+			//Log.Warn($"Got block entity for non existing chunk at {coordinates}\n{nbt.NbtFile.RootTag}");
+			_futureBlockEntities.TryAdd(coordinates, blockEntity);
+		else
+			//Log.Warn($"Got block entity for existing chunk at {coordinates}\n{nbt.NbtFile.RootTag}");
+			chunk.BlockEntities[coordinates] = blockEntity;
+	}
+
+	public override void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
+	{
+		foreach (KeyValuePair<ulong, byte[]> kv in message.blobs)
 		{
-			Client.SpawnPoint = new Vector3(message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
-			Client.LevelInfo.SpawnX = (int) Client.SpawnPoint.X;
-			Client.LevelInfo.SpawnY = (int) Client.SpawnPoint.Y;
-			Client.LevelInfo.SpawnZ = (int) Client.SpawnPoint.Z;
-		}
+			ulong hash = kv.Key;
+			byte[] data = kv.Value;
 
-		private ConcurrentDictionary<CachedChunk, object> _futureChunks = new ConcurrentDictionary<CachedChunk, object>();
-		private ConcurrentDictionary<BlockCoordinates, NbtCompound> _futureBlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
+			Client.BlobCache.TryAdd(hash, data);
 
-		private class CachedChunk
-		{
-			public int X { get; set; }
-			public int Z { get; set; }
-			public ulong[] SubChunks { get; set; } = new ulong[16];
-			public ulong Biome { get; set; }
-
-			public ChunkColumn Chunk { get; set; } = new ChunkColumn();
-		}
-
-		public override void HandleMcpeUpdateBlock(McpeUpdateBlock message)
-		{
-		}
-
-
-		public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
-		{
-			BlockCoordinates coordinates = message.blockPosition;
-			Nbt nbt = message.actorDataTags;
-			ChunkColumn chunk = _worldProvider.GenerateChunkColumn((ChunkCoordinates) coordinates, true);
-			if(chunk == null)
+			IEnumerable<KeyValuePair<CachedChunk, object>> chunks = _futureChunks.Where(c => c.Key.SubChunks.Contains(hash) || c.Key.Biome == hash);
+			foreach (KeyValuePair<CachedChunk, object> kvp in chunks)
 			{
-				//Log.Warn($"Got block entity for non existing chunk at {coordinates}\n{nbt.NbtFile.RootTag}");
-				_futureBlockEntities.TryAdd(coordinates, (NbtCompound) nbt.NbtFile.RootTag);
-			}
-			else
-			{
-				//Log.Warn($"Got block entity for existing chunk at {coordinates}\n{nbt.NbtFile.RootTag}");
-				chunk.SetBlockEntity(coordinates, (NbtCompound) nbt.NbtFile.RootTag);
-			}
-		}
+				CachedChunk chunk = kvp.Key;
 
-		public override void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
-		{
-			foreach (KeyValuePair<ulong, byte[]> kv in message.blobs)
-			{
-				ulong hash = kv.Key;
-				byte[] data = kv.Value;
-
-				Client.BlobCache.TryAdd(hash, data);
-
-				var chunks = _futureChunks.Where(c => c.Key.SubChunks.Contains(hash) || c.Key.Biome == hash);
-				foreach (KeyValuePair<CachedChunk, object> kvp in chunks)
+				if (chunk.Biome == hash)
+					// TODO - 1.20 - update
+					//chunk.Chunk.biomeId = data;
+					chunk.Biome = 0;
+				else
+					for (int i = 0; i < chunk.SubChunks.Length; i++)
+					{
+						ulong subChunkHash = chunk.SubChunks[i];
+						if (subChunkHash == hash)
+						{
+							// parse data
+							chunk.Chunk[i] = ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates)[0];
+							chunk.SubChunks[i] = 0;
+						}
+					}
+				if (chunk.Biome == 0 && chunk.SubChunks.All(c => c == 0))
 				{
-					CachedChunk chunk = kvp.Key;
+					_futureChunks.TryRemove(chunk, out _);
 
-					if (chunk.Biome == hash)
+					var coordinates = new ChunkCoordinates(chunk.Chunk.X, chunk.Chunk.Z);
+					foreach (var bePair in _futureBlockEntities.Where(be => (ChunkCoordinates) be.Key == coordinates))
 					{
-						chunk.Chunk.biomeId = data;
-						chunk.Biome = 0;
+						chunk.Chunk.BlockEntities.Add(bePair);
+						_futureBlockEntities.TryRemove(bePair.Key, out _);
 					}
-					else
-					{
-						for (int i = 0; i < chunk.SubChunks.Length; i++)
-						{
-							ulong subChunkHash = chunk.SubChunks[i];
-							if (subChunkHash == hash)
-							{
-								// parse data
-								chunk.Chunk[i] = ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates)[0];
-								chunk.SubChunks[i] = 0;
-							}
-						}
-					}
-					if (chunk.Biome == 0 && chunk.SubChunks.All(c => c == 0))
-					{
-						_futureChunks.TryRemove(chunk, out _);
 
-						var coordinates = new ChunkCoordinates(chunk.Chunk.X, chunk.Chunk.Z);
-						foreach (KeyValuePair<BlockCoordinates, NbtCompound> bePair in _futureBlockEntities.Where(be => (ChunkCoordinates) be.Key == coordinates))
-						{
-							chunk.Chunk.BlockEntities.Add(bePair);
-							_futureBlockEntities.TryRemove(bePair.Key, out _);
-						}
-
-						chunk.Chunk.RecalcHeight();
-						Client.Chunks[coordinates] = chunk.Chunk;
-					}
+					chunk.Chunk.RecalcHeight();
+					Client.Chunks[coordinates] = chunk.Chunk;
 				}
 			}
 		}
+	}
 
-		public override void HandleMcpeLevelChunk(McpeLevelChunk message)
+	public override void HandleMcpeLevelChunk(McpeLevelChunk message)
+	{
+		if (message.blobHashes != null)
 		{
-			if (message.blobHashes != null) 
+			var chunk = new CachedChunk
 			{
-				var chunk = new CachedChunk
-				{
-					X = message.chunkX,
-					Z = message.chunkZ,
-				};
-				chunk.Chunk.X = chunk.X;
-				chunk.Chunk.Z = chunk.Z;
+				X = message.chunkX,
+				Z = message.chunkZ
+			};
+			chunk.Chunk.X = chunk.X;
+			chunk.Chunk.Z = chunk.Z;
 
-				var hits = new List<ulong>();
-				var misses = new List<ulong>();
+			var hits = new List<ulong>();
+			var misses = new List<ulong>();
 
-				ulong biomeHash = message.blobHashes.Last();
-				if (Client.BlobCache.TryGetValue(biomeHash, out byte[] biomes))
+			ulong biomeHash = message.blobHashes.Last();
+			if (Client.BlobCache.TryGetValue(biomeHash, out byte[] biomes))
+				// TODO - 1.20 - update
+				//chunk.Chunk.biomeId = biomes;
+				hits.Add(biomeHash);
+			else
+			{
+				chunk.Biome = biomeHash;
+				misses.Add(biomeHash);
+			}
+
+			for (int i = 0; i < message.blobHashes.Length - 1; i++)
+			{
+				ulong hash = message.blobHashes[i];
+				if (Client.BlobCache.TryGetValue(hash, out byte[] data))
 				{
-					chunk.Chunk.biomeId = biomes;
-					hits.Add(biomeHash);
+					chunk.Chunk[i] = ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates)[0];
+					hits.Add(hash);
 				}
 				else
 				{
-					chunk.Biome = biomeHash;
-					misses.Add(biomeHash);
-				}
-
-				for (int i = 0; i < message.blobHashes.Length - 1; i++)
-				{
-					ulong hash = message.blobHashes[i];
-					if (Client.BlobCache.TryGetValue(hash, out byte[] data))
-					{
-						chunk.Chunk[i] = ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates)[0];
-						hits.Add(hash);
-					}
-					else
-					{
-						chunk.SubChunks[i] = hash;
-						_futureChunks.TryAdd(chunk, null);
-						misses.Add(hash);
-					}
-				}
-
-				{
-					var status = McpeClientCacheBlobStatus.CreateObject();
-					status.hashHits = hits.ToArray();
-					status.hashMisses = misses.ToArray();
-					Client.SendPacket(status);
+					chunk.SubChunks[i] = hash;
+					_futureChunks.TryAdd(chunk, null);
+					misses.Add(hash);
 				}
 			}
-			else
+
 			{
-				var coord = new ChunkCoordinates(message.chunkX, message.chunkZ);
-				int chunkCount = (int) message.subChunkCount;
-				byte[] data = message.chunkData;
-
-				ChunkColumn chunk = null;
-				try
-				{
-					chunk = ClientUtils.DecodeChunkColumn(chunkCount, data, BlockPalette, _internalStates);
-					if (chunk != null)
-					{
-						chunk.X = coord.X;
-						chunk.Z = coord.Z;
-						chunk.RecalcHeight();
-					}
-				}
-				catch (Exception e)
-				{
-					Log.Error($"Reading chunk {coord}", e);
-				}
-
-				Client.Chunks[coord] = chunk;
+				McpeClientCacheBlobStatus status = McpeClientCacheBlobStatus.CreateObject();
+				status.hashHits = hits.ToArray();
+				status.hashMisses = misses.ToArray();
+				Client.SendPacket(status);
 			}
 		}
+		else
+		{
+			var coord = new ChunkCoordinates(message.chunkX, message.chunkZ);
+			int chunkCount = (int) message.subChunkCount;
+			byte[] data = message.chunkData;
+
+			ChunkColumn chunk = null;
+			try
+			{
+				chunk = ClientUtils.DecodeChunkColumn(chunkCount, data, BlockPalette, _internalStates);
+				if (chunk != null)
+				{
+					chunk.X = coord.X;
+					chunk.Z = coord.Z;
+					chunk.RecalcHeight();
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Reading chunk {coord}", e);
+			}
+
+			Client.Chunks[coord] = chunk;
+		}
+	}
+
+	private class CachedChunk
+	{
+		public int X { get; set; }
+		public int Z { get; set; }
+		public ulong[] SubChunks { get; } = new ulong[16];
+		public ulong Biome { get; set; }
+
+		public ChunkColumn Chunk { get; } = new();
 	}
 }

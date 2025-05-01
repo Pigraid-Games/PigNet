@@ -1,11 +1,10 @@
 ﻿using System;
 using PigNet.Items;
-using PigNet.Items.Food;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class OakLeaves : LeavesBase
+public partial class OakLeaves
 {
 	public override Item[] GetDrops(Level world, Item tool)
 	{

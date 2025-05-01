@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class DiamondOre : Block
+public partial class DiamondOre
 {
 	public DiamondOre()
 	{

@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class GoldenRail : Block
+public partial class GoldenRail
 {
 	public GoldenRail()
 	{

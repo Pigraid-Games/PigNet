@@ -1,8 +1,3 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class UnpoweredRepeater : RepeaterBase
-{
-	public UnpoweredRepeater()
-	{
-	}
-}
+public partial class UnpoweredRepeater : RepeaterBase;

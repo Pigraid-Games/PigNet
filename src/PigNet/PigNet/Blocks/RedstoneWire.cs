@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class RedstoneWire : Block
+public partial class RedstoneWire
 {
 	public RedstoneWire()
 	{

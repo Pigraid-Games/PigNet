@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Podzol : Block
+public partial class Podzol
 {
 	public Podzol()
 	{
@@ -13,6 +13,6 @@ public partial class Podzol : Block
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new[] { ItemFactory.GetItem<Dirt>() };
+		return [ItemFactory.GetItem<Dirt>()];
 	}
 }

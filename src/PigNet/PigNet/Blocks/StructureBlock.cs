@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class StructureBlock : Block
+public partial class StructureBlock
 {
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
 	{

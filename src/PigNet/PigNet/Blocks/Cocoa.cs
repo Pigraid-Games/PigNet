@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Cocoa : Block
+public partial class Cocoa
 {
 	public Cocoa()
 	{

@@ -2,6 +2,7 @@
 using PigNet.Items;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
+using PigNet.Blocks.States;
 
 namespace PigNet.Blocks;
 
@@ -12,7 +13,7 @@ public class PortalInfo
 	public BoundingBox Size { get; set; }
 }
 
-public partial class Portal : Block
+public partial class Portal
 {
 	public Portal()
 	{
@@ -64,7 +65,7 @@ public partial class Portal : Block
 		{
 			BlockCoordinates coordinates = visits.Dequeue();
 
-			if (!(level.GetBlock(coordinates) is Portal)) continue;
+			if (level.GetBlock(coordinates) is not Portal) continue;
 
 			level.SetAir(coordinates);
 

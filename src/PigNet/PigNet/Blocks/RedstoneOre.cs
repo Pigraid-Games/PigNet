@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class RedstoneOre : Block
+public partial class RedstoneOre
 {
 	public RedstoneOre()
 	{

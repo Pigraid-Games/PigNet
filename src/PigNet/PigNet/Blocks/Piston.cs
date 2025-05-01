@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Piston : Block
+public partial class Piston
 {
 	public Piston()
 	{

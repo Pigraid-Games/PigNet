@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Stonecutter : Block
+public partial class Stonecutter
 {
 	public Stonecutter()
 	{

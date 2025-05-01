@@ -36,89 +36,100 @@ using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils.Metadata;
 using PigNet.Worlds;
 
-namespace PigNet.Entities.Projectiles
+namespace PigNet.Entities.Projectiles;
+
+public class FireworksRocket : Projectile
 {
-	public class FireworksRocket : Projectile
+	private static readonly ILog Log = LogManager.GetLogger(typeof(FireworksRocket));
+
+	public Item Fireworks { get; set; }
+	public int Lifetime { get; set; }
+
+	public FireworksRocket(Player shooter, Level level, Item fireworks, Random random = null) : base(shooter, EntityType.FireworksRocket, level, 0)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(FireworksRocket));
+		random = random ?? new Random();
 
-		public Item Fireworks { get; set; }
-		public int Lifetime { get; set; }
+		Fireworks = fireworks;
+		Width = 0.25;
+		Length = 0.25;
+		Height = 0.25;
 
-		public FireworksRocket(Player shooter, Level level, Item fireworks, Random random = null) : base(shooter, EntityType.FireworksRocket, level, 0)
+		Gravity = 0.0;
+		Drag = 0.01;
+
+		HealthManager.IsInvulnerable = true;
+
+		HasCollision = true;
+		IsAffectedByGravity = true;
+
+		int flyTime = 1;
+		try
 		{
-			random = random ?? new Random();
-
-			Fireworks = fireworks;
-			Width = 0.25;
-			Length = 0.25;
-			Height = 0.25;
-
-			Gravity = 0.0;
-			Drag = 0.01;
-
-			HealthManager.IsInvulnerable = true;
-
-			HasCollision = true;
-			IsAffectedByGravity = true;
-
-			int flyTime = 1;
-			try
+			if (Fireworks.ExtraData["Fireworks"]["Flight"] is NbtByte flight)
 			{
-				if (Fireworks.ExtraData["Fireworks"]["Flight"] is NbtByte flight)
-				{
-					flyTime = flight.ByteValue;
-				}
+				flyTime = flight.ByteValue;
 			}
-			catch (Exception e)
-			{
-				Log.Debug(e);
-			}
-
-			Lifetime = 20 * flyTime + random.Next(5) + random.Next(7);
+		}
+		catch (Exception e)
+		{
+			Log.Debug(e);
 		}
 
-		public override MetadataDictionary GetMetadata()
+		Lifetime = 20 * flyTime + random.Next(5) + random.Next(7);
+	}
+
+	public override MetadataDictionary GetMetadata()
+	{
+		var metadata = base.GetMetadata();
+		//metadata[(int) MetadataFlags.FireworksType] = new MetadataSlot(Fireworks);
+		return metadata;
+	}
+
+	public override void SpawnEntity()
+	{
+		Velocity = Force = KnownPosition.GetDirectionVector().Normalize() * 0.06055374f;
+		KnownPosition.Yaw = (float) Velocity.GetYaw();
+		KnownPosition.Pitch = (float) Velocity.GetPitch();
+
+		// TODO
+		//var sound = McpeLevelSoundEvent.CreateObject();
+		//sound.soundId = 55;
+		//sound.blockId = -1;
+		//sound.entityType = 1;
+		//sound.position = KnownPosition;
+		//Level.RelayBroadcast(sound);
+
+		base.SpawnEntity();
+	}
+
+	public override void DespawnEntity()
+	{
+		McpeActorEvent entityEvent = McpeActorEvent.CreateObject();
+		entityEvent.runtimeEntityId = EntityId;
+		entityEvent.eventId = ActorEvent.FireworksExplode;
+		entityEvent.data = 0;
+		Level.RelayBroadcast(entityEvent);
+
+		base.DespawnEntity();
+
+		// TODO
+		//var sound = McpeLevelSoundEvent.CreateObject();
+		//sound.soundId = 56;
+		//sound.blockId = -1;
+		//sound.entityType = 1;
+		//sound.position = KnownPosition;
+		//Level.RelayBroadcast(sound);
+	}
+
+	public override void OnTick(Entity[] entities)
+	{
+		if (Lifetime-- < 0)
 		{
-			var metadata = base.GetMetadata();
-			//metadata[(int) MetadataFlags.FireworksType] = new MetadataSlot(Fireworks);
-			return metadata;
+			DespawnEntity();
 		}
-
-		public override void SpawnEntity()
+		else
 		{
-			Velocity = Force = KnownPosition.GetDirection().Normalize() * 0.06055374f;
-			KnownPosition.Yaw = (float) Velocity.GetYaw();
-			KnownPosition.Pitch = (float) Velocity.GetPitch();
-
-			Level.BroadcastSound(KnownPosition.ToVector3(), LevelSoundEventType.Launch);
-
-			base.SpawnEntity();
-		}
-
-		public override void DespawnEntity()
-		{
-			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
-			actorEvent.runtimeEntityId = EntityId;
-			actorEvent.eventId = ActorEvent.FireworksExplode;
-			actorEvent.data = 0;
-			Level.RelayBroadcast(actorEvent);
-
-			Level.BroadcastSound(KnownPosition.ToVector3(), LevelSoundEventType.Blast);
-
-			base.DespawnEntity();
-		}
-
-		public override void OnTick(Entity[] entities)
-		{
-			if (Lifetime-- < 0)
-			{
-				DespawnEntity();
-			}
-			else
-			{
-				base.OnTick(entities);
-			}
+			base.OnTick(entities);
 		}
 	}
 }

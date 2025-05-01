@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class NetherBrickStairs : StairsBase
+public partial class NetherBrickStairs
 {
 	public NetherBrickStairs()
 	{

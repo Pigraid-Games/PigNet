@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class PumpkinStem : Block
+public partial class PumpkinStem
 {
 	public PumpkinStem()
 	{

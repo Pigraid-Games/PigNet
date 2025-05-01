@@ -21,6 +21,7 @@
 // All Rights Reserved.
 #endregion
 
+using PigNet.Inventories;
 using PigNet.Net.Packets.Mcpe;
 
 namespace PigNet.BlockEntities;

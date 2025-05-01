@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class HeavyWeightedPressurePlate : Block
+public partial class HeavyWeightedPressurePlate
 {
 	public HeavyWeightedPressurePlate()
 	{

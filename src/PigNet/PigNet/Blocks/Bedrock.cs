@@ -28,7 +28,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Bedrock : Block
+public partial class Bedrock
 {
 	public Bedrock()
 	{

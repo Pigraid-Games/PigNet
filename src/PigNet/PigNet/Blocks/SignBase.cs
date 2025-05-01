@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Linq;
+using System.Numerics;
 using PigNet.Items;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils.Vectors;
@@ -23,7 +24,6 @@ public abstract class SignBase : Block
 		switch (this)
 		{
 			case StandingSign:
-			case WallSign:
 				return new ItemOakSign();
 			case DarkoakStandingSign:
 			case DarkoakWallSign:

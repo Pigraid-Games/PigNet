@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Jukebox : Block
+public partial class Jukebox
 {
 	public Jukebox()
 	{

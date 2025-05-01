@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Rail : Block
+public partial class Rail
 {
 	public Rail()
 	{
@@ -16,6 +16,6 @@ public partial class Rail : Block
 	public override Item[] GetDrops(Level world, Item tool)
 	{
 		// No special metadata
-		return new[] { ItemFactory.GetItem<Rail>() };
+		return [ItemFactory.GetItem<Rail>()];
 	}
 }

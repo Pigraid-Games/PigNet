@@ -2,7 +2,7 @@
 
 public abstract class TerracottaBase : Block
 {
-	public TerracottaBase()
+	protected TerracottaBase()
 	{
 		BlastResistance = 30;
 		Hardness = 1.25f;

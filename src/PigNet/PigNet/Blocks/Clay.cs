@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Clay : Block
+public partial class Clay
 {
 	public Clay()
 	{

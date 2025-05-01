@@ -1,10 +1,8 @@
-﻿using PigNet.Items.Food;
+﻿namespace PigNet.Items;
 
-namespace PigNet.Items;
-
-public class ItemKelp() : Item("minecraft:kelp", 335, canInteract: false)
+public partial class ItemKelp
 {
-	public override Item GetSmelt()
+	public Item GetSmelt()
 	{
 		return new ItemDriedKelp();
 	}

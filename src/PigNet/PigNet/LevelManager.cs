@@ -31,6 +31,7 @@ using log4net;
 using PigNet.Net.EnumerationsTable;
 using PigNet.Utils;
 using PigNet.Worlds;
+using PigNet.Worlds.Anvil;
 
 namespace PigNet;
 
@@ -94,7 +95,6 @@ public class LevelManager
 				TntExplodes = Config.GetProperty("GameRule.TntExplodes", true),
 				SendCommandfeedback = Config.GetProperty("GameRule.SendCommandfeedback", true),
 				RandomTickSpeed = Config.GetProperty("GameRule.RandomTickSpeed", 3),
-				RedstoneEnabled = Config.GetProperty("RedstoneEnabled", true),
 				DoShowDeathMessage = Config.GetProperty("GameRule.ShowDeathMessages", true),
 			};
 

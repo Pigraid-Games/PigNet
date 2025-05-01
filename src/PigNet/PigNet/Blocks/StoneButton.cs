@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class StoneButton : ButtonBase
+public partial class StoneButton
 {
 	public StoneButton()
 	{

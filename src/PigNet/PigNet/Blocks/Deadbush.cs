@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Deadbush : Block
+public partial class Deadbush
 {
 	public Deadbush()
 	{

@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class HardenedClay : Block
+public partial class HardenedClay
 {
 	public HardenedClay()
 	{

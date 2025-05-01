@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Prismarine : Block
+public partial class Prismarine
 {
 	public Prismarine()
 	{

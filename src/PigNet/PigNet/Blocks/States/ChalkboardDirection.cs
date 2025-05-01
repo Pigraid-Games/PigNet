@@ -44,4 +44,4 @@ public class ChalkboardDirection : BlockStateInt
 			ThrowArgumentException(value);
 		}
 	}
-}}
+}

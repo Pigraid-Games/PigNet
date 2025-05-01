@@ -1,57 +1,37 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using fNbt;
+using fNbt.Serialization;
 using Newtonsoft.Json;
+using PigNet.Blocks;
 
 namespace PigNet.Utils;
 
-public class BlockPalette : Dictionary<int, BlockStateContainer>
+public class BlockPalette : List<IBlockStateContainer>
 {
 	public static int Version => 17694723;
 
-	public BlockPalette FromJson(string json)
+	public static BlockPalette FromJson(string json)
 	{
 		var pallet = new BlockPalette();
 
 		dynamic result = JsonConvert.DeserializeObject<dynamic>(json);
+		int runtimeId = 0;
 		foreach (dynamic obj in result)
 		{
-			var record = new BlockStateContainer();
+			var record = new PaletteBlockStateContainer();
 			record.Id = obj.Id;
-			record.Name = obj.Name;
 			record.Data = obj.Data;
-			record.RuntimeId = obj.RuntimeId;
+			record.RuntimeId = runtimeId++;
 
 			foreach (dynamic stateObj in obj.States)
 				switch ((int) stateObj.Type)
 				{
 					case 1:
 					{
-						record.States.Add(new BlockStateByte
+						record.AddState(new BlockStateByte
 						{
 							Name = stateObj.Name,
 							Value = stateObj.Value
@@ -60,7 +40,7 @@ public class BlockPalette : Dictionary<int, BlockStateContainer>
 					}
 					case 3:
 					{
-						record.States.Add(new BlockStateInt
+						record.AddState(new BlockStateInt
 						{
 							Name = stateObj.Name,
 							Value = stateObj.Value
@@ -69,7 +49,7 @@ public class BlockPalette : Dictionary<int, BlockStateContainer>
 					}
 					case 8:
 					{
-						record.States.Add(new BlockStateString
+						record.AddState(new BlockStateString
 						{
 							Name = stateObj.Name,
 							Value = stateObj.Value
@@ -77,75 +57,197 @@ public class BlockPalette : Dictionary<int, BlockStateContainer>
 						break;
 					}
 				}
-			pallet.Add(record.RuntimeId, record);
-		}
 
+			pallet.Add(record);
+		}
 
 		return pallet;
 	}
 }
 
-public class BlockStateContainer
+[JsonObject(MemberSerialization.OptIn)]
+public interface IBlockStateContainer : IEquatable<IBlockStateContainer>
 {
-	public int Id { get; set; }
-	public short Data { get; set; }
-	public string Name { get; set; }
-	public int RuntimeId { get; set; }
-	public List<IBlockState> States { get; set; } = new();
+	[JsonProperty] public int RuntimeId { get; }
 
-	[JsonIgnore] public byte[] StatesCacheNbt { get; set; }
-	public ItemPickInstance ItemInstance { get; set; }
+	[JsonProperty] public string Id { get; }
 
-	protected bool Equals(BlockStateContainer other)
+	[JsonProperty] public short Data { get; }
+
+	[JsonProperty] public IEnumerable<IBlockState> States { get; }
+
+	public byte[] StatesCacheNbt { get; }
+	public NbtCompound StatesNbt { get; }
+}
+
+public class PaletteBlockStateContainer : IBlockStateContainer
+{
+	private readonly List<IBlockState> _states;
+
+	public PaletteBlockStateContainer()
 	{
-		bool result = /*Id == other.Id && */Name == other.Name;
-		if (!result) return false;
+		_states = new List<IBlockState>();
+	}
 
-		var thisStates = new HashSet<IBlockState>(States);
-		var otherStates = new HashSet<IBlockState>(other.States);
+	public PaletteBlockStateContainer(string id, IEnumerable<IBlockState> states)
+	{
+		Id = id;
+		_states = states.ToList();
+	}
 
-		otherStates.IntersectWith(thisStates);
-		result = otherStates.Count == thisStates.Count;
+	public int RuntimeId { get; set; }
 
-		return result;
+	public string Id { get; set; }
+	public short Data { get; set; }
+	public IEnumerable<IBlockState> States => _states;
+
+	public byte[] StatesCacheNbt { get; set; }
+	public NbtCompound StatesNbt { get; set; }
+
+	public bool Equals(IBlockStateContainer obj)
+	{
+		return Id == obj?.Id && _states.SequenceEqual(obj.States);
+	}
+
+	public void AddState(IBlockState state)
+	{
+		_states.Add(state);
 	}
 
 	public override bool Equals(object obj)
 	{
 		if (ReferenceEquals(null, obj)) return false;
 		if (ReferenceEquals(this, obj)) return true;
-		if (obj.GetType() != GetType()) return false;
-		return Equals((BlockStateContainer) obj);
+		if (obj is not IBlockStateContainer other) return false;
+		return Equals(other);
 	}
 
 	public override int GetHashCode()
 	{
 		var hash = new HashCode();
 		hash.Add(Id);
-		hash.Add(Name);
-		foreach (IBlockState state in States)
-			switch (state)
-			{
-				case BlockStateByte blockStateByte:
-					hash.Add(blockStateByte);
-					break;
-				case BlockStateInt blockStateInt:
-					hash.Add(blockStateInt);
-					break;
-				case BlockStateString blockStateString:
-					hash.Add(blockStateString);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(state));
-			}
+		foreach (IBlockState state in States) hash.Add(state);
 
-		int hashCode = hash.ToHashCode();
-		return hashCode;
+		return hash.ToHashCode();
 	}
 
 	public override string ToString()
 	{
-		return $"{nameof(Name)}: {Name}, {nameof(Id)}: {Id}, {nameof(Data)}: {Data}, {nameof(RuntimeId)}: {RuntimeId}, {nameof(States)} {{ {string.Join(';', States)} }}";
+		return $"{nameof(Id)}: {Id}, {nameof(Data)}: {Data}, {nameof(RuntimeId)}: {RuntimeId}, {nameof(States)} {{ {string.Join(';', States)} }}";
+	}
+}
+
+public class BlockStateContainer : IBlockStateContainer
+{
+	private static readonly Dictionary<string, IBlockStateContainer> _defaultStates = new();
+
+	private IBlockStateContainer _cache;
+	private bool _changed;
+	private bool _factoryState;
+
+	public BlockStateContainer()
+	{
+		if (!_defaultStates.TryGetValue(Id, out _cache))
+		{
+			BlockFactory.BlockStates.TryGetValue(this, out _cache);
+			_defaultStates.TryAdd(Id, _cache);
+		}
+	}
+
+	public bool IsValidStates => GetPaletteContainer() != null;
+
+	[NbtProperty("name")] public virtual string Id { get; }
+
+	public int RuntimeId => GetPaletteContainer()?.RuntimeId ?? -1;
+	public short Data => GetPaletteContainer()?.Data ?? 0;
+
+	public IEnumerable<IBlockState> States => GetStates();
+
+	public byte[] StatesCacheNbt => GetPaletteContainer()?.StatesCacheNbt;
+
+	[NbtProperty("states")] public NbtCompound StatesNbt => GetPaletteContainer()?.StatesNbt;
+
+	public bool Equals(IBlockStateContainer obj)
+	{
+		return Id == obj?.Id && GetStates().SequenceEqual(obj.States);
+	}
+
+	private IBlockStateContainer GetPaletteContainer()
+	{
+		if (_changed)
+		{
+			if (_factoryState)
+			{
+				SpinWait spinWait = default;
+				while (_factoryState) spinWait.SpinOnce();
+
+				return _cache;
+			}
+
+			_factoryState = true;
+			BlockFactory.BlockStates.TryGetValue(this, out _cache);
+
+			_factoryState = false;
+			_changed = false;
+		}
+
+		return _cache;
+	}
+
+	protected void NotifyStateUpdate(BlockStateString state, string value)
+	{
+		state.Value = value;
+		_changed = true;
+	}
+
+	protected void NotifyStateUpdate(BlockStateInt state, int value)
+	{
+		state.Value = value;
+		_changed = true;
+	}
+
+	protected void NotifyStateUpdate(BlockStateByte state, byte value)
+	{
+		state.Value = value;
+		_changed = true;
+	}
+
+	protected void NotifyStateUpdate(BlockStateByte state, bool value)
+	{
+		state.Value = Convert.ToByte(value);
+		_changed = true;
+	}
+
+	public void SetStates(IBlockStateContainer blockstate)
+	{
+		SetStates(blockstate.States);
+	}
+
+	public virtual void SetStates(IEnumerable<IBlockState> states)
+	{
+	}
+
+	protected virtual IEnumerable<IBlockState> GetStates()
+	{
+		return [];
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (ReferenceEquals(null, obj)) return false;
+		if (ReferenceEquals(this, obj)) return true;
+		if (obj is not IBlockStateContainer other) return false;
+		return Equals(other);
+	}
+
+	public override int GetHashCode()
+	{
+		return HashCode.Combine(Id);
+	}
+
+	public override string ToString()
+	{
+		return $"{nameof(Id)}: {Id}, {nameof(Data)}: {Data}, {nameof(RuntimeId)}: {RuntimeId}, {nameof(States)} {{ {string.Join(';', States)} }}";
 	}
 }
 
@@ -159,103 +261,177 @@ public class ItemPickInstance
 public interface IBlockState
 {
 	public string Name { get; set; }
+
+	public object GetValue();
 }
 
-public class BlockStateInt : IBlockState
+public class BlockStateInt : IBlockState, ICloneable, IEquatable<BlockStateInt>
 {
-	public int Type { get; } = 3;
-	public int Value { get; set; }
-	public string Name { get; set; }
+	private int _value;
 
-	protected bool Equals(BlockStateInt other)
+	public int Type { get; } = 3;
+
+	public virtual int Value
+	{
+		get => _value;
+		set
+		{
+			ValidateValue(value);
+			_value = value;
+		}
+	}
+
+	public virtual string Name { get; set; }
+
+	public object GetValue()
+	{
+		return _value;
+	}
+
+	public object Clone()
+	{
+		return MemberwiseClone();
+	}
+
+	public bool Equals(BlockStateInt other)
 	{
 		return Name == other.Name && Value == other.Value;
 	}
 
 	public override bool Equals(object obj)
 	{
-		if (ReferenceEquals(null, obj))
-			return false;
-		if (ReferenceEquals(this, obj))
-			return true;
-		if (obj.GetType() != GetType())
-			return false;
+		if (ReferenceEquals(null, obj)) return false;
+		if (ReferenceEquals(this, obj)) return true;
+		if (!obj.GetType().IsAssignableTo(GetType())) return false;
 		return Equals((BlockStateInt) obj);
 	}
 
 	public override int GetHashCode()
 	{
-		return HashCode.Combine(GetType().Name, Name, Value);
+		return Value;
 	}
 
 	public override string ToString()
 	{
 		return $"{nameof(Name)}: {Name}, {nameof(Value)}: {Value}";
 	}
+
+	public static bool operator ==(BlockStateInt x, BlockStateInt y)
+	{
+		return x.Equals(y);
+	}
+
+	public static bool operator !=(BlockStateInt x, BlockStateInt y)
+	{
+		return !x.Equals(y);
+	}
+
+	protected virtual void ValidateValue(int value)
+	{
+	}
+
+	protected void ThrowArgumentException(int value)
+	{
+		throw new ArgumentOutOfRangeException(Name, value, null);
+	}
 }
 
-public class BlockStateByte : IBlockState
+public class BlockStateByte : IBlockState, ICloneable, IEquatable<BlockStateByte>
 {
 	public int Type { get; } = 1;
-	public byte Value { get; set; }
-	public string Name { get; set; }
+	public virtual byte Value { get; set; }
+	public virtual string Name { get; set; }
 
-	protected bool Equals(BlockStateByte other)
+	public object GetValue()
+	{
+		return Value;
+	}
+
+	public object Clone()
+	{
+		return MemberwiseClone();
+	}
+
+	public bool Equals(BlockStateByte other)
 	{
 		return Name == other.Name && Value == other.Value;
 	}
 
 	public override bool Equals(object obj)
 	{
-		if (ReferenceEquals(null, obj))
-			return false;
-		if (ReferenceEquals(this, obj))
-			return true;
-		if (obj.GetType() != GetType())
-			return false;
+		if (ReferenceEquals(null, obj)) return false;
+		if (ReferenceEquals(this, obj)) return true;
+		if (!obj.GetType().IsAssignableTo(GetType())) return false;
 		return Equals((BlockStateByte) obj);
 	}
 
 	public override int GetHashCode()
 	{
-		return HashCode.Combine(GetType().Name, Name, Value);
+		return Value;
 	}
 
 	public override string ToString()
 	{
 		return $"{nameof(Name)}: {Name}, {nameof(Value)}: {Value}";
 	}
+
+	public static bool operator ==(BlockStateByte x, BlockStateByte y)
+	{
+		return x.Equals(y);
+	}
+
+	public static bool operator !=(BlockStateByte x, BlockStateByte y)
+	{
+		return !x.Equals(y);
+	}
 }
 
-public class BlockStateString : IBlockState
+public class BlockStateString : IBlockState, ICloneable, IEquatable<BlockStateString>
 {
 	public int Type { get; } = 8;
-	public string Value { get; set; }
-	public string Name { get; set; }
+	public virtual string Value { get; set; }
+	public virtual string Name { get; set; }
 
-	protected bool Equals(BlockStateString other)
+	public object GetValue()
 	{
-		return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase) && string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
+		return Value;
+	}
+
+	public object Clone()
+	{
+		return MemberwiseClone();
+	}
+
+	public bool Equals(BlockStateString other)
+	{
+		return Name == other.Name && Value == other.Value;
 	}
 
 	public override bool Equals(object obj)
 	{
-		if (ReferenceEquals(null, obj))
-			return false;
-		if (ReferenceEquals(this, obj))
-			return true;
-		if (obj.GetType() != GetType())
-			return false;
+		if (ReferenceEquals(null, obj)) return false;
+		if (ReferenceEquals(this, obj)) return true;
+		if (!obj.GetType().IsAssignableTo(GetType())) return false;
 		return Equals((BlockStateString) obj);
 	}
 
 	public override int GetHashCode()
 	{
-		return HashCode.Combine(GetType().Name, Name, Value.ToLowerInvariant());
+		return Value.GetHashCode();
 	}
 
 	public override string ToString()
 	{
 		return $"{nameof(Name)}: {Name}, {nameof(Value)}: {Value}";
+	}
+
+	public static bool operator ==(BlockStateString x, BlockStateString y)
+	{
+		return x.Equals(y);
+	}
+
+	public static bool operator !=(BlockStateString x, BlockStateString y)
+	{
+		return !x.Equals(y);
 	}
 }

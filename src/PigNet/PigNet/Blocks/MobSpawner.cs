@@ -8,7 +8,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class MobSpawner : Block
+public partial class MobSpawner
 {
 	public MobSpawner()
 	{

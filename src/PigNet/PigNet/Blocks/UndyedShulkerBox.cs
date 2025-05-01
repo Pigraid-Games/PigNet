@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class UndyedShulkerBox : Block
+public partial class UndyedShulkerBox
 {
 	public UndyedShulkerBox()
 	{
@@ -21,9 +21,7 @@ public partial class UndyedShulkerBox : Block
 			Coordinates = Coordinates,
 			Facing = (byte) face
 		};
-
 		world.SetBlockEntity(shulkerBoxBlockEntity);
-
 		return false;
 	}
 
@@ -31,7 +29,6 @@ public partial class UndyedShulkerBox : Block
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
 		player.OpenInventory(blockCoordinates);
-
 		return true;
 	}
 }

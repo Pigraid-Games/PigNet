@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class MelonBlock : Block
+public partial class MelonBlock
 {
 	public MelonBlock()
 	{

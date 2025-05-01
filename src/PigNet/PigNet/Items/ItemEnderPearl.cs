@@ -1,20 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using PigNet.Entities.Projectiles;
-using PigNet.Sounds;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Items;
 
-public class ItemEnderPearl : Item
+public partial class ItemEnderPearl
 {
 	private static readonly ConcurrentDictionary<Player, bool> Cooldowns = new();
-
-	public ItemEnderPearl() : base("minecraft:ender_pearl", 368)
-	{
-		MaxStackSize = 16;
-	}
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
@@ -38,12 +32,12 @@ public class ItemEnderPearl : Item
 		var enderPearl = new Enderpearl(player, world)
 		{
 			KnownPosition = (PlayerLocation) player.KnownPosition.Clone(),
-			Velocity = player.KnownPosition.GetDirection().Normalize() * Force
+			Velocity = player.KnownPosition.ToVector3() * Force
 		};
 		enderPearl.KnownPosition.Y += 1.62f;
 		enderPearl.SpawnEntity();
 
-		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
+		world.BroadcastSound(player.KnownPosition.ToVector3(), LevelSoundEventType.Throw);
 		if (player.GameMode == GameMode.Creative) return;
 		Item itemInHand = player.Inventory.GetItemInHand();
 		itemInHand.Count--;

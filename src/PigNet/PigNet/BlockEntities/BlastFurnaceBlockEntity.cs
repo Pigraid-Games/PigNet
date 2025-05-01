@@ -2,9 +2,6 @@
 
 namespace PigNet.BlockEntities;
 
-public class BlastFurnaceBlockEntity : FurnaceBlockEntityBase<BlastFurnace, LitBlastFurnace>
+public class BlastFurnaceBlockEntity() : FurnaceBlockEntityBase<BlastFurnace, LitBlastFurnace>(BlockEntityIds.BlastFurnace, 100)
 {
-	public BlastFurnaceBlockEntity() : base(BlockEntityIds.BlastFurnace, 100)
-	{
-	}
 }

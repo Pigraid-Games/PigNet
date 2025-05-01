@@ -1,35 +1,18 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE. 
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14 
-// and 15 have been added to cover use of software over a computer network and 
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has 
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2018 Niclas Olofsson. 
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Numerics;
 
 namespace PigNet.Utils.Vectors;
 
 public class PlayerLocation : ICloneable
 {
+	public float X { get; set; }
+	public float Y { get; set; }
+	public float Z { get; set; }
+
+	public float Yaw { get; set; }
+	public float Pitch { get; set; }
+	public float HeadYaw { get; set; }
+
 	public PlayerLocation()
 	{
 	}
@@ -50,19 +33,6 @@ public class PlayerLocation : ICloneable
 
 	public PlayerLocation(Vector3 vector, float headYaw = 0f, float yaw = 0f, float pitch = 0f) : this(vector.X, vector.Y, vector.Z, headYaw, yaw, pitch)
 	{
-	}
-
-	public float X { get; set; }
-	public float Y { get; set; }
-	public float Z { get; set; }
-
-	public float Yaw { get; set; }
-	public float Pitch { get; set; }
-	public float HeadYaw { get; set; }
-
-	public object Clone()
-	{
-		return MemberwiseClone();
 	}
 
 	public BlockCoordinates GetCoordinates3D()
@@ -99,9 +69,9 @@ public class PlayerLocation : ICloneable
 	//	return new Vector3((float)x, (float)y, (float)z);
 	//}
 
-	public Vector3 GetDirection()
+	public Vector3 GetDirectionVector()
 	{
-		var vector = new Vector3();
+		Vector3 vector = new Vector3();
 		double pitch = Pitch.ToRadians();
 		double yaw = Yaw.ToRadians();
 		vector.X = (float) (-Math.Sin(yaw) * Math.Cos(pitch));
@@ -110,9 +80,9 @@ public class PlayerLocation : ICloneable
 		return vector;
 	}
 
-	public Vector3 GetHeadDirection()
+	public Vector3 GetHeadDirectionVector()
 	{
-		var vector = new Vector3();
+		Vector3 vector = new Vector3();
 
 		double pitch = Pitch.ToRadians();
 		double yaw = HeadYaw.ToRadians();
@@ -121,6 +91,21 @@ public class PlayerLocation : ICloneable
 		vector.Z = (float) (Math.Cos(yaw) * Math.Cos(pitch));
 
 		return vector;
+	}
+
+	public Direction GetDirection()
+	{
+		return (Direction) ((int) Math.Floor(HeadYaw * 4 / 360 + 0.5) & 0x03);
+	}
+
+	public int GetDirection16()
+	{
+		return (byte) Math.Floor(HeadYaw * 16 / 360 + 0.5) & 0x0f;
+	}
+
+	public int GetOppositeDirection16()
+	{
+		return (byte) Math.Floor((HeadYaw + 180) * 16 / 360 + 0.5) & 0x0f;
 	}
 
 	public static PlayerLocation operator +(PlayerLocation b, Vector3 a)
@@ -149,18 +134,13 @@ public class PlayerLocation : ICloneable
 		return new PlayerLocation(v.X, v.Y, v.Z);
 	}
 
-	public override string ToString()
+	public object Clone()
 	{
-		return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pich={Pitch}";
+		return MemberwiseClone();
 	}
 
-	public static bool Equal(PlayerLocation pos_1_62, PlayerLocation pos, float tolerance = 0.01f)
+	public override string ToString()
 	{
-		return Math.Abs(pos_1_62.X - pos.X) < tolerance &&
-				Math.Abs(pos_1_62.Y + 1.62f - pos.Y) < tolerance &&
-				Math.Abs(pos_1_62.Z - pos.Z) < tolerance &&
-				Math.Abs(pos_1_62.HeadYaw - pos.HeadYaw) < tolerance &&
-				Math.Abs(pos_1_62.Yaw - pos.Yaw) < tolerance &&
-				Math.Abs(pos_1_62.Pitch - pos.Pitch) < tolerance;
+		return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pitch={Pitch}";
 	}
 }

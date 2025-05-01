@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class EnchantingTable : Block
+public partial class EnchantingTable
 {
 	public EnchantingTable()
 	{

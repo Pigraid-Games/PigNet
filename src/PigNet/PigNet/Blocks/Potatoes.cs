@@ -1,7 +1,7 @@
 ﻿using System;
 using PigNet.Items;
-using PigNet.Items.Food;
 using PigNet.Worlds;
+using ItemPotato = PigNet.Items.ItemPotato;
 
 namespace PigNet.Blocks;
 

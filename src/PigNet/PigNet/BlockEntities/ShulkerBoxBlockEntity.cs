@@ -1,4 +1,5 @@
 ﻿using fNbt.Serialization;
+using PigNet.Inventories;
 
 namespace PigNet.BlockEntities;
 
@@ -13,7 +14,7 @@ public class ShulkerBoxBlockEntity() : ContainerBlockEntity(BlockEntityIds.Shulk
 
 		if (args.Opened)
 		{
-			args.Player.Level.BroadcastSound(Coordinates, LevelSoundEventType.ShulkerBoxOpen);
+			args.Player.Level.BroadcastSound(Coordinates, LevelSoundEventType.ShulkerboxOpen);
 		}
 	}
 

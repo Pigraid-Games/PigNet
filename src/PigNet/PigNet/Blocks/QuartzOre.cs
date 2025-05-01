@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class QuartzOre : Block
+public partial class QuartzOre
 {
 	public QuartzOre()
 	{

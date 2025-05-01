@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class GlassPane : Block
+public partial class GlassPane
 {
 	public GlassPane()
 	{

@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class RedstoneLamp : Block
+public partial class RedstoneLamp
 {
 	public RedstoneLamp()
 	{

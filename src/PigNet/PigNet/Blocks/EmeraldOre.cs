@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class EmeraldOre : Block
+public partial class EmeraldOre 
 {
 	public EmeraldOre()
 	{

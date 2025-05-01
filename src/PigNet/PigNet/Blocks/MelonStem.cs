@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class MelonStem : Block
+public partial class MelonStem
 {
 	public MelonStem()
 	{

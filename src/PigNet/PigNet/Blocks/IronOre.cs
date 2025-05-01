@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class IronOre : Block
+public partial class IronOre
 {
 	public IronOre()
 	{

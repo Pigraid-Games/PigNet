@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class PistonArmCollision : Block
+public partial class PistonArmCollision
 {
 	public PistonArmCollision()
 	{

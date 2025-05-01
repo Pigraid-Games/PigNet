@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Numerics;
 using PigNet.Items;
-using PigNet.Items.Food;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
+using ItemBeetroot = PigNet.Items.ItemBeetroot;
+using ItemBeetrootSeeds = PigNet.Items.ItemBeetrootSeeds;
 
 namespace PigNet.Blocks;
 
@@ -24,7 +25,6 @@ public partial class Beetroot : Crops
 		return true;
 
 	}
-
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{

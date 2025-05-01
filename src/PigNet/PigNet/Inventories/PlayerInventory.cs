@@ -1,34 +1,8 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/MiNET/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is MiNET.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2025 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using log4net;
 using PigNet.Blocks;
 using PigNet.Entities;
 using PigNet.Items;
-using PigNet.Items.Armor;
 using PigNet.Net;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils;
@@ -38,9 +12,22 @@ namespace PigNet.Inventories;
 
 public class PlayerInventory : Inventory
 {
+	private static readonly ILog Log = LogManager.GetLogger(typeof(PlayerInventory));
+
 	public const int HotbarSize = 9;
 	public const int InventorySize = HotbarSize + 36;
-	private static readonly ILog Log = LogManager.GetLogger(typeof(PlayerInventory));
+	public Player Player { get; }
+
+	public int InHandSlot { get; set; }
+	public Item OffHand { get; set; } = new ItemAir();
+
+	public CursorInventory UiInventory { get; set; } = new CursorInventory();
+
+	// Armour
+	public Item Boots { get; set; } = new ItemAir();
+	public Item Leggings { get; set; } = new ItemAir();
+	public Item Chest { get; set; } = new ItemAir();
+	public Item Helmet { get; set; } = new ItemAir();
 
 
 	public PlayerInventory(Player player)
@@ -51,19 +38,6 @@ public class PlayerInventory : Inventory
 		InHandSlot = 0;
 		WindowId = WindowId.Inventory;
 	}
-
-	public Player Player { get; }
-
-	public int InHandSlot { get; set; }
-	public Item OffHand { get; set; } = new ItemAir();
-
-	public CursorInventory UiInventory { get; set; } = new();
-
-	// Armour
-	public Item Boots { get; set; } = new ItemAir();
-	public Item Leggings { get; set; } = new ItemAir();
-	public Item Chest { get; set; } = new ItemAir();
-	public Item Helmet { get; set; } = new ItemAir();
 
 	public virtual Item GetItemInHand()
 	{
@@ -98,23 +72,25 @@ public class PlayerInventory : Inventory
 		if (Player.GameMode != GameMode.Survival) return item;
 		if (item.Unbreakable) return item;
 
-		short unbreakingLevel = item.GetEnchantingLevel(EnchantingType.Unbreaking);
+		var unbreakingLevel = item.GetEnchantingLevel(EnchantingType.Unbreaking);
 		if (unbreakingLevel > 0)
-			if (new Random().Next(1 + unbreakingLevel) != 0)
-				return item;
+		{
+			if (new Random().Next(1 + unbreakingLevel) != 0) return item;
+		}
 
-		if (!item.DamageItem(Player, reason, target, block)) return item;
-		item = new ItemAir();
+		if (item.DamageItem(Player, reason, target, block))
+		{
+			item = new ItemAir();
 
-		// TODO: Use the current sound system
-		/**
-		McpeLevelSoundEvent sound = McpeLevelSoundEvent.CreateObject();
-		sound.soundId = 5;
-		sound.blockId = -1;
-		sound.entityType = 1;
-		sound.position = Player.KnownPosition;
-		Player.Level.RelayBroadcast(sound);
-		**/
+			// TODO
+			//var sound = McpeLevelSoundEvent.CreateObject();
+			//sound.soundId = 5;
+			//sound.blockId = -1;
+			//sound.entityType = 1;
+			//sound.position = Player.KnownPosition;
+			//Player.Level.RelayBroadcast(sound);
+		}
+
 		return item;
 	}
 
@@ -122,16 +98,26 @@ public class PlayerInventory : Inventory
 	[Wired]
 	public virtual void SetInventorySlot(int slot, Item item, bool forceReplace = false)
 	{
-		if (item == null || item.Count <= 0) item = new ItemAir();
+		if (item == null || item.Count <= 0)
+		{
+			item = new ItemAir();
+		}
+
 		UpdateInventorySlot(slot, item, forceReplace);
+
 		SendSetSlot(slot);
 	}
 
 	[Wired]
 	public virtual void SetArmorSlot(ArmorType type, Item item, bool forceReplace = false)
 	{
-		if (item == null || item.Count <= 0) item = new ItemAir();
+		if (item == null || item.Count <= 0)
+		{
+			item = new ItemAir();
+		}
+
 		UpdateArmorSlot(type, item, forceReplace);
+
 		Player.SendArmorEquipmentForPlayer();
 		SendSetSlot((int) type, GetArmorSlot(type), WindowId.Armor);
 	}
@@ -139,7 +125,10 @@ public class PlayerInventory : Inventory
 	[Wired]
 	public virtual void SetOffHandSlot(Item item, bool forceReplace = false)
 	{
-		if (item == null || item.Count <= 0) item = new ItemAir();
+		if (item == null || item.Count <= 0)
+		{
+			item = new ItemAir();
+		}
 
 		UpdateOffHandSlot(item, forceReplace);
 
@@ -150,7 +139,10 @@ public class PlayerInventory : Inventory
 	[Wired]
 	public virtual void SetUiSlot(int slot, Item item, bool forceReplace = false)
 	{
-		if (item == null || item.Count <= 0) item = new ItemAir();
+		if (item == null || item.Count <= 0)
+		{
+			item = new ItemAir();
+		}
 
 		UpdateUiSlot(slot, item, forceReplace);
 		SendSetSlot(slot, UiInventory.Slots[slot], WindowId.UI);
@@ -158,7 +150,7 @@ public class PlayerInventory : Inventory
 
 	public virtual void UpdateInventorySlot(int slot, Item item, bool forceReplace = false)
 	{
-		Item existing = Slots[slot];
+		var existing = Slots[slot];
 
 		UpdateSlot(() => existing, newItem => Slots[slot] = newItem, item, forceReplace);
 	}
@@ -170,15 +162,15 @@ public class PlayerInventory : Inventory
 
 	public virtual void UpdateUiSlot(int slot, Item item, bool forceReplace = false)
 	{
-		ItemStacks slots = UiInventory.Slots;
-		Item existing = slots[slot];
+		var slots = UiInventory.Slots;
+		var existing = slots[slot];
 
 		UpdateSlot(() => existing, newItem => slots[slot] = newItem, item, forceReplace);
 	}
 
 	public virtual void UpdateArmorSlot(ArmorType type, Item item, bool forceReplace = false)
 	{
-		Item existing = GetArmorSlot(type);
+		var existing = GetArmorSlot(type);
 
 		if (existing == null) return;
 
@@ -206,7 +198,7 @@ public class PlayerInventory : Inventory
 
 	private void UpdateSlot(Func<Item> getItem, Action<Item> setItem, Item item, bool forceReplace = false)
 	{
-		Item existing = getItem();
+		var existing = getItem();
 		if (forceReplace || existing.Id != item.Id || existing is ItemBlock ^ item is ItemBlock)
 		{
 			setItem(item);
@@ -218,7 +210,10 @@ public class PlayerInventory : Inventory
 		existing.Metadata = item.Metadata;
 		existing.ExtraData = item.ExtraData;
 
-		if (existing is ItemBlock existingItemBock && item is ItemBlock itemBlock) existingItemBock.SetBlock(itemBlock.Block);
+		if (existing is ItemBlock existingItemBock && item is ItemBlock itemBlock)
+		{
+			existingItemBock.SetBlock(itemBlock.Block);
+		}
 	}
 
 	public ItemStacks GetSlots()
@@ -250,7 +245,7 @@ public class PlayerInventory : Inventory
 			Helmet ?? new ItemAir(),
 			Chest ?? new ItemAir(),
 			Leggings ?? new ItemAir(),
-			Boots ?? new ItemAir()
+			Boots ?? new ItemAir(),
 		]);
 	}
 
@@ -261,18 +256,21 @@ public class PlayerInventory : Inventory
 			Item existingItem = Slots[si];
 
 			// This needs to also take extradata into account when comparing.
-			if (!existingItem.Equals(item) || existingItem.Count >= existingItem.MaxStackSize) continue;
-			int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
-			existingItem.Count += (byte) take;
-			item.Count -= (byte) take;
-			if (update) SendSetSlot(si);
+			if (existingItem.Equals(item) && existingItem.Count < existingItem.MaxStackSize)
+			{
+				int take = Math.Min(item.Count, existingItem.MaxStackSize - existingItem.Count);
+				existingItem.Count += (byte) take;
+				item.Count -= (byte) take;
+				if (update) SendSetSlot(si);
 
-			if (item.Count <= 0) return true;
+				if (item.Count <= 0) return true;
+			}
 		}
 
 		for (int si = 0; si < Slots.Length; si++)
-			if (FirstEmptySlot(item, update, si))
-				return true;
+		{
+			if (FirstEmptySlot(item, update, si)) return true;
+		}
 
 		return false;
 	}
@@ -281,12 +279,16 @@ public class PlayerInventory : Inventory
 	{
 		Item existingItem = Slots[si];
 
-		if (existingItem is not ItemAir) return false;
-		Slots[si] = (Item) item.Clone();
-		item.Count = 0;
-		if (update) SendSetSlot(si);
+		if (existingItem is ItemAir)
+		{
+			Slots[si] = (Item) item.Clone();
+			item.Count = 0;
+			if (update) SendSetSlot(si);
 
-		return true;
+			return true;
+		}
+
+		return false;
 	}
 
 	public bool AddItem(Item item, bool update)
@@ -295,11 +297,13 @@ public class PlayerInventory : Inventory
 		{
 			Item existingItem = Slots[si];
 
-			if (existingItem is not ItemAir) continue;
-			Slots[si] = item;
-			if (update) SendSetSlot(si);
+			if (existingItem is ItemAir)
+			{
+				Slots[si] = item;
+				if (update) SendSetSlot(si);
 
-			return true;
+				return true;
+			}
 		}
 
 		return false;
@@ -312,7 +316,7 @@ public class PlayerInventory : Inventory
 
 		if (sendToPlayer)
 		{
-			McpeMobEquipment order = McpeMobEquipment.CreateObject();
+			var order = McpeMobEquipment.CreateObject();
 			order.runtimeActorId = EntityManager.EntityIdSelf;
 			order.item = GetItemInHand();
 			order.selectedSlot = (byte) InHandSlot;
@@ -320,7 +324,7 @@ public class PlayerInventory : Inventory
 			Player.SendPacket(order);
 		}
 
-		McpeMobEquipment broadcast = McpeMobEquipment.CreateObject();
+		var broadcast = McpeMobEquipment.CreateObject();
 		broadcast.runtimeActorId = Player.EntityId;
 		broadcast.item = GetItemInHand();
 		broadcast.selectedSlot = (byte) InHandSlot;
@@ -340,8 +344,12 @@ public class PlayerInventory : Inventory
 	public bool HasItem(Item item)
 	{
 		for (byte i = 0; i < Slots.Length; i++)
+		{
 			if (Slots[i].Id == item.Id && Slots[i].Metadata == item.Metadata)
+			{
 				return true;
+			}
+		}
 
 		return false;
 	}
@@ -354,22 +362,27 @@ public class PlayerInventory : Inventory
 		{
 			if (count <= 0) break;
 
-			Item slot = Slots[i];
-			if (slot.Id != id) continue;
-			if (Slots[i].Count >= count)
+			var slot = Slots[i];
+			if (slot.Id == id)
 			{
-				Slots[i].Count -= count;
-				count = 0;
-			}
-			else
-			{
-				count -= Slots[i].Count;
-				Slots[i].Count = 0;
-			}
+				if (Slots[i].Count >= count)
+				{
+					Slots[i].Count -= count;
+					count = 0;
+				}
+				else
+				{
+					count -= Slots[i].Count;
+					Slots[i].Count = 0;
+				}
 
-			if (slot.Count == 0) Slots[i] = new ItemAir();
+				if (slot.Count == 0)
+				{
+					Slots[i] = new ItemAir();
+				}
 
-			SendSetSlot(i);
+				SendSetSlot(i);
+			}
 		}
 	}
 
@@ -390,7 +403,7 @@ public class PlayerInventory : Inventory
 
 	internal void CloseUiInventory()
 	{
-		foreach (Item item in UiInventory.Slots)
+		foreach (var item in UiInventory.Slots)
 		{
 			if (item is ItemAir) continue;
 

@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Glowingobsidian : Block
+public partial class Glowingobsidian
 {
 	public Glowingobsidian()
 	{

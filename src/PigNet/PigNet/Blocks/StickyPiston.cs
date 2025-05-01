@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class StickyPiston : Block
+public partial class StickyPiston
 {
 	public StickyPiston()
 	{

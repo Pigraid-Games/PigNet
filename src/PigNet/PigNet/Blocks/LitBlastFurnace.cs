@@ -1,3 +1,3 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class LitBlastFurnace : BlastFurnaceBase
+public partial class LitBlastFurnace : BlastFurnaceBase;

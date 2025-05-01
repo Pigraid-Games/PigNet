@@ -59,7 +59,7 @@ public class BossBar : Entity
 		}
 	}
 
-	public BossBar(Level level, [CanBeNull] string filteredName) : base(EntityType.Slime, level)
+	public BossBar(Level level, string filteredName) : base(EntityType.Slime, level)
 	{
 		Width = 0;
 		Length = 0;
@@ -76,7 +76,7 @@ public class BossBar : Entity
 	}
 
 	[Wired]
-	public virtual void SetNameTag(string nameTag, [CanBeNull] string filterName = null)
+	public virtual void SetNameTag(string nameTag, string filterName = null)
 	{
 		NameTag = nameTag;
 		filterName ??= nameTag;

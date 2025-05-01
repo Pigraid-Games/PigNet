@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Sand : Block
+public partial class Sand
 {
 	private int _tickRate = 1;
 

@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class EndRod : Block
+public partial class EndRod
 {
 	public EndRod()
 	{

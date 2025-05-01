@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Web : Block
+public partial class Web
 {
 	public Web()
 	{
@@ -15,7 +15,7 @@ public partial class Web : Block
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{
-		if (tool is ItemShears) return new[] { ItemFactory.GetItem<Web>() };
+		if (tool is ItemShears) return [ItemFactory.GetItem<Web>()];
 		return tool.ItemType == ItemType.Sword ? [new ItemString()] : [];
 	}
 }

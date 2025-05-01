@@ -1,99 +1,65 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE. 
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14 
-// and 15 have been added to cover use of software over a computer network and 
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has 
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2018 Niclas Olofsson. 
-// All Rights Reserved.
-
-#endregion
-
-using System.Numerics;
-using PigNet.Net;
-using PigNet.Utils;
+﻿using System.Numerics;
 using PigNet.Blocks;
 using PigNet.Net.EnumerationsTable;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Particles;
 using PigNet.Utils.Vectors;
 
-namespace PigNet.Entities.Behaviors
+namespace PigNet.Entities.Behaviors;
+
+public class EatBlockBehavior(Mob entity) : BehaviorBase
 {
-	public class EatBlockBehavior : BehaviorBase
+	private int _duration;
+
+	public override bool ShouldStart()
 	{
-		private readonly Mob _entity;
-		private int _duration;
+		if (entity.Level.Random.Next(1000) != 0) return false;
 
-		public EatBlockBehavior(Mob entity)
+		var coordinates = entity.KnownPosition;
+		var direction = Vector3.Normalize(coordinates.GetHeadDirectionVector());
+
+		BlockCoordinates coord = new Vector3(coordinates.X + direction.X, coordinates.Y, coordinates.Z + direction.Z);
+
+		var shouldStart = entity.Level.GetBlock(coord.BlockDown()) is GrassBlock || entity.Level.GetBlock(coord) is ShortGrass;
+		if (!shouldStart) return false;
+
+		_duration = 40;
+
+		entity.Velocity *= new Vector3(0, 1, 0);
+
+		McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
+		actorEvent.runtimeEntityId = entity.EntityId;
+		actorEvent.eventId = ActorEvent.EatGrass;
+		entity.Level.RelayBroadcast(actorEvent);
+
+		return true;
+	}
+
+	public override bool CanContinue()
+	{
+		return _duration-- > 0;
+	}
+
+	public override void OnEnd()
+	{
+		PlayerLocation coordinates = entity.KnownPosition;
+		var direction = Vector3.Normalize(coordinates.GetHeadDirectionVector());
+
+		BlockCoordinates coord = new Vector3(coordinates.X + direction.X, coordinates.Y, coordinates.Z + direction.Z);
+
+		Block broken;
+		if (entity.Level.GetBlock(coord) is ShortGrass)
 		{
-			this._entity = entity;
+			broken = entity.Level.GetBlock(coord);
+			entity.Level.SetAir(coord);
 		}
-
-		public override bool ShouldStart()
+		else
 		{
-			if (_entity.Level.Random.Next(1000) != 0) return false;
-
-			var coordinates = _entity.KnownPosition;
-			var direction = Vector3.Normalize(coordinates.GetHeadDirection());
-
-			BlockCoordinates coord = new Vector3(coordinates.X + direction.X, coordinates.Y, coordinates.Z + direction.Z);
-
-			var shouldStart = _entity.Level.GetBlock(coord.BlockDown()) is GrassBlock || _entity.Level.GetBlock(coord) is Tallgrass;
-			if (!shouldStart) return false;
-
-			_duration = 40;
-
-			_entity.Velocity *= new Vector3(0, 1, 0);
-
-			McpeActorEvent actorEvent = McpeActorEvent.CreateObject();
-			actorEvent.runtimeEntityId = _entity.EntityId;
-			actorEvent.eventId = ActorEvent.EatGrass;
-			_entity.Level.RelayBroadcast(actorEvent);
-
-			return true;
+			coord += BlockCoordinates.Down;
+			broken = entity.Level.GetBlock(coord);
+			entity.Level.SetBlock(new Dirt {Coordinates = coord});
 		}
-
-		public override bool CanContinue()
-		{
-			return _duration-- > 0;
-		}
-
-		public override void OnEnd()
-		{
-			var coordinates = _entity.KnownPosition;
-			var direction = Vector3.Normalize(coordinates.GetHeadDirection());
-
-			BlockCoordinates coord = new Vector3(coordinates.X + direction.X, coordinates.Y, coordinates.Z + direction.Z);
-
-			int runtimeId = 0;
-			if (_entity.Level.GetBlock(coord) is Tallgrass)
-			{
-				runtimeId = _entity.Level.GetBlock(coord).GetRuntimeId();
-				_entity.Level.SetAir(coord);
-			}
-			else
-			{
-				coord += BlockCoordinates.Down;
-				runtimeId = _entity.Level.GetBlock(coord).GetRuntimeId();
-				_entity.Level.SetBlock(new Dirt {Coordinates = coord});
-			}
-			DestroyBlockParticle particle = new DestroyBlockParticle(_entity.Level, coord, (uint) runtimeId);
-			particle.Spawn();
-		}
+		var particle = new DestroyBlockParticle(entity.Level, broken);
+		particle.Spawn();
 	}
 }

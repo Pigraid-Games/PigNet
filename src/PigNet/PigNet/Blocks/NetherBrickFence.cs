@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class NetherBrickFence : FenceBase
+public partial class NetherBrickFence
 {
 	public NetherBrickFence()
 	{

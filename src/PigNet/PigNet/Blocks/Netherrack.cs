@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Netherrack : Block
+public partial class Netherrack
 {
 	public Netherrack()
 	{

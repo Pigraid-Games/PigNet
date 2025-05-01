@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Hopper : Block
+public partial class Hopper
 {
 	public Hopper()
 	{

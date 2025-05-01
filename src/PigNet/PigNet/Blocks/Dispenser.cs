@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Dispenser : Block
+public partial class Dispenser
 {
 	public Dispenser()
 	{

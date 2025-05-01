@@ -1,5 +1,7 @@
 ﻿using System;
 using fNbt.Serialization;
+using PigNet.Inventories;
+using PigNet.Utils;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 

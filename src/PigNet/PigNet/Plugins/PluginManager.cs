@@ -754,7 +754,7 @@ public class PluginManager
 		return Attribute.IsDefined(param, typeof(ParamArrayAttribute));
 	}
 
-	internal bool ExecuteCommand([NotNull] MethodInfo method, [NotNull] Player player, [NotNull] string[] args, out object result)
+	internal bool ExecuteCommand(MethodInfo method, Player player, string[] args, out object result)
 	{
 		Log.Info($"Execute command {method}, {string.Join(',', args)}");
 

@@ -6,10 +6,6 @@ namespace PigNet.Blocks;
 
 public partial class Wheat : Crops
 {
-	public Wheat()
-	{
-	}
-
 	public override Item[] GetDrops(Level world, Item tool)
 	{
 		if (Growth != 7) return [new ItemWheatSeeds()];

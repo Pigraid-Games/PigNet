@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Stone : Block
+public partial class Stone
 {
 	public Stone()
 	{
@@ -13,6 +13,6 @@ public partial class Stone : Block
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return tool.ItemType != ItemType.PickAxe ? [] : new[] { ItemFactory.GetItem<Cobblestone>() };
+		return tool.ItemType != ItemType.PickAxe ? [] : [ItemFactory.GetItem<Cobblestone>()];
 	}
 }

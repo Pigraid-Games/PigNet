@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class TripWire : Block
+public partial class TripWire
 {
 	public TripWire()
 	{

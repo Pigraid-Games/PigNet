@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class TripwireHook : Block
+public partial class TripwireHook
 {
 	public TripwireHook()
 	{

@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class BrownMushroomBlock : Block
+public partial class BrownMushroomBlock
 {
 	public BrownMushroomBlock()
 	{

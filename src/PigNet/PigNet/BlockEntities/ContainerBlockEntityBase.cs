@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using fNbt.Serialization;
+using PigNet.Inventories;
 using PigNet.Items;
 using PigNet.Utils;
 using PigNet.Worlds;

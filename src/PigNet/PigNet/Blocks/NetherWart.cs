@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class NetherWart : Block
+public partial class NetherWart
 {
 	public NetherWart()
 	{

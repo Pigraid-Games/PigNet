@@ -1,14 +1,16 @@
 ﻿using System.Numerics;
 using PigNet.Net;
 using PigNet.BlockEntities;
+using PigNet.Inventories;
 using PigNet.Net.EnumerationsTable;
 using PigNet.Net.Packets.Mcpe;
+using PigNet.Utils;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Beacon : Block
+public partial class Beacon
 {
 	public Beacon()
 	{

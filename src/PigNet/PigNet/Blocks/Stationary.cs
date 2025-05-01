@@ -60,7 +60,7 @@ public abstract class Stationary : Block
 		}
 	}
 
-	private bool IsWater(Level world, BlockCoordinates coord)
+	private static bool IsWater(Level world, BlockCoordinates coord)
 	{
 		Block block = world.GetBlock(coord);
 		return block is FlowingWater or Water;

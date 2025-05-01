@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Ice : Block
+public partial class Ice
 {
 	public Ice()
 	{

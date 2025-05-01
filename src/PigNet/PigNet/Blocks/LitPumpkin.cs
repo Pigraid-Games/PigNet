@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class LitPumpkin : Block
+public partial class LitPumpkin
 {
 	public LitPumpkin()
 	{

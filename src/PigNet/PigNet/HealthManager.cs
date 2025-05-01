@@ -225,7 +225,7 @@ public class HealthManager
 
 		if (player != null)
 		{
-			player.Inventory.ArmorInventory.DamageAll();
+			player.Inventory.DamageArmor();
 			player.HungerManager.IncreaseExhaustion(0.3f);
 			player.SendUpdateAttributes();
 		}
@@ -361,7 +361,7 @@ public class HealthManager
 			if (IsDead) return;
 			if (player != null)
 			{
-				if (player.Inventory.GetItemInHand() is ItemTotemOfUndying || player.Inventory.OffHandInventory.GetItem() is ItemTotemOfUndying)
+				if (player.Inventory.GetItemInHand() is ItemTotemOfUndying || player.Inventory.OffHand is ItemTotemOfUndying)
 				{
 					Health = 2;
 
@@ -381,7 +381,7 @@ public class HealthManager
 					}
 					else
 					{
-						player.Inventory.OffHandInventory.SetItem(new ItemAir());
+						player.Inventory.OffHand = new ItemAir();
 						player.SendPlayerInventory();
 					}
 					return;
@@ -553,57 +553,42 @@ public class HealthManager
 
 	public bool IsInWater(PlayerLocation playerPosition)
 	{
-		if (playerPosition.Y is < 0 or > 255) return false;
-
+		if (playerPosition.Y < 0 || playerPosition.Y > 255) return false;
 		float y = playerPosition.Y + 1.62f;
-
 		var waterPos = new BlockCoordinates
 		{
 			X = (int) Math.Floor(playerPosition.X),
 			Y = (int) Math.Floor(y),
 			Z = (int) Math.Floor(playerPosition.Z)
 		};
-
 		Block block = Entity.Level.GetBlock(waterPos);
-
-		if (block == null || (block.Id != 8 && block.Id != 9)) return false;
-
+		if (block == null || (block is not Water && block is not FlowingWater)) return false;
 		return y < Math.Floor(y) + 1 - ((1f / 9f) - 0.1111111);
 	}
 
 	public bool IsStandingInWater(PlayerLocation playerPosition)
 	{
 		if (playerPosition.Y is < 0 or > 255) return false;
-
 		Block block = Entity.Level.GetBlock(playerPosition);
-
-		if (block == null || (block.Id != 8 && block.Id != 9)) return false;
-
+		if (block == null || (block is not Water && block is not FlowingWater)) return false;
 		return playerPosition.Y < Math.Floor(playerPosition.Y) + 1 - ((1f / 9f) - 0.1111111);
 	}
 
 	private bool IsInLava(PlayerLocation playerPosition)
 	{
 		if (playerPosition.Y is < 0 or > 255) return false;
-
 		Block block = Entity.Level.GetBlock(playerPosition);
-
-		if (block == null || (block.Id != 10 && block.Id != 11)) return false;
-
+		if (block == null || (block is not Lava && block is not FlowingLava)) return false;
 		return playerPosition.Y < Math.Floor(playerPosition.Y) + 1 - ((1f / 9f) - 0.1111111);
 	}
 
 	private bool IsInOpaque(PlayerLocation playerPosition)
 	{
-		if (playerPosition.Y is < 0 or > 255) return false;
-
+		if (playerPosition.Y < 0 || playerPosition.Y > 255) return false;
 		var solidPos = (BlockCoordinates) playerPosition;
 		if (Entity.Height >= 1) solidPos.Y += 1;
-
 		Block block = Entity.Level.GetBlock(solidPos);
-
 		if (block == null) return false;
-
 		return !block.IsTransparent;
 	}
 

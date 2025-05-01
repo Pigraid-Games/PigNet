@@ -11,9 +11,9 @@ public abstract class ChestBase : Block
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
 
-	public abstract CardinalDirection CardinalDirection { get; set; }
+	public abstract CardinalDirection Direction { get; set; }
 
-	public ChestBase()
+	protected ChestBase()
 	{
 		FuelEfficiency = 15;
 		IsTransparent = true;
@@ -21,23 +21,22 @@ public abstract class ChestBase : Block
 		Hardness = 2.5f;
 	}
 
-
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		CardinalDirection = player.KnownPosition.GetDirection();
+		Direction = player.KnownPosition.GetDirection();
 
 		var blockEntity = new ChestBlockEntity
 		{
 			Coordinates = Coordinates
 		};
 
-		foreach (var coords in Coordinates.Get2dAroundCoordinates())
+		foreach (BlockCoordinates coords in Coordinates.Get2dAroundCoordinates())
 		{
 			Block pairBlock = world.GetBlock(coords);
 
 			if (pairBlock is not ChestBase chest
 				|| pairBlock.Id != Id
-				|| CardinalDirection != chest.CardinalDirection) continue;
+				|| Direction != chest.Direction) continue;
 			BlockEntity pairBlockEntity = world.GetBlockEntity(coords);
 
 			if (pairBlockEntity is not ChestBlockEntity pairChestBlockEntity
@@ -57,6 +56,7 @@ public abstract class ChestBase : Block
 	{
 		Log.Debug($"Opening chest inventory at {blockCoordinates}");
 		player.OpenInventory(blockCoordinates);
+
 		return true;
 	}
 }

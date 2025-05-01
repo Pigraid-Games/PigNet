@@ -1,30 +1,6 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Numerics;
+using log4net;
 using PigNet.Entities;
 using PigNet.Entities.Hostile;
 using PigNet.Entities.Passive;
@@ -33,24 +9,48 @@ using PigNet.Worlds;
 
 namespace PigNet.Items;
 
-public class ItemSpawnEgg : Item
+public partial class ItemSpawnEgg
 {
-	public ItemSpawnEgg(EntityType type) : this((short) type)
+	public ItemSpawnEgg()
 	{
 	}
 
-	public ItemSpawnEgg(short metadata) : base("minecraft:spawn_egg", 383, metadata)
+	public ItemSpawnEgg(EntityType entityType) : base(entityType)
 	{
-		MaxStackSize = 1;
 	}
 
-	public override void PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
+		return SpawnMob((EntityType) Metadata, world, player, blockCoordinates, face);
+	}
+}
+
+public abstract class ItemSpawnEggBase : Item
+{
+	private static readonly ILog Log = LogManager.GetLogger(typeof(ItemSpawnEgg));
+
+	protected ItemSpawnEggBase(EntityType entityType)
+	{
+		Metadata = (short) entityType;
+	}
+
+	public ItemSpawnEggBase()
+	{
+	}
+
+	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
+	{
+		return SpawnMob(EntityHelpers.ToEntityType(Id.Replace("_spawn_egg", "")), world, player, blockCoordinates, face);
+	}
+
+	protected bool SpawnMob(EntityType type, Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face)
+	{
+		Log.WarnFormat("Player {0} trying to spawn Mob #{1}.", player.Username, Metadata);
+
 		BlockCoordinates coordinates = GetNewCoordinatesFromFace(blockCoordinates, face);
 
 		Mob mob = null;
 
-		var type = (EntityType) Metadata;
 		switch (type)
 		{
 			case EntityType.Chicken:
@@ -66,11 +66,7 @@ public class ItemSpawnEgg : Item
 				mob = new Sheep(world);
 				break;
 			case EntityType.Wolf:
-				mob = new Wolf(world)
-				{
-					Owner = player,
-					IsBaby = GetRandomBool()
-				};
+				mob = new Wolf(world) { Owner = player };
 				break;
 			case EntityType.Villager:
 				mob = new Villager(world);
@@ -186,21 +182,19 @@ public class ItemSpawnEgg : Item
 				break;
 		}
 
-		if (mob == null) return;
+		if (mob == null) return false;
 
-		mob.KnownPosition = new PlayerLocation(coordinates.X, coordinates.Y, coordinates.Z);
+		mob.KnownPosition = new PlayerLocation(coordinates.X, coordinates.Y, coordinates.Z) + new Vector3(0.5f, 0, 0.5f);
 		mob.NoAi = true;
 		mob.SpawnEntity();
 
-		if (player.GameMode != GameMode.Survival) return;
+		Log.WarnFormat("Player {0} spawned Mob #{1}.", player.Username, Metadata);
+
+		if (player.GameMode != GameMode.Survival) return true;
 		Item itemInHand = player.Inventory.GetItemInHand();
 		itemInHand.Count--;
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand);
-	}
 
-	public static bool GetRandomBool()
-	{
-		var random = new Random();
-		return random.Next(2) == 0;
+		return true;
 	}
 }

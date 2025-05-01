@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class EndStone : Block
+public partial class EndStone
 {
 	public EndStone()
 	{

@@ -1,4 +1,5 @@
-﻿using PigNet.Items;
+﻿using System.Linq;
+using PigNet.Items;
 
 namespace PigNet.Net.Crafting;
 

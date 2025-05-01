@@ -8,9 +8,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using fNbt;
+using fNbt.Serialization;
 using log4net;
-using PigNet.Net;
-using PigNet.Utils.Nbt;
+using PigNet.BlockEntities;
 using PigNet.Blocks;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils.IO;
@@ -20,27 +20,28 @@ namespace PigNet.Worlds;
 
 public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 {
-	public const int WorldHeight = 256;
+	public const int WorldHeight = 384;
 	public const int WorldMaxY = WorldHeight + WorldMinY;
-	public const int WorldMinY = 0;
+	public const int WorldMinY = -64;
 
 	private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkColumn));
 
-	private readonly Random random = new();
 	private McpeWrapper _cachedBatch;
 	private object _cacheSync = new();
+	internal short[] _height;
 
-	private SubChunk[] _subChunks = new SubChunk[WorldHeight / 16];
+	private readonly SubChunkFactory _subChunkFactory;
+	private SubChunk[] _subChunks = new SubChunk[WorldHeight >> 4];
 
-	public byte[] biomeId;
-	public short[] height;
-
-	public ChunkColumn(bool clearBuffers = true)
+	public ChunkColumn() : this((x, z, i) => new SubChunk(x, z, i))
 	{
-		biomeId = ArrayPool<byte>.Shared.Rent(256);
-		height = ArrayPool<short>.Shared.Rent(256);
+	}
 
-		if (clearBuffers) ClearBuffers();
+	public ChunkColumn(SubChunkFactory subChunkFactory)
+	{
+		_subChunkFactory = subChunkFactory;
+
+		_height = ArrayPool<short>.Shared.Rent(256);
 
 		IsDirty = false;
 	}
@@ -48,10 +49,14 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	public int X { get; set; }
 	public int Z { get; set; }
 
+	public Dimension Dimension { get; set; } = Dimension.Overworld;
+
 	public bool IsAllAir { get; set; }
 
-	//TODO: This dictionary need to be concurrent. Investigate performance before changing.
-	public IDictionary<BlockCoordinates, NbtCompound> BlockEntities { get; private set; } = new Dictionary<BlockCoordinates, NbtCompound>();
+	//TODO: This dictionaries need to be concurrent. Investigate performance before changing.
+	public IDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; private set; } = new Dictionary<BlockCoordinates, BlockEntity>();
+
+	public int Length => _subChunks.Length;
 
 	// Cache related. Should actually all be private, but well
 	public bool IsDirty { get; set; }
@@ -59,15 +64,16 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 
 	public bool DisableCache { get; set; }
 
-
 	public SubChunk this[int chunkIndex, bool generateIfMissing = true]
 	{
 		get
 		{
 			SubChunk subChunk = _subChunks[chunkIndex];
-			if (!generateIfMissing || subChunk != null) return subChunk;
-			subChunk = SubChunk.CreateObject();
-			_subChunks[chunkIndex] = subChunk;
+			if (generateIfMissing && subChunk == null)
+			{
+				subChunk = _subChunkFactory(X, Z, chunkIndex);
+				_subChunks[chunkIndex] = subChunk;
+			}
 			return subChunk;
 		}
 		set => _subChunks[chunkIndex] = value;
@@ -80,18 +86,20 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		cc._subChunks = new SubChunk[_subChunks.Length];
 		for (int i = 0; i < _subChunks.Length; i++) cc._subChunks[i] = (SubChunk) _subChunks[i]?.Clone();
 
-		cc.biomeId = (byte[]) biomeId.Clone();
-		cc.height = (short[]) height.Clone();
+		cc._height = (short[]) _height.Clone();
 
-		cc.BlockEntities = new Dictionary<BlockCoordinates, NbtCompound>();
-		foreach (KeyValuePair<BlockCoordinates, NbtCompound> blockEntityPair in BlockEntities) cc.BlockEntities.TryAdd(blockEntityPair.Key, (NbtCompound) blockEntityPair.Value.Clone());
+		cc.BlockEntities = new Dictionary<BlockCoordinates, BlockEntity>();
+		foreach (KeyValuePair<BlockCoordinates, BlockEntity> blockEntityPair in BlockEntities) cc.BlockEntities.Add(blockEntityPair.Key, (BlockEntity) blockEntityPair.Value.Clone());
 
-		McpeWrapper batch = McpeWrapper.CreateObject();
-		batch.payload = _cachedBatch.payload;
-		batch.Encode();
-		batch.MarkPermanent();
+		if (_cachedBatch != null)
+		{
+			McpeWrapper batch = McpeWrapper.CreateObject();
+			batch.payload = _cachedBatch.payload;
+			batch.Encode();
+			batch.MarkPermanent();
 
-		cc._cachedBatch = batch;
+			cc._cachedBatch = batch;
+		}
 
 		cc._cacheSync = new object();
 
@@ -114,21 +122,15 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		return GetEnumerator();
 	}
 
-	private void ClearBuffers()
-	{
-		Array.Clear(biomeId, 0, 256);
-		Fill<byte>(biomeId, 1);
-	}
-
-	private void SetDirty()
-	{
-		IsDirty = true;
-		NeedSave = true;
-	}
-
 	public int Count()
 	{
 		return _subChunks.Count(s => s != null);
+	}
+
+	public void SetDirty()
+	{
+		IsDirty = true;
+		NeedSave = true;
 	}
 
 	public SubChunk GetSubChunk(int by)
@@ -139,10 +141,10 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		return this[Math.Clamp(by, 0, _subChunks.Length - 1)];
 	}
 
-	public int GetBlockId(int bx, int by, int bz)
+	public int GetBlockRuntimeId(int bx, int by, int bz)
 	{
 		SubChunk subChunk = GetSubChunk(by);
-		return subChunk.GetBlockId(bx, by & 0xf, bz);
+		return subChunk.GetBlockRuntimeId(bx, by & 0xf, bz);
 	}
 
 	public Block GetBlockObject(int bx, int by, int bz)
@@ -167,24 +169,26 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 
 	public void SetHeight(int bx, int bz, short h)
 	{
-		height[(bz << 4) + bx] = h;
+		_height[(bz << 4) + bx] = (short) (h - WorldMinY);
 		SetDirty();
 	}
 
 	public short GetHeight(int bx, int bz)
 	{
-		return height[(bz << 4) + bx];
+		return (short) (_height[(bz << 4) + bx] + WorldMinY);
 	}
 
-	public void SetBiome(int bx, int bz, byte biome)
+	public void SetBiome(int bx, int by, int bz, byte biome)
 	{
-		biomeId[(bz << 4) + bx] = biome;
+		SubChunk subChunk = GetSubChunk(by);
+		subChunk.SetBiome(bx, by & 0xf, bz, biome);
 		SetDirty();
 	}
 
-	public byte GetBiome(int bx, int bz)
+	public byte GetBiome(int bx, int by, int bz)
 	{
-		return biomeId[(bz << 4) + bx];
+		SubChunk subChunk = GetSubChunk(by);
+		return subChunk.GetBiome(bx, by & 0xf, bz);
 	}
 
 	public byte GetBlocklight(int bx, int by, int bz)
@@ -211,24 +215,36 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		subChunk.SetSkylight(bx, by & 0xf, bz, data);
 	}
 
-	public NbtCompound GetBlockEntity(BlockCoordinates coordinates)
+	public BlockEntity GetBlockEntity(BlockCoordinates coordinates)
 	{
-		BlockEntities.TryGetValue(coordinates, out NbtCompound nbt);
+		BlockEntities.TryGetValue(coordinates, out BlockEntity blockEntity);
 
-		// High cost clone. Consider alternative options on this.
-		return (NbtCompound) nbt?.Clone();
+		return blockEntity;
 	}
 
-	public void SetBlockEntity(BlockCoordinates coordinates, NbtCompound nbt)
+	public void SetBlockEntity(BlockEntity blockEntity)
 	{
-		var blockEntity = (NbtCompound) nbt.Clone();
-		BlockEntities[coordinates] = blockEntity;
+		BlockEntities[blockEntity.Coordinates] = blockEntity;
+
 		SetDirty();
+	}
+
+	public BlockEntity UpdateBlockEntity(BlockCoordinates coordinates, NbtCompound tag)
+	{
+		if (BlockEntities.TryGetValue(coordinates, out BlockEntity blockEntity))
+		{
+			blockEntity.SetCompound(tag);
+
+			SetDirty();
+		}
+
+		return blockEntity;
 	}
 
 	public void RemoveBlockEntity(BlockCoordinates coordinates)
 	{
 		BlockEntities.Remove(coordinates);
+
 		SetDirty();
 	}
 
@@ -266,51 +282,6 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 		b /= aColors.Length;
 
 		return Color.FromArgb(r, g, b);
-	}
-
-	private void InterpolateBiomes()
-	{
-		for (int bx = 0; bx < 16; bx++)
-		for (int bz = 0; bz < 16; bz++)
-		{
-			Color c = CombineColors(
-				GetBiomeColor(bx, bz),
-				GetBiomeColor(bx - 1, bz - 1),
-				GetBiomeColor(bx - 1, bz),
-				GetBiomeColor(bx, bz - 1),
-				GetBiomeColor(bx + 1, bz + 1),
-				GetBiomeColor(bx + 1, bz),
-				GetBiomeColor(bx, bz + 1),
-				GetBiomeColor(bx - 1, bz + 1),
-				GetBiomeColor(bx + 1, bz - 1)
-			);
-			//SetBiomeColor(bx, bz, c.ToArgb());
-		}
-
-		//SetBiomeColor(0, 0, Color.GreenYellow.ToArgb());
-		//SetBiomeColor(0, 15, Color.Blue.ToArgb());
-		//SetBiomeColor(15, 0, Color.Red.ToArgb());
-		//SetBiomeColor(15, 15, Color.Yellow.ToArgb());
-	}
-
-	private Color GetBiomeColor(int bx, int bz)
-	{
-		if (bx < 0) bx = 0;
-		if (bz < 0) bz = 0;
-		if (bx > 15) bx = 15;
-		if (bz > 15) bz = 15;
-
-		var utils = new BiomeUtils();
-		byte biome = GetBiome(bx, bz);
-		int color = utils.ComputeBiomeColor(biome, 0, true);
-
-		if (random.Next(30) == 0)
-		{
-			var col = Color.FromArgb(color);
-			color = Color.FromArgb(0, Math.Max(0, col.R - 160), Math.Max(0, col.G - 160), Math.Max(0, col.B - 160)).ToArgb();
-		}
-
-		return Color.FromArgb(color);
 	}
 
 	public static unsafe void FastFill<T>(ref T[] data, T value2, ulong value) where T : unmanaged
@@ -353,6 +324,12 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	{
 		if (destinationArray == null) throw new ArgumentNullException(nameof(destinationArray));
 
+		if (destinationArray.Length == 1 && value.Length == 1)
+		{
+			destinationArray[0] = value[0];
+			return;
+		}
+
 		if (value.Length >= destinationArray.Length) throw new ArgumentException("Length of value array must be less than length of destination");
 
 		// set the initial array value
@@ -375,10 +352,10 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 
 	public void RecalcHeight(int x, int z, int startY = WorldMaxY)
 	{
+		//TODO - rework
+
 		bool isInLight = true;
 		bool isInAir = true;
-		int warnCount = 0;
-		const int maxWarns = 5;
 
 		for (int y = startY; y >= 0; y--)
 			if (isInLight)
@@ -386,33 +363,15 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 				SubChunk chunk = GetSubChunk(y);
 				if (isInAir && chunk.IsAllAir())
 				{
-					if (chunk.IsDirty)
-						Array.Fill<byte>(chunk._skylight.Data, 0xff);
+					//if (chunk.IsDirty) Array.Fill<byte>(chunk.SkyLight.Data, 0xff);
 					y -= 15;
 					continue;
 				}
 
 				isInAir = false;
 
-				int bid = GetBlockId(x, y, z);
-
-				if (bid < 0 || bid >= BlockFactory.TransparentBlocks.Count || !BlockFactory.TransparentBlocks.ContainsKey(bid))
-				{
-					if (++warnCount >= maxWarns)
-					{
-						Log.Error($"Too many missing block warnings (ID {bid}) at ({x}, {y}, {z}). Stopping recalculation.");
-						break;
-					}
-
-					if (bid != 0)
-					{
-						SetHeight(x, z, (short) (y + 1));
-						SetSkyLight(x, y, z, 0);
-						isInLight = false;
-					}
-					continue;
-				}
-
+				int bid = GetBlockRuntimeId(x, y, z);
+				if (bid < 0 || bid >= BlockFactory.TransparentBlocks.Length) Log.Warn($"{bid}");
 				if (bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 30 && bid != 8 && bid != 9))
 					SetSkyLight(x, y, z, 15);
 				else
@@ -430,32 +389,22 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	{
 		bool isInAir = true;
 
-		try
+		for (int y = WorldHeight; y >= WorldMinY; y--)
 		{
-			for (int y = WorldHeight; y >= WorldMinY; y--)
+			SubChunk chunk = GetSubChunk(y);
+			if (isInAir && chunk.IsAllAir())
 			{
-				SubChunk chunk = GetSubChunk(y);
-				if (chunk == null) continue;
-
-				if (isInAir && chunk.IsAllAir())
-				{
-					if (chunk.IsDirty && chunk._skylight?.Data != null) Array.Fill<byte>(chunk._skylight.Data, 0xff);
-					y -= 15;
-					continue;
-				}
-
-				isInAir = false;
-
-				int bid = GetBlockId(x, y, z);
-				if (bid == 0 || (BlockFactory.TransparentBlocks?.Count > bid && BlockFactory.TransparentBlocks![bid] == 1 && bid != 18 && bid != 30))
-					continue;
-
-				return y + 1;
+				//if (chunk.IsDirty) Array.Fill<byte>(chunk.SkyLight.Data, 0xff);
+				y -= 15;
+				continue;
 			}
-		}
-		catch (Exception ex)
-		{
-			Log.Error($"Error in GetRecalatedHeight: {ex.Message}", ex);
+
+			isInAir = false;
+
+			int bid = GetBlockRuntimeId(x, y, z);
+			if (bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 30)) continue;
+
+			return y + 1;
 		}
 
 		return 0;
@@ -490,7 +439,8 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 			fullChunkPacket.subChunkRequestMode = SubChunkRequestMode.SubChunkRequestModeLegacy;
 			fullChunkPacket.chunkX = X;
 			fullChunkPacket.chunkZ = Z;
-			fullChunkPacket.subChunkCount = (uint) topEmpty + 4;
+			fullChunkPacket.dimension = (int) Dimension;
+			fullChunkPacket.subChunkCount = (uint) topEmpty;
 			fullChunkPacket.chunkData = chunkData;
 			byte[] bytes = fullChunkPacket.Encode();
 			fullChunkPacket.PutPool();
@@ -510,56 +460,36 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	{
 		using var stream = new MemoryStream();
 
-		for (int i = 0; i < 4; i++) //fill up negative chunks to support world format
-		{
-			stream.WriteByte(8);
-			stream.WriteByte(0); // empty
-		}
-
 		for (int ci = 0; ci < topEmpty; ci++) this[ci].Write(stream);
 
-		byte[] biomePalette = GetBiomePalette(biomeId);
-		stream.Write(biomePalette, 0, biomePalette.Length);
+		WriteBiomePalette(stream);
 
 		stream.WriteByte(0); // Border blocks - nope (EDU)
 
-		if (BlockEntities.Count == 0) return stream.ToArray();
-		foreach (NbtCompound blockEntity in BlockEntities.Values.ToArray())
-		{
-			var file = new NbtFile(blockEntity)
-			{
-				BigEndian = false,
-				UseVarInt = true
-			};
-			file.SaveToStream(stream, NbtCompression.None);
-		}
+		if (BlockEntities.Any())
+			foreach (BlockEntity blockEntity in BlockEntities.Values.ToArray())
+				NbtSerializer.Write(blockEntity, stream, new NbtSerializerSettings { Flavor = NbtFlavor.Bedrock });
 
 		return stream.ToArray();
 	}
 
-	private byte[] GetBiomePalette(byte[] biomes)
+	private void WriteBiomePalette(MemoryStream stream)
 	{
-		for (int b = 0; b < biomes.Length; b++)
-			if (biomes[b] == 255)
-				biomes[b] = 0;
-		using var stream = new MemoryStream();
-
-		var uniqueBiomes = biomes.Distinct().Select(x => (int) x).ToList();
-
-		short[] newBiomes = new short[16 * 16 * 16];
-		for (int x = 0; x < 16; x++)
-		for (int z = 0; z < 16; z++)
+		for (int i = 0; i < 24; i++)
 		{
-			int currentBiome = biomes[(z << 4) + x];
+			SubChunk subChunk = this[i];
 
-			for (int y = 0; y < 16; y++)
-				//var index = ((y >> 2) << 4) | ((z >> 2) << 2) | (x >> 2);
-				newBiomes[(x << 8) | (z << 4) | y] = (short) uniqueBiomes.IndexOf(currentBiome);
+			if (subChunk == null || (subChunk.Biomes.Palette.Count == 1 && subChunk.Biomes.Palette.First() == 0))
+			{
+				// full plants
+				stream.WriteByte(1);
+				stream.WriteByte(0);
+
+				continue;
+			}
+
+			subChunk.Biomes.WriteToStream(stream);
 		}
-
-		for (int i = 0; i < 24; i++) SubChunk.WriteStore(stream, newBiomes, null, false, uniqueBiomes);
-
-		return stream.ToArray();
 	}
 
 
@@ -572,7 +502,7 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 			if (_subChunks[ci] == null || _subChunks[ci].IsAllAir())
 			{
 				topEmpty = ci;
-				_subChunks[ci]?.PutPool();
+				_subChunks[ci]?.Dispose();
 				_subChunks[ci] = null;
 			}
 			else
@@ -583,10 +513,8 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	private void Dispose(bool disposing)
 	{
 		if (disposing)
-		{
-			if (biomeId != null) ArrayPool<byte>.Shared.Return(biomeId);
-			if (height != null) ArrayPool<short>.Shared.Return(height);
-		}
+			if (_height != null)
+				ArrayPool<short>.Shared.Return(_height);
 	}
 
 	~ChunkColumn()
@@ -595,21 +523,4 @@ public class ChunkColumn : ICloneable, IEnumerable<SubChunk>, IDisposable
 	}
 }
 
-public static class ArrayOf<T> where T : new()
-{
-	public static T[] Create(int size, T initialValue)
-	{
-		var array = (T[]) Array.CreateInstance(typeof(T), size);
-		for (int i = 0; i < array.Length; i++)
-			array[i] = initialValue;
-		return array;
-	}
-
-	public static T[] Create(int size)
-	{
-		var array = (T[]) Array.CreateInstance(typeof(T), size);
-		for (int i = 0; i < array.Length; i++)
-			array[i] = new T();
-		return array;
-	}
-}
+public delegate SubChunk SubChunkFactory(int x, int z, int index);

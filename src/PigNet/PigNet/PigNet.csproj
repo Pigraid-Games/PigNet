@@ -26,10 +26,17 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Blocks\Data\blockstates.json" />
-    <EmbeddedResource Include="Blocks\Data\block_meta_map.json" />
-    <EmbeddedResource Include="Items\Data\itemstates.json" />
-    <EmbeddedResource Include="Items\Data\item_id_map.json" />
+    <EmbeddedResource Include="Blocks\Data\block_id_to_item_id_map.json" />
+    <EmbeddedResource Include="Blocks\Data\canonical_block_states.nbt" />
+    <EmbeddedResource Include="Blocks\Data\r12_to_current_block_map.bin" />
+    <EmbeddedResource Include="Crafting\Data\shaped_chemistry_asymmetric.json" />
+    <EmbeddedResource Include="Crafting\Data\shaped_crafting.json" />
+    <EmbeddedResource Include="Crafting\Data\shapeless_crafting.json" />
+    <EmbeddedResource Include="Crafting\Data\shapeless_shulker_box.json" />
+    <EmbeddedResource Include="Crafting\Data\smelting.json" />
+    <EmbeddedResource Include="Worlds\Data\biome_definitions.nbt" />
+    <EmbeddedResource Include="Worlds\Data\biome_definitions_full.nbt" />
+    <EmbeddedResource Include="Worlds\Data\biome_id_map.json" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CRPE-MiNET.fNbt" Version="1.0.21" />
@@ -41,12 +48,17 @@
     <PackageReference Include="MiNET.astar" Version="1.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+    <PackageReference Include="SharpAvi" Version="3.0.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.5" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-preview.2.25163.2" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Crafting\Data\shaped_chemistry_asymmetric.json" />
     <None Remove="Net\MCPE Protocol.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Crafting\Data\shapeless_chemistry.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\LICENSE">
@@ -79,10 +91,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>MCPE Protocol.tt</DependentUpon>
     </Compile>
-    <Compile Remove="Net\McpeCommandBlockUpdate.cs" />
-    <Compile Remove="Net\McpeAvailableCommands.cs" />
-    <Compile Remove="Net\McpeMoveEntityDelta.cs" />
-    <Compile Remove="Net\McpeCommandOutput.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Net\Items\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj" />

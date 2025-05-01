@@ -127,13 +127,13 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 		{
 			var destination = new MemoryStream(buffer);
 			destination.Position = 0;
-			NbtBinaryReader reader = new NbtBinaryReader(destination, false);
+			var reader = new NbtBinaryReader(destination, NbtFlavor.BedrockNoVarInt);
 
-			var countCertData = reader.ReadInt32();
+			int countCertData = reader.ReadInt32();
 			certificateChain = Encoding.UTF8.GetString(reader.ReadBytes(countCertData));
 			if (Log.IsDebugEnabled) Log.Debug($"Certificate Chain (Lenght={countCertData})\n{certificateChain}");
 
-			var countSkinData = reader.ReadInt32();
+			int countSkinData = reader.ReadInt32();
 			skinData = Encoding.UTF8.GetString(reader.ReadBytes(countSkinData));
 			if (Log.IsDebugEnabled) Log.Debug($"Skin data (Lenght={countSkinData})\n{skinData}");
 		}

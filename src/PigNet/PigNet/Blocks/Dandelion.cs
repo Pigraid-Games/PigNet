@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Dandelion : Block
+public partial class Dandelion
 {
 	public Dandelion()
 	{

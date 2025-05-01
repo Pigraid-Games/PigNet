@@ -25,63 +25,113 @@
 
 using System;
 using System.Collections.Generic;
+using log4net;
 using PigNet.Blocks;
 using PigNet.Utils.Vectors;
+using PigNet.Worlds.Anvil;
 
 namespace PigNet.Worlds;
 
-public static class BlockLightCalculations
+public class BlockLightCalculations
 {
+	private static readonly ILog Log = LogManager.GetLogger(typeof(BlockLightCalculations));
+
 	public static void Calculate(Level level, BlockCoordinates blockCoordinates)
 	{
-		Queue<BlockCoordinates> lightBfsQueue = new();
-		lightBfsQueue.Enqueue(blockCoordinates);
+		//Interlocked.Add(ref touches, 1);
 
-		while (lightBfsQueue.Count > 0) ProcessNode(level, lightBfsQueue.Dequeue(), lightBfsQueue);
+		Queue<BlockCoordinates> lightBfsQueue = new Queue<BlockCoordinates>();
+
+		lightBfsQueue.Enqueue(blockCoordinates);
+		while (lightBfsQueue.Count > 0)
+		{
+			ProcessNode(level, lightBfsQueue.Dequeue(), lightBfsQueue);
+		}
 	}
 
 	private static void ProcessNode(Level level, BlockCoordinates coord, Queue<BlockCoordinates> lightBfsQueue)
 	{
+		//Log.Debug($"Setting light on block {block.Id} with LightLevel={block.LightLevel} and BlockLight={block.Blocklight}");
 		ChunkColumn chunk = GetChunk(level, coord);
 		if (chunk == null) return;
 
 		int lightLevel = chunk.GetBlocklight(coord.X & 0x0f, coord.Y, coord.Z & 0x0f);
 
-		Span<BlockCoordinates> neighbors = stackalloc BlockCoordinates[6] { coord.BlockUp(), coord.BlockDown(), coord.BlockWest(), coord.BlockEast(), coord.BlockSouth(), coord.BlockNorth() };
+		Test(level, coord, coord.BlockUp(), lightBfsQueue, chunk, lightLevel);
+		Test(level, coord, coord.BlockDown(), lightBfsQueue, chunk, lightLevel);
+		Test(level, coord, coord.BlockWest(), lightBfsQueue, chunk, lightLevel);
+		Test(level, coord, coord.BlockEast(), lightBfsQueue, chunk, lightLevel);
+		Test(level, coord, coord.BlockSouth(), lightBfsQueue, chunk, lightLevel);
+		Test(level, coord, coord.BlockNorth(), lightBfsQueue, chunk, lightLevel);
 
-		foreach (BlockCoordinates neighbor in neighbors) Test(level, neighbor, lightBfsQueue, chunk, lightLevel);
+		//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.Down, chunk), lightLevel);
+		//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.West, chunk), lightLevel);
+		//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.East, chunk), lightLevel);
+		//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.South, chunk), lightLevel);
+		//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.North, chunk), lightLevel);
 	}
 
 	private static ChunkColumn GetChunk(Level level, BlockCoordinates blockCoordinates)
 	{
-		return (level.WorldProvider as AnvilWorldProvider)?._chunkCache.GetValueOrDefault((ChunkCoordinates) blockCoordinates);
+		AnvilWorldProvider provider = level.WorldProvider as AnvilWorldProvider;
+		if (provider != null)
+		{
+			ChunkColumn chunk;
+			provider._chunkCache.TryGetValue((ChunkCoordinates) blockCoordinates, out chunk);
+
+			return chunk;
+		}
+
+		return null;
 	}
 
-	private static void Test(Level level, BlockCoordinates newCoord, Queue<BlockCoordinates> lightBfsQueue, ChunkColumn chunk, int lightLevel)
+	public static long touches = 0;
+
+	private static void Test(Level level, BlockCoordinates coord, BlockCoordinates newCoord, Queue<BlockCoordinates> lightBfsQueue, ChunkColumn chunk, int lightLevel)
 	{
+		//Interlocked.Add(ref touches, 1);
+
 		var newChunkCoord = (ChunkCoordinates) newCoord;
-		if (chunk.X != newChunkCoord.X || chunk.Z != newChunkCoord.Z) chunk = GetChunk(level, newCoord);
+		if (chunk.X != newChunkCoord.X || chunk.Z != newChunkCoord.Z)
+		{
+			chunk = GetChunk(level, newCoord);
+		}
 
 		if (chunk == null) return;
 
-		if (chunk.GetBlockId(newCoord.X & 0x0f, newCoord.Y, newCoord.Z & 0x0f) == 0)
+		if (BlockFactory.IsBlock<Air>(chunk.GetBlockRuntimeId(newCoord.X & 0x0f, newCoord.Y, newCoord.Z & 0x0f)))
+		{
 			SetLightLevel(chunk, lightBfsQueue, newCoord, lightLevel);
+		}
 		else
-			SetLightLevel(chunk, lightBfsQueue, level.GetBlock(newCoord, chunk), lightLevel);
+		{
+			//if (BlockFactory.LuminousBlocks.ContainsKey(chunk.GetBlocklight(newCoord.X & 0x0f, newCoord.Y, newCoord.Z & 0x0f)))
+			//{
+			//}
+			//else
+			{
+				SetLightLevel(chunk, lightBfsQueue, level.GetBlock(newCoord, chunk), lightLevel);
+			}
+		}
 	}
 
 	private static void SetLightLevel(ChunkColumn chunk, Queue<BlockCoordinates> lightBfsQueue, Block b1, int lightLevel)
 	{
-		if (b1.LightLevel > 0 && b1.LightLevel < lightLevel)
+		if (b1.LightLevel > 0)
 		{
+			if (b1.LightLevel >= lightLevel)
+			{
+				return;
+			}
+
 			b1.BlockLight = (byte) Math.Max(b1.LightLevel, lightLevel - 1);
-			chunk.SetBlocklight(b1.Coordinates.X & 0x0f, b1.Coordinates.Y, b1.Coordinates.Z & 0x0f, b1.BlockLight);
+			chunk.SetBlocklight(b1.Coordinates.X & 0x0f, b1.Coordinates.Y, b1.Coordinates.Z & 0x0f, (byte) b1.BlockLight);
 		}
 
 		if ((!b1.IsSolid || b1.IsTransparent) && b1.BlockLight + 2 <= lightLevel)
 		{
 			b1.BlockLight = (byte) (lightLevel - 1);
-			chunk.SetBlocklight(b1.Coordinates.X & 0x0f, b1.Coordinates.Y, b1.Coordinates.Z & 0x0f, b1.BlockLight);
+			chunk.SetBlocklight(b1.Coordinates.X & 0x0f, b1.Coordinates.Y, b1.Coordinates.Z & 0x0f, (byte) b1.BlockLight);
 			lightBfsQueue.Enqueue(b1.Coordinates);
 		}
 	}

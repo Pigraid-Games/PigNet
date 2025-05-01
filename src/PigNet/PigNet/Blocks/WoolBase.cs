@@ -2,7 +2,7 @@
 
 public abstract class WoolBase : Block
 {
-	public WoolBase()
+	protected WoolBase()
 	{
 		BlastResistance = 4;
 		Hardness = 0.8f;

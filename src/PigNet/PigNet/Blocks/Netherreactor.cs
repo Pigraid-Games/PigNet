@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Netherreactor : Block
+public partial class Netherreactor
 {
 	public Netherreactor()
 	{

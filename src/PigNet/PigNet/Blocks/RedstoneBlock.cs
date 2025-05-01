@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class RedstoneBlock : Block
+public partial class RedstoneBlock
 {
 	public RedstoneBlock()
 	{

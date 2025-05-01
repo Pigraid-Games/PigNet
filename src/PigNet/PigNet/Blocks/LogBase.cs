@@ -9,7 +9,7 @@ public abstract class LogBase : Block
 {
 	public abstract PillarAxis PillarAxis { get; set; }
 
-	public LogBase()
+	protected LogBase()
 	{
 		FuelEfficiency = 15;
 		BlastResistance = 10;

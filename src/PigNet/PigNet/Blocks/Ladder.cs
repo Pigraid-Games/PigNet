@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Ladder : Block
+public partial class Ladder
 {
 	public Ladder()
 	{

@@ -9,14 +9,28 @@ public static class ResourceUtil
 {
 	public static T ReadResource<T>(string filename, Type namespaceProvider = null, string subFolder = null)
 	{
-		namespaceProvider ??= typeof(T);
-			
-		var assembly = Assembly.GetAssembly(namespaceProvider);
+		if (namespaceProvider == null)
+			namespaceProvider = typeof(T);
+
+		var assembly = namespaceProvider.Assembly;
 		string ns = namespaceProvider.Namespace;
 
-		if (!string.IsNullOrWhiteSpace(subFolder)) ns += $".{subFolder}";
-		using Stream stream = assembly.GetManifestResourceStream( ns + $".{filename}");
+		if (!string.IsNullOrWhiteSpace(subFolder))
+		{
+			ns += $".{subFolder}";
+		}
+
+		string resourcePath = $"{ns}.{filename}";
+
+		// Debug: list all embedded resources
+		// Console.WriteLine("Available resources: " + string.Join(", ", assembly.GetManifestResourceNames()));
+
+		var stream = assembly.GetManifestResourceStream(resourcePath);
+		if (stream == null)
+			throw new FileNotFoundException($"Embedded resource not found: '{resourcePath}' in assembly '{assembly.FullName}'");
+
 		using var reader = new StreamReader(stream);
 		return JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
 	}
+
 }

@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using log4net;
 using PigNet.BlockEntities;
 using PigNet.Items;
 using PigNet.Utils.Vectors;
@@ -7,7 +6,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Frame : Block
+public partial class Frame
 {
 	public Frame()
 	{

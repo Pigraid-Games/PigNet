@@ -1,11 +1,10 @@
 ﻿using System;
 using PigNet.Items;
-using PigNet.Items.Food;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class ChorusPlant : Block
+public partial class ChorusPlant
 {
 	public ChorusPlant()
 	{

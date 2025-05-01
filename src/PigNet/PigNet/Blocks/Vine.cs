@@ -1,41 +1,19 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Numerics;
+using log4net;
 using PigNet.Blocks.States;
-using PigNet.Entities;
 using PigNet.Items;
 using PigNet.Particles;
+using PigNet.Utils;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Vine : Block
+public partial class Vine
 {
+	private static readonly ILog Log = LogManager.GetLogger(typeof(Vine));
+
 	public Vine()
 	{
 		IsSolid = false;
@@ -51,7 +29,7 @@ public partial class Vine : Block
 		if (!base.CanPlace(world, player, blockCoordinates, targetCoordinates, face)) return false;
 
 		var onTop = world.GetBlock(Coordinates.BlockUp()) as Vine;
-		if (face == BlockFace.Up || face == BlockFace.Down) return onTop != null;
+		if (face is BlockFace.Up or BlockFace.Down) return onTop != null;
 
 		return CanPlace(world, this, onTop, face.Opposite().ToDirection());
 	}
@@ -60,11 +38,11 @@ public partial class Vine : Block
 	{
 		if (world.GetBlock(Coordinates) is Vine block) VineDirectionBits = block.VineDirectionBits;
 
-		if (face == BlockFace.Up || face == BlockFace.Down)
+		if (face is BlockFace.Up or BlockFace.Down)
 		{
 			bool canPlace = false;
 			var onTop = world.GetBlock(Coordinates.BlockUp()) as Vine;
-			foreach (Entity.Direction direction in Enum.GetValues<Entity.Direction>())
+			foreach (Direction direction in Enum.GetValues<Direction>())
 			{
 				if (VineDirectionBits.HasSide(direction)) continue;
 				if (!CanPlace(world, this, onTop, direction)) continue;
@@ -77,7 +55,7 @@ public partial class Vine : Block
 			if (!canPlace) return true;
 		}
 
-		var vineFace = face.Opposite();
+		BlockFace vineFace = face.Opposite();
 
 		if (VineDirectionBits.HasSide(vineFace)) return true;
 
@@ -86,6 +64,39 @@ public partial class Vine : Block
 		return false;
 	}
 
+	//public override void BreakBlock(Level level, BlockFace face, bool silent = false)
+	//{
+	//	Log.Debug($"Breaking vine face {face}, have direction: {VineDirectionBits}");
+	//	int newValue = GetDirectionBits(level, this);
+	//	switch (face)
+	//	{
+	//		case BlockFace.North:
+	//			newValue &= ~North;
+	//			break;
+	//		case BlockFace.East:
+	//			newValue &= ~East;
+	//			break;
+	//		case BlockFace.South:
+	//			newValue &= ~South;
+	//			break;
+	//		case BlockFace.West:
+	//			newValue &= ~West;
+	//			break;
+	//	}
+	//	Log.Debug($"Breaking vine, new value: {newValue}, old {VineDirectionBits}");
+	//	if (newValue != VineDirectionBits)
+	//	{
+	//		VineDirectionBits = newValue;
+	//		if (VineDirectionBits != 0)
+	//		{
+	//			level.SetBlock(this);
+	//		}
+	//		else
+	//		{
+	//			base.BreakBlock(level, face, silent);
+	//		}
+	//	}
+	//}
 
 	public override void BlockUpdate(Level level, BlockCoordinates blockCoordinates)
 	{
@@ -94,7 +105,8 @@ public partial class Vine : Block
 
 		VineDirectionBits = newValue;
 
-		if (VineDirectionBits == VineDirectionBits.None) level.BreakBlock(null, this);
+		if (VineDirectionBits == VineDirectionBits.None)
+			level.BreakBlock(null, this);
 		else
 		{
 			level.SetBlock(this);
@@ -105,10 +117,10 @@ public partial class Vine : Block
 
 	private static VineDirectionBits GetDirectionBits(Level level, Vine vine)
 	{
-		var newVineDirectionBits = VineDirectionBits.None;
+		VineDirectionBits newVineDirectionBits = VineDirectionBits.None;
 
 		var onTop = level.GetBlock(vine.Coordinates.BlockUp()) as Vine;
-		foreach (Entity.Direction direction in Enum.GetValues<Entity.Direction>())
+		foreach (Direction direction in Enum.GetValues<Direction>())
 		{
 			if (!vine.VineDirectionBits.HasSide(direction)) continue;
 			if (!CanPlace(level, vine, onTop, direction)) continue;
@@ -124,11 +136,10 @@ public partial class Vine : Block
 		return tool.ItemType != ItemType.Sheers ? [] : base.GetDrops(world, tool);
 	}
 
-	private static bool CanPlace(Level level, Vine vine, Vine onTop, Entity.Direction direction)
+	private static bool CanPlace(Level level, Vine vine, Vine onTop, Direction direction)
 	{
 		bool hasSideTop = onTop != null && onTop.VineDirectionBits.HasSide(direction);
 		bool hasFaceBlockSide = level.GetBlock(vine.Coordinates + direction).IsSolid;
-
 		return hasSideTop || hasFaceBlockSide;
 	}
 }

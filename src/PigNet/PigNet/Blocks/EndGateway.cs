@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class EndGateway : Block
+public partial class EndGateway
 {
 	public EndGateway()
 	{

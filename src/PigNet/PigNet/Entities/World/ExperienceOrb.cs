@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using PigNet.Blocks;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Sounds;
@@ -29,7 +29,7 @@ namespace PigNet.Entities.World
 			return new MetadataDictionary
 			{
 				[(int) MetadataFlags.EntityFlags] = new MetadataLong(GetDataValue()),
-				[(int) MetadataFlags.ExperienceValue] = new MetadataShort(xpValue),
+				[(int) MetadataFlags.Value] = new MetadataShort(xpValue),
 			};
 		}
 

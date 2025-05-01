@@ -8,7 +8,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class GrassBlock : Block
+public partial class GrassBlock
 {
 	public GrassBlock()
 	{
@@ -23,25 +23,23 @@ public partial class GrassBlock : Block
 		Block upBlock = level.GetBlock(Coordinates.BlockUp());
 		if (!upBlock.IsTransparent)
 		{
-			var dirt = new Dirt();
-			dirt.Coordinates = Coordinates;
+			var dirt = new Dirt
+			{
+				Coordinates = Coordinates
+			};
 			level.SetBlock(dirt, true, false, false);
 		}
 		else
 		{
 			int lightLevel = level.GetSubtractedLight(Coordinates.BlockUp());
-			if (lightLevel >= 9)
+			if (lightLevel < 9) return;
+			var random = new Random();
+			for (int i = 0; i < 4; i++)
 			{
-				var random = new Random();
-				for (int i = 0; i < 4; i++)
-				{
-					BlockCoordinates coordinates = Coordinates + new BlockCoordinates(random.Next(3) - 1, random.Next(5) - 3, random.Next(3) - 1);
-					if (level.GetBlock(coordinates) is Dirt next)
-					{
-						Block nextUp = level.GetBlock(coordinates.BlockUp());
-						if (nextUp.IsTransparent) level.SetBlock(new GrassBlock { Coordinates = coordinates });
-					}
-				}
+				BlockCoordinates coordinates = Coordinates + new BlockCoordinates(random.Next(3) - 1, random.Next(5) - 3, random.Next(3) - 1);
+				if (level.GetBlock(coordinates) is not Dirt) continue;
+				Block nextUp = level.GetBlock(coordinates.BlockUp());
+				if (nextUp.IsTransparent) level.SetBlock(new GrassBlock { Coordinates = coordinates });
 			}
 		}
 	}
@@ -57,13 +55,6 @@ public partial class GrassBlock : Block
 			// the player must travel to biomes where the flowers are found naturally. See Flower § Flower biomes
 			// for more information.
 			//TODO: Grow grass and flowers randomly
-			var random = new RandomWeighted<int>(new List<RandomRange<int>>
-			{
-				new(0, 216),
-				new(1, 24),
-				new(2, 8),
-				new(3, 8)
-			});
 
 			int grassPlanted = 0;
 			int flowersPlanted = 0;
@@ -138,7 +129,7 @@ public partial class GrassBlock : Block
 							// "poppy",
 							// "cornflower",
 							// "tulip_orange",
-							// "oxeye",
+							// "ox eye",
 							// "orchid")]
 							case 1: // plains
 							{
@@ -186,26 +177,19 @@ public partial class GrassBlock : Block
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new[] { ItemFactory.GetItem<Dirt>() };
+		return [ItemFactory.GetItem<Dirt>()];
 	}
 }
 
-public class RandomWeighted<T>
+public class RandomWeighted<T>(List<RandomRange<T>> items)
 {
-	private readonly List<RandomRange<T>> _items;
-	private readonly Random _random;
-
-	public RandomWeighted(List<RandomRange<T>> items)
-	{
-		_items = items;
-		_random = new Random();
-	}
+	private readonly Random _random = new();
 
 	public T Next()
 	{
-		int targetWeight = _random.Next(_items.Sum(i => i.Weight) + 1);
+		int targetWeight = _random.Next(items.Sum(i => i.Weight) + 1);
 		int currentWeight = 0;
-		foreach (RandomRange<T> range in _items)
+		foreach (RandomRange<T> range in items)
 		{
 			currentWeight += range.Weight;
 

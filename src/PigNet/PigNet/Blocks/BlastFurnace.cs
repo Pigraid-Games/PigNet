@@ -1,8 +1,4 @@
-﻿namespace PigNet.Blocks;
+﻿
+namespace PigNet.Blocks;
 
-public partial class BlastFurnace : BlastFurnaceBase
-{
-	public BlastFurnace()
-	{
-	}
-}
+public partial class BlastFurnace : BlastFurnaceBase;

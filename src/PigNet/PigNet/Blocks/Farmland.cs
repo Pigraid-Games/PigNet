@@ -6,13 +6,13 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Farmland : Block
+public partial class Farmland
 {
 
 	public Farmland()
 	{
 		IsTransparent = true;
-		IsBlockingSkylight = false;.
+		IsBlockingSkylight = false;
 		BlastResistance = 3;
 		Hardness = 0.6f;
 	}

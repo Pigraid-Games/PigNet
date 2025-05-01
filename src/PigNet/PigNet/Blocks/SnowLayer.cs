@@ -1,12 +1,11 @@
 ﻿using System.Numerics;
 using PigNet.Items;
-using PigNet.Items.Weapons;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class SnowLayer : Block
+public partial class SnowLayer
 {
 	public SnowLayer()
 	{

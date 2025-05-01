@@ -1,6 +1,7 @@
 ﻿using fNbt.Serialization;
 using log4net;
 using PigNet.Blocks;
+using PigNet.Inventories;
 using PigNet.Items;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Worlds;
@@ -122,7 +123,7 @@ namespace PigNet.BlockEntities;
 			FurnaceBase newFurnace = lit ? new TLitFurnace() : new TFurnace();
 
 			newFurnace.Coordinates = oldFurnace.Coordinates;
-			newFurnace.CardinalDirection = oldFurnace.CardinalDirection;
+			newFurnace.Direction = oldFurnace.Direction;
 
 			level.SetBlock(newFurnace);
 		}

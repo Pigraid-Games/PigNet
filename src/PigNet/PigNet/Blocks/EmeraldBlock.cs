@@ -1,25 +1,10 @@
-﻿using System;
-using PigNet.Items;
-using PigNet.Worlds;
+﻿namespace PigNet.Blocks;
 
-namespace PigNet.Blocks;
-
-public partial class EmeraldOre : Block
+public partial class EmeraldBlock
 {
-	public EmeraldOre()
+	public EmeraldBlock()
 	{
-		BlastResistance = 15;
-		Hardness = 3;
-	}
-
-	public override Item[] GetDrops(Level world, Item tool)
-	{
-		return tool.ItemMaterial < ItemMaterial.Stone ? [] : [new ItemEmerald()];
-	}
-
-	public override float GetExperiencePoints()
-	{
-		var random = new Random();
-		return random.Next(3, 8);
+		BlastResistance = 30;
+		Hardness = 5;
 	}
 }

@@ -8,7 +8,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Barrel : Block
+public partial class Barrel
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(ChestBase));
 
@@ -21,24 +21,19 @@ public partial class Barrel : Block
 
 	public static bool IsBestTool(Item item)
 	{
-		return item is ItemAxe;
+		return item is ItemAxeBase;
 	}
 
 
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
-		FacingDirection = ItemBlock.GetFacingDirectionFromEntity(player);
-
-		//TODO Berrel entity
-
 		return false;
 	}
 
 
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
-		Log.Debug($"Opening barrel {blockCoordinates}");
-		world.BroadcastSound(new BlockBarrelOpenSound(blockCoordinates));
+		world.BroadcastSound(player.KnownPosition.ToVector3(), LevelSoundEventType.BlockBarrelOpen);
 		return true;
 	}
 }

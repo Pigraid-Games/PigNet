@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class DiamondBlock : Block
+public partial class DiamondBlock
 {
 	public DiamondBlock()
 	{

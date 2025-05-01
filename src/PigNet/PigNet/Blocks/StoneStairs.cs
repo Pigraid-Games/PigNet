@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class StoneStairs : StairsBase
+public partial class StoneStairs
 {
 	public StoneStairs()
 	{

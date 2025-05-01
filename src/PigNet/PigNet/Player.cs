@@ -41,6 +41,7 @@ using Newtonsoft.Json;
 using System.IO.Compression;
 using PigNet.BlockEntities;
 using PigNet.Blocks;
+using PigNet.Blocks.States;
 using PigNet.Crafting;
 using PigNet.Effects;
 using PigNet.Entities;
@@ -511,7 +512,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				if (GameMode == GameMode.Survival)
 				{
 					Block target = Level.GetBlock(message.coordinates);
-					Item[] drops = target.GetDrops(Inventory.GetItemInHand());
+					Item[] drops = target.GetDrops(Level, Inventory.GetItemInHand());
 					float toolTypeFactor = drops == null || drops.Length == 0 ? 5f : 1.5f;
 					double breakTime = Math.Ceiling(target.Hardness * toolTypeFactor * 20);
 
@@ -528,7 +529,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			case PlayerAction.Breaking:
 			{
 				Block target = Level.GetBlock(message.coordinates);
-				int data = target.GetRuntimeId() | ((byte) (message.face << 24));
+				int data = target.RuntimeId | ((byte) (message.face << 24));
 
 				McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
 				breakEvent.eventId = LevelEventType.ParticlesCrackBlock;
@@ -808,38 +809,43 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		SendPacket(packet);
 	}
 
-	private AbilityLayers GetAbilities()
+	public AbilityLayers GetAbilities()
 	{
-		PlayerAbility abilities = 0;
+		var abilities = new Dictionary<PlayerAbility, bool>();
 
-		if (AllowFly || GameMode.AllowsFlying())
+		var mayFly = AllowFly || GameMode.AllowsFlying();
+		abilities.Add(PlayerAbility.MayFly, mayFly);
+		abilities.Add(PlayerAbility.Flying, mayFly && IsFlying);
+
+		abilities.Add(PlayerAbility.NoClip, IsNoClip || IsSpectator || !GameMode.HasCollision());
+		abilities.Add(PlayerAbility.Invulnerable, !GameMode.AllowsTakingDamage());
+		abilities.Add(PlayerAbility.InstantBuild, GameMode.HasCreativeInventory());
+
+		var mayEditWorld = IsWorldBuilder || GameMode.AllowsEditing();
+		abilities.Add(PlayerAbility.Build, mayEditWorld);
+		abilities.Add(PlayerAbility.Mine, mayEditWorld);
+
+		var mayInteract = GameMode.AllowsInteraction() || IsSpectator;
+		abilities.Add(PlayerAbility.DoorsAndSwitches, mayInteract);
+		abilities.Add(PlayerAbility.OpenContainers, mayInteract);
+		abilities.Add(PlayerAbility.AttackPlayers, mayInteract);
+		abilities.Add(PlayerAbility.AttackMobs, mayInteract);
+
+		abilities.Add(PlayerAbility.OperatorCommands, PermissionLevel == PermissionLevel.Operator);
+		abilities.Add(PlayerAbility.Muted, IsMuted);
+
+		var layers = new AbilityLayers()
 		{
-			abilities |= PlayerAbility.MayFly;
-			if (IsFlying) abilities |= PlayerAbility.Flying;
-		}
-
-		if (!GameMode.HasCollision()) abilities |= PlayerAbility.NoClip;
-		if (!GameMode.AllowsTakingDamage()) abilities |= PlayerAbility.Invulnerable;
-		if (GameMode.HasCreativeInventory()) abilities |= PlayerAbility.InstantBuild;
-
-		if (PermissionLevel is PermissionLevel.Operator or PermissionLevel.Member)
-			abilities |= PlayerAbility.Build | PlayerAbility.Mine |
-						PlayerAbility.DoorsAndSwitches | PlayerAbility.OpenContainers |
-						PlayerAbility.AttackPlayers | PlayerAbility.AttackMobs;
-		if (PermissionLevel == PermissionLevel.Operator) abilities |= PlayerAbility.OperatorCommands;
-		if (IsMuted) abilities |= PlayerAbility.Muted;
-
-		var layers = new AbilityLayers();
-		var baseLayer = new AbilityLayer
-		{
-			Type = AbilityLayerType.Base,
-			Abilities = PlayerAbility.All,
-			Values = (uint) abilities,
-			FlySpeed = 0.1f,
-			VerticalFlySpeed = 0.1f
+			new AbilityLayer()
+			{
+				Type = AbilityLayerType.Base,
+				Abilities = abilities,
+				FlySpeed = 0.05f,
+				VerticalFlySpeed = 1f,
+				WalkSpeed = 0.1f
+			}
 		};
 
-		layers.Add(baseLayer);
 		return layers;
 	}
 
@@ -992,13 +998,12 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		{
 			NbtFile = new NbtFile
 			{
-				BigEndian = false,
-				UseVarInt = true,
-				RootTag = BiomeUtils.GenerateDefinitionList(),
+				Flavor = NbtFlavor.Bedrock,
+				RootTag = BiomeUtils.BiomesCache
 			}
 		};
 
-		McpeBiomeDefinitionList pk = McpeBiomeDefinitionList.CreateObject();
+		var pk = McpeBiomeDefinitionList.CreateObject();
 		pk.namedtag = nbt;
 		SendPacket(pk);
 	}
@@ -1065,7 +1070,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		string basePath = Config.GetProperty("LevelDBWorldFolder", "World").Trim();
 		string rDataJson = File.ReadAllText(basePath + "/PlayerData/" + ClientUuid + ".json");
 		PlayerData prDataJson = JsonConvert.DeserializeObject<PlayerData>(rDataJson);
-		for (int i = 0; i < PlayerInventory.InventorySize; i++) pInventoryData.Add(Inventory.Slots[i].Name);
+		for (int i = 0; i < PlayerInventory.InventorySize; i++) pInventoryData.Add(Inventory.Slots[i].Id);
 		prDataJson.Inventory = pInventoryData;
 		File.WriteAllText(basePath + "/PlayerData/" + ClientUuid + ".json", prDataJson.ToString());
 	}
@@ -1116,6 +1121,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		}
 		else
 			Log.Warn($"Unhandled respawn state = {message.state}");
+	}
+	
+	public PlayerLocation GetEyesPosition()
+	{
+		return KnownPosition + new PlayerLocation(0, 1.62f, 0);
 	}
 
 	[Wired]
@@ -1233,7 +1243,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 					{
 						BlockCoordinates coordinates = new BlockCoordinates(x, y, z) + platformPosition + new BlockCoordinates(-2, 0, -2);
 						if (y == 0)
-							Level.SetBlock(new Obsidian() { Coordinates = coordinates });
+							Level.SetBlock(new Obsidian { Coordinates = coordinates });
 						else
 							Level.SetAir(coordinates);
 					}
@@ -1295,41 +1305,54 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	private PlayerLocation FindNetherSpawn(Level level, BlockCoordinates start)
 	{
-		const int width = 128;
+		int width = 128;
 		int height = Level.Dimension == Dimension.Overworld ? 256 : 128;
 
 
-		int portalId = new Portal().Id;
-		int obsidianId = new Obsidian().Id;
+		var portalId = new Portal().Id;
+		var obsidionId = new Obsidian().Id;
 
 		Log.Debug($"Starting point: {start}");
 
 		BlockCoordinates? closestPortal = null;
 		int closestDistance = int.MaxValue;
 		for (int x = start.X - width; x < start.X + width; x++)
-		for (int z = start.Z - width; z < start.Z + width; z++)
 		{
-			if (level.Dimension == Dimension.Overworld) height = level.GetHeight(new BlockCoordinates(x, 0, z)) + 10;
-
-			for (int y = height - 1; y >= 0; y--)
+			for (int z = start.Z - width; z < start.Z + width; z++)
 			{
-				var coordinates = new BlockCoordinates(x, y, z);
-				if (coordinates.DistanceTo(start) > closestDistance) continue;
+				if (level.Dimension == Dimension.Overworld)
+				{
+					height = level.GetHeight(new BlockCoordinates(x, 0, z)) + 10;
+				}
 
-				bool b = level.IsBlock(coordinates, portalId);
-				b &= level.IsBlock(coordinates.BlockDown(), obsidianId);
-				if (!b) continue;
-				var portal = (Portal) level.GetBlock(coordinates);
-				if (portal.PortalAxis == "z")
-					b &= level.IsBlock(coordinates.BlockNorth(), portalId);
-				else
-					b &= level.IsBlock(coordinates.BlockEast(), portalId);
+				for (int y = height - 1; y >= 0; y--)
+				{
+					var coord = new BlockCoordinates(x, y, z);
+					if (coord.DistanceTo(start) > closestDistance) continue;
 
-				Log.Debug($"Found portal block at {coordinates}, axis={portal.PortalAxis}");
-				if (!b || !(coordinates.DistanceTo(start) < closestDistance)) continue;
-				Log.Debug($"Found a closer portal at {coordinates}");
-				closestPortal = coordinates;
-				closestDistance = (int) coordinates.DistanceTo(start);
+					bool b = level.IsBlock(coord, portalId);
+					b &= level.IsBlock(coord.BlockDown(), obsidionId);
+					if (b)
+					{
+						var portal = (Portal) level.GetBlock(coord);
+						if (portal.PortalAxis == PortalAxis.X)
+						{
+							b &= level.IsBlock(coord.BlockNorth(), portalId);
+						}
+						else
+						{
+							b &= level.IsBlock(coord.BlockEast(), portalId);
+						}
+
+						Log.Debug($"Found portal block at {coord}, axis={portal.PortalAxis}");
+						if (b && coord.DistanceTo(start) < closestDistance)
+						{
+							Log.Debug($"Found a closer portal at {coord}");
+							closestPortal = coord;
+							closestDistance = (int) coord.DistanceTo(start);
+						}
+					}
+				}
 			}
 		}
 
@@ -1419,7 +1442,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public static void BuildPortal(Level level, PortalInfo portalInfo)
 	{
-		BoundingBox bbox = portalInfo.Size;
+		var bbox = portalInfo.Size;
 
 		Log.Debug($"Building portal from BBOX: {bbox}");
 
@@ -1433,50 +1456,61 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		bool haveSetCoordinate = false;
 		for (int x = 0; x < width; x++)
-		for (int z = 0; z < depth; z++)
-		for (int y = 0; y < height; y++)
 		{
-			var coordinates = new BlockCoordinates(x + minX, (int) (y + bbox.Min.Y), z + minZ);
-			Log.Debug($"Place: {coordinates}");
-
-			if (width > depth && z == midPoint)
+			for (int z = 0; z < depth; z++)
 			{
-				if ((x == 0 || x == width - 1) || (y == 0 || y == height - 1))
-					level.SetBlock(new Obsidian { Coordinates = coordinates });
-				else
+				for (int y = 0; y < height; y++)
 				{
-					level.SetBlock(new Portal
+					var coordinates = new BlockCoordinates(x + minX, (int) (y + bbox.Min.Y), z + minZ);
+					Log.Debug($"Place: {coordinates}");
+
+					if (width > depth && z == midPoint)
 					{
-						Coordinates = coordinates,
-						PortalAxis = "x"
-					});
-					if (!haveSetCoordinate)
+						if ((x == 0 || x == width - 1) || (y == 0 || y == height - 1))
+						{
+							level.SetBlock(new Obsidian {Coordinates = coordinates});
+						}
+						else
+						{
+							level.SetBlock(new Portal
+							{
+								Coordinates = coordinates,
+								PortalAxis = PortalAxis.X
+							});
+							if (!haveSetCoordinate)
+							{
+								haveSetCoordinate = true;
+								portalInfo.Coordinates = coordinates;
+							}
+						}
+					}
+					else if (width <= depth && x == midPoint)
 					{
-						haveSetCoordinate = true;
-						portalInfo.Coordinates = coordinates;
+						if ((z == 0 || z == depth - 1) || (y == 0 || y == height - 1))
+						{
+							level.SetBlock(new Obsidian {Coordinates = coordinates});
+						}
+						else
+						{
+							level.SetBlock(new Portal
+							{
+								Coordinates = coordinates,
+								PortalAxis = PortalAxis.Z,
+							});
+							if (!haveSetCoordinate)
+							{
+								haveSetCoordinate = true;
+								portalInfo.Coordinates = coordinates;
+							}
+						}
+					}
+
+					if (portalInfo.HasPlatform && y == 0)
+					{
+						level.SetBlock(new Obsidian {Coordinates = coordinates});
 					}
 				}
 			}
-			else if (width <= depth && x == midPoint)
-			{
-				if ((z == 0 || z == depth - 1) || (y == 0 || y == height - 1))
-					level.SetBlock(new Obsidian { Coordinates = coordinates });
-				else
-				{
-					level.SetBlock(new Portal
-					{
-						Coordinates = coordinates,
-						PortalAxis = "z",
-					});
-					if (!haveSetCoordinate)
-					{
-						haveSetCoordinate = true;
-						portalInfo.Coordinates = coordinates;
-					}
-				}
-			}
-
-			if (portalInfo.HasPlatform && y == 0) level.SetBlock(new Obsidian { Coordinates = coordinates });
 		}
 	}
 	
@@ -1610,22 +1644,28 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		SendPacket(mcpeSetDifficulty);
 	}
 
-	// TODO: Move this to the inventory system
 	public void SendPlayerInventory()
 	{
-		// TODO: We need to move the inventoryIds in an enum or something more clean
+
 		McpeInventoryContent inventoryContent = McpeInventoryContent.CreateObject();
-		inventoryContent.inventoryId = 0x00;
+		inventoryContent.inventoryId = (byte) WindowId.Inventory;
 		inventoryContent.slots = Inventory.GetSlots();
+		inventoryContent.fullContainerName = FullContainerName.Unknown;
 		SendPacket(inventoryContent);
 
-		Inventory.ArmorInventory.SendArmorContentPacket(this);
-		Inventory.OffHandInventory.SendUpdate();
+		SendPlayerArmor();
 
 		McpeInventoryContent uiContent = McpeInventoryContent.CreateObject();
-		uiContent.inventoryId = 0x7c;
-		uiContent.slots = Inventory.GetUiSlots();
+		uiContent.inventoryId = (byte) WindowId.UI;
+		uiContent.slots = Inventory.UiInventory.GetSlots();
+		uiContent.fullContainerName = FullContainerName.Unknown;
 		SendPacket(uiContent);
+
+		McpeInventoryContent offHandContent = McpeInventoryContent.CreateObject();
+		offHandContent.inventoryId = (byte) WindowId.Offhand;
+		offHandContent.slots = Inventory.GetOffHand();
+		offHandContent.fullContainerName = FullContainerName.Unknown;
+		SendPacket(offHandContent);
 
 		McpeMobEquipment mobEquipment = McpeMobEquipment.CreateObject();
 		mobEquipment.runtimeActorId = EntityManager.EntityIdSelf;
@@ -1644,22 +1684,15 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		SendPacket(armorContent);
 	}
 
-	public void SendCraftingRecipes()
-	{
-		McpeCraftingData craftingData = McpeCraftingData.CreateObject();
-		craftingData.craftingEntries = RecipeManager.Recipes;
-		SendPacket(craftingData);
-	}
+	public void SendCraftingRecipes() => SendPacket(RecipeManager.GetCraftingData());
+	
+	public void SendItemRegistry() => SendPacket(InventoryUtils.GetItemRegistryData());
 
-	// TODO: Move this to the inventory system
 	public void SendCreativeInventory()
 	{
 		if (!UseCreativeInventory) return;
 
-		McpeCreativeContent creativeContent = McpeCreativeContent.CreateObject();
-		creativeContent.groups = InventoryUtils.GetCreativeGroups();
-		creativeContent.input = InventoryUtils.GetCreativeMetadataSlots();
-		SendPacket(creativeContent);
+		SendPacket(InventoryUtils.GetCreativeInventoryData());
 	}
 
 	public void SendChunkRadiusUpdate()
@@ -1753,7 +1786,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		string text = message.message;
 		if (string.IsNullOrEmpty(text)) return;
-		Level.BroadcastMessage(text, sender: this, platformId: message.platformChatId);
+		Level.BroadcastMessage(text, sender: this);
 	}
 
 	public void HandleMcpeMovePlayer(McpeMovePlayer message)
@@ -1821,7 +1854,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			MiNetServer.FastThreadPool.QueueUserWorkItem(SendChunksForKnownPosition);
 	}
 
-	private bool DetectSimpleFly(PlayerLocation message, bool isOnGround)
+	public bool DetectSimpleFly(PlayerLocation message, bool isOnGround)
 	{
 		double d = Math.Abs(KnownPosition.Y - (message.Y - 1.62f));
 		return !(AllowFly || IsOnGround || isOnGround || d > 0.001);
@@ -1847,38 +1880,36 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpePlayerAuthInput(McpePlayerAuthInput message)
 	{
 		CurrentTick = message.Tick;
-		if (!PlayerLocation.Equal(KnownPosition, message.Position))
+
+		var newLocation = new PlayerLocation(message.Position.X, message.Position.Y - 1.62f, message.Position.Z, message.Yaw, message.Pitch, message.HeadYaw);
+
+		if (KnownPosition.ToVector3() != newLocation.ToVector3())
 		{
 			var origin = KnownPosition.ToVector3();
-			double distanceTo = Vector3.Distance(origin, new Vector3(message.Position.X, message.Position.Y - 1.62f, message.Position.Z));
+			double distanceTo = Vector3.Distance(origin, newLocation.ToVector3());
 
 			CurrentSpeed = distanceTo / ((double) (DateTime.UtcNow - LastUpdatedTime).Ticks / TimeSpan.TicksPerSecond);
 
-			double verticalMove = message.Position.Y - 1.62 - KnownPosition.Y;
+			double verticalMove = newLocation.Y - KnownPosition.Y;
 
 			bool isOnGround = IsOnGround;
 			bool isFlyingHorizontally = false;
+
 			if (Math.Abs(distanceTo) > 0.01)
 			{
-				isOnGround = CheckOnGround(message.Position);
-				isFlyingHorizontally = DetectSimpleFly(message.Position, isOnGround);
+				isOnGround = CheckOnGround(newLocation);
+				isFlyingHorizontally = DetectSimpleFly(newLocation, isOnGround);
 			}
 
 			IsFlyingHorizontally = isFlyingHorizontally;
 			IsOnGround = isOnGround;
 
 			if (!IsGliding)
-				HungerManager.Move(Vector3.Distance(new Vector3(KnownPosition.X, 0, KnownPosition.Z), new Vector3(message.Position.X, 0, message.Position.Z)));
-
-			KnownPosition = new PlayerLocation
 			{
-				X = message.Position.X,
-				Y = message.Position.Y - 1.62f,
-				Z = message.Position.Z,
-				Pitch = message.Position.Pitch,
-				Yaw = message.Position.Yaw,
-				HeadYaw = message.Position.HeadYaw
-			};
+				HungerManager.Move(Vector3.Distance(new Vector3(KnownPosition.X, 0, KnownPosition.Z), new Vector3(newLocation.X, 0, newLocation.Z)));
+			}
+
+			KnownPosition = newLocation;
 
 			IsFalling = verticalMove < 0 && !IsOnGround && !IsGliding;
 
@@ -1890,7 +1921,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			else
 			{
 				double damage = StartFallY - KnownPosition.Y;
-				if ((damage - 3) > 0 && Level.Falldamage) 
+				if ((damage - 3) > 0 && Level.Falldamage)
 					HealthManager.TakeHit(null, (int) DamageCalculator.CalculatePlayerDamage(null, this, null, damage, DamageCause.Fall), DamageCause.Fall);
 				StartFallY = 0;
 			}
@@ -1898,7 +1929,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			LastUpdatedTime = DateTime.UtcNow;
 
 			var chunkPosition = new ChunkCoordinates(KnownPosition);
-			if (_currentChunkPosition != chunkPosition && _currentChunkPosition.DistanceTo(chunkPosition) >= MoveRenderDistance) 
+			if (_currentChunkPosition != chunkPosition && _currentChunkPosition.DistanceTo(chunkPosition) >= MoveRenderDistance)
 				MiNetServer.FastThreadPool.QueueUserWorkItem(SendChunksForKnownPosition);
 		}
 
@@ -1910,7 +1941,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			if ((message.InputFlags & AuthInputFlags.StartSneaking) != 0)
 			{
 				IsSneaking = true;
-				if(Inventory.OffHandInventory.GetItem() is ItemShield)
+				if (Inventory.OffHand is ItemShield)
 				{
 					IsBlockedWithShield = true;
 					IsTransitionBlocking = true;
@@ -1937,9 +1968,15 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				BroadcastSetEntityData();
 			}
 
-			if ((message.InputFlags & AuthInputFlags.StartSprinting) != 0) SetSprinting(true);
+			if ((message.InputFlags & AuthInputFlags.StartSprinting) != 0)
+			{
+				SetSprinting(true);
+			}
 
-			if ((message.InputFlags & AuthInputFlags.StopSprinting) != 0) SetSprinting(false);
+			if ((message.InputFlags & AuthInputFlags.StopSprinting) != 0)
+			{
+				SetSprinting(false);
+			}
 
 			if ((message.InputFlags & AuthInputFlags.StartGliding) != 0)
 			{
@@ -1955,79 +1992,19 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				BroadcastSetEntityData();
 			}
 
-			if ((message.InputFlags & AuthInputFlags.StartJumping) != 0) HungerManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
-		}
-
-		if (message.Actions == null) return;
-		foreach (McpePlayerAuthInput.PlayerBlockActionData action in message.Actions.PlayerBlockAction)
-		{
-			// ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-			switch (action.PlayerActionType)
+			if ((message.InputFlags & AuthInputFlags.StartJumping) != 0)
 			{
-				case PlayerAction.StartBreak:
-				case PlayerAction.ContinueDestroyBlock:
-				{
-					if (GameMode == GameMode.Survival)
-					{
-						Block target = Level.GetBlock(action.BlockCoordinates);
-						Item tool = Inventory.GetItemInHand();
-						Item[] drops = target.GetDrops(tool);
-
-						double toolTypeFactor = drops == null || drops.Length == 0 ? 5 : 1.5;
-						toolTypeFactor /= tool.GetBreakingSpeed(target);
-
-						double breakTime = Math.Ceiling(target.Hardness * toolTypeFactor * 20);
-						McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-						breakEvent.eventId = LevelEventType.StartBlockCracking;
-						breakEvent.position = action.BlockCoordinates;
-						breakEvent.data = (int) (65535 / breakTime);
-						Level.RelayBroadcast(breakEvent);
-					}
-
-					break;
-				}
-				case PlayerAction.Breaking:
-				{
-					Block target = Level.GetBlock(action.BlockCoordinates);
-					int data = target.GetRuntimeId() | ((byte) (action.Facing << 24));
-
-					McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-					breakEvent.eventId = LevelEventType.ParticlesCrackBlock;
-					breakEvent.position = action.BlockCoordinates;
-					breakEvent.data = data;
-					Level.RelayBroadcast(breakEvent);
-					break;
-				}
-				case PlayerAction.AbortBreak:
-				case PlayerAction.StopBreak:
-				{
-					McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-					breakEvent.eventId = LevelEventType.StopBlockCracking;
-					breakEvent.position = action.BlockCoordinates;
-					Level.RelayBroadcast(breakEvent);
-					break;
-				}
-				case PlayerAction.PredictDestroyBlock:
-				{
-					Level.BreakBlock(this, action.BlockCoordinates);
-					break;
-				}
-				default:
-				{
-					Log.Warn($"Unhandled action ID={action.PlayerActionType}");
-					throw new ArgumentOutOfRangeException(nameof(action.PlayerActionType));
-				}
+				HungerManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
 			}
-
-			BroadcastSetEntityData();
 		}
+
+		// No more message.Actions — block action handling removed
 	}
 
 	public void HandleMcpeItemStackRequest(McpeItemStackRequest message)
 	{
-		McpeItemStackResponse response = McpeItemStackResponse.CreateObject();
-		var updatedSlots = new List<StackRequestSlotInfo>();
-		response.responses = [];
+		var response = McpeItemStackResponse.CreateObject();
+		response.responses = new ItemStackResponses();
 		foreach (ItemStackActionList request in message.requests)
 		{
 			var stackResponse = new ItemStackResponse()
@@ -2041,11 +2018,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 			try
 			{
-				StackRequestSlotInfo info = null;
-				List<StackResponseContainerInfo> actionList = ItemStackInventoryManager.HandleItemStackActions(request.RequestId, request, ref info);
-				stackResponse.ResponseContainerInfos.AddRange(actionList);
-
-				if (info != null) updatedSlots.Add(info);
+				stackResponse.Result = ItemStackInventoryManager.HandleItemStackActions(request.RequestId, request, out var stackResponses);
+				stackResponse.ResponseContainerInfos.AddRange(stackResponses);
 			}
 			catch (Exception e)
 			{
@@ -2056,11 +2030,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		}
 
 		SendPacket(response);
-
-		foreach (StackRequestSlotInfo slot in updatedSlots) Inventory.SendSetSlot(slot.Slot, slot.ContainerId);
 	}
 
-	public virtual void HandleMcpeMobEquipment(McpeMobEquipment message)
+	public void HandleMcpeMobEquipment(McpeMobEquipment message)
 	{
 		if (HealthManager.IsDead) return;
 
@@ -2127,7 +2099,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		}
 	}
 
-	protected virtual void OnInventoryChanged(object sender, InventoryChangeEventArgs args)
+	public void OnInventoryChanged(object sender, InventoryChangeEventArgs args)
 	{
 	}
 
@@ -2184,7 +2156,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		if (itemInHand.Id != transaction.Item.Id || itemInHand.Metadata != transaction.Item.Metadata) 
 			Log.Warn($"Attack item mismatch. Expected {itemInHand}, but client reported {transaction.Item}");
 		
-		if (!Level.TryGetEntity(transaction.EntityId, out Entity target)) return;
+		if (!Level.TryGetEntity(transaction.RuntimeEntityId, out Entity target)) return;
 		target.DoItemInteraction(this, itemInHand);
 	}
 
@@ -2192,7 +2164,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		DoInteraction((int) transaction.ActionType, this);
 
-		if (!Level.TryGetEntity(transaction.EntityId, out Entity target)) return;
+		if (!Level.TryGetEntity(transaction.RuntimeEntityId, out Entity target)) return;
 		target.DoInteraction((int) transaction.ActionType, this);
 	}
 
@@ -2202,36 +2174,35 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		if (itemInHand.Id != transaction.Item.Id || itemInHand.Metadata != transaction.Item.Metadata)
 			Log.Warn($"Attack item mismatch. Expected {itemInHand}, but client reported {transaction.Item}");
 
-		if (!Level.TryGetEntity(transaction.EntityId, out Entity target)) return;
-
+		if (!Level.TryGetEntity(transaction.RuntimeEntityId, out Entity target)) return;
 
 		LastAttackTarget = target;
+
+		double damage = DamageCalculator.CalculateItemDamage(itemInHand);
+		if (IsFalling)
+			damage += DamageCalculator.CalculateFallDamage(this, damage, target);
+
+		damage += DamageCalculator.CalculateEffectDamage(this);
+		damage += DamageCalculator.CalculateDamageIncreaseFromEnchantments(this, itemInHand, target);
+		if (damage < 0) damage = 0;
 
 		if (target is Player player)
 		{
 			if (!OnPlayerDamageToPlayer(new PlayerDamageToPlayerEventArgs(player, this))) return;
+
+			int reducedDamage = (int)DamageCalculator.CalculatePlayerDamage(this, player, itemInHand, damage, DamageCause.EntityAttack);
+			player.HealthManager.TakeHit(this, itemInHand, reducedDamage, DamageCause.EntityAttack);
 		}
 		else
 		{
-			if (!OnPlayerDamageToEntity(new PlayerDamageToEntityEventArgs(target, this)) && target != null) return;
+			if (!OnPlayerDamageToEntity(new PlayerDamageToEntityEventArgs(target, this))) return;
+
+			target.HealthManager.TakeHit(this, itemInHand, (int)damage, DamageCause.EntityAttack);
 		}
 
-		double damage = DamageCalculator.CalculateItemDamage(itemInHand);
-
-		if (IsFalling) damage += DamageCalculator.CalculateFallDamage(this, damage, target);
-
-		damage += DamageCalculator.CalculateEffectDamage(this);
-
-		if (damage < 0) damage = 0;
-
-		damage += DamageCalculator.CalculateDamageIncreaseFromEnchantments(this, itemInHand, target);
-
-		int reducedDamage = (int) DamageCalculator.CalculatePlayerDamage(this, target, itemInHand, damage, DamageCause.EntityAttack);
-
-		target?.HealthManager.TakeHit(this, itemInHand, reducedDamage, DamageCause.EntityAttack);
-
 		short fireAspectLevel = itemInHand.GetEnchantingLevel(EnchantingType.FireAspect);
-		if (fireAspectLevel > 0) target?.HealthManager.Ignite(fireAspectLevel * 80);
+		if (fireAspectLevel > 0)
+			target?.HealthManager.Ignite(fireAspectLevel * 80);
 
 		Inventory.DamageItemInHand(ItemDamageReason.EntityAttack, target, null);
 		HungerManager.IncreaseExhaustion(0.1f);
@@ -2372,11 +2343,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		if(player.IsConnected) player.SpawnToPlayers([this]);
 	}
 
-	public ItemActor DropItem(Item item)
+	public ItemEntity DropItem(Item item)
 	{
-		var itemEntity = new ItemActor(Level, item)
+		var itemEntity = new ItemEntity(Level, item)
 		{
-			Velocity = KnownPosition.GetDirection().Normalize() * 0.3f,
+			Velocity = KnownPosition.GetDirectionVector().Normalize() * 0.3f,
 			KnownPosition = KnownPosition + new Vector3(0f, 1.62f, 0f)
 		};
 		itemEntity.SpawnEntity();
@@ -2384,70 +2355,30 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		return itemEntity;
 	}
 
-	public bool PickUpItem(ItemActor item) => Inventory.SetFirstEmptySlot(item.Item, true);
-
+	public bool PickUpItem(ItemEntity item)
+	{
+		return Inventory.SetFirstEmptySlot(item.Item, true);
+	}
+	
 	public void HandleMcpeContainerClose(McpeContainerClose message)
 	{
-		UsingAnvil = false;
-
 		lock (_inventorySync)
 		{
-			switch (_openInventory)
+			if (_openInventory != null)
 			{
-				case Inventory inventory:
-				{
-					_openInventory = null;
+				if (message.containerId != (byte) _openInventory.WindowId) return;
 
-					// unsubscribe to inventory changes
-					inventory.InventoryChange -= OnInventoryChange;
-					inventory.RemoveObserver(this);
+				_openInventory.Close(this, true);
+			}
+			else
+			{
+				McpeContainerClose closePacket = McpeContainerClose.CreateObject();
+				closePacket.containerId = 0;
+				closePacket.containerType = (sbyte) WindowType.Inventory;
+				closePacket.server = false;
+				SendPacket(closePacket);
 
-					if (message != null && message.containerId != inventory.WindowsId) return;
-
-					// close container 
-					if (inventory.Type == 0 && !inventory.IsOpen())
-					{
-						McpeBlockEvent tileEvent = McpeBlockEvent.CreateObject();
-						tileEvent.coordinates = inventory.Coordinates;
-						tileEvent.case1 = 1;
-						tileEvent.case2 = 0;
-						Level.RelayBroadcast(tileEvent);
-					}
-
-					McpeContainerClose closePacket = McpeContainerClose.CreateObject();
-					closePacket.containerId = inventory.WindowsId;
-					closePacket.server = message == null;
-					SendPacket(closePacket);
-
-					Block block = Level.GetBlock(inventory.Coordinates);
-					switch (block)
-					{
-						case Chest or TrappedChest:
-							Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.ChestClosed);
-							break;
-						case EnderChest:
-							Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.EnderchestClosed);
-							break;
-						case ShulkerBox:
-							Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.ShulkerboxClosed);
-							break;
-						case Barrel:
-							Level.BroadcastSound(inventory.Coordinates, LevelSoundEventType.BlockBarrelClose);
-							break;
-					}
-					break;
-				}
-				case HorseInventory:
-					_openInventory = null;
-					break;
-				default:
-				{
-					McpeContainerClose closePacket = McpeContainerClose.CreateObject();
-					closePacket.containerId = 0;
-					closePacket.server = message == null;
-					SendPacket(closePacket);
-					break;
-				}
+				Inventory.CloseUiInventory();
 			}
 		}
 	}
@@ -2503,10 +2434,17 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	/// <exception cref="ArgumentOutOfRangeException"></exception>
 	public void HandleMcpeInteract(McpeInteract message)
 	{
-		Entity target;
+		//Log.Info($"Interact. Target={message.targetRuntimeEntityId} Action={message.actionId} Position={message.Position}");
+		Entity target = null;
 		long runtimeEntityId = message.targetRuntimeActorId;
-		if (runtimeEntityId == EntityManager.EntityIdSelf) target = this;
-		else if (!Level.TryGetEntity(runtimeEntityId, out target)) return;
+		if (runtimeEntityId == EntityManager.EntityIdSelf)
+		{
+			target = this;
+		}
+		else if (!Level.TryGetEntity(runtimeEntityId, out target))
+		{
+			return;
+		}
 
 		if (message.actionId != InteractPacketAction.InteractUpdate)
 		{
@@ -2515,62 +2453,66 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		}
 
 		if (target == null) return;
-		switch ((McpeInteract.Actions) message.actionId)
+		switch ((McpeInteract.Actions)message.actionId)
 		{
 			case McpeInteract.Actions.LeaveVehicle:
 			{
-				if (Level.TryGetEntity(Vehicle, out Mob mob)) mob.Unmount(this);
+				if (Level.TryGetEntity(Vehicle, out Mob mob))
+				{
+					mob.Unmount(this);
+				}
 
 				break;
 			}
 			case McpeInteract.Actions.MouseOver:
 			{
 				// Mouse over
-				DoMouseOverInteraction(this);
-				target.DoMouseOverInteraction(this);
+				DoMouseOverInteraction((byte) message.actionId, this);
+				target.DoMouseOverInteraction((byte) message.actionId, this);
 				break;
 			}
 			case McpeInteract.Actions.OpenInventory:
 			{
 				if (target == this)
 				{
-					McpeContainerOpen containerOpen = McpeContainerOpen.CreateObject();
-					containerOpen.containerId = 0;
-					//containerOpen.containerType = 255;
-					containerOpen.containerType = ContainerType.Inventory;
-					containerOpen.runtimeActorId = EntityManager.EntityIdSelf;
-					SendPacket(containerOpen);
+					Inventory.Open();
 				}
 				else if (IsRiding) // Riding; Open inventory
 				{
-					if (Level.TryGetEntity(Vehicle, out Mob mob) && mob is Horse horse) horse.Inventory.Open(this);
+					if (Level.TryGetEntity(Vehicle, out Mob mob) && mob is Horse horse)
+					{
+						horse.Inventory.Open(this);
+					}
 				}
 
 				break;
 			}
-			default:
-				throw new ArgumentOutOfRangeException();
 		}
 	}
 
 	public void HandleMcpeBlockPickRequest(McpeBlockPickRequest message)
 	{
-		if (GameMode != GameMode.Creative) return;
 		Block block = Level.GetBlock(message.x, message.y, message.z);
-		Log.Debug($"Picked block {block.Id}:{block.Metadata} from blockstate {block.GetRuntimeId()}. Expected block to be in slot {message.selectedSlot}");
-		int id = block.Id;
-		if (id > 255) id = -(id - 255);
-		Item item = ItemFactory.GetItem((short) id, block.Metadata);
+		Log.Debug($"Picked block {block.Id} from blockstate {block.RuntimeId}. Expected block to be in slot {message.selectedSlot}");
+
+		var item = block.GetItem(Level);
 		switch (item)
 		{
 			case ItemBlock blockItem:
-				Log.Debug($"Have BlockItem with block state {blockItem.Block.GetRuntimeId()}");
+				Log.Debug($"Have BlockItem with block state {blockItem.Block?.RuntimeId}");
 				break;
 			case null:
 				return;
 		}
 
-		Inventory.SetInventorySlot(Inventory.InHandSlot, item, true);
+		for (int i = 0; i < PlayerInventory.HotbarSize; i++)
+		{
+			if (!Inventory.Slots[i].Equals(item)) continue;
+			Inventory.SetHeldItemSlot(i);
+			return;
+		}
+
+		if (GameMode == GameMode.Creative) Inventory.SetInventorySlot(Inventory.InHandSlot, item, true);
 	}
 
 	public void HandleMcpeTakeItemActor(McpeActorPickRequest message)
@@ -2668,7 +2610,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			hasAchievementsDisabled = true,
 			time = (int) Level!.WorldTime,
 			eduOffer = PlayerInfo.Edition == 1 ? 1 : 0,
-			rainLevel = Level.rainLevel,
+			rainLevel = 0,
 			lightningLevel = 0,
 			isMultiplayer = true,
 			broadcastToLan = true,
@@ -2724,7 +2666,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendItemComponents()
 	{
 		McpeItemComponent itemComponent = McpeItemComponent.CreateObject();
-		itemComponent.entries = ItemFactory.Itemstates;
+		itemComponent.entries = ItemFactory.ItemStates;
 		SendPacket(itemComponent);
 	}
 	
@@ -2959,8 +2901,10 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void SendTitle(string text, TitleType type = TitleType.Title, int fadeIn = 6, int fadeOut = 6, int stayTime = 20, Player sender = null)
 		=> Level.BroadcastTitle(text, type, fadeIn, fadeOut, stayTime, sender, [this]);
 	
-	public void SendMessage(string text, TextPacketType type = TextPacketType.Chat, Player sender = null, bool needsTranslation = false, string[] parameters = null, string platformId = null) 
-		=> Level.BroadcastMessage(text, type, sender, [this], needsTranslation, parameters, platformId: platformId);
+	public void SendMessage(string text, TextPacketType type = TextPacketType.Chat, Player sender = null, bool needsTranslation = false, string[] parameters = null)
+	{
+		Level.BroadcastMessage(text, type, sender, new[] {this}, needsTranslation, parameters);
+	}
 
 	public void SendMovePlayer(bool teleport = false)
 	{
@@ -3094,7 +3038,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public override MetadataDictionary GetMetadata()
 	{
 		MetadataDictionary metadata = base.GetMetadata();
-		metadata[(int) MetadataFlags.NameTag] = new MetadataString(NameTag ?? Username);
+		metadata[(int) MetadataFlags.Name] = new MetadataString(NameTag ?? Username);
+		metadata[(int) MetadataFlags.InteractText] = new MetadataString(ButtonText ?? string.Empty);
 		metadata[(int) MetadataFlags.PlayerFlags] = new MetadataByte((byte) (IsSleeping ? 0b10 : 0));
 		metadata[(int) MetadataFlags.BedPosition] = new MetadataIntCoordinates((int) SpawnPosition.X, (int) SpawnPosition.Y, (int) SpawnPosition.Z);
 		return metadata;
@@ -3124,21 +3069,22 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	[Wired]
 	public void SetDisplayName(string displayName)
 	{
-		// TODO: Fix this
 		DisplayName = displayName;
 
-		McpePlayerList playerList = McpePlayerList.CreateObject();
-		playerList.records = new PlayerRemoveRecords { this };
-
-		Level.RelayBroadcast(Level.CreateMcpeBatch(playerList.Encode())); // Replace with records, to remove need for player and encode
-		playerList.records = null;
-		playerList.PutPool();
-
-		playerList = McpePlayerList.CreateObject();
-		playerList.records = new PlayerAddRecords { this };
-		Level.RelayBroadcast(Level.CreateMcpeBatch(playerList.Encode())); // Replace with records, to remove need for player and encode
-		playerList.records = null;
-		playerList.PutPool();
+		{
+			var playerList = McpePlayerList.CreateObject();
+			playerList.records = new PlayerRemoveRecords(this);
+			Level.RelayBroadcast(Level.CreateMcpeBatch(playerList.Encode())); // Replace with records, to remove need for player and encode
+			playerList.records = null;
+			playerList.PutPool();
+		}
+		{
+			var playerList = McpePlayerList.CreateObject();
+			playerList.records = new PlayerAddRecords(this);
+			Level.RelayBroadcast(Level.CreateMcpeBatch(playerList.Encode())); // Replace with records, to remove need for player and encode
+			playerList.records = null;
+			playerList.PutPool();
+		}
 	}
 
 	[Wired]
@@ -3291,22 +3237,46 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public void DropInventory()
 	{
-		List<Item> slots = Inventory.Slots;
-		List<Item> uiSlots = Inventory.UiInventory.Slots;
+		var slots = Inventory.Slots;
+		var uiSlots = Inventory.UiInventory.Slots;
 
-		var coordinates = KnownPosition.ToVector3();
+		Vector3 coordinates = KnownPosition.ToVector3();
 		coordinates.Y += 0.5f;
 
-		foreach (Item stack in slots.ToArray()) Level.DropItem(coordinates, stack);
+		foreach (var stack in slots.ToArray())
+		{
+			Level.DropItem(coordinates, stack);
+		}
 
-		foreach (Item stack in uiSlots.ToArray()) Level.DropItem(coordinates, stack);
+		foreach (var stack in uiSlots.ToArray())
+		{
+			Level.DropItem(coordinates, stack);
+		}
 
-		if (Inventory.ArmorInventory.GetHeadItem().Id != 0) Level.DropItem(coordinates, Inventory.ArmorInventory.GetHeadItem());
-		if (Inventory.ArmorInventory.GetChestItem().Id != 0) Level.DropItem(coordinates, Inventory.ArmorInventory.GetChestItem());
-		if (Inventory.ArmorInventory.GetLegsItem().Id != 0) Level.DropItem(coordinates, Inventory.ArmorInventory.GetLegsItem());
-		if (Inventory.ArmorInventory.GetFeetItem().Id != 0) Level.DropItem(coordinates, Inventory.ArmorInventory.GetFeetItem());
-		
-		Inventory.ArmorInventory.Clear();
+		if (Inventory.Helmet is not ItemAir)
+		{
+			Level.DropItem(coordinates, Inventory.Helmet);
+			Inventory.Helmet = new ItemAir();
+		}
+
+		if (Inventory.Chest is not ItemAir)
+		{
+			Level.DropItem(coordinates, Inventory.Chest);
+			Inventory.Chest = new ItemAir();
+		}
+
+		if (Inventory.Leggings is not ItemAir)
+		{
+			Level.DropItem(coordinates, Inventory.Leggings);
+			Inventory.Leggings = new ItemAir();
+		}
+
+		if (Inventory.Boots is not ItemAir)
+		{
+			Level.DropItem(coordinates, Inventory.Boots);
+			Inventory.Boots = new ItemAir();
+		}
+
 		Inventory.Clear();
 	}
 
@@ -3344,7 +3314,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		}
 
 		SendEquipmentForPlayer(players);
-		Inventory.ArmorInventory.SendMobArmorEquipmentPacket(players);
+		SendArmorEquipmentForPlayer(players);
 	}
 
 	public void SendEquipmentForPlayer(Player[] receivers = null)
@@ -3359,7 +3329,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			Level.RelayBroadcast(this, receivers, mcpePlayerEquipment);
 	}
 	
-	public virtual void SendArmorEquipmentForPlayer(Player[] receivers = null)
+	public void SendArmorEquipmentForPlayer(Player[] receivers = null)
 	{
 		McpeMobArmorEquipment mcpePlayerArmorEquipment = McpeMobArmorEquipment.CreateObject();
 		mcpePlayerArmorEquipment.runtimeActorId = EntityId;

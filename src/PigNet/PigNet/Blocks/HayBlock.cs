@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class HayBlock : Block
+public partial class HayBlock
 {
 	public HayBlock()
 	{

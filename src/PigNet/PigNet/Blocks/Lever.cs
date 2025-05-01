@@ -1,10 +1,11 @@
 ﻿using System.Numerics;
+using PigNet.Blocks.States;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Lever : Block
+public partial class Lever
 {
 	public Lever()
 	{

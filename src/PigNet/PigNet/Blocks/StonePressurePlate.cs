@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class StonePressurePlate : Block
+public partial class StonePressurePlate
 {
 	public StonePressurePlate()
 	{

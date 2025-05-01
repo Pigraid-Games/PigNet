@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class BrownMushroom : Block
+public partial class BrownMushroom
 {
 	public BrownMushroom()
 	{

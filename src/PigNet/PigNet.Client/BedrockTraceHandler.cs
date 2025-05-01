@@ -1,29 +1,4 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE.
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14
-// and 15 have been added to cover use of software over a computer network and
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2020 Niclas Olofsson.
-// All Rights Reserved.
-
-#endregion
-
-using System;
+﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
@@ -33,23 +8,30 @@ using System.Text;
 using System.Threading.Tasks;
 using fNbt;
 using log4net;
-using PigNet;
-using PigNet.Crafting;
+using Newtonsoft.Json;
+using PigNet.Blocks;
 using PigNet.Entities;
 using PigNet.Items;
 using PigNet.Net;
+using PigNet.Net.Crafting;
 using PigNet.Net.EnumerationsTable;
 using PigNet.Net.Packets.Mcpe;
 using PigNet.Utils;
 using PigNet.Utils.Metadata;
 using PigNet.Utils.Vectors;
+using PigNet.Worlds;
 
 namespace PigNet.Client;
 
-public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerBase(client)
+public class BedrockTraceHandler : McpeClientMessageHandlerBase
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(BedrockTraceHandler));
-	
+
+
+	public BedrockTraceHandler(MiNetClient client) : base(client)
+	{
+	}
+
 	public override void HandleMcpeUpdateSoftEnum(McpeUpdateSoftEnum message)
 	{
 		Log.Warn($"Got soft enum update for {message}");
@@ -57,40 +39,23 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	public override void HandleMcpeDisconnect(McpeDisconnect message)
 	{
-		Log.Warn("[Disconnect Screen] ");
-		switch (message.message)
-		{
-			case "disconnectionScreen.notAuthenticated":
-				Log.Warn("You need to authenticate to Xbox Live services to join this server.");
-				break;
-			case "disconnectionScreen.invalidSkin":
-				Log.Warn("Invalid skin.");
-				break;
-			case "disconnectionScreen.serverFull":
-			case "disconnectionScreen.serverFull.title":
-				Log.Warn("Server is full.");
-				break;
-			case "disconnectionScreen.resourcePack":
-				Log.Warn("Resource pack error.");
-				break;
-			case "disconnectionScreen.badPacket":
-				Log.Warn("Client sent invalid packet.");
-				break;
-			default:
-				Log.Warn($"Server requested disconnect with message {message.message}");
-				break;
-		}
+		Log.InfoFormat("Disconnect {1}: {0}", message.message, Client.Username);
+
 		base.HandleMcpeDisconnect(message);
 	}
 
 	public override void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
 	{
+		Log.Warn($"HEX: \n{Packet.HexDump(message.Bytes)}");
+
 		var sb = new StringBuilder();
 		sb.AppendLine();
 
 		sb.AppendLine("Texture packs:");
-		foreach (TexturePackInfo info in message.texturepacks) 
+		foreach (var info in message.texturepacks)
+		{
 			sb.AppendLine($"ID={info.UUID}, Version={info.Version}, Unknown={info.Size}");
+		}
 
 		Log.Debug(sb.ToString());
 
@@ -99,44 +64,62 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	public override void HandleMcpeResourcePackStack(McpeResourcePackStack message)
 	{
+		//Log.Debug($"HEX: \n{Package.HexDump(message.Bytes)}");
+
 		var sb = new StringBuilder();
 		sb.AppendLine();
 
 		sb.AppendLine("Resource pack stacks:");
-		foreach (PackIdVersion info in message.resourcepackidversions) 
+		foreach (var info in message.resourcepackidversions)
+		{
 			sb.AppendLine($"ID={info.Id}, Version={info.Version}, Subpackname={info.SubPackName}");
+		}
 
 		sb.AppendLine("Behavior pack stacks:");
-		foreach (PackIdVersion info in message.behaviorpackidversions) 
+		foreach (var info in message.behaviorpackidversions)
+		{
 			sb.AppendLine($"ID={info.Id}, Version={info.Version}, Subpackname={info.SubPackName}");
+		}
 
 		Log.Debug(sb.ToString());
 
 		base.HandleMcpeResourcePackStack(message);
 	}
 
-	private readonly List<ICommandExecutioner> _executioners = [new PlaceAllBlocksExecutioner()];
+	//private bool _runningBlockMetadataDiscovery;
+
+	private List<ICommandExecutioner> _executioners = new List<ICommandExecutioner>() { new PlaceAllBlocksExecutioner() };
 
 	private void CallPacketHandlers(Packet packet)
 	{
-		IEnumerable<ICommandExecutioner> wantExec = _executioners.Where(e => e is IGenericPacketHandler);
-		List<Task> tasks = [];
-		tasks.AddRange(from IGenericPacketHandler executioner in wantExec select Task.Run(() 
-			=> executioner.HandlePacket(this, packet)));
+		var wantExec = _executioners.Where(e => e is IGenericPacketHandler);
+		List<Task> tasks = new List<Task>();
+		foreach (var commandExecutioner in wantExec)
+		{
+			var executioner = (IGenericPacketHandler) commandExecutioner;
+			tasks.Add(Task.Run(() => executioner.HandlePacket(this, packet)));
+		}
 		Task.WaitAll(tasks.ToArray());
 	}
 
 	public override void HandleMcpeText(McpeText message)
 	{
+		if (Log.IsDebugEnabled) Log.Debug($"Text: {message.message}");
+
 		string text = message.message;
 		if (string.IsNullOrEmpty(text)) return;
 
-		IEnumerable<ICommandExecutioner> wantExec = _executioners.Where(e => e.CanExecute(text));
+		var wantExec = _executioners.Where(e => e.CanExecute(text));
 
-		foreach (ICommandExecutioner executioner in wantExec)
+		foreach (var executioner in wantExec)
 		{
 			Log.Debug($"Executing command handler: {executioner.GetType().FullName}");
 			Task.Run(() => executioner.Execute(this, text));
+		}
+
+		if (text.Equals(".do"))
+		{
+			Client.SendCraftingEvent();
 		}
 	}
 
@@ -152,66 +135,35 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	public override void HandleMcpeInventoryContent(McpeInventoryContent message)
 	{
-		Log.Error($"Set container content on Window ID: 0x{message.inventoryId:x2}, Count: {message.slots.Count}, ContainerName: {message.fullContainerName.ContainerId} - {message.fullContainerName.DynamicId}");
 		CallPacketHandlers(message);
+
+		Log.Debug($"Set container content on Window ID: 0x{message.inventoryId:x2}, Count: {message.slots.Length}");
+
+		if (Client.IsEmulator) return;
+
+		ItemStacks slots = message.slots;
+
+		//if (message.inventoryId == 0x79)
+		//{
+		//	string fileName = Path.GetTempPath() + "Inventory_0x79_" + Guid.NewGuid() + ".txt";
+		//	Client.WriteInventoryToFile(fileName, slots);
+		//}
+		//else if (message.inventoryId == 0x00)
+		//{
+		//	//string fileName = Path.GetTempPath() + "Inventory_0x00_" + Guid.NewGuid() + ".txt";
+		//	//Client.WriteInventoryToFile(fileName, slots);
+		//}
 	}
 
 	public override void HandleMcpeCreativeContent(McpeCreativeContent message)
 	{
-		Log.Warn($"[McpeCreativeContent] Received {message.input.Count} creative items");
-		FileStream file = File.OpenWrite("newResources/creativeInventory.txt");
-		var writer = new IndentedTextWriter(new StreamWriter(file), "\t");
-		writer.WriteLine($"//Minecraft Bedrock Edition {McpeProtocolInfo.GameVersion} Creative Inventory");
-		foreach (CreativeItemEntry item in message.input)
-		{
-			writer.WriteLine(item.Item.ExtraData == null ? $"new Item({item.Item.Id}, {item.Item.Metadata}){{ RuntimeId = {item.Item.RuntimeId}}}," 
-				: $"new Item({item.Item.Id}, {item.Item.Metadata}){{ RuntimeId = {item.Item.RuntimeId}, ExtraData = {item.Item.ExtraData}}},");
-		}
-		Log.Warn($"[McpeCreativeContent] Done reading {message.input.Count} creative items\n");
-		writer.Flush();
-		file.Close();
-		Log.Warn("Received creative items exported to newResources/creativeInventory.txt\n");
+		var content = message.content;
 
-		FileStream file2 = File.OpenWrite("newResources/creativeGroups.txt");
-		var writer2 = new IndentedTextWriter(new StreamWriter(file2), "\t");
-		writer2.WriteLine("public static Dictionary<string, creativeGroup> CreativeGroups = new Dictionary<string, creativeGroup>()");
-		writer2.WriteLine("		{");
-		writer2.WriteLine("			//Generated with PigNet.Client (creativeGroups.txt)");
-
-		int constructionIndex = 0;
-		int equipmentIndex = 0;
-		int itemsIndex = 0;
-		int natureIndex = 0;
-		foreach (creativeGroup group in message.groups)
+		foreach (var category in content.GetCategories())
 		{
-			if (group.Icon.Id == 0)
-			{
-				switch (group.Category)
-				{
-					case 1:
-						writer2.WriteLine($"			{{\"Construction{constructionIndex++}\", new creativeGroup(1, \"\", new ItemAir())}},");
-						break;
-					case 2:
-						writer2.WriteLine($"			{{\"Nature{equipmentIndex++}\", new creativeGroup(2, \"\", new ItemAir())}},");
-						break;
-					case 3:
-						writer2.WriteLine($"			{{\"Equipment{itemsIndex++}\", new creativeGroup(3, \"\", new ItemAir())}},");
-						break;
-					case 4:
-						writer2.WriteLine($"			{{\"Items{natureIndex++}\", new creativeGroup(4, \"\", new ItemAir())}},");
-						break;
-				}
-			}
-			else
-			{
-				string groupName = group.Name.Split('.').Last();
-				writer2.WriteLine($"			{{\"{char.ToUpper(groupName[0]) + groupName.Substring(1)}\", new creativeGroup({group.Category}, \"{group.Name}\", new Item({group.Icon.Id}, {group.Icon.Metadata}))}},");
-			}
+			string fileName = Path.Combine(Path.GetTempPath(), $"creative_{category.Key.ToString().ToLower().Replace("category", "")}_{Guid.NewGuid()}.txt");
+			Client.WriteCreativeCategory(fileName, category.Value);
 		}
-		writer2.WriteLine("		};");
-		writer2.Flush();
-		file2.Close();
-		Log.Warn("Received creative groups exported to newResources/creativeGroups.txt\n");
 	}
 
 	public override void HandleMcpeAddItemEntity(McpeAddItemActor message)
@@ -224,11 +176,6 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 		CallPacketHandlers(message);
 	}
 
-	public override void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocks message)
-	{
-		CallPacketHandlers(message);
-	}
-
 	public override void HandleMcpeStartGame(McpeStartGame message)
 	{
 		Client.EntityId = message.runtimeEntityId;
@@ -236,11 +183,216 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 		Client.SpawnPoint = message.spawn;
 		Client.CurrentLocation = new PlayerLocation(Client.SpawnPoint, message.rotation.X, message.rotation.X, message.rotation.Y);
 
+		BlockPalette blockPalette = message.blockPalette;
+		Client.BlockPalette = message.blockPalette;
+
+		//var blockPalette = BlockFactory.BlockStates;
+		Log.Warn($"Got position from startgame packet: {Client.CurrentLocation}");
+
+		var settings = new JsonSerializerSettings
+		{
+			PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+			TypeNameHandling = TypeNameHandling.Auto,
+			Formatting = Formatting.Indented,
+			DefaultValueHandling = DefaultValueHandling.Include
+		};
+
+		string fileName = Path.GetTempPath() + "MissingBlocks_" + Guid.NewGuid() + ".txt";
+		using (FileStream file = File.OpenWrite(fileName))
+		{
+			var writer = new IndentedTextWriter(new StreamWriter(file));
+
+			Log.Warn($"BlockPalette ({blockPalette.Count}) Filename:\n{fileName}");
+
+			writer.WriteLine($"namespace MiNET.Blocks");
+			writer.WriteLine($"{{");
+			writer.Indent++;
+
+			var blocks = new List<(int, string)>();
+
+			foreach (IGrouping<string, IBlockStateContainer> blockstateGrouping in blockPalette.OrderBy(record => record.Id).ThenBy(record => record.Data).ThenBy(record => record.RuntimeId).GroupBy(record => record.Id))
+			{
+				var currentBlockState = blockstateGrouping.First();
+				Log.Debug($"{currentBlockState.Id}, Id={currentBlockState.Id}");
+
+				var existingBlock = BlockFactory.GetBlockById(currentBlockState.Id);
+				var defaultBlockState = existingBlock as IBlockStateContainer;
+				if (!existingBlock.IsValidStates)
+				{
+					defaultBlockState = blockstateGrouping.FirstOrDefault(bs => bs.Data == 0);
+				}
+
+				Log.Debug($"{currentBlockState.RuntimeId}, {currentBlockState.Id}, {currentBlockState.Data}");
+				Block blockById = BlockFactory.GetBlockById(currentBlockState.Id);
+				// 1.19-update
+				//bool existingBlock = blockById.GetType() != typeof(Block) && !blockById.IsGenerated;
+
+				string blockClassName = CodeName(currentBlockState.Id.Replace("minecraft:", ""), true);
+
+				// 1.19-update
+				//blocks.Add((blockById.Id, blockClassName));
+				writer.WriteLineNoTabs($"");
+
+				writer.WriteLine($"public partial class {blockClassName} // {blockById.Id} typeof={blockById.GetType().Name}");
+				writer.WriteLine($"{{");
+				writer.Indent++;
+
+				writer.WriteLine($"public override string Name => \"{currentBlockState.Id}\";");
+				writer.WriteLineNoTabs("");
+
+				var bits = new List<BlockStateByte>();
+				foreach (var state in blockstateGrouping.First().States)
+				{
+					var q = blockstateGrouping.SelectMany(c => c.States);
+
+					// If this is on base, skip this property. We need this to implement common functionality.
+					Type baseType = blockById.GetType().BaseType;
+					bool propOverride = baseType != null
+										&& ("Block" != baseType.Name
+											&& baseType.GetProperty(CodeName(state.Name, true)) != null);
+
+					switch (state)
+					{
+						case BlockStateByte blockStateByte:
+						{
+							var values = q.Where(s => s.Name == state.Name).Select(d => ((BlockStateByte) d).Value).Distinct().OrderBy(s => s).ToList();
+							byte defaultVal = ((BlockStateByte) defaultBlockState?.States.FirstOrDefault(s => s.Name.Equals(state.Name, StringComparison.OrdinalIgnoreCase)))?.Value ?? 0;
+							if (values.Min() == 0 && values.Max() == 1)
+							{
+								bits.Add(blockStateByte);
+								writer.Write($"[StateBit] ");
+								writer.WriteLine($"public{(propOverride ? " override" : "")} bool {CodeName(state.Name, true)} {{ get; set; }} = {(defaultVal == 1 ? "true" : "false")};");
+							}
+							else
+							{
+								writer.Write($"[StateRange({values.Min()}, {values.Max()})] ");
+								writer.WriteLine($"public{(propOverride ? " override" : "")} byte {CodeName(state.Name, true)} {{ get; set; }} = {defaultVal};");
+							}
+							break;
+						}
+						case BlockStateInt blockStateInt:
+						{
+							var values = q.Where(s => s.Name == state.Name).Select(d => ((BlockStateInt) d).Value).Distinct().OrderBy(s => s).ToList();
+							int defaultVal = ((BlockStateInt) defaultBlockState?.States.FirstOrDefault(s => s.Name.Equals(state.Name, StringComparison.OrdinalIgnoreCase)))?.Value ?? 0;
+							writer.Write($"[StateRange({values.Min()}, {values.Max()})] ");
+							writer.WriteLine($"public{(propOverride ? " override" : "")} int {CodeName(state.Name, true)} {{ get; set; }} = {defaultVal};");
+							break;
+						}
+						case BlockStateString blockStateString:
+						{
+							var values = q.Where(s => s.Name == state.Name).Select(d => ((BlockStateString) d).Value).Distinct().ToList();
+							string defaultVal = ((BlockStateString) defaultBlockState?.States.FirstOrDefault(s => s.Name.Equals(state.Name, StringComparison.OrdinalIgnoreCase)))?.Value ?? "";
+							if (values.Count > 1)
+							{
+								writer.WriteLine($"[StateEnum({string.Join(',', values.Select(v => $"\"{v}\""))})]");
+							}
+							writer.WriteLine($"public{(propOverride ? " override" : "")} string {CodeName(state.Name, true)} {{ get; set; }} = \"{defaultVal}\";");
+							break;
+						}
+						default:
+							throw new ArgumentOutOfRangeException(nameof(state));
+					}
+				}
+
+				// Constructor
+
+				//if (id == -1 || blockById.IsGenerated)
+				//{
+				//	writer.WriteLine($"");
+
+				//	writer.WriteLine($"public {blockClassName}() : base({currentBlockState.Id})");
+				//	writer.WriteLine($"{{");
+				//	writer.Indent++;
+				//	writer.WriteLine($"IsGenerated = true;");
+				//	writer.WriteLine($"SetGenerated();");
+				//	writer.Indent--;
+				//	writer.WriteLine($"}}");
+				//}
+
+				writer.WriteLineNoTabs($"");
+				writer.WriteLine($"public override void SetState(List<IBlockState> states)");
+				writer.WriteLine($"{{");
+				writer.Indent++;
+				writer.WriteLine($"foreach (var state in states)");
+				writer.WriteLine($"{{");
+				writer.Indent++;
+				writer.WriteLine($"switch(state)");
+				writer.WriteLine($"{{");
+				writer.Indent++;
+
+				foreach (var state in blockstateGrouping.First().States)
+				{
+					writer.WriteLine($"case {state.GetType().Name} s when s.Name == \"{state.Name}\":");
+					writer.Indent++;
+					writer.WriteLine($"{CodeName(state.Name, true)} = {(bits.Contains(state) ? "Convert.ToBoolean(s.Value)" : "s.Value")};");
+					writer.WriteLine($"break;");
+					writer.Indent--;
+				}
+
+				writer.Indent--;
+				writer.WriteLine($"}} // switch");
+				writer.Indent--;
+				writer.WriteLine($"}} // foreach");
+				writer.Indent--;
+				writer.WriteLine($"}} // method");
+
+				writer.WriteLineNoTabs($"");
+				writer.WriteLine($"public override BlockStateContainer GetState()");
+				writer.WriteLine($"{{");
+				writer.Indent++;
+				writer.WriteLine($"var record = new BlockStateContainer();");
+				writer.WriteLine($"record.Name = \"{blockstateGrouping.First().Id}\";");
+				writer.WriteLine($"record.Id = {blockstateGrouping.First().Id};");
+				foreach (var state in blockstateGrouping.First().States)
+				{
+					string propName = CodeName(state.Name, true);
+					writer.WriteLine($"record.States.Add(new {state.GetType().Name} {{Name = \"{state.Name}\", Value = {(bits.Contains(state) ? $"Convert.ToByte({propName})" : propName)}}});");
+				}
+				writer.WriteLine($"return record;");
+				writer.Indent--;
+				writer.WriteLine($"}} // method");
+				writer.Indent--;
+				writer.WriteLine($"}} // class");
+			}
+
+			writer.WriteLine();
+
+			// 1.19-update
+			//foreach (var block in blocks.OrderBy(tuple => tuple.Item1))
+			//{
+			//	int clazzId = block.Item1;
+
+			//	Block blockById = BlockFactory.GetBlockById(clazzId);
+			//	bool existingBlock = blockById.GetType() != typeof(Block) && !blockById.IsGenerated;
+			//	if (existingBlock) continue;
+
+			//	string clazzName = block.Item2;
+			//	string baseClazz = clazzName.EndsWith("Stairs") ? "BlockStairs" : "Block";
+			//	baseClazz = clazzName.EndsWith("Slab") && !clazzName.EndsWith("DoubleSlab")? "SlabBase" : baseClazz;
+			//	writer.WriteLine($"public partial class {clazzName} : {baseClazz} {{ " +
+			//					$"public {clazzName}() : base({clazzId}) {{ IsGenerated = true; }} " +
+			//					$"}}");
+			//}
+
+			writer.Indent--;
+			writer.WriteLine($"}}"); // namespace
+
+			//foreach (var block in blocks.OrderBy(tuple => tuple.Item1))
+			//{
+			//	// 495 => new StrippedCrimsonStem(),
+			//	writer.WriteLine($"\t\t\t\t{block.Item1} => new {block.Item2}(),");
+			//}
+
+			writer.Flush();
+		}
+
 		LogGamerules(message.levelSettings.gamerules);
 
 		Client.LevelInfo.LevelName = "Default";
-		Client.LevelInfo.Version = 19133;
+		Client.LevelInfo.NbtVersion = 19133;
 		Client.LevelInfo.GameType = message.levelSettings.gamemode;
+
+		//ClientUtils.SaveLevel(_level);
 
 		{
 			var packet = McpeRequestChunkRadius.CreateObject();
@@ -253,12 +405,17 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	public static string CodeName(string name, bool firstUpper = false)
 	{
+		//name = name.ToLowerInvariant();
+
 		bool upperCase = firstUpper;
 
-		string result = string.Empty;
+		var result = string.Empty;
 		for (int i = 0; i < name.Length; i++)
 		{
-			if (name[i] == ' ' || name[i] == '_') upperCase = true;
+			if (name[i] == ' ' || name[i] == '_')
+			{
+				upperCase = true;
+			}
 			else
 			{
 				if ((i == 0 && firstUpper) || upperCase)
@@ -266,7 +423,10 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 					result += name[i].ToString().ToUpperInvariant();
 					upperCase = false;
 				}
-				else result += name[i];
+				else
+				{
+					result += name[i];
+				}
 			}
 		}
 
@@ -298,12 +458,10 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 		if (!Client.Entities.ContainsKey(message.entityIdSelf))
 		{
-			var entity = new Entity(message.entityType, null)
-			{
-				EntityId = message.runtimeEntityId,
-				KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.yaw, message.yaw, message.pitch),
-				Velocity = new Vector3(message.speedX, message.speedY, message.speedZ)
-			};
+			var entity = new Entity(message.entityType, null);
+			entity.EntityId = message.runtimeEntityId;
+			entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.yaw, message.yaw, message.pitch);
+			entity.Velocity = new Vector3(message.speedX, message.speedY, message.speedZ);
 			Client.Entities.TryAdd(entity.EntityId, entity);
 		}
 
@@ -333,7 +491,10 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 		if (Log.IsDebugEnabled)
 		{
-			foreach (KeyValuePair<string, EntityAttribute> attribute in message.attributes) Log.Debug($"Entity attribute {attribute}");
+			foreach (var attribute in message.attributes)
+			{
+				Log.Debug($"Entity attribute {attribute}");
+			}
 		}
 
 		Log.DebugFormat("Links count: {0}", message.links);
@@ -348,69 +509,92 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 			Client._mobWriter.Flush();
 		}
 
-		if (message.entityType != "minecraft:horse") return;
-		long id = message.runtimeEntityId;
-		var pos = new Vector3(message.x, message.y, message.z);
-		Task.Run(BotHelpers.DoWaitForSpawn(Client))
-			.ContinueWith(_ => Task.Delay(3000).Wait())
-			.ContinueWith(_ =>
-			{
-				Log.Warn("Sending sneak for player");
+		if (message.entityType == "minecraft:horse")
+		{
+			var id = message.runtimeEntityId;
+			Vector3 pos = new Vector3(message.x, message.y, message.z);
+			Task.Run(BotHelpers.DoWaitForSpawn(Client))
+				.ContinueWith(t => Task.Delay(3000).Wait())
+				//.ContinueWith(task =>
+				//{
+				//	Log.Warn("Sending jump for player");
 
-				McpePlayerAction action = McpePlayerAction.CreateObject();
-				action.runtimeActorId = Client.EntityId;
-				action.actionId = PlayerActionType.StartSneaking;
-				Client.SendPacket(action);
-			})
-			.ContinueWith(_ => Task.Delay(2000).Wait())
-			.ContinueWith(_ =>
-			{
-				Log.Warn("Sending transaction for horse");
+				//	McpeInteract action = McpeInteract.CreateObject();
+				//	action.targetRuntimeEntityId = id;
+				//	action.actionId = (int) 3;
+				//	SendPackage(action);
+				//})
+				//.ContinueWith(t => Task.Delay(2000).Wait())
+				//.ContinueWith(task =>
+				//{
+				//	for (int i = 0; i < 10; i++)
+				//	{
+				//		Log.Warn("Mounting horse");
 
-				McpeInventoryTransaction transaction = McpeInventoryTransaction.CreateObject();
-				transaction.transaction = new ItemUseOnEntityTransaction()
+				//		McpeInventoryTransaction transaction = McpeInventoryTransaction.CreateObject();
+				//		transaction.transaction = new Transaction()
+				//		{
+				//			TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
+				//			TransactionRecords = new List<TransactionRecord>(),
+				//			EntityId = id,
+				//			ActionType = 0,
+				//			Slot = 0,
+				//			Item = new ItemAir(),
+				//			//Item = new ItemBlock(new Cobblestone()) { Count = 64 },
+				//			Position = BlockCoordinates.Zero,
+				//			FromPosition = CurrentLocation,
+				//			ClickPosition = pos,
+				//		};
+
+				//		SendPackage(transaction);
+				//		Thread.Sleep(4000);
+				//	}
+
+				//})
+				.ContinueWith(task =>
 				{
-					TransactionRecords = [],
-					EntityId = id,
-					ActionType = 0,
-					Slot = 0,
-					Item = new ItemAir(),
-					FromPosition = Client.CurrentLocation,
-					ClickPosition = pos
-				};
+					Log.Warn("Sending sneak for player");
 
-				Client.SendPacket(transaction);
-			});
+					McpePlayerAction action = McpePlayerAction.CreateObject();
+					action.runtimeActorId = Client.EntityId;
+					action.actionId = PlayerActionType.StartSneaking;
+					Client.SendPacket(action);
+				})
+				.ContinueWith(t => Task.Delay(2000).Wait())
+				.ContinueWith(task =>
+				{
+					Log.Warn("Sending transaction for horse");
+
+					var transaction = McpeInventoryTransaction.CreateObject();
+					transaction.transaction = new ItemUseOnEntityTransaction()
+					{
+						TransactionRecords = new List<TransactionRecord>(),
+						RuntimeEntityId = id,
+						ActionType = 0,
+						Slot = 0,
+						Item = new ItemAir(),
+						FromPosition = Client.CurrentLocation,
+						ClickPosition = pos,
+					};
+
+					Client.SendPacket(transaction);
+				});
+		}
 	}
 
 	public override void HandleMcpeRemoveEntity(McpeRemoveActor message)
 	{
-		Log.DebugFormat("McpeAddPlayer Entity ID: {0}", message.entityIdSelf);
 		Client.Entities.TryRemove(message.entityIdSelf, out _);
 	}
 
 	public override void HandleMcpeLevelEvent(McpeLevelEvent message)
 	{
 		int data = message.data;
-		switch (message.eventId)
+		if (message.eventId == LevelEventType.ParticlesDestroyBlock)
 		{
-			case LevelEventType.ParticlesDestroyBlock:
-			{
-				int blockId = data & 0xff;
-				int metadata = data >> 12;
-				Log.Debug($"BlockID={blockId}, Metadata={metadata}");
-				break;
-			}
-			case LevelEventType.ParticlesPotionSplash:
-			{
-				Log.Warn($"Got effect with data: {message.data}");
-				int r = (message.data >> 16) & 0xFF;
-				int g = (message.data >> 8) & 0xFF;
-				int b = message.data & 0xFF;
-
-				Log.Warn($"Actual effect color R: 0x{r:x} G: 0x{g:x} B: 0x{b:x}");
-				break;
-			}
+			int blockId = data & 0xff;
+			int metadata = data >> 12;
+			Log.Debug($"BlockID={blockId}, Metadata={metadata}");
 		}
 	}
 
@@ -426,7 +610,7 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 	{
 		if (Client.IsEmulator) return;
 
-		string fileName = "newResources/recipes.txt";
+		string fileName = Path.GetTempPath() + "Recipes_" + Guid.NewGuid() + ".txt";
 		Log.Info("Writing recipes to filename: " + fileName);
 		FileStream file = File.OpenWrite(fileName);
 
@@ -445,64 +629,90 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 		foreach (Recipe recipe in message.craftingEntries)
 		{
-			switch (recipe)
+			var shapelessRecipe = recipe as ShapelessRecipe;
+			if (shapelessRecipe != null)
 			{
-				case ShapelessRecipe shapelessRecipe:
+				writer.WriteLine($"new ShapelessRecipe(");
+				writer.Indent++;
+
+				writer.WriteLine("new List<Item>");
+				writer.WriteLine("{");
+				writer.Indent++;
+				foreach (var itemStack in shapelessRecipe.Output)
 				{
-					writer.WriteLine("new ShapelessRecipe(");
-					writer.Indent++;
-
-					writer.WriteLine("new List<Item>");
-					writer.WriteLine("{");
-					writer.Indent++;
-					foreach (Item itemStack in shapelessRecipe.Result) 
-						writer.WriteLine($"new Item({itemStack.Id}, {itemStack.Metadata}, {itemStack.Count}){{ UniqueId = {itemStack.UniqueId}, RuntimeId={itemStack.RuntimeId} }},");
-					writer.Indent--;
-					writer.WriteLine($"}},");
-
-					writer.WriteLine("new List<Item>");
-					writer.WriteLine("{");
-					writer.Indent++;
-					foreach (Item itemStack in shapelessRecipe.Input) 
-						writer.WriteLine($"new Item({itemStack.Id}, {itemStack.Metadata}, {itemStack.Count}){{ UniqueId = {itemStack.UniqueId}, RuntimeId={itemStack.RuntimeId} }},");
-					writer.Indent--;
-					writer.WriteLine($"}}, \"{shapelessRecipe.Block}\"){{ UniqueId = {shapelessRecipe.UniqueId} }},");
-
-					writer.Indent--;
-					continue;
+					writer.WriteLine($"new Item(\"{itemStack.Id}\", {itemStack.Metadata}, {itemStack.Count}){{ UniqueId = {itemStack.UniqueId}, RuntimeId={itemStack.BlockRuntimeId} }},");
 				}
+				writer.Indent--;
+				writer.WriteLine($"}},");
 
-				case ShapedRecipe shapedRecipe:
+				writer.WriteLine("new List<Item>");
+				writer.WriteLine("{");
+				writer.Indent++;
+				foreach (var ingredient in shapelessRecipe.Input)
 				{
-					writer.WriteLine($"new ShapedRecipe({shapedRecipe.Width}, {shapedRecipe.Height},");
-					writer.Indent++;
-
-					writer.WriteLine("new List<Item>");
-					writer.WriteLine("{");
-					writer.Indent++;
-					foreach (Item item in shapedRecipe.Result) 
-						writer.WriteLine($"new Item({item.Id}, {item.Metadata}, {item.Count}){{ UniqueId = {item.UniqueId}, RuntimeId={item.RuntimeId} }},");
-					writer.Indent--;
-					writer.WriteLine($"}},");
-
-					writer.WriteLine("new Item[]");
-					writer.WriteLine("{");
-					writer.Indent++;
-					foreach (Item item in shapedRecipe.Input) 
-						writer.WriteLine($"new Item({item.Id}, {item.Metadata}, {item.Count}){{ UniqueId = {item.UniqueId}, RuntimeId={item.RuntimeId} }},");
-					writer.Indent--;
-					writer.WriteLine($"}}, \"{shapedRecipe.Block}\"){{ UniqueId = {shapedRecipe.UniqueId} }},");
-
-					writer.Indent--;
-
-					continue;
+					// TODO - 1.20-update (make an analog of generating recipe files from Bedrock Data?)
+					//writer.WriteLine($"new Item(\"{ingredient.Id}\", {ingredient.Metadata}, {ingredient.Count}){{ UniqueId = {ingredient.UniqueId}, RuntimeId={ingredient.BlockRuntimeId} }},");
 				}
-				case SmeltingRecipe smeltingRecipe:
-					writer.WriteLine($"new SmeltingRecipe(new Item({smeltingRecipe.Result.Id}, {smeltingRecipe.Result.Metadata}, {smeltingRecipe.Result.Count}){{ UniqueId = {smeltingRecipe.Result.UniqueId}, RuntimeId={smeltingRecipe.Result.RuntimeId} }}, new Item({smeltingRecipe.Input.Id}, {smeltingRecipe.Input.Metadata}){{ UniqueId = {smeltingRecipe.Input.UniqueId}, RuntimeId={smeltingRecipe.Input.RuntimeId} }}, \"{smeltingRecipe.Block}\"),");
-					continue;
-				case MultiRecipe multiRecipe:
-					writer.WriteLine($"new MultiRecipe() {{ Id = new UUID(\"{recipe.Id}\"), UniqueId = {multiRecipe.UniqueId} }}, // {recipe.Id}");
-					continue;
+				writer.Indent--;
+				writer.WriteLine($"}}, \"{shapelessRecipe.Block}\"){{ UniqueId = {shapelessRecipe.UniqueId} }},");
+
+				writer.Indent--;
+				continue;
+			}
+
+			var shapedRecipe = recipe as ShapedRecipe;
+			//if (shapedRecipe != null && Client._recipeToSend == null)
+			//{
+			//	if (shapedRecipe.Result.Id == 5 && shapedRecipe.Result.Count == 4 && shapedRecipe.Result.Metadata == 0)
+			//	{
+			//		Log.Error("Setting recipe! " + shapedRecipe.Id);
+			//		Client._recipeToSend = shapedRecipe;
+			//	}
+			//}
+
+			if (shapedRecipe != null)
+			{
+				writer.WriteLine($"new ShapedRecipe({shapedRecipe.Width}, {shapedRecipe.Height},");
+				writer.Indent++;
+
+				writer.WriteLine("new List<Item>");
+				writer.WriteLine("{");
+				writer.Indent++;
+				foreach (Item item in shapedRecipe.Output)
+				{
+					writer.WriteLine($"new Item(\"{item.Id}\", {item.Metadata}, {item.Count}){{ UniqueId = {item.UniqueId}, RuntimeId={item.BlockRuntimeId} }},");
+				}
+				writer.Indent--;
+				writer.WriteLine($"}},");
+
+				writer.WriteLine("new Item[]");
+				writer.WriteLine("{");
+				writer.Indent++;
+				foreach (var ingredient in shapedRecipe.Input)
+				{
+					// TODO - 1.20-update (make an analog of generating recipe files from Bedrock Data?)
+					//writer.WriteLine($"new Item(\"{ingredient.Id}\", {ingredient.Metadata}, {ingredient.Count}){{ RuntimeId={ingredient.BlockRuntimeId} }},");
+				}
+				writer.Indent--;
+				writer.WriteLine($"}}, \"{shapedRecipe.Block}\"){{ UniqueId = {shapedRecipe.UniqueId} }},");
+
+				writer.Indent--;
+
+				continue;
+			}
+
+			var smeltingRecipe = recipe as SmeltingRecipe;
+			if (smeltingRecipe != null)
+			{
+				writer.WriteLine($"new SmeltingRecipe(new Item(\"{smeltingRecipe.Output.Id}\", {smeltingRecipe.Output.Metadata}, {smeltingRecipe.Output.Count}){{ UniqueId = {smeltingRecipe.Output.UniqueId}, RuntimeId={smeltingRecipe.Output.BlockRuntimeId} }}, new Item(\"{smeltingRecipe.Input.Id}\", {smeltingRecipe.Input.Metadata}){{ UniqueId = {smeltingRecipe.Input.UniqueId}, RuntimeId={smeltingRecipe.Input.BlockRuntimeId} }}, \"{smeltingRecipe.Block}\"),");
+				continue;
+			}
+
+			var multiRecipe = recipe as MultiRecipe;
+			if (multiRecipe != null)
+			{
+				writer.WriteLine($"new MultiRecipe() {{ Id = new UUID(\"{recipe.Id}\"), UniqueId = {multiRecipe.UniqueId} }}, // {recipe.Id}");
+				continue;
 			}
 		}
 
@@ -513,7 +723,7 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 		writer.Flush();
 		file.Close();
-		Log.Warn("Received recipes exported to newResources/recipes.txt\n");
+		//Environment.Exit(0);
 	}
 
 	public override void HandleMcpeBlockEntityData(McpeBlockActorData message)
@@ -531,17 +741,47 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 		if (message.blobHashes != null)
 		{
-			McpeClientCacheBlobStatus status = McpeClientCacheBlobStatus.CreateObject();
+			var hits = new ulong[message.blobHashes.Length];
+
+			for (int i = 0; i < message.blobHashes.Length; i++)
+			{
+				ulong hash = message.blobHashes[i];
+				hits[i] = hash;
+				Log.Debug($"Got hashes for {message.chunkX}, {message.chunkZ}, {hash}");
+			}
+
+			var status = McpeClientCacheBlobStatus.CreateObject();
+			status.hashHits = hits;
 			Client.SendPacket(status);
 		}
 		else
 		{
-			Client.Chunks.GetOrAdd(new ChunkCoordinates(message.chunkX, message.chunkZ), _ =>
+			Client.Chunks.GetOrAdd(new ChunkCoordinates(message.chunkX, message.chunkZ), coordinates =>
 			{
 				Log.Debug($"Chunk X={message.chunkX}, Z={message.chunkZ}, size={message.chunkData.Length}, Count={Client.Chunks.Count}");
-				if (BlockstateGenerator.running == false) Console.WriteLine($"[McpeLevelChunk] Got chunk | X: {message.chunkX,-4} | Z: {message.chunkZ,-4} |");
 
-				return null;
+				ChunkColumn chunk = null;
+				try
+				{
+					chunk = ClientUtils.DecodeChunkColumn((int) message.subChunkCount, message.chunkData);
+					if (chunk != null)
+					{
+						chunk.X = coordinates.X;
+						chunk.Z = coordinates.Z;
+						chunk.RecalcHeight();
+						Log.DebugFormat("Chunk X={0}, Z={1}", chunk.X, chunk.Z);
+						foreach (var blockEntity in chunk.BlockEntities)
+						{
+							Log.Debug($"Blockentity: {blockEntity.Value.GetCompound()}");
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					Log.Error("Reading chunk", e);
+				}
+
+				return chunk;
 			});
 		}
 	}
@@ -554,30 +794,48 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	private static void LogGamerules(GameRules rules)
 	{
-		foreach (GameRule rule in rules)
+		foreach (var rule in rules)
 		{
-			switch (rule)
+			if (rule is GameRule<bool>)
 			{
-				case GameRule<bool> gameRule:
-					Log.Debug($"Rule: {gameRule.Name}={gameRule}");
-					break;
-				case GameRule<int> gameRule:
-					Log.Debug($"Rule: {gameRule.Name}={gameRule}");
-					break;
-				case GameRule<float> gameRule:
-					Log.Debug($"Rule: {gameRule.Name}={gameRule}");
-					break;
-				default:
-					Log.Warn($"Rule: {rule.Name}={rule}");
-					break;
+				Log.Debug($"Rule: {rule.Name}={(GameRule<bool>) rule}");
+			}
+			else if (rule is GameRule<int>)
+			{
+				Log.Debug($"Rule: {rule.Name}={(GameRule<int>) rule}");
+			}
+			else if (rule is GameRule<float>)
+			{
+				Log.Debug($"Rule: {rule.Name}={(GameRule<float>) rule}");
+			}
+			else
+			{
+				Log.Warn($"Rule: {rule.Name}={rule}");
 			}
 		}
+	}
+
+	public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
+	{
+		//{
+		//	dynamic json = JObject.Parse(message.commands);
+
+		//	//if (Log.IsDebugEnabled) Log.Debug($"Command JSON:\n{json}");
+		//	string fileName = Path.GetTempPath() + "AvailableCommands_" + Guid.NewGuid() + ".json";
+		//	Log.Info($"Writing commands to filename: {fileName}");
+		//	File.WriteAllText(fileName, message.commands);
+		//}
+		//{
+		//	dynamic json = JObject.Parse(message.unknown);
+
+		//	//if (Log.IsDebugEnabled) Log.Debug($"Command (unknown) JSON:\n{json}");
+		//}
 	}
 
 	public override void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
 	{
 		string fileName = Path.GetTempPath() + "ResourcePackChunkData_" + message.packageId + ".zip";
-		Log.Warn("Writing ResourcePackChunkData part " + message.chunkIndex + " to filename: " + fileName);
+		Log.Warn("Writing ResourcePackChunkData part " + message.chunkIndex.ToString() + " to filename: " + fileName);
 
 		FileStream file = File.OpenWrite(fileName);
 		file.Seek((long) message.progress, SeekOrigin.Begin);
@@ -595,33 +853,40 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 	public override void HandleMcpeAvailableEntityIdentifiers(McpeAvailableEntityIdentifiers message)
 	{
-		foreach (NbtTag entity in (NbtList)message.namedtag.NbtFile.RootTag["idlist"])
+		foreach (var entity in message.namedtag.NbtFile.RootTag["idlist"] as NbtList)
 		{
-			string id = ((NbtString)entity["id"]).Value;
-			int rid = ((NbtInt)entity["rid"]).Value;
-			if (!Enum.IsDefined(typeof(EntityType), rid)) Log.Debug($"{{ (EntityType) {rid}, \"{id}\" }},");
+			var id = (entity["id"] as NbtString).Value;
+			var rid = (entity["rid"] as NbtInt).Value;
+			if (!Enum.IsDefined(typeof(EntityType), rid))
+			{
+				Log.Debug($"{{ (EntityType) {rid}, \"{id}\" }},");
+			}
 		}
 	}
 
 	public override void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
 	{
-		var list = new NbtCompound("");
-		foreach (NbtTag biome in (NbtCompound)message.namedtag.NbtFile.RootTag)
-		{
-			string biomeName = biome.Name;
-			float downfall = ((NbtFloat)biome["downfall"]).Value;
-			float temperature = ((NbtFloat)biome["temperature"]).Value;
-			list.Add(
-				new NbtCompound(biomeName)
-				{
-					new NbtFloat("temperature", temperature),
-					new NbtFloat("downfall", downfall)
-				}
-			);
-		}
+		//NbtCompound list = new NbtCompound("");
+		//foreach (Biome biome in Biomes)
+		//{
+		//	if (string.IsNullOrEmpty(biome.DefinitionName))
+		//		continue;
+		//	list.Add(
+		//		new NbtCompound(biome.DefinitionName)
+		//		{
+		//			new NbtFloat("downfall", biome.Downfall),
+		//			new NbtFloat("temperature", biome.Temperature),
+		//		}
+		//	);
+		//}
 
-		File.WriteAllText("newResources/biomes.txt", list.ToString());
-		Log.Warn("Received biome definitions exported to newResources/biomes.txt\n");
+		var root = message.namedtag.NbtFile.RootTag;
+		//Log.Debug($"\n{root}");
+		File.WriteAllText(Path.Combine(Path.GetTempPath(), "Biomes_" + Guid.NewGuid() + ".txt"), root.ToString());
+	}
+
+	public override void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
+	{
 	}
 
 	public override void HandleMcpePlayStatus(McpePlayStatus message)
@@ -629,17 +894,38 @@ public class BedrockTraceHandler(MiNetClient client) : McpeClientMessageHandlerB
 
 		base.HandleMcpePlayStatus(message);
 
-		if (Client.PlayerStatus != 0) return;
-		McpeClientCacheStatus packet = McpeClientCacheStatus.CreateObject();
-		packet.enabled = Client.UseBlobCache;
-		Client.SendPacket(packet);
+		if (Client.PlayerStatus == 0)
+		{
+			var packet = McpeClientCacheStatus.CreateObject();
+			packet.enabled = Client.UseBlobCache;
+			Client.SendPacket(packet);
+		}
 	}
-	
-	public override void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
+
+	/// <inheritdoc />
+	public override void HandleMcpeCommandOutput(McpeCommandOutput message)
 	{
+		base.HandleMcpeCommandOutput(message);
+
+		//foreach (var msg in message.Messages)
+		//{
+		//	Log.Warn($"Received command output: {msg}");
+		//}
 	}
-	
-	public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
+
+	public override void HandleMcpeItemComponent(McpeItemComponent message)
 	{
+		var settings = new JsonSerializerSettings
+		{
+			PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+			TypeNameHandling = TypeNameHandling.Auto,
+			Formatting = Formatting.Indented,
+			DefaultValueHandling = DefaultValueHandling.Include,
+			NullValueHandling = NullValueHandling.Ignore
+		};
+
+		var fileNameItemstates = Path.GetTempPath() + "itemstates_" + Guid.NewGuid() + ".json";
+		File.WriteAllText(fileNameItemstates, JsonConvert.SerializeObject(new Dictionary<string, ItemState>(message.entries.OrderBy(s => s.Key)), settings));
+		Log.Warn($"itemstates_ Filename:\n{fileNameItemstates}");
 	}
 }

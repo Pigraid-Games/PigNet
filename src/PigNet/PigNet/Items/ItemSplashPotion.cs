@@ -1,13 +1,12 @@
 ﻿using PigNet.Entities.Projectiles;
-using PigNet.Sounds;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Items;
 
-public class ItemSplashPotion : Item
+public partial class ItemSplashPotion
 {
-	public ItemSplashPotion(short metadata = 0) : base("minecraft:splash_potion", 438)
+	public ItemSplashPotion(short metadata = 0)
 	{
 		Metadata = metadata;
 		MaxStackSize = 1;
@@ -25,9 +24,9 @@ public class ItemSplashPotion : Item
 
 		var splashPotion = new SplashPotion(player, world, Metadata) { KnownPosition = (PlayerLocation) player.KnownPosition.Clone() };
 		splashPotion.KnownPosition.Y += 1.62f;
-		splashPotion.Velocity = splashPotion.KnownPosition.GetDirection().Normalize() * Force;
+		splashPotion.Velocity = splashPotion.KnownPosition.ToVector3() * Force;
 		splashPotion.SpawnEntity();
-		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
+		world.BroadcastSound(player.KnownPosition.ToVector3(), LevelSoundEventType.Throw);
 		Item itemInHand = player.Inventory.GetItemInHand();
 		if (itemInHand.Count != 0)
 		{

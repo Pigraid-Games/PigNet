@@ -6,7 +6,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Torch : Block
+public partial class Torch
 {
 	public Torch()
 	{

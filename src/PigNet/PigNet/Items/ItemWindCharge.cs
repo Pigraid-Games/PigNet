@@ -7,14 +7,9 @@ using PigNet.Worlds;
 
 namespace PigNet.Items;
 
-public class ItemWindCharge : Item
+public partial class ItemWindCharge
 {
 	private static readonly ConcurrentDictionary<Player, bool> Cooldowns = new();
-
-	public ItemWindCharge() : base("minecraft:wind_charge", 1046)
-	{
-		MaxStackSize = 64;
-	}
 
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
@@ -38,12 +33,12 @@ public class ItemWindCharge : Item
 		var windCharge = new WindCharge(player, world)
 		{
 			KnownPosition = (PlayerLocation) player.KnownPosition.Clone(),
-			Velocity = player.KnownPosition.GetDirection().Normalize() * Force
+			Velocity = player.KnownPosition.ToVector3() * Force
 		};
 		windCharge.KnownPosition.Y += 1.62f;
 		windCharge.SpawnEntity();
 
-		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
+		world.BroadcastSound(player.KnownPosition.ToVector3(), LevelSoundEventType.Throw);
 		Item itemInHand = player.Inventory.GetItemInHand();
 		itemInHand.Count--;
 		player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, itemInHand, true);

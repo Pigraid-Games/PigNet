@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class QuartzBlock : Block
+public partial class QuartzBlock
 {
 	public QuartzBlock()
 	{

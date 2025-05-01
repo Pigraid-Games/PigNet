@@ -2,7 +2,7 @@
 
 public abstract class WoodenStairsBase : StairsBase
 {
-	public WoodenStairsBase()
+	protected WoodenStairsBase()
 	{
 		BlastResistance = 15;
 		IsFlammable = true;

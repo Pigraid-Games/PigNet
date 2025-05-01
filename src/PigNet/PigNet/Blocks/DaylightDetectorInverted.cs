@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class DaylightDetectorInverted : Block
+public partial class DaylightDetectorInverted
 {
 	public DaylightDetectorInverted()
 	{

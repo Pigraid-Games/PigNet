@@ -12,7 +12,7 @@ public abstract class LeavesBase : Block
 
 	public abstract bool UpdateBit { get; set; }
 
-	public LeavesBase()
+	protected LeavesBase()
 	{
 		IsTransparent = true;
 		BlastResistance = 1;
@@ -66,7 +66,8 @@ public abstract class LeavesBase : Block
 				BirchLeaves => [ItemFactory.GetItem<BirchSapling>()],
 				JungleLeaves => [ItemFactory.GetItem<JungleSapling>()],
 				AcaciaLeaves => [ItemFactory.GetItem<AcaciaSapling>()],
-				DarkOakLeaves => [ItemFactory.GetItem<DarkOakSapling>()]
+				DarkOakLeaves => [ItemFactory.GetItem<DarkOakSapling>()],
+				_ => throw new ArgumentOutOfRangeException()
 			};
 		}
 
@@ -77,7 +78,7 @@ public abstract class LeavesBase : Block
 	{
 		if (visited.Contains(coord)) return false;
 
-		var block = level.GetBlock(coord);
+		Block block = level.GetBlock(coord);
 		if (block is LogBase) return true;
 
 		visited.Add(coord);

@@ -1,8 +1,8 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Obsidian : Block
+public partial class Observer
 {
-	public Obsidian()
+	public Observer()
 	{
 		BlastResistance = 6000;
 		Hardness = 50;

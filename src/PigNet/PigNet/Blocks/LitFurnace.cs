@@ -1,4 +1,5 @@
-﻿using PigNet.Items;
+﻿using PigNet.Blocks.States;
+using PigNet.Items;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
@@ -12,6 +13,6 @@ public partial class LitFurnace : FurnaceBase
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new[] { ItemFactory.GetItem<Furnace>() };
+		return [ItemFactory.GetItem<Furnace>()];
 	}
 }

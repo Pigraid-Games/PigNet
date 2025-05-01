@@ -1,10 +1,6 @@
-﻿using PigNet.Blocks.States;
-using PigNet.Items;
-using PigNet.Worlds;
+﻿namespace PigNet.Blocks;
 
-namespace PigNet.Blocks;
-
-public partial class Cactus : Block
+public partial class Cactus
 {
 	public Cactus()
 	{

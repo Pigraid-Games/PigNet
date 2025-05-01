@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class ChorusFlower : Block
+public partial class ChorusFlower
 {
 	public ChorusFlower()
 	{

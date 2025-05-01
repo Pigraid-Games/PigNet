@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class IronBars : Block
+public partial class IronBars
 {
 	public IronBars()
 	{

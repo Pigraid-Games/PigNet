@@ -1,245 +1,195 @@
-﻿#region LICENSE
-
-// The contents of this file are subject to the Common Public Attribution
-// License Version 1.0. (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// https://github.com/NiclasOlofsson/PigNet/blob/master/LICENSE. 
-// The License is based on the Mozilla Public License Version 1.1, but Sections 14 
-// and 15 have been added to cover use of software over a computer network and 
-// provide for limited attribution for the Original Developer. In addition, Exhibit A has 
-// been modified to be consistent with Exhibit B.
-// 
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
-// the specific language governing rights and limitations under the License.
-// 
-// The Original Code is PigNet.
-// 
-// The Original Developer is the Initial Developer.  The Initial Developer of
-// the Original Code is Niclas Olofsson.
-// 
-// All portions of the code written by Niclas Olofsson are Copyright (c) 2014-2018 Niclas Olofsson. 
-// All Rights Reserved.
-
-#endregion
-
-using System.Linq;
+﻿using System.Linq;
 using System.Numerics;
 using PigNet.Entities.Passive;
 using PigNet.Worlds;
 
-namespace PigNet.Entities.Behaviors
+namespace PigNet.Entities.Behaviors;
+
+public class FindAttackableTargetBehavior : BehaviorBase, ITargetingBehavior
 {
-	public class FindAttackableTargetBehavior : BehaviorBase, ITargetingBehavior
+	protected readonly Mob _entity;
+	private readonly double _targetDistance;
+	private int _targetUnseenTicks = 0;
+
+	public FindAttackableTargetBehavior(Mob entity, double targetDistance = 16)
 	{
-		protected readonly Mob _entity;
-		private readonly double _targetDistance;
-		private int _targetUnseenTicks = 0;
+		_entity = entity;
+		_targetDistance = targetDistance;
+	}
 
-		public FindAttackableTargetBehavior(Mob entity, double targetDistance = 16)
+	public override bool ShouldStart()
+	{
+		if (_entity.Level.Random.Next(10) != 0) return false;
+
+		Player player = _entity.Level.Players
+			.OrderBy(p => Vector3.Distance(_entity.KnownPosition, p.Value.KnownPosition))
+			.FirstOrDefault(p =>
+				p.Value.IsSpawned
+				&& !p.Value.HealthManager.IsDead
+				&& p.Value.GameMode != GameMode.Creative
+				&& p.Value.GameMode != GameMode.Spectator
+				&& _entity.DistanceTo(p.Value) < GetTargetDistance(p.Value)).Value;
+
+		if (player == null)
 		{
-			_entity = entity;
-			_targetDistance = targetDistance;
+			_entity.SetTarget(null);
+			return false;
 		}
 
-		public override bool ShouldStart()
+		_entity.SetTarget(player);
+
+		return true;
+	}
+
+	private double GetTargetDistance(Player player)
+	{
+		double distance = _targetDistance;
+		if (player.IsSneaking) distance *= 0.8;
+		return distance;
+	}
+
+	public override void OnStart()
+	{
+		_targetUnseenTicks = 0;
+	}
+
+	public override bool CanContinue()
+	{
+		Entity target = _entity.Target;
+		if (target == null) return false;
+		if (target.HealthManager.IsDead) return false;
+
+
+		if (target is not Player player)
 		{
-			if (_entity.Level.Random.Next(10) != 0)
-			{
-				return false;
-			}
+			if (_entity.DistanceTo(target) > _targetDistance) return false;
+		}
+		else
+		{
+			if (_entity.DistanceTo(player) > GetTargetDistance(player)) return false;
+			if (_entity.CanSee(player)) _targetUnseenTicks = 0;
+			else if (_targetUnseenTicks++ > 60) return false;
 
-			var player = _entity.Level.Players
-				.OrderBy(p => Vector3.Distance(_entity.KnownPosition, p.Value.KnownPosition))
-				.FirstOrDefault(p =>
-					p.Value.IsSpawned
-					&& !p.Value.HealthManager.IsDead
-					&& p.Value.GameMode != GameMode.Creative
-					&& p.Value.GameMode != GameMode.Spectator
-					&& _entity.DistanceTo(p.Value) < GetTargetDistance(p.Value)).Value;
-
-			if (player == null)
-			{
-				_entity.SetTarget(null);
-				return false;
-			}
-
-			_entity.SetTarget(player);
-
-			return true;
+			_entity.SetTarget(player); // This makes sense when we to attacked by targeting
 		}
 
-		private double GetTargetDistance(Player player)
+		return true;
+	}
+
+	public override void OnTick(Entity[] entities)
+	{
+	}
+
+	public override void OnEnd()
+	{
+		_entity.SetTarget(null);
+	}
+}
+
+public class FindAttackableEntityTargetBehavior<TEntity> : BehaviorBase, ITargetingBehavior where TEntity : Entity
+{
+	private readonly Mob _entity;
+	private readonly double _targetDistance;
+	private readonly int _attackChance;
+	private int _targetUnseenTicks = 0;
+	private Entity _misssedEntity;
+
+	public FindAttackableEntityTargetBehavior(Mob entity, double targetDistance = 16, int attackChance = 10)
+	{
+		_entity = entity;
+		_targetDistance = targetDistance;
+		_attackChance = attackChance;
+	}
+
+	public override bool ShouldStart()
+	{
+		if (_entity.Level.Random.Next(150) != 0)
 		{
-			double distance = _targetDistance;
-
-			if (player.IsSneaking)
-			{
-				distance *= 0.8;
-			}
-
-			return distance;
+			return false;
 		}
 
-		public override void OnStart()
+		var target = _entity.Level.Entities
+			.OrderBy(p => Vector3.Distance(_entity.KnownPosition, p.Value.KnownPosition))
+			.FirstOrDefault(p =>
+				p.Value != _entity
+				&& p.Value is TEntity
+				&& !p.Value.HealthManager.IsDead
+				&& _entity.DistanceTo(p.Value) < _targetDistance).Value as TEntity;
+
+		if (target == _misssedEntity)
+		{
+			return false;
+		}
+
+		if (target == null)
+		{
+			_entity.SetTarget(null);
+			return false;
+		}
+
+		_entity.SetTarget(target);
+
+		return true;
+	}
+
+	public override void OnStart()
+	{
+		_targetUnseenTicks = 0;
+	}
+
+	public override bool CanContinue()
+	{
+		// Give the poor entity a chance to survive
+		// Also makes it let go of unreachable targets
+		var target = _entity.Target;
+
+		if (_entity.Level.Random.Next(_attackChance * 10) == 0 && _entity.DistanceTo(target) > 4)
+		{
+			_misssedEntity = _entity.Target;
+			return false;
+		}
+
+		if (target == null)
+			return false;
+
+		if (target.HealthManager.IsDead)
+			return false;
+
+
+		if (_entity.DistanceTo(target) > _targetDistance)
+		{
+			return false;
+		}
+
+		if (_entity.CanSee(target))
 		{
 			_targetUnseenTicks = 0;
 		}
-
-		public override bool CanContinue()
+		else if (_targetUnseenTicks++ > 60)
 		{
-			var target = _entity.Target;
+			return false;
+		}
 
-			if (target == null) return false;
-
-			if (target.HealthManager.IsDead) return false;
-
-
-			if (!(target is Player))
+		if (_entity is Wolf )
+		{
+			Wolf wolf = _entity as Wolf;
+			if (wolf.DistanceTo(wolf.Owner) > 10)
 			{
-				if (_entity.DistanceTo(target) > _targetDistance)
-				{
-					return false;
-				}
+				return false;
 			}
-			else
-			{
-				if (_entity.DistanceTo(target) > GetTargetDistance((Player) target))
-				{
-					return false;
-				}
-
-				if (_entity.CanSee(target))
-				{
-					_targetUnseenTicks = 0;
-				}
-				else if (_targetUnseenTicks++ > 60)
-				{
-					return false;
-				}
-
-				_entity.SetTarget(target); // This makes sense when we to attacked by targeting
-			}
-
-			return true;
 		}
 
-		public override void OnTick(Entity[] entities)
-		{
-		}
+		_entity.SetTarget(target); // This makes sense when we to attacked by targeting
 
-		public override void OnEnd()
-		{
-			_entity.SetTarget(null);
-		}
+		return true;
 	}
 
-	public class FindAttackableEntityTargetBehavior<TEntity> : BehaviorBase, ITargetingBehavior where TEntity : Entity
+	public override void OnTick(Entity[] entities)
 	{
-		private readonly Mob _entity;
-		private readonly double _targetDistance;
-		private readonly int _attackChance;
-		private int _targetUnseenTicks = 0;
-		private Entity _misssedEntity;
-
-		public FindAttackableEntityTargetBehavior(Mob entity, double targetDistance = 16, int attackChance = 10)
-		{
-			_entity = entity;
-			_targetDistance = targetDistance;
-			_attackChance = attackChance;
-		}
-
-		public override bool ShouldStart()
-		{
-			if (_entity.Level.Random.Next(150) != 0)
-			{
-				return false;
-			}
-
-			var target = _entity.Level.Entities
-				.OrderBy(p => Vector3.Distance(_entity.KnownPosition, p.Value.KnownPosition))
-				.FirstOrDefault(p =>
-					p.Value != _entity
-					&& p.Value is TEntity
-					&& !p.Value.HealthManager.IsDead
-					&& _entity.DistanceTo(p.Value) < _targetDistance).Value as TEntity;
-
-			if (target == _misssedEntity)
-			{
-				return false;
-			}
-
-			if (target == null)
-			{
-				_entity.SetTarget(null);
-				return false;
-			}
-
-			_entity.SetTarget(target);
-
-			return true;
-		}
-
-		public override void OnStart()
-		{
-			_targetUnseenTicks = 0;
-		}
-
-		public override bool CanContinue()
-		{
-			// Give the poor entity a chance to survive
-			// Also makes it let go of unreachable targets
-			var target = _entity.Target;
-
-			if (_entity.Level.Random.Next(_attackChance * 10) == 0 && _entity.DistanceTo(target) > 4)
-			{
-				_misssedEntity = _entity.Target;
-				return false;
-			}
-
-			if (target == null)
-				return false;
-
-			if (target.HealthManager.IsDead)
-				return false;
-
-
-			if (_entity.DistanceTo(target) > _targetDistance)
-			{
-				return false;
-			}
-
-			if (_entity.CanSee(target))
-			{
-				_targetUnseenTicks = 0;
-			}
-			else if (_targetUnseenTicks++ > 60)
-			{
-				return false;
-			}
-
-			if (_entity is Wolf )
-			{
-				Wolf wolf = _entity as Wolf;
-				if (wolf.DistanceTo(wolf.Owner) > 10)
-				{
-					return false;
-				}
-			}
-
-			_entity.SetTarget(target); // This makes sense when we to attacked by targeting
-
-			return true;
-		}
-
-		public override void OnTick(Entity[] entities)
-		{
-		}
-
-		public override void OnEnd()
-		{
-			_entity.SetTarget(null);
-		}
 	}
 
+	public override void OnEnd()
+	{
+		_entity.SetTarget(null);
+	}
 }

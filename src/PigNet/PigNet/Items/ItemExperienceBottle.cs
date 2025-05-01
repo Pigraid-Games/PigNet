@@ -5,13 +5,8 @@ using PigNet.Worlds;
 
 namespace PigNet.Items;
 
-public class ItemExperienceBottle : Item
+public partial class ItemExperienceBottle
 {
-	public ItemExperienceBottle() : base("minecraft:experience_bottle", 384)
-	{
-		MaxStackSize = 64;
-	}
-
 	public override void UseItem(Level world, Player player, BlockCoordinates blockCoordinates)
 	{
 		// Trigger the PlayerShootEvent
@@ -25,9 +20,9 @@ public class ItemExperienceBottle : Item
 
 		var experienceBottle = new ExperienceBottle(player, world) { KnownPosition = (PlayerLocation) player.KnownPosition.Clone() };
 		experienceBottle.KnownPosition.Y += 1.62f;
-		experienceBottle.Velocity = experienceBottle.KnownPosition.GetDirection().Normalize() * Force;
+		experienceBottle.Velocity = experienceBottle.KnownPosition.ToVector3() * Force;
 		experienceBottle.SpawnEntity();
-		world.BroadcastSound(new ThrowSound(player.KnownPosition), "minecraft:player");
+		world.BroadcastSound(player.KnownPosition.ToVector3(), LevelSoundEventType.Throw);
 		Item itemInHand = player.Inventory.GetItemInHand();
 		if (player.GameMode == GameMode.Creative) return;
 		itemInHand.Count--;

@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class BrewingStand : Block
+public partial class BrewingStand
 {
 	public BrewingStand()
 	{

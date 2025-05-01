@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class PurpurBlock : Block
+public partial class PurpurBlock
 {
 	public PurpurBlock()
 	{

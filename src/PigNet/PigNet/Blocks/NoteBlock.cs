@@ -1,7 +1,7 @@
 ﻿
 namespace PigNet.Blocks;
 
-public partial class Noteblock : Block
+public partial class Noteblock
 {
 	public Noteblock()
 	{

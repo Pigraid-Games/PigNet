@@ -6,14 +6,10 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class WallBanner : Block
+public partial class WallBanner
 {
 	public int BaseColor { get; set; }
 	public NbtCompound ExtraData { get; set; }
-
-	public WallBanner()
-	{
-	}
 
 	protected override bool CanPlace(Level world, Player player, BlockCoordinates blockCoordinates, BlockCoordinates targetCoordinates, BlockFace face)
 	{

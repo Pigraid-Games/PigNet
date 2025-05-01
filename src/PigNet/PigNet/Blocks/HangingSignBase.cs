@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using PigNet.BlockEntities;
 using PigNet.Blocks.States;
 using PigNet.Items;
 using PigNet.Utils.Vectors;

@@ -4,7 +4,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class LapisOre : Block
+public partial class LapisOre
 {
 	public LapisOre()
 	{

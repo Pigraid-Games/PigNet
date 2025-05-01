@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class DragonEgg : Block
+public partial class DragonEgg
 {
 	public DragonEgg()
 	{

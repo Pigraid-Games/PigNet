@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Tnt : Block
+public partial class Tnt
 {
 	public Tnt()
 	{

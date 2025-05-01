@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class ActivatorRail : Block
+public partial class ActivatorRail
 {
 	public ActivatorRail()
 	{

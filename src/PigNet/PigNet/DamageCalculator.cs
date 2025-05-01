@@ -160,85 +160,110 @@ public class DamageCalculator
 		return increase;
 	}
 
-	public virtual double CalculatePlayerDamage(Entity source, Entity target, Item tool, double damage, DamageCause cause)
+	public virtual double CalculatePlayerDamage(Entity source, Player target, Item tool, double damage, DamageCause cause)
 	{
 		double originalDamage = damage;
 		double armorValue = 0;
 		double epfValue = 0;
 
-		if (target is Player player)
 		{
-			Item armorPiece1 = player.Inventory.ArmorInventory.GetHeadItem();
-			armorValue += armorPiece1.ItemMaterial switch
 			{
-				ItemMaterial.Leather => 1,
-				ItemMaterial.Gold => 2,
-				ItemMaterial.Chain => 2,
-				ItemMaterial.Iron => 2,
-				ItemMaterial.Diamond => 3,
-				ItemMaterial.Netherite => 4,
-				ItemMaterial.None => 0,
-				_ => 0
-			};
-			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece1, tool, cause);
-
-			Item armorPiece2 = player.Inventory.ArmorInventory.GetChestItem();
-			armorValue += armorPiece2.ItemMaterial switch
-			{
-				ItemMaterial.Leather => 3,
-				ItemMaterial.Gold => 5,
-				ItemMaterial.Chain => 5,
-				ItemMaterial.Iron => 6,
-				ItemMaterial.Diamond => 8,
-				ItemMaterial.Netherite => 9,
-				ItemMaterial.None => 0,
-				_ => 0
-			};
-			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece2, tool, cause);
-
-			Item armorPiece3 = player.Inventory.ArmorInventory.GetLegsItem();
-			switch (armorPiece3.ItemMaterial)
-			{
-				case ItemMaterial.Leather:
-					armorValue += 2;
-					break;
-				case ItemMaterial.Gold:
-					armorValue += 3;
-					break;
-				case ItemMaterial.Chain:
-					armorValue += 4;
-					break;
-				case ItemMaterial.Iron:
-					armorValue += 5;
-					break;
-				case ItemMaterial.Diamond:
-					armorValue += 6;
-					break;
-				case ItemMaterial.Netherite:
-					armorValue += 7; 
-					break;
+				Item armorPiece = target.Inventory.Helmet;
+				switch (armorPiece.ItemMaterial)
+				{
+					case ItemMaterial.Leather:
+						armorValue += 1;
+						break;
+					case ItemMaterial.Gold:
+						armorValue += 2;
+						break;
+					case ItemMaterial.Chain:
+						armorValue += 2;
+						break;
+					case ItemMaterial.Iron:
+						armorValue += 2;
+						break;
+					case ItemMaterial.Diamond:
+						armorValue += 3;
+						break;
+				}
+				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece, tool, cause);
 			}
-			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece3, tool, cause);
 
-			Item armorPiece4 = player.Inventory.ArmorInventory.GetFeetItem();
-			armorValue += armorPiece4.ItemMaterial switch
 			{
-				ItemMaterial.Leather => 1,
-				ItemMaterial.Gold => 1,
-				ItemMaterial.Chain => 1,
-				ItemMaterial.Iron => 2,
-				ItemMaterial.Diamond => 3,
-				ItemMaterial.Netherite => 4,
-				ItemMaterial.None => 0,
-				_ => 0
-			};
-			epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece4, tool, cause);
+				Item armorPiece = target.Inventory.Chest;
+				switch (armorPiece.ItemMaterial)
+				{
+					case ItemMaterial.Leather:
+						armorValue += 3;
+						break;
+					case ItemMaterial.Gold:
+						armorValue += 5;
+						break;
+					case ItemMaterial.Chain:
+						armorValue += 5;
+						break;
+					case ItemMaterial.Iron:
+						armorValue += 6;
+						break;
+					case ItemMaterial.Diamond:
+						armorValue += 8;
+						break;
+				}
+				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece, tool, cause);
+			}
+
+			{
+				Item armorPiece = target.Inventory.Leggings;
+				switch (armorPiece.ItemMaterial)
+				{
+					case ItemMaterial.Leather:
+						armorValue += 2;
+						break;
+					case ItemMaterial.Gold:
+						armorValue += 3;
+						break;
+					case ItemMaterial.Chain:
+						armorValue += 4;
+						break;
+					case ItemMaterial.Iron:
+						armorValue += 5;
+						break;
+					case ItemMaterial.Diamond:
+						armorValue += 6;
+						break;
+				}
+				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece, tool, cause);
+			}
+
+			{
+				Item armorPiece = target.Inventory.Boots;
+				switch (armorPiece.ItemMaterial)
+				{
+					case ItemMaterial.Leather:
+						armorValue += 1;
+						break;
+					case ItemMaterial.Gold:
+						armorValue += 1;
+						break;
+					case ItemMaterial.Chain:
+						armorValue += 1;
+						break;
+					case ItemMaterial.Iron:
+						armorValue += 2;
+						break;
+					case ItemMaterial.Diamond:
+						armorValue += 3;
+						break;
+				}
+				epfValue += CalculateDamageReductionFromEnchantments(source, armorPiece, tool, cause);
+			}
 		}
 
-		damage *= (1 - Math.Max(armorValue / 5, armorValue - damage / 2) / 25);
+		damage = damage * (1 - Math.Max(armorValue / 5, armorValue - damage / 2) / 25);
 
 		epfValue = Math.Min(20, epfValue);
-		damage *= (1 - epfValue / 25);
+		damage = damage * (1 - epfValue / 25);
 
 
 		Log.Debug($"Original Damage={originalDamage:F1} Redused Damage={damage:F1}, Armor Value={armorValue:F1}, EPF {epfValue:F1}");
@@ -337,10 +362,10 @@ public class DamageCalculator
 	public static int CalculateFireTickReduction(Player target)
 	{
 		int reduction = 0;
-		reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetHeadItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
-		reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetChestItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
-		reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetLegsItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
-		reduction = Math.Max(reduction, target.Inventory.ArmorInventory.GetFeetItem().GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+		reduction = Math.Max(reduction, target.Inventory.Helmet.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+		reduction = Math.Max(reduction, target.Inventory.Chest.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+		reduction = Math.Max(reduction, target.Inventory.Leggings.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
+		reduction = Math.Max(reduction, target.Inventory.Boots.GetEnchantingLevel(EnchantingType.FireProtection) * 15);
 
 		return (int) Math.Ceiling(reduction / 100f);
 	}

@@ -1,10 +1,9 @@
 ﻿using PigNet.Items;
-using PigNet.Items.Weapons;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class Snow : Block
+public partial class Snow
 {
 	public Snow()
 	{

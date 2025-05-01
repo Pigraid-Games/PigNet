@@ -2,7 +2,7 @@
 
 public partial class Furnace : FurnaceBase
 {
-	public Furnace()
+	public Furnace() : base()
 	{
 	}
 }

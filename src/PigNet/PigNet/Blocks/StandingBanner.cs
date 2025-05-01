@@ -7,7 +7,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class StandingBanner : Block
+public partial class StandingBanner
 {
 	public int BaseColor { get; set; }
 	public NbtCompound ExtraData { get; set; }

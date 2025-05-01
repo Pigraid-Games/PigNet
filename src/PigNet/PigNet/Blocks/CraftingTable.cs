@@ -1,13 +1,12 @@
 ﻿using System.Numerics;
-using PigNet.Net;
-using PigNet.Net.EnumerationsTable;
-using PigNet.Net.Packets.Mcpe;
+using PigNet.Inventories;
+using PigNet.Utils;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class CraftingTable : Block
+public partial class CraftingTable
 {
 	public CraftingTable()
 	{
@@ -19,7 +18,6 @@ public partial class CraftingTable : Block
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
 		new Inventory(Coordinates, WindowType.Workbench).Open(player);
-
 		return true;
 	}
 }

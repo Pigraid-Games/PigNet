@@ -33,8 +33,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using fNbt;
 using log4net;
-using PigNet.Plugins;
-using PigNet.Utils.Skins;
 using PigNet.BlockEntities;
 using PigNet.Blocks;
 using PigNet.Entities;
@@ -50,9 +48,8 @@ using PigNet.Sounds;
 using PigNet.Utils;
 using PigNet.Utils.Diagnostics;
 using PigNet.Utils.IO;
-using PigNet.Utils.Nbt;
 using PigNet.Utils.Vectors;
-using static PigNet.WeatherManager;
+using PigNet.Worlds.Anvil;
 
 namespace PigNet.Worlds;
 
@@ -66,13 +63,11 @@ public class Level : IBlockAccess
 	public static readonly BlockCoordinates North = new(0, 0, -1);
 	public static readonly BlockCoordinates East = new(1, 0, 0);
 	public static readonly BlockCoordinates West = new(-1, 0, 0);
-
-	private readonly object _playerWriteLock = new();
-
-	private readonly int _worldDayCycleTime = 24000;
 	private DateTime _lastBroadcast = DateTime.UtcNow;
 
 	private DateTime _lastSendTime = DateTime.UtcNow;
+
+	private readonly object _playerWriteLock = new();
 
 	public Profiler _profiler = new();
 
@@ -80,6 +75,8 @@ public class Level : IBlockAccess
 
 	private object _tickSync = new();
 	private Stopwatch _tickTimer = new();
+
+	private readonly int _worldDayCycleTime = 24000;
 	public long AvarageTickProcessingTime = 50;
 	public long LastTickProcessingTime;
 
@@ -89,14 +86,11 @@ public class Level : IBlockAccess
 
 		LevelManager = levelManager;
 		EntityManager = entityManager;
-		InventoryManager = new InventoryManager(this);
 		EntitySpawnManager = new EntitySpawnManager(this);
-		WeatherManager = new WeatherManager(this);
 		LevelId = levelId;
 		GameMode = gameMode;
 		Difficulty = difficulty;
 		ViewDistance = viewDistance;
-		TickDistance = ViewDistance / 2;
 		WorldProvider = worldProvider;
 	}
 
@@ -131,29 +125,21 @@ public class Level : IBlockAccess
 	public long TickTime { get; set; }
 	public int SkylightSubtracted { get; set; }
 	public long StartTimeInTicks { get; private set; }
-	public bool EnableBlockTicking { get; set; }
-	public bool EnableChunkTicking { get; set; }
+	public bool EnableBlockTicking { get; set; } = false;
+	public bool EnableChunkTicking { get; set; } = false;
 
 	public bool AllowBuild { get; set; } = true;
 	public bool AllowBreak { get; set; } = true;
 
 	public EntityManager EntityManager { get; protected set; }
-	public InventoryManager InventoryManager { get; protected set; }
 	public EntitySpawnManager EntitySpawnManager { get; protected set; }
-	public WeatherManager WeatherManager { get; protected set; }
 
 	public int ViewDistance { get; set; }
-
-	public int TickDistance { get; set; }
 
 	public Random Random { get; }
 
 	public int SaveInterval { get; set; } = 300;
 	public int UnloadInterval { get; set; } = -1;
-
-	public string fog { get; set; } = "";
-	public WeatherManager.weatherTypes Weather { get; set; } = WeatherManager.weatherTypes.clear;
-	public float rainLevel { get; set; }
 
 	public LevelManager LevelManager { get; }
 	public Level NetherLevel { get; set; }
@@ -180,14 +166,13 @@ public class Level : IBlockAccess
 	public bool TntExplodes { get; set; } = true;
 	public bool SendCommandfeedback { get; set; } = true;
 	public int RandomTickSpeed { get; set; } = 3;
-	public bool RedstoneEnabled { get; set; } = true;
 	public bool DoShowDeathMessage { get; set; } = true;
 
-	public Block GetBlock(BlockCoordinates coordinates, ChunkColumn tryChunk = null)
+	public Block GetBlock(BlockCoordinates blockCoordinates, ChunkColumn tryChunk = null)
 	{
-		ChunkColumn chunk;
+		ChunkColumn chunk = null;
 
-		var chunkCoordinates = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
+		var chunkCoordinates = new ChunkCoordinates(blockCoordinates.X >> 4, blockCoordinates.Z >> 4);
 		if (tryChunk != null && tryChunk.X == chunkCoordinates.X && tryChunk.Z == chunkCoordinates.Z)
 			chunk = tryChunk;
 		else
@@ -195,16 +180,18 @@ public class Level : IBlockAccess
 		if (chunk == null)
 			return new Air
 			{
-				Coordinates = coordinates,
+				Coordinates = blockCoordinates,
 				SkyLight = 15
 			};
 
-		Block block = chunk.GetBlockObject(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f);
-		byte blockLight = chunk.GetBlocklight(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f);
-		byte skyLight = chunk.GetSkylight(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f);
-		byte biomeId = chunk.GetBiome(coordinates.X & 0x0f, coordinates.Z & 0x0f);
+		Block block = chunk.GetBlockObject(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
+		byte blockLight = chunk.GetBlocklight(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
+		byte skyLight = chunk.GetSkylight(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
+		byte biomeId = chunk.GetBiome(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
 
-		block.Coordinates = coordinates;
+		//Block block = BlockFactory.GetBlockById(bid);
+		block.Coordinates = blockCoordinates;
+		//block.Metadata = metadata;
 		block.BlockLight = blockLight;
 		block.SkyLight = skyLight;
 		block.BiomeId = biomeId;
@@ -215,7 +202,7 @@ public class Level : IBlockAccess
 	public int GetHeight(BlockCoordinates blockCoordinates)
 	{
 		ChunkColumn chunk = GetChunk(blockCoordinates);
-		if (chunk == null) return 256;
+		if (chunk == null) return ChunkColumn.WorldMaxY;
 
 		return chunk.GetHeight(blockCoordinates.X & 0x0f, blockCoordinates.Z & 0x0f);
 	}
@@ -228,13 +215,13 @@ public class Level : IBlockAccess
 	public ChunkColumn GetChunk(ChunkCoordinates chunkCoordinates, bool cacheOnly = false)
 	{
 		ChunkColumn chunk = WorldProvider.GenerateChunkColumn(chunkCoordinates, cacheOnly);
-		if (chunk == null) Log.Debug($"Got <null> chunk at {chunkCoordinates}");
+		if (!cacheOnly && chunk == null) Log.Debug($"Got <null> chunk at {chunkCoordinates}");
 		return chunk;
 	}
 
 	public void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null)
 	{
-		if (block.Coordinates.Y < 0) return;
+		if (block.Coordinates.Y < ChunkColumn.WorldMinY) return;
 
 		var chunkCoordinates = new ChunkCoordinates(block.Coordinates.X >> 4, block.Coordinates.Z >> 4);
 		ChunkColumn chunk = possibleChunk != null && possibleChunk.X == chunkCoordinates.X && possibleChunk.Z == chunkCoordinates.Z ? possibleChunk : GetChunk(chunkCoordinates);
@@ -247,20 +234,21 @@ public class Level : IBlockAccess
 
 		if (applyPhysics) ApplyPhysics(block.Coordinates.X, block.Coordinates.Y, block.Coordinates.Z);
 
-		// We should not ignore creative. Need to investigate.
-		if (GameMode != GameMode.Creative && calculateLight /* && block.LightLevel > 0*/)
-		{
-			if (Dimension == Dimension.Overworld) new SkyLightCalculations().Calculate(this, block.Coordinates);
+		// !!!now the client is calculating the light!!!
+		//// We should not ignore creative. Need to investigate.
+		//if (GameMode != GameMode.Creative && calculateLight /* && block.LightLevel > 0*/)
+		//{
+		//	if (Dimension == Dimension.Overworld) new SkyLightCalculations().Calculate(this, block.Coordinates);
 
-			block.BlockLight = (byte) block.LightLevel;
-			chunk.SetBlocklight(block.Coordinates.X & 0x0f, block.Coordinates.Y, block.Coordinates.Z & 0x0f, (byte) block.LightLevel);
-			BlockLightCalculations.Calculate(this, block.Coordinates);
-		}
+		//	block.BlockLight = (byte) block.LightLevel;
+		//	chunk.SetBlocklight(block.Coordinates.X & 0x0f, block.Coordinates.Y, block.Coordinates.Z & 0x0f, (byte) block.LightLevel);
+		//	BlockLightCalculations.Calculate(this, block.Coordinates);
+		//}
 
 		if (broadcast)
 		{
 			McpeUpdateBlock message = McpeUpdateBlock.CreateObject();
-			message.blockRuntimeId = (uint) block.GetRuntimeId();
+			message.blockRuntimeId = (uint) block.RuntimeId;
 			message.coordinates = block.Coordinates;
 			message.blockPriority = 0xb;
 			RelayBroadcast(message);
@@ -280,7 +268,7 @@ public class Level : IBlockAccess
 		//IsWorldTimeStarted = false;
 		WorldProvider.Initialize();
 
-		SpawnPoint ??= new PlayerLocation(WorldProvider.GetSpawnPoint());
+		SpawnPoint = SpawnPoint ?? new PlayerLocation(WorldProvider.GetSpawnPoint());
 		TickTime = WorldProvider.GetTime();
 		WorldTime = WorldProvider.GetDayTime();
 		LevelName = WorldProvider.GetName();
@@ -291,32 +279,50 @@ public class Level : IBlockAccess
 
 			// Pre-cache chunks for spawn coordinates
 			int i = 0;
-			if (Dimension == Dimension.Overworld)
-			{
-				ChunkCoordinates chunkCoordinates = new ChunkCoordinates(SpawnPoint) / 8;
-				i += GenerateChunks(chunkCoordinates, new Dictionary<ChunkCoordinates, McpeWrapper>(), 1).Count(chunk => chunk != null);
 
-				Log.Info($"World pre-cache {i} chunks completed in {chunkLoading.ElapsedMilliseconds}ms");
-			}
+			var chunkCoordinates = new ChunkCoordinates(SpawnPoint);
+			if (Dimension == Dimension.Nether) chunkCoordinates /= 8;
+
+			foreach (McpeWrapper chunk in GenerateChunks(chunkCoordinates, new Dictionary<ChunkCoordinates, McpeWrapper>(), ViewDistance))
+				if (chunk != null)
+					i++;
+
+			Log.Info($"World pre-cache {i} chunks completed in {chunkLoading.ElapsedMilliseconds}ms");
 		}
 
 		if (Dimension == Dimension.Overworld)
-			if (Config.GetProperty("CheckForSafeSpawn", true))
+		{
+			if (Config.GetProperty("CheckForSafeSpawn", false))
 			{
-				SpawnPoint.Y = GetHeight((BlockCoordinates) SpawnPoint) + 1;
+				int height = GetHeight((BlockCoordinates) SpawnPoint);
+				if (height > SpawnPoint.Y) SpawnPoint.Y = height;
 				Log.Debug("Checking for safe spawn");
 			}
+
+			if (LevelManager != null && WorldProvider.HaveNether()) NetherLevel = LevelManager.GetDimension(this, Dimension.Nether);
+			if (LevelManager != null && WorldProvider.HaveTheEnd()) TheEndLevel = LevelManager.GetDimension(this, Dimension.TheEnd);
+		}
+
+		//SpawnPoint.Y = 20;
 
 		StartTimeInTicks = DateTime.UtcNow.Ticks;
 
 		_tickTimer = new Stopwatch();
 		_tickTimer.Restart();
-		_tickerHighPrecisionTimer = new HighPrecisionTimer(50, WorldTick, false, false);
+		_tickerHighPrecisionTimer = new HighPrecisionTimer(50, WorldTick, false, false, Config.GetProperty("EnableHighPrecision", true));
+	}
+
+	private void _tickerHighPrecisionTimer_Tick()
+	{
+		WorldTick(null);
 	}
 
 	public virtual void Close()
 	{
 		WorldProvider?.SaveChunks();
+
+		NetherLevel?.Close();
+		TheEndLevel?.Close();
 
 		_tickerHighPrecisionTimer?.Dispose();
 		_tickerHighPrecisionTimer = null;
@@ -343,7 +349,7 @@ public class Level : IBlockAccess
 				provider._chunkCache.TryRemove(chunk.Key, out ChunkColumn waste);
 				if (waste == null) continue;
 
-				foreach (SubChunk c in waste) c.PutPool();
+				foreach (SubChunk c in waste) c.Dispose();
 
 				waste.ClearCache();
 			}
@@ -374,18 +380,12 @@ public class Level : IBlockAccess
 
 			if (Players.TryAdd(newPlayer.EntityId, newPlayer))
 			{
-				foreach (Entity entity in Entities.Values.ToArray()) entity.SpawnToPlayers([newPlayer]);
+				foreach (Entity entity in Entities.Values.ToArray()) entity.SpawnToPlayers(new[] { newPlayer });
+
 				SpawnToAll(newPlayer);
 			}
 
 			newPlayer.IsSpawned = spawn;
-		}
-
-		if (fog != "")
-		{
-			McpePlayerFog msg = McpePlayerFog.CreateObject();
-			msg.fogstack = new fogStack(fog);
-			newPlayer.SendPacket(msg);
 		}
 
 		OnPlayerAdded(new LevelEventArgs(newPlayer, this));
@@ -416,17 +416,22 @@ public class Level : IBlockAccess
 			var spawnedPlayers = players.ToList();
 			spawnedPlayers.Add(newPlayer);
 
-			newPlayer.SpawnToPlayers(players);
-
-			foreach (Player spawnedPlayer in players) spawnedPlayer.SpawnToPlayers([newPlayer]);
+			Player[] sendList = spawnedPlayers.ToArray();
 
 			McpePlayerList playerListMessage = McpePlayerList.CreateObject();
 			playerListMessage.records = new PlayerAddRecords(spawnedPlayers);
-			newPlayer.SendPacket(playerListMessage);
+			newPlayer.SendPacket(CreateMcpeBatch(playerListMessage.Encode()));
+			playerListMessage.PutPool();
 
 			McpePlayerList playerList = McpePlayerList.CreateObject();
-			playerList.records = new PlayerAddRecords { newPlayer };
-			RelayBroadcast(playerList);
+			playerList.records = new PlayerAddRecords(newPlayer);
+
+			RelayBroadcast(newPlayer, sendList, CreateMcpeBatch(playerList.Encode()));
+			playerList.PutPool();
+
+			newPlayer.SpawnToPlayers(players);
+
+			foreach (Player spawnedPlayer in players) spawnedPlayer.SpawnToPlayers(new[] { newPlayer });
 		}
 	}
 
@@ -467,7 +472,8 @@ public class Level : IBlockAccess
 			playerListMessage.PutPool();
 
 			McpePlayerList playerList = McpePlayerList.CreateObject();
-			playerList.records = new PlayerRemoveRecords { player };
+			playerList.records = new PlayerRemoveRecords(player);
+
 			RelayBroadcast(player, CreateMcpeBatch(playerList.Encode()));
 			playerList.records = null;
 			playerList.PutPool();
@@ -499,6 +505,13 @@ public class Level : IBlockAccess
 
 	public void RemoveDuplicatePlayers(string username, long clientId)
 	{
+		//var existingPlayers = Players.Where(player => player.Value.ClientId == clientId && player.Value.Username.Equals(username, StringComparison.InvariantCultureIgnoreCase));
+
+		//foreach (var existingPlayer in existingPlayers)
+		//{
+		//	Log.InfoFormat("Removing staled players on login {0}", username);
+		//	existingPlayer.Value.Disconnect("Duplicate player. Crashed.", false);
+		//}
 	}
 
 	public virtual void BroadcastTitle(string text, TitleType type = TitleType.Title, int fadeIn = 6, int fadeOut = 6, int stayTime = 20, Player sender = null, Player[] sendList = null)
@@ -513,16 +526,14 @@ public class Level : IBlockAccess
 		RelayBroadcast(sender, sendList, mcpeSetTitle);
 	}
 
-	public virtual void BroadcastMessage(string text, TextPacketType type = TextPacketType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null, string platformId = null)
+	public virtual void BroadcastMessage(string text, TextPacketType type = TextPacketType.Chat, Player sender = null, Player[] sendList = null, bool needsTranslation = false, string[] parameters = null)
 	{
 		if (type is TextPacketType.Chat or TextPacketType.Raw)
 			foreach (string line in text.Split(["\n", Environment.NewLine], StringSplitOptions.RemoveEmptyEntries))
 			{
 				McpeText message = McpeText.CreateObject();
 				message.type = type;
-				message.source = sender == null ? "" : sender.NameTag;
-				message.xuid = sender?.CertificateData.ExtraData.Xuid;
-				message.platformChatId = platformId;
+				message.source = sender == null ? "" : sender.Username;
 				message.message = line;
 				message.needsTranslation = needsTranslation;
 				message.parameters = parameters;
@@ -533,8 +544,6 @@ public class Level : IBlockAccess
 			McpeText message = McpeText.CreateObject();
 			message.type = type;
 			message.source = sender == null ? "" : sender.Username;
-			message.xuid = sender?.CertificateData.ExtraData.Xuid;
-			message.platformChatId = platformId;
 			message.message = text;
 			message.needsTranslation = needsTranslation;
 			message.parameters = parameters;
@@ -544,6 +553,12 @@ public class Level : IBlockAccess
 
 	private void WorldTick(object sender)
 	{
+		//if (_tickTimer.ElapsedMilliseconds < 40 && LastTickProcessingTime < 50)
+		//{
+		//	if (Log.IsDebugEnabled) Log.Warn($"World tick came too fast: {_tickTimer.ElapsedMilliseconds} ms");
+		//	return;
+		//}
+
 		if (Log.IsDebugEnabled && _tickTimer.ElapsedMilliseconds >= 65) Log.Warn($"Time between world tick too long: {_tickTimer.ElapsedMilliseconds} ms. Last processing time={LastTickProcessingTime}, Avarage={AvarageTickProcessingTime}");
 
 		Measurement worldTickMeasurement = _profiler.Begin("World tick");
@@ -554,15 +569,7 @@ public class Level : IBlockAccess
 		{
 			TickTime++;
 
-			WeatherManager.tick(TickTime);
-
 			Player[] players = GetSpawnedPlayers();
-
-			if (TickTime % 10 == 0)
-				foreach (Player player in players)
-					if (player.Level.GetBlock((int) player.KnownPosition.X, (int) player.KnownPosition.Y, (int) player.KnownPosition.Z) is PressurePlateBase)
-						if (!player.Level.BlockWithTicks.ContainsKey(new BlockCoordinates((int) player.KnownPosition.X, (int) player.KnownPosition.Y, (int) player.KnownPosition.Z)))
-							player.Level.ScheduleBlockTick(player.Level.GetBlock(new BlockCoordinates((int) player.KnownPosition.X, (int) player.KnownPosition.Y, (int) player.KnownPosition.Z)), 20);
 
 			if (DoDaylightcycle) WorldTime++;
 
@@ -579,18 +586,12 @@ public class Level : IBlockAccess
 
 			// Save dirty chunks
 			if (TickTime % (SaveInterval * 20) == 0) WorldProvider.SaveChunks();
+
+			// Unload chunks not needed
 			if (UnloadInterval > 0 && TickTime % (UnloadInterval * 20) == 0)
 			{
 				var cacheProvider = WorldProvider as ICachingWorldProvider;
-				int removed = 0;
-				if (players.Length > 0)
-					foreach (Player player in players)
-					{
-						var oldChunks = (ChunkCoordinates) (BlockCoordinates) player.KnownPosition;
-						removed += cacheProvider?.UnloadChunks(players, oldChunks, ViewDistance) ?? 0;
-					}
-				else
-					removed += cacheProvider?.UnloadChunks(players, (ChunkCoordinates) (BlockCoordinates) SpawnPoint, 1) ?? 0;
+				int removed = cacheProvider?.UnloadChunks(players, (ChunkCoordinates) (BlockCoordinates) SpawnPoint, ViewDistance) ?? 0;
 				if (removed > 0) Log.Warn($"Unloaded {removed} chunks, {cacheProvider?.GetCachedChunks().Length} chunks remain cached");
 			}
 
@@ -599,14 +600,14 @@ public class Level : IBlockAccess
 			Entity[] entities = Entities.Values.OrderBy(e => e.EntityId).ToArray();
 			if (EnableChunkTicking || EnableBlockTicking)
 			{
-				if (DoMobspawning) EntitySpawnManager.DespawnMobs(TickTime);
+				if (EnableChunkTicking) EntitySpawnManager.DespawnMobs(TickTime);
 
 				var chunksWithinRadiusOfPlayer = new List<EntitySpawnManager.SpawnState>();
 				foreach (Player player in players)
 				{
 					var bCoord = (BlockCoordinates) player.KnownPosition;
 
-					chunksWithinRadiusOfPlayer = GetChunkCoordinatesForTick(new ChunkCoordinates(bCoord), chunksWithinRadiusOfPlayer, TickDistance, Random);
+					chunksWithinRadiusOfPlayer = GetChunkCoordinatesForTick(new ChunkCoordinates(bCoord), chunksWithinRadiusOfPlayer, 17, Random); // Should actually be 15
 				}
 
 				if (chunksWithinRadiusOfPlayer.Count > 0)
@@ -652,7 +653,7 @@ public class Level : IBlockAccess
 							Measurement chunkTickMeasurement = blockAndChunkTickMeasurement?.Begin("Chunk tick");
 
 							int maxValue = ((((height + 1) >> 4) + 1) * 16) - 1;
-							int ySpawn = random.Next(maxValue);
+							int ySpawn = random.Next(Math.Abs(maxValue));
 							var spawnCoordinates = new BlockCoordinates(x + (spawnState.ChunkX * 16), ySpawn, z + (spawnState.ChunkZ * 16));
 							Block spawnBlock = GetBlock(spawnCoordinates, chunk);
 							if (spawnBlock.IsTransparent)
@@ -662,8 +663,7 @@ public class Level : IBlockAccess
 							chunkTickMeasurement?.End();
 						}
 
-						if (!EnableBlockTicking || RandomTickSpeed <= 0) return;
-						{
+						if (EnableBlockTicking && RandomTickSpeed > 0)
 							for (int s = 0; s < 16; s++)
 							for (int i = 0; i < RandomTickSpeed; i++)
 							{
@@ -675,10 +675,14 @@ public class Level : IBlockAccess
 
 								var blockCoordinates = new BlockCoordinates(x + (spawnState.ChunkX * 16), y + (s * 16), z + (spawnState.ChunkZ * 16));
 								Block block = GetBlock(blockCoordinates, chunk);
+								//Stopwatch sw = Stopwatch.StartNew();
 								block.OnTick(this, true);
+								//if(sw.ElapsedMilliseconds > 50)
+								//{
+								//	if (Log.IsDebugEnabled) Log.Warn($"Took a long time ({sw.ElapsedMilliseconds}) with block tick on {block}");
+								//}
 								blockTickMeasurement?.End();
 							}
-						}
 					});
 				}
 			}
@@ -691,9 +695,9 @@ public class Level : IBlockAccess
 			foreach (KeyValuePair<BlockCoordinates, long> blockEvent in BlockWithTicks)
 				try
 				{
-					if (blockEvent.Value > TickTime) continue;
-					if (BlockWithTicks.TryRemove(blockEvent.Key, out _))
-						GetBlock(blockEvent.Key).OnTick(this, false);
+					if (blockEvent.Value <= TickTime)
+						if (BlockWithTicks.TryRemove(blockEvent.Key, out _))
+							GetBlock(blockEvent.Key).OnTick(this, false);
 				}
 				catch (Exception e)
 				{
@@ -729,6 +733,9 @@ public class Level : IBlockAccess
 			// Send player movements
 			BroadCastMovement(players, entities);
 
+			//TODO: We don't want to trigger sending here. But right now
+			// it seems better for performance since the send-tick is one for all
+			// sessions, so we need to refactor that first.
 			var tasks = new List<Task>();
 			foreach (Player player in players)
 				if (player.NetworkHandler is RakSession session)
@@ -769,6 +776,8 @@ public class Level : IBlockAccess
 		double f1 = 1.0F - ((Math.Cos(f * ((float) Math.PI * 2F)) * 2.0F) + 0.5F);
 		f1 = BiomeUtils.Clamp((float) f1, 0.0F, 1.0F);
 		f1 = 1.0F - f1;
+		//f1 = (float)((double)f1 * (1.0D - (double)(this.getRainStrength(p_72967_1_) * 5.0F) / 16.0D));
+		//f1 = (float)((double)f1 * (1.0D - (double)(this.getThunderStrength(p_72967_1_) * 5.0F) / 16.0D));
 		f1 = 1.0F - f1;
 		return (int) (f1 * 11.0F);
 	}
@@ -783,20 +792,22 @@ public class Level : IBlockAccess
 		if (f > 1.0F) --f;
 
 		float f1 = 1.0F - (float) ((Math.Cos(f * Math.PI) + 1.0D) / 2.0D);
-		f += ((f1 - f) / 3.0F);
+		f = f + ((f1 - f) / 3.0F);
 		return f;
 	}
 
 	public Player[] GetSpawnedPlayers()
 	{
-		return Players == null ? [] : // HACK
-			Players.Values.Where(player => player.IsSpawned).ToArray();
+		if (Players == null) return new Player[0]; // HACK
+
+		return Players.Values.Where(player => player.IsSpawned).ToArray();
 	}
 
 	public Player[] GetAllPlayers()
 	{
-		return Players == null ? [] : // HACK
-			Players.Values.ToArray();
+		if (Players == null) return new Player[0]; // HACK
+
+		return Players.Values.ToArray();
 	}
 
 	public Entity[] GetEntities()
@@ -815,65 +826,58 @@ public class Level : IBlockAccess
 	{
 		DateTime now = DateTime.UtcNow;
 
-		switch (players.Length)
-		{
-			case 0:
-			case <= 1 when entities.Length == 0:
-				return;
-		}
+		if (players.Length == 0) return;
+
+		if (players.Length <= 1 && entities.Length == 0) return;
+
+		//if (now - _lastBroadcast < TimeSpan.FromMilliseconds(50)) return;
 
 		DateTime lastSendTime = _lastSendTime;
 		_lastSendTime = DateTime.UtcNow;
 
-		int playerMoveCount = 0;
-
-		var movePackets = new List<Packet>();
-
-		foreach (Player player in players)
+		//using (MemoryStream stream = new MemoryStream())
 		{
-			if (now - player.LastUpdatedTime <= now - lastSendTime && player.KnownPosition != player.LastSentPosition)
-			{
-				if (Vector3.Distance(player.KnownPosition, player.LastSentPosition) > ViewDistance)
+			int playerMoveCount = 0;
+			int entiyMoveCount = 0;
+
+			var movePackets = new List<Packet>();
+
+			if (players.Length == 1 && entiyMoveCount == 0) return;
+
+			foreach (Player player in players)
+				if (now - player.LastUpdatedTime <= now - lastSendTime)
 				{
 					var knownPosition = (PlayerLocation) player.KnownPosition.Clone();
 
-					McpeMoveActor move = McpeMoveActor.CreateObject();
-					move.runtimeEntityId = player.EntityId;
-					move.flags = 2;
-					move.position = knownPosition;
-					move.position.Y += 1.62f;
+					McpeMovePlayer move = McpeMovePlayer.CreateObject();
+					move.playerRuntimeId = player.EntityId;
+					move.x = knownPosition.X;
+					move.y = knownPosition.Y + 1.62f;
+					move.z = knownPosition.Z;
+					move.pitch = knownPosition.Pitch;
+					move.yaw = knownPosition.Yaw;
+					move.headYaw = knownPosition.HeadYaw;
+					move.mode = (PositionMode)(player.Vehicle == 0 ? 0 : 3);
+					move.onGround = !player.IsGliding && player.IsOnGround;
+					move.ridingRuntimeId = player.Vehicle;
 					movePackets.Add(move);
+					playerMoveCount++;
 				}
-				else
-				{
-					var knownPosition = (PlayerLocation) player.KnownPosition.Clone();
+			
+			if (playerMoveCount == 0 && entiyMoveCount == 0) return;
 
-					McpeMoveActorDelta move = McpeMoveActorDelta.CreateObject();
-					move.runtimeEntityId = player.EntityId;
-					move.prevSentPosition = player.LastSentPosition;
-					move.currentPosition = knownPosition;
-					move.currentPosition.Y += 1.62f;
-					move.isOnGround = player.IsWalker && player.IsOnGround;
-					if (move.SetFlags()) RelayBroadcast(move);
-					movePackets.Add(move);
-				}
-				playerMoveCount++;
-			}
-			player.LastSentPosition = (PlayerLocation) player.KnownPosition.Clone();
+			if (players.Length == 1 && entiyMoveCount == 0) return;
+
+			if (movePackets.Count == 0) return;
+
+			////McpeWrapper batch = BatchUtils.CreateBatchPacket(new Memory<byte>(stream.GetBuffer(), 0, (int) stream.Length), CompressionLevel.Optimal, false);
+			McpeWrapper batch = McpeWrapper.CreateObject(players.Length);
+			batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
+			batch.payload = CompressionManager.ZLibCompressionManager.CompressPacketsForWrapper(movePackets);
+			batch.Encode();
+			foreach (Player player in players) MiNetServer.FastThreadPool.QueueUserWorkItem(() => player.SendPacket(batch));
+			_lastBroadcast = DateTime.UtcNow;
 		}
-
-		if (playerMoveCount == 0) return;
-
-		if (players.Length == 1) return;
-
-		if (movePackets.Count == 0) return;
-
-		McpeWrapper batch = McpeWrapper.CreateObject(players.Length);
-		batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-		batch.payload = Compression.CompressPacketsForWrapper(movePackets, CompressionLevel.Fastest, true);
-		batch.Encode();
-		foreach (Player player in players) MiNetServer.FastThreadPool.QueueUserWorkItem(() => player.SendPacket(batch));
-		_lastBroadcast = DateTime.UtcNow;
 	}
 
 	public void RelayBroadcast<T>(T message) where T : Packet<T>, new()
@@ -1023,28 +1027,30 @@ public class Level : IBlockAccess
 		return GetBlock(new BlockCoordinates(x, y, z));
 	}
 
-
-	public bool IsBlock(int x, int y, int z, int blockId)
+	public bool IsAir(BlockCoordinates blockCoordinates)
 	{
-		return IsBlock(new BlockCoordinates(x, y, z), blockId);
+		return IsBlock<Air>(blockCoordinates);
 	}
 
-	public bool IsBlock(BlockCoordinates blockCoordinates, int blockId)
+	public bool IsBlock<T>(BlockCoordinates blockCoordinates) where T : Block
+	{
+		return IsBlock(blockCoordinates, typeof(T));
+	}
+
+	public bool IsBlock(BlockCoordinates blockCoordinates, Type blockType)
 	{
 		ChunkColumn chunk = GetChunk(blockCoordinates);
 		if (chunk == null) return false;
 
-		return chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f) == blockId;
+		return BlockFactory.IsBlock(chunk.GetBlockRuntimeId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f), blockType);
 	}
 
-	public bool IsAir(BlockCoordinates blockCoordinates)
+	public bool IsBlock(BlockCoordinates blockCoordinates, string blockId)
 	{
 		ChunkColumn chunk = GetChunk(blockCoordinates);
-		if (chunk == null) return true;
+		if (chunk == null) return false;
 
-		int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
-		return bid == 0;
-		//return bid == 0 || bid == 20 || bid == 241; // Need this for skylight calculations. Revise!
+		return BlockFactory.GetIdByRuntimeId(chunk.GetBlockRuntimeId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f)) == blockId;
 	}
 
 	public bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates)
@@ -1052,8 +1058,8 @@ public class Level : IBlockAccess
 		ChunkColumn chunk = GetChunk(blockCoordinates);
 		if (chunk == null) return true;
 
-		int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
-		return bid == 0 || bid == 20 || bid == 241; // Need this for skylight calculations. Revise!
+		int bid = chunk.GetBlockRuntimeId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
+		return BlockFactory.IsBlock<Air>(bid) || BlockFactory.IsBlock<Glass>(bid) || BlockFactory.IsBlock<StainedGlassBase>(bid); // Need this for skylight calculations. Revise!
 	}
 
 	public bool IsTransparent(BlockCoordinates blockCoordinates)
@@ -1061,7 +1067,7 @@ public class Level : IBlockAccess
 		ChunkColumn chunk = GetChunk(blockCoordinates);
 		if (chunk == null) return true;
 
-		int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
+		int bid = chunk.GetBlockRuntimeId(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
 		return BlockFactory.TransparentBlocks[bid] == 1;
 	}
 
@@ -1089,7 +1095,7 @@ public class Level : IBlockAccess
 
 		if (chunk == null) return 0;
 
-		return chunk.GetBiome(blockCoordinates.X & 0x0f, blockCoordinates.Z & 0x0f);
+		return chunk.GetBiome(blockCoordinates.X & 0x0f, blockCoordinates.Y, blockCoordinates.Z & 0x0f);
 	}
 
 	private void CalculateSkyLight(int x, int y, int z)
@@ -1127,7 +1133,7 @@ public class Level : IBlockAccess
 	public void SetBiomeId(BlockCoordinates coordinates, byte biomeId)
 	{
 		ChunkColumn chunk = GetChunk(coordinates);
-		chunk?.SetBiome(coordinates.X & 0x0f, coordinates.Z & 0x0f, biomeId);
+		chunk?.SetBiome(coordinates.X & 0x0f, coordinates.Y, coordinates.Z & 0x0f, biomeId);
 	}
 
 	public void SetSkyLight(Block block)
@@ -1143,7 +1149,7 @@ public class Level : IBlockAccess
 
 	public void SetAir(int x, int y, int z, bool broadcast = true)
 	{
-		Block air = BlockFactory.GetBlockById(0);
+		Block air = new Air();
 		air.Coordinates = new BlockCoordinates(x, y, z);
 		SetBlock(air, broadcast);
 	}
@@ -1155,63 +1161,48 @@ public class Level : IBlockAccess
 
 		ChunkColumn chunk = GetChunk(new ChunkCoordinates(blockCoordinates.X >> 4, blockCoordinates.Z >> 4));
 
-		NbtCompound nbt = chunk?.GetBlockEntity(blockCoordinates);
-		if (nbt == null) return null;
-
-		if (!nbt.TryGet("id", out NbtString idTag)) return null;
-
-		blockEntity = BlockEntityFactory.GetBlockEntityById(idTag.StringValue);
+		blockEntity = chunk?.GetBlockEntity(blockCoordinates);
 		if (blockEntity == null) return null;
-
-		blockEntity.Coordinates = blockCoordinates;
-		blockEntity.SetCompound(nbt);
 
 		return blockEntity;
 	}
 
 	public void SetBlockEntity(BlockEntity blockEntity, bool broadcast = true)
 	{
-		ChunkColumn chunk = GetChunk(new ChunkCoordinates(blockEntity.Coordinates.X >> 4, blockEntity.Coordinates.Z >> 4));
-		chunk.SetBlockEntity(blockEntity.Coordinates, blockEntity.GetCompound());
+		ChunkColumn chunk = GetChunk(blockEntity.Coordinates);
+		chunk.SetBlockEntity(blockEntity);
 
-		if (blockEntity.UpdatesOnTick)
-		{
-			BlockEntities.RemoveAll(entity => entity.Coordinates == blockEntity.Coordinates);
-			BlockEntities.Add(blockEntity);
-		}
+		if (blockEntity.UpdatesOnTick) BlockEntities.Add(blockEntity);
 
 		if (!broadcast) return;
 
-		var nbt = new Nbt
-		{
-			NbtFile = new NbtFile
-			{
-				BigEndian = false,
-				UseVarInt = true,
-				RootTag = blockEntity.GetCompound()
-			}
-		};
+		blockEntity.SendData(this);
+	}
 
-		if (Log.IsDebugEnabled) Log.Debug($"Nbt: {nbt.NbtFile.RootTag}");
+	public void UpdateBlockEntity(BlockCoordinates coordinates, NbtCompound tag, bool broadcast = true)
+	{
+		ChunkColumn chunk = GetChunk(coordinates);
 
-		McpeBlockActorData actorData = McpeBlockActorData.CreateObject();
-		actorData.actorDataTags = nbt;
-		actorData.blockPosition = blockEntity.Coordinates;
+		tag.Remove("x");
+		tag.Remove("y");
+		tag.Remove("z");
 
-		RelayBroadcast(actorData);
+		var blockEntity = chunk.UpdateBlockEntity(coordinates, tag);
+		if (blockEntity == null) return;
+		if (!broadcast) return;
+
+		blockEntity.SendData(this);
 	}
 
 	public void RemoveBlockEntity(BlockCoordinates blockCoordinates)
 	{
 		ChunkColumn chunk = GetChunk(new ChunkCoordinates(blockCoordinates.X >> 4, blockCoordinates.Z >> 4));
-		NbtCompound nbt = chunk.GetBlockEntity(blockCoordinates);
-		if (nbt == null) return;
+		var blockEntity = chunk.GetBlockEntity(blockCoordinates);
+		if (blockEntity == null) return;
 
-		BlockEntity blockEntity = BlockEntities.FirstOrDefault(entity => entity.Coordinates == blockCoordinates);
-		if (blockEntity != null)
-			BlockEntities.Remove(blockEntity);
+		blockEntity.RemoveBlockEntity(this);
 
-		//Log.Error("NULL");
+		BlockEntities.Remove(blockEntity);
 		chunk.RemoveBlockEntity(blockCoordinates);
 	}
 
@@ -1227,46 +1218,43 @@ public class Level : IBlockAccess
 	public void Interact(Player player, Item itemInHand, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoords)
 	{
 		Block target = GetBlock(blockCoordinates);
-		if (!player.IsSneaking && OnBlockInteract(new BlockInteractEventArgs(player, this, target)) && target.Interact(this, player, blockCoordinates, face, faceCoords)) return; // Handled in block interaction
+		if (!player.IsSneaking && target.Interact(this, player, blockCoordinates, face, faceCoords)) return; // Handled in block interaction
 
 		Log.Debug($"Item in hand: {itemInHand}");
-		if (itemInHand.Id == 356) itemInHand = new ItemBlock(new UnpoweredRepeater()); //TODO: item translator
-		if (itemInHand.Id == 379) itemInHand = new ItemBlock(new BrewingStand()); //TODO: item translator
-		if (itemInHand.Id == 404) itemInHand = new ItemBlock(new UnpoweredComparator()); //TODO: item translator
-		if (itemInHand.Id == 410) itemInHand = new ItemBlock(new Hopper()); //TODO: item translator
-		if (itemInHand.Id == 720) itemInHand = new ItemBlock(new Campfire()); //TODO: item translator
-		if (itemInHand.Id == 331) itemInHand = new ItemBlock(new RedstoneWire()); //TODO: item translator
-
-		Block block = GetBlock(blockCoordinates);
-		if (!block.IsReplaceable) block = GetBlock(itemInHand.GetNewCoordinatesFromFace(blockCoordinates, face));
-
-		if (!AllowBuild || player.GameMode == GameMode.Spectator || !OnBlockPlace(new BlockPlaceEventArgs(player, this, target, block)))
+		if (itemInHand is ItemBlock)
 		{
-			if (!itemInHand.CanInteract)
+			Block block = GetBlock(blockCoordinates);
+			if (!block.IsReplaceable) block = GetBlock(itemInHand.GetNewCoordinatesFromFace(blockCoordinates, face));
+
+			if (!AllowBuild || player.GameMode == GameMode.Spectator || !OnBlockPlace(new BlockPlaceEventArgs(player, this, target, block)))
+			{
+				// Revert
+
+				player.SendPlayerInventory();
+
+				McpeUpdateBlock message = McpeUpdateBlock.CreateObject();
+				message.blockRuntimeId = (uint) block.RuntimeId;
+				message.coordinates = block.Coordinates;
+				message.blockPriority = 0xb;
+				player.SendPacket(message);
+
 				return;
-			// Revert
-
-			player.SendPlayerInventory();
-
-			McpeUpdateBlock message = McpeUpdateBlock.CreateObject();
-			message.blockRuntimeId = (uint) block.GetRuntimeId();
-			message.coordinates = block.Coordinates;
-			message.blockPriority = 0xb;
-			player.SendPacket(message);
-
-			return;
+			}
 		}
 
 		itemInHand.PlaceBlock(this, player, blockCoordinates, face, faceCoords);
 	}
 
-	public event EventHandler<BlockInteractEventArgs> BlockInteract;
-
-	protected virtual bool OnBlockInteract(BlockInteractEventArgs e)
+	public void UseItem(Player player, Item itemInHand, BlockCoordinates blockCoordinates, BlockFace face)
 	{
-		BlockInteract?.Invoke(this, e);
+		itemInHand.UseItem(this, player, blockCoordinates);
+		if (itemInHand.Count == 0) player.Inventory.SetInventorySlot(player.Inventory.InHandSlot, null, true);
 
-		return !e.Cancel;
+		if (!player.IsSneaking)
+		{
+			Block target = GetBlock(blockCoordinates);
+			target.UseItem(this, player, blockCoordinates, face);
+		}
 	}
 
 	public event EventHandler<BlockBreakEventArgs> BlockBreak;
@@ -1277,90 +1265,50 @@ public class Level : IBlockAccess
 
 		return !e.Cancel;
 	}
+	
+	public void BreakBlock(Block block, BlockEntity blockEntity = null, Item tool = null, BlockFace face = BlockFace.None)
+	{
+		BreakBlock(null, block, blockEntity, tool, face);
+	}
 
-	public bool BreakBlock(Player player, BlockCoordinates blockCoordinates, BlockFace face = BlockFace.None)
+	public void BreakBlock(Player player, BlockCoordinates blockCoordinates, BlockFace face = BlockFace.None)
 	{
 		Block block = GetBlock(blockCoordinates);
 		BlockEntity blockEntity = GetBlockEntity(blockCoordinates);
 
-		Item inHand = player.Inventory.GetItemInHand() ?? new ItemAir();
-
+		Item inHand = player.Inventory.GetItemInHand();
 		bool canBreak = inHand.BreakBlock(this, player, block, blockEntity);
 
-		int xpDrop = player.GameMode == GameMode.Survival ? (int) block.GetExperiencePoints() : 0;
-
-		var eventArgs = new BlockBreakEventArgs(player, this, block, [.. block.GetDrops(inHand)]);
-
-		if (!canBreak || !AllowBreak || player.GameMode == GameMode.Spectator || !OnBlockBreak(eventArgs))
-		{
+		if (!canBreak || !AllowBreak || player.GameMode == GameMode.Spectator || !OnBlockBreak(new BlockBreakEventArgs(player, this, block, null)))
+			// Revert
 			RevertBlockAction(player, block, blockEntity);
-			return false;
-		}
-
-		BreakBlock(player, block, blockEntity, inHand, face);
-
-		player.Inventory.DamageItemInHand(ItemDamageReason.BlockBreak, null, block);
-
-		player.HungerManager.IncreaseExhaustion(0.005f);
-
-		if (xpDrop > 0) DropExperience(blockCoordinates, xpDrop);
-		Log.Warn("The BreakBlock completed as - can be broken");
-		return true;
-	}
-
-	private void DropExperience(BlockCoordinates coordinates, int amount)
-	{
-		var random = new Random();
-		for (int i = 0; i < amount; i++)
+		else
 		{
-			var xpOrb = new ExperienceOrb(this)
-			{
-				KnownPosition = new PlayerLocation(
-					coordinates.X + 0.5f + (float)(random.NextDouble() * 0.2 - 0.1),
-					coordinates.Y + 0.5f + (float)(random.NextDouble() * 0.2 - 0.1),
-					coordinates.Z + 0.5f + (float)(random.NextDouble() * 0.2 - 0.1)
-				),
-			};
-			xpOrb.SpawnEntity();
+			BreakBlock(player, block, blockEntity, inHand, face);
+
+			player.Inventory.DamageItemInHand(ItemDamageReason.BlockBreak, null, block);
+			player.HungerManager.IncreaseExhaustion(0.025f);
+			player.ExperienceManager.AddExperience(block.GetExperiencePoints());
 		}
 	}
 
-	private void RevertBlockAction(Player player, Block block, BlockEntity blockEntity)
+	private static void RevertBlockAction(Player player, Block block, BlockEntity blockEntity)
 	{
-		Log.Warn("The RevertBlockAction has been called");
-		BlockCoordinates revertCoords = block.Coordinates;
-
-		if (block is DoorBase doors) revertCoords = doors.UpperBlockBit ? revertCoords.BlockDown() : revertCoords.BlockUp();
-
 		McpeUpdateBlock message = McpeUpdateBlock.CreateObject();
-		message.blockRuntimeId = (uint) block.GetRuntimeId();
-		message.coordinates = revertCoords;
+		message.blockRuntimeId = (uint) block.RuntimeId;
+		message.coordinates = block.Coordinates;
 		message.blockPriority = 0xb;
 		player.SendPacket(message);
 
-		if (blockEntity != null)
-		{
-			var nbt = new Nbt
-			{
-				NbtFile = new NbtFile
-				{
-					BigEndian = false,
-					RootTag = blockEntity.GetCompound()
-				}
-			};
-
-			McpeBlockActorData actorData = McpeBlockActorData.CreateObject();
-			actorData.actorDataTags = nbt;
-			actorData.blockPosition = blockEntity.Coordinates;
-			player.SendPacket(actorData);
-		}
+		// Revert block entity if exists
+		if (blockEntity != null) blockEntity.SendData(player);
 	}
 
 	public void BreakBlock(Player player, Block block, BlockEntity blockEntity = null, Item tool = null, BlockFace face = BlockFace.None)
 	{
 		block.BreakBlock(this, face);
 		var drops = new List<Item>();
-		drops.AddRange(block.GetDrops(tool ?? new ItemAir()));
+		drops.AddRange(block.GetDrops(this, tool ?? new ItemAir()));
 
 		if (blockEntity != null)
 		{
@@ -1368,7 +1316,7 @@ public class Level : IBlockAccess
 			drops.AddRange(blockEntity.GetDrops());
 		}
 
-		if ((player != null && player.GameMode == GameMode.Survival && DoTiledrops) || (player == null && GameMode == GameMode.Survival && DoTiledrops))
+		if ((player != null && player.GameMode == GameMode.Survival) || (player == null && GameMode == GameMode.Survival))
 			foreach (Item drop in drops)
 				DropItem(block.Coordinates, drop);
 	}
@@ -1379,19 +1327,19 @@ public class Level : IBlockAccess
 		if (GameMode == GameMode.Creative) return;
 
 		if (drop == null) return;
-		if (drop.Id == 0) return;
+		if (drop is ItemAir) return;
 		if (drop.Count == 0) return;
 
-		if (AutoSmelt) drop = drop.GetSmelt() ?? drop;
+		if (AutoSmelt) drop = drop.GetSmelt(BlockFactory.GetIdByType<Furnace>(false)) ?? drop;
 
-		var random = new Random();
-		var itemEntity = new ItemActor(this, drop)
+		Random random = new Random();
+		var itemEntity = new ItemEntity(this, drop)
 		{
 			KnownPosition =
 			{
-				X = coordinates.X + 0.5f,
-				Y = coordinates.Y + 0.5f,
-				Z = coordinates.Z + 0.5f
+				X = (float) coordinates.X + 0.5f,
+				Y = (float) coordinates.Y + 0.5f,
+				Z = (float) coordinates.Z + 0.5f
 			},
 			Velocity = new Vector3((float) (random.NextDouble() * 0.005), (float) (random.NextDouble() * 0.20), (float) (random.NextDouble() * 0.005))
 		};
@@ -1439,8 +1387,13 @@ public class Level : IBlockAccess
 	}
 
 
-	public ChunkColumn[] GetLoadedChunks() => WorldProvider is ICachingWorldProvider cacheProvider ? cacheProvider.GetCachedChunks() : [];
-	
+	public ChunkColumn[] GetLoadedChunks()
+	{
+		var cacheProvider = WorldProvider as ICachingWorldProvider;
+		if (cacheProvider != null) return cacheProvider.GetCachedChunks();
+
+		return new ChunkColumn[0];
+	}
 
 	public void ClearLoadedChunks()
 	{
@@ -1584,67 +1537,36 @@ public class Level : IBlockAccess
 
 	public virtual GameRules GetGameRules()
 	{
-		var rules = new GameRules
-		{
-			new GameRule<bool>(GameRulesEnum.DrowningDamage, DrowningDamage),
-			new GameRule<bool>(GameRulesEnum.CommandblockOutput, CommandblockOutput),
-			new GameRule<bool>(GameRulesEnum.DoTiledrops, DoTiledrops),
-			new GameRule<bool>(GameRulesEnum.DoMobloot, DoMobloot),
-			new GameRule<bool>(GameRulesEnum.KeepInventory, KeepInventory),
-			new GameRule<bool>(GameRulesEnum.DoDaylightcycle, DoDaylightcycle),
-			new GameRule<bool>(GameRulesEnum.DoMobspawning, DoMobspawning),
-			new GameRule<bool>(GameRulesEnum.DoEntitydrops, DoEntitydrops),
-			new GameRule<bool>(GameRulesEnum.DoFiretick, DoFiretick),
-			new GameRule<bool>(GameRulesEnum.DoWeathercycle, DoWeathercycle),
-			new GameRule<bool>(GameRulesEnum.Pvp, Pvp),
-			new GameRule<bool>(GameRulesEnum.Falldamage, Falldamage),
-			new GameRule<bool>(GameRulesEnum.Firedamage, Firedamage),
-			new GameRule<bool>(GameRulesEnum.Mobgriefing, Mobgriefing),
-			new GameRule<bool>(GameRulesEnum.ShowCoordinates, ShowCoordinates),
-			new GameRule<bool>(GameRulesEnum.NaturalRegeneration, NaturalRegeneration),
-			new GameRule<bool>(GameRulesEnum.TntExplodes, TntExplodes),
-			new GameRule<bool>(GameRulesEnum.SendCommandfeedback, SendCommandfeedback),
-			new GameRule<bool>(GameRulesEnum.ExperimentalGameplay, true)
-		};
+		var rules = new GameRules();
+		rules.Add(new GameRule<bool>(GameRulesEnum.DrowningDamage, DrowningDamage));
+		rules.Add(new GameRule<bool>(GameRulesEnum.CommandblockOutput, CommandblockOutput));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoTiledrops, DoTiledrops));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoMobloot, DoMobloot));
+		rules.Add(new GameRule<bool>(GameRulesEnum.KeepInventory, KeepInventory));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoDaylightcycle, DoDaylightcycle));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoMobspawning, DoMobspawning));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoEntitydrops, DoEntitydrops));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoFiretick, DoFiretick));
+		rules.Add(new GameRule<bool>(GameRulesEnum.DoWeathercycle, DoWeathercycle));
+		rules.Add(new GameRule<bool>(GameRulesEnum.Pvp, Pvp));
+		rules.Add(new GameRule<bool>(GameRulesEnum.Falldamage, Falldamage));
+		rules.Add(new GameRule<bool>(GameRulesEnum.Firedamage, Firedamage));
+		rules.Add(new GameRule<bool>(GameRulesEnum.Mobgriefing, Mobgriefing));
+		rules.Add(new GameRule<bool>(GameRulesEnum.ShowCoordinates, ShowCoordinates));
+		rules.Add(new GameRule<bool>(GameRulesEnum.NaturalRegeneration, NaturalRegeneration));
+		rules.Add(new GameRule<bool>(GameRulesEnum.TntExplodes, TntExplodes));
+		rules.Add(new GameRule<bool>(GameRulesEnum.SendCommandfeedback, SendCommandfeedback));
+		rules.Add(new GameRule<bool>(GameRulesEnum.ExperimentalGameplay, true));
 		return rules;
 	}
 
-	public void BroadcastSound(Sound sound, Player[] receivers)
-	{
-		McpeLevelEvent packet = McpeLevelEvent.CreateObject();
-		packet.eventId = (LevelEventType) sound.Id;
-		packet.data = sound.Pitch * 1000;
-		packet.position = sound.Position;
-		foreach (Player player in receivers) player.SendPacket(packet);
-	}
-
-	public void BroadcastSound(Sound sound, string entityType = null)
-	{
-		if (entityType != null)
-		{
-			BroadcastSound(new PlayerLocation(sound.Position), (LevelSoundEventType) sound.Id, entityType);
-			return;
-		}
-		BroadcastSound(sound.Position, (LevelSoundEventType) sound.Id);
-	}
-
-	public void BroadcastSound(BlockCoordinates position, LevelSoundEventType sound, int blockId = 0, Player sender = null)
+	public void BroadcastSound(Vector3 position, LevelSoundEventType sound, int blockId = 0, Player sender = null)
 	{
 		McpeLevelSoundEvent packet = McpeLevelSoundEvent.CreateObject();
 		packet.position = position;
 		packet.soundId = (uint) sound;
 		packet.extraData = blockId;
 		RelayBroadcast(sender, packet);
-	}
-
-	public void BroadcastSound(PlayerLocation position, LevelSoundEventType sound, string entityType = null, bool isBabyMob = false) //todo use this for all entities
-	{
-		McpeLevelSoundEvent packet = McpeLevelSoundEvent.CreateObject();
-		packet.position = position;
-		packet.soundId = (uint) sound;
-		packet.entityType = entityType;
-		packet.isBabyMob = isBabyMob;
-		RelayBroadcast(packet);
 	}
 }
 
@@ -1691,14 +1613,4 @@ public class BlockBreakEventArgs : LevelCancelEventArgs
 
 	public Block Block { get; private set; }
 	public List<Item> Drops { get; private set; }
-}
-
-public class BlockInteractEventArgs : LevelCancelEventArgs
-{
-	public BlockInteractEventArgs(Player player, Level level, Block block) : base(player, level)
-	{
-		Block = block;
-	}
-
-	public Block Block { get; private set; }
 }

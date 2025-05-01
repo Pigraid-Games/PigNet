@@ -1,7 +1,8 @@
-﻿namespace PigNet.Blocks.States;
+﻿using PigNet.Utils;
+
+namespace PigNet.Blocks.States;
 
 using System;
-using Direction = PigNet.Utils.Direction;
 
 public partial class LeverDirection
 {

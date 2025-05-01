@@ -1,6 +1,6 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class EndPortalFrame : Block
+public partial class EndPortalFrame 
 {
 	public EndPortalFrame()
 	{

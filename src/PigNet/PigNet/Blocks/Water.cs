@@ -1,8 +1,3 @@
 ﻿namespace PigNet.Blocks;
 
-public partial class Water : Stationary
-{
-	public Water() : base(BlockFactory.GetIdByType<FlowingWater>())
-	{
-	}
-}
+public partial class Water() : Stationary(BlockFactory.GetIdByType<FlowingWater>());

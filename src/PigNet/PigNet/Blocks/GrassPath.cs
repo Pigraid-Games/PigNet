@@ -3,7 +3,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Blocks;
 
-public partial class GrassPath : Block
+public partial class GrassPath
 {
 	public GrassPath()
 	{
@@ -15,6 +15,6 @@ public partial class GrassPath : Block
 
 	public override Item[] GetDrops(Level world, Item tool)
 	{
-		return new[] { ItemFactory.GetItem<Dirt>() };
+		return [ItemFactory.GetItem<Dirt>()];
 	}
 }
