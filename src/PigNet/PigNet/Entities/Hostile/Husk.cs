@@ -25,14 +25,13 @@
 
 using PigNet.Worlds;
 
-namespace PigNet.Entities.Hostile
+namespace PigNet.Entities.Hostile;
+
+public class Husk : HostileMob, IAgeable
 {
-	public class Husk : HostileMob, IAgeable
+	public Husk(Level level) : base(EntityType.Husk, level)
 	{
-		public Husk(Level level) : base(EntityType.Husk, level)
-		{
-			Width = Length = 0.6;
-			Height = 1.8;
-		}
+		Width = Length = 0.6;
+		Height = 1.8;
 	}
 }

@@ -16,7 +16,7 @@ public abstract class SignBase : Block
 		BlastResistance = 5;
 		Hardness = 1;
 
-		IsFlammable = true; // Only in PE!!
+		IsFlammable = true;
 	}
 
 	public override Item GetItem(Level world, bool blockItem = false)
@@ -24,14 +24,15 @@ public abstract class SignBase : Block
 		switch (this)
 		{
 			case StandingSign:
+			case WallSign:
 				return new ItemOakSign();
 			case DarkoakStandingSign:
 			case DarkoakWallSign:
 				return new ItemDarkOakSign();
 		}
 
-		var idSplit = Id.Split('_');
-		var itemId = $"{string.Join('_', idSplit.Take(idSplit.Length - 2))}_{idSplit.Last()}";
+		string[] idSplit = Id.Split('_');
+		string itemId = $"{string.Join('_', idSplit.Take(idSplit.Length - 2))}_{idSplit.Last()}";
 
 		return ItemFactory.GetItem(itemId);
 	}
@@ -39,23 +40,15 @@ public abstract class SignBase : Block
 	public override bool PlaceBlock(Level world, Player player, BlockCoordinates targetCoordinates, BlockFace face, Vector3 faceCoords)
 	{
 		// TODO: check a clicked sign side for changing a specific side text
-		if (player != null)
-		{
-			OpenSign(player);
-		}
+		if (player != null) OpenSign(player);
 
 		return base.PlaceBlock(world, player, targetCoordinates, face, faceCoords);
 	}
 
 	public override bool Interact(Level world, Player player, BlockCoordinates blockCoordinates, BlockFace face, Vector3 faceCoord)
 	{
-		if (player.Inventory.GetItemInHand() is ItemSignBase)
-		{
-			return false;
-		}
-
+		if (player.Inventory.GetItemInHand() is ItemSignBase) return false;
 		OpenSign(player);
-
 		return true;
 	}
 

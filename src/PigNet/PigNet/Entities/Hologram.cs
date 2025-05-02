@@ -26,27 +26,26 @@
 using PigNet.Net;
 using PigNet.Worlds;
 
-namespace PigNet.Entities
+namespace PigNet.Entities;
+
+public class Hologram : PlayerMob
 {
-	public class Hologram : PlayerMob
+	public Hologram(string text, Level level) : base(text, level)
 	{
-		public Hologram(string text, Level level) : base(text, level)
-		{
-			Width = 0;
-			Length = 0;
-			Height = 0;
-			Scale = 0;
+		Width = 0;
+		Length = 0;
+		Height = 0;
+		Scale = 0;
 
-			HideNameTag = false;
-			IsAlwaysShowName = true;
-		}
+		HideNameTag = false;
+		IsAlwaysShowName = true;
+	}
 
-		[Wired]
-		public virtual void SetNameTag(string nameTag)
-		{
-			NameTag = nameTag;
+	[Wired]
+	public virtual void SetNameTag(string nameTag)
+	{
+		NameTag = nameTag;
 
-			BroadcastSetEntityData();
-		}
+		BroadcastSetEntityData();
 	}
 }

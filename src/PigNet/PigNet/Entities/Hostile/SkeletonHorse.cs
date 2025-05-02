@@ -25,29 +25,27 @@
 
 using System;
 using log4net;
-using PigNet.Utils;
 using PigNet.Utils.Metadata;
 using PigNet.Worlds;
 
-namespace PigNet.Entities.Hostile
+namespace PigNet.Entities.Hostile;
+
+public class SkeletonHorse : HostileMob
 {
-	public class SkeletonHorse : HostileMob
+	private static readonly ILog Log = LogManager.GetLogger(typeof(SkeletonHorse));
+
+	public SkeletonHorse(Level level) : base(EntityType.SkeletonHorse, level)
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(SkeletonHorse));
+		Width = Length = 1.4;
+		Height = 1.6;
+		var random = new Random();
+		Variant = random.Next(7);
+	}
 
-		public SkeletonHorse(Level level) : base(EntityType.SkeletonHorse, level)
-		{
-			Width = Length = 1.4;
-			Height = 1.6;
-			var random = new Random();
-			Variant = random.Next(7);
-		}
-
-		public override MetadataDictionary GetMetadata()
-		{
-			var metadata = base.GetMetadata();
-			metadata[(int) MetadataFlags.Variant] = new MetadataInt(Variant);
-			return metadata;
-		}
+	public override MetadataDictionary GetMetadata()
+	{
+		MetadataDictionary metadata = base.GetMetadata();
+		metadata[(int) MetadataFlags.Variant] = new MetadataInt(Variant);
+		return metadata;
 	}
 }

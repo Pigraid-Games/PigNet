@@ -1,5 +1,4 @@
-﻿
-namespace PigNet.Net.Packets.Mcpe;
+﻿namespace PigNet.Net.Packets.Mcpe;
 
 public class McpeGameRulesChanged : Packet<McpeGameRulesChanged>
 {

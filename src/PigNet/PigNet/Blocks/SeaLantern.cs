@@ -16,6 +16,6 @@ public partial class SeaLantern : Block
 	public override Item[] GetDrops(Level world, Item tool)
 	{
 		var rnd = new Random();
-		return [new ItemPrismarineShard { Count = (byte) (rnd.Next(2, 3)) }];
+		return [new ItemPrismarineShard { Count = (byte) rnd.Next(2, 3) }];
 	}
 }

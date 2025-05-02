@@ -24,40 +24,38 @@
 #endregion
 
 using System;
-using PigNet.Utils;
 using PigNet.Utils.Metadata;
 using PigNet.Worlds;
 
-namespace PigNet.Entities.Hostile
+namespace PigNet.Entities.Hostile;
+
+public class Slime : HostileMob
 {
-	public class Slime : HostileMob
+	public const byte MetadataSize = 16;
+
+	private byte _size = 1;
+
+	public Slime(Level level, byte size = 1) : base(EntityType.Slime, level)
 	{
-		public const byte MetadataSize = 16;
+		Size = size;
+		HealthManager.ResetHealth();
+	}
 
-		private byte _size = 1;
-
-		public byte Size
+	public byte Size
+	{
+		get => _size;
+		set
 		{
-			get { return _size; }
-			set
-			{
-				_size = value;
-				Width = Height = Length = _size * 0.51000005;
-				HealthManager.MaxHealth = (int) Math.Pow(2, _size);
-			}
+			_size = value;
+			Width = Height = Length = _size * 0.51000005;
+			HealthManager.MaxHealth = (int) Math.Pow(2, _size);
 		}
+	}
 
-		public Slime(Level level, byte size = 1) : base(EntityType.Slime, level)
-		{
-			Size = size;
-			HealthManager.ResetHealth();
-		}
-
-		public override MetadataDictionary GetMetadata()
-		{
-			var md = base.GetMetadata();
-			md[MetadataSize] = new MetadataByte(Size);
-			return md;
-		}
+	public override MetadataDictionary GetMetadata()
+	{
+		MetadataDictionary md = base.GetMetadata();
+		md[MetadataSize] = new MetadataByte(Size);
+		return md;
 	}
 }

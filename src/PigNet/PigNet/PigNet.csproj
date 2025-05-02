@@ -1,108 +1,108 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
-  <PropertyGroup>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>MiNET-Pigraid</PackageId>
-    <Version>1.13.0.24</Version>
-    <Authors>gurun</Authors>
-    <Company>Niclas Olofsson</Company>
-    <Description>MiNET - a Minecraft PocketEdition Server</Description>
-    <Copyright>Copyright Niclas Olofsson 2015-2018</Copyright>
-    <PackageProjectUrl>https://github.com/CobwebSMP/MiNET</PackageProjectUrl>
-    <PackageIcon></PackageIcon>
-    <PackageTags>MiNET Plugin API MCPE Minecraft PocketEdition bedrock</PackageTags>
-    <FileVersion>10.0.0.0</FileVersion>
-    <AssemblyVersion>10.0.0.0</AssemblyVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <NoWarn>1701;1702;1701;CA1416</NoWarn>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TargetFramework>net8.0</TargetFramework>
-    <NeutralLanguage>en</NeutralLanguage>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Blocks\Data\block_id_to_item_id_map.json" />
-    <EmbeddedResource Include="Blocks\Data\canonical_block_states.nbt" />
-    <EmbeddedResource Include="Blocks\Data\r12_to_current_block_map.bin" />
-    <EmbeddedResource Include="Crafting\Data\shaped_chemistry_asymmetric.json" />
-    <EmbeddedResource Include="Crafting\Data\shaped_crafting.json" />
-    <EmbeddedResource Include="Crafting\Data\shapeless_crafting.json" />
-    <EmbeddedResource Include="Crafting\Data\shapeless_shulker_box.json" />
-    <EmbeddedResource Include="Crafting\Data\smelting.json" />
-    <EmbeddedResource Include="Inventories\Data\construction.json" />
-    <EmbeddedResource Include="Inventories\Data\equipment.json" />
-    <EmbeddedResource Include="Inventories\Data\items.json" />
-    <EmbeddedResource Include="Inventories\Data\nature.json" />
-    <EmbeddedResource Include="Items\Data\item_tags.json" />
-    <EmbeddedResource Include="Items\Data\r16_to_current_item_map.json" />
-    <EmbeddedResource Include="Items\Data\required_item_list.json" />
-    <EmbeddedResource Include="Worlds\Data\biome_definitions.nbt" />
-    <EmbeddedResource Include="Worlds\Data\biome_definitions_full.nbt" />
-    <EmbeddedResource Include="Worlds\Data\biome_id_map.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="CRPE-MiNET.fNbt" Version="1.0.21" />
-    <PackageReference Include="CRPE-MiNET.fNbt.Serialization" Version="1.0.21" />
-    <PackageReference Include="jose-jwt" Version="5.1.1" />
-    <PackageReference Include="LibNoise.NetStandart" Version="0.2.0" />
-    <PackageReference Include="log4net" Version="3.0.5-preview.1" />
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-    <PackageReference Include="MiNET.astar" Version="1.0.14" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-    <PackageReference Include="SharpAvi" Version="3.0.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.5" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-preview.2.25163.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Crafting\Data\shaped_chemistry_asymmetric.json" />
-    <None Remove="Net\MCPE Protocol.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Crafting\Data\shapeless_chemistry.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="Net\MCPE Protocol.xml" />
-    <None Update="Net\MCPE Protocol Documentation.tt">
-      <DependentUpon>MCPE Protocol.xml</DependentUpon>
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>MCPE Protocol Documentation.md</LastGenOutput>
-    </None>
-    <None Update="Net\MCPE Protocol Documentation.md">
-      <DependentUpon>MCPE Protocol Documentation.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </None>
-    <None Update="Net\MCPE Protocol.tt">
-      <DependentUpon>MCPE Protocol.xml</DependentUpon>
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>MCPE Protocol.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Net\MCPE Protocol.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MCPE Protocol.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Net\Items\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>MiNET-Pigraid</PackageId>
+		<Version>1.13.0.24</Version>
+		<Authors>gurun</Authors>
+		<Company>Niclas Olofsson</Company>
+		<Description>MiNET - a Minecraft PocketEdition Server</Description>
+		<Copyright>Copyright Niclas Olofsson 2015-2018</Copyright>
+		<PackageProjectUrl>https://github.com/CobwebSMP/MiNET</PackageProjectUrl>
+		<PackageIcon></PackageIcon>
+		<PackageTags>MiNET Plugin API MCPE Minecraft PocketEdition bedrock</PackageTags>
+		<FileVersion>10.0.0.0</FileVersion>
+		<AssemblyVersion>10.0.0.0</AssemblyVersion>
+	</PropertyGroup>
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+		<NoWarn>1701;1702;1701;CA1416</NoWarn>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<TargetFramework>net8.0</TargetFramework>
+		<NeutralLanguage>en</NeutralLanguage>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugType>full</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Blocks\Data\block_id_to_item_id_map.json"/>
+		<EmbeddedResource Include="Blocks\Data\canonical_block_states.nbt"/>
+		<EmbeddedResource Include="Blocks\Data\r12_to_current_block_map.bin"/>
+		<EmbeddedResource Include="Crafting\Data\shaped_chemistry_asymmetric.json"/>
+		<EmbeddedResource Include="Crafting\Data\shaped_crafting.json"/>
+		<EmbeddedResource Include="Crafting\Data\shapeless_crafting.json"/>
+		<EmbeddedResource Include="Crafting\Data\shapeless_shulker_box.json"/>
+		<EmbeddedResource Include="Crafting\Data\smelting.json"/>
+		<EmbeddedResource Include="Inventories\Data\construction.json"/>
+		<EmbeddedResource Include="Inventories\Data\equipment.json"/>
+		<EmbeddedResource Include="Inventories\Data\items.json"/>
+		<EmbeddedResource Include="Inventories\Data\nature.json"/>
+		<EmbeddedResource Include="Items\Data\item_tags.json"/>
+		<EmbeddedResource Include="Items\Data\r16_to_current_item_map.json"/>
+		<EmbeddedResource Include="Items\Data\required_item_list.json"/>
+		<EmbeddedResource Include="Worlds\Data\biome_definitions.nbt"/>
+		<EmbeddedResource Include="Worlds\Data\biome_definitions_full.nbt"/>
+		<EmbeddedResource Include="Worlds\Data\biome_id_map.json"/>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CRPE-MiNET.fNbt" Version="1.0.21"/>
+		<PackageReference Include="CRPE-MiNET.fNbt.Serialization" Version="1.0.21"/>
+		<PackageReference Include="jose-jwt" Version="5.1.1"/>
+		<PackageReference Include="LibNoise.NetStandart" Version="0.2.0"/>
+		<PackageReference Include="log4net" Version="3.0.5-preview.1"/>
+		<PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1"/>
+		<PackageReference Include="MiNET.astar" Version="1.0.14"/>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0"/>
+		<PackageReference Include="SharpAvi" Version="3.0.1"/>
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.7"/>
+		<PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.5"/>
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-preview.2.25163.2"/>
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Crafting\Data\shaped_chemistry_asymmetric.json"/>
+		<None Remove="Net\MCPE Protocol.xml"/>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Crafting\Data\shapeless_chemistry.json"/>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="Net\MCPE Protocol.xml"/>
+		<None Update="Net\MCPE Protocol Documentation.tt">
+			<DependentUpon>MCPE Protocol.xml</DependentUpon>
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MCPE Protocol Documentation.md</LastGenOutput>
+		</None>
+		<None Update="Net\MCPE Protocol Documentation.md">
+			<DependentUpon>MCPE Protocol Documentation.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</None>
+		<None Update="Net\MCPE Protocol.tt">
+			<DependentUpon>MCPE Protocol.xml</DependentUpon>
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>MCPE Protocol.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Net\MCPE Protocol.cs">
+			<AutoGen>True</AutoGen>
+			<DesignTime>True</DesignTime>
+			<DependentUpon>MCPE Protocol.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Net\Items\"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\MiNET.LevelDB\MiNET.LevelDB\MiNET.LevelDB.csproj"/>
+	</ItemGroup>
 </Project>

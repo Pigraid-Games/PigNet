@@ -7,7 +7,7 @@ public enum Direction
 	North = 0,
 	East = 1,
 	South = 2,
-	West = 3,
+	West = 3
 }
 
 public static class DirectionExtensions

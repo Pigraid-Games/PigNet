@@ -75,6 +75,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 {
 	private static readonly ILog Log = LogManager.GetLogger(typeof(Player));
 	
+	private static readonly UUID WorldTemplateId = new(Guid.NewGuid().ToByteArray());
+	
 	// Network & Connection
 	private MiNetServer Server { get; set; }
 	public IPEndPoint EndPoint { get; private set; }
@@ -897,10 +899,10 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 	public void Start(object o)
 	{
-		var watch = new Stopwatch();
+		Stopwatch watch = new Stopwatch();
 		watch.Restart();
 
-		ConnectionInfo serverInfo = Server.ConnectionInfo;
+		var serverInfo = Server.ConnectionInfo;
 
 		try
 		{
@@ -911,9 +913,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				if (!IsConnected) return;
 
 				if (Level != null) return; // Already called this method.
-				
-				string defaultLevel = Config.GetProperty("WorldDirectory", "Worlds").Trim(); // default level
-				Level = Server.LevelManager.GetLevel(defaultLevel);
+
+				Level = Server.LevelManager.GetLevel(this, Dimension.Overworld.ToString());
 			}
 
 			if (Level == null)
@@ -926,9 +927,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 			SpawnPosition = (PlayerLocation) (SpawnPosition ?? Level.SpawnPoint).Clone();
 			KnownPosition = (PlayerLocation) SpawnPosition.Clone();
-			NameTag = (string) Username.Clone();
 
-			// Check if the user already exist, that case bump the old one
+			// Check if the user already exist, that case bumpt the old one
 			Level.RemoveDuplicatePlayers(Username, ClientId);
 
 			Level.EntityManager.AddEntity(this);
@@ -939,11 +939,17 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			// Start game - spawn sequence starts here
 			//
 
+			// Vanilla 1st player list here
+
+			//Level.AddPlayer(this, false);
+
 			SendSetTime();
 
 			SendStartGame();
 
-			SendItemComponents();
+			SendItemRegistry();
+
+			SetGameMode(GameMode);
 
 			SendAvailableEntityIdentifiers();
 
@@ -2256,7 +2262,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		HandleTransactionRecords(transaction.TransactionRecords);
 	}
 
-	private void HandleItemUseTransaction(ItemUseTransaction transaction)
+	public void HandleItemUseTransaction(ItemUseTransaction transaction)
 	{
 		Item itemInHand = Inventory.GetItemInHand();
 
@@ -2270,7 +2276,10 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			case McpeInventoryTransaction.ItemUseAction.Use:
 			{
 				itemInHand.UseItem(Level, this, transaction.Position);
-				if (itemInHand is not ItemBlock) BroadcastSetEntityData();
+				if (itemInHand.Count == 0)
+				{
+					Inventory.SetInventorySlot(Inventory.InHandSlot, null, true);
+				}
 				break;
 			}
 			case McpeInventoryTransaction.ItemUseAction.Destroy:
@@ -2279,8 +2288,6 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				Level.BreakBlock(this, transaction.Position, (BlockFace) transaction.Face);
 				break;
 			}
-			default:
-				throw new ArgumentOutOfRangeException();
 		}
 
 		HandleTransactionRecords(transaction.TransactionRecords);
@@ -2629,22 +2636,20 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			y = (int) (SpawnPosition.Y + Height),
 			z = (int) SpawnPosition.Z,
 			hasAchievementsDisabled = true,
-			time = (int) Level!.WorldTime,
+			time = (int) Level.WorldTime,
 			eduOffer = PlayerInfo.Edition == 1 ? 1 : 0,
 			rainLevel = 0,
 			lightningLevel = 0,
 			isMultiplayer = true,
 			broadcastToLan = true,
 			enableCommands = EnableCommands,
-			isTexturepacksRequired = false,
+			isTexturepacksRequired = true,
 			gamerules = Level.GetGameRules(),
 			bonusChest = false,
-			mapEnabled = false,
+			mapEnabled = true,
 			permissionLevel = (byte) PermissionLevel,
-			gameVersion = McpeProtocolInfo.GameVersion,
-			hasEduFeaturesEnabled = true,
-			onlySpawnV1Villagers = false,
-			emoteChatMuted = true
+			gameVersion = "*",
+			hasEduFeaturesEnabled = false
 		};
 
 		McpeStartGame startGame = McpeStartGame.CreateObject();
@@ -2654,18 +2659,16 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		startGame.playerGamemode = (int) GameMode;
 		startGame.spawn = SpawnPosition;
 		startGame.rotation = new Vector2(KnownPosition.HeadYaw, KnownPosition.Pitch);
+
 		startGame.levelId = "1m0AAMIFIgA=";
 		startGame.worldName = Level.LevelName;
 		startGame.premiumWorldTemplateId = "";
 		startGame.isTrial = false;
 		startGame.currentTick = Level.TickTime;
 		startGame.enchantmentSeed = 123456;
-		if (Config.GetProperty("ServerAuthoritativeMovement", true))
-		{
-			startGame.movementType = 3;
-			startGame.movementRewindHistorySize = 40;
-			startGame.enableNewBlockBreakSystem = true;
-		}
+		startGame.movementType = (int) ServerAuthMovementMode.LegacyClientAuthoritativeV1;
+
+		//startGame.blockPalette = BlockFactory.BlockPalette;
 
 		startGame.enableNewInventorySystem = true;
 		startGame.blockPaletteChecksum = 0;
@@ -2674,12 +2677,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		{
 			NbtFile = new NbtFile
 			{
-				BigEndian = false,
-				UseVarInt = true,
+				Flavor = NbtFlavor.Bedrock,
 				RootTag = new NbtCompound("")
 			}
 		};
-		startGame.worldTemplateId = new UUID(Guid.Empty.ToByteArray());
+		startGame.worldTemplateId = WorldTemplateId;
 
 		SendPacket(startGame);
 	}

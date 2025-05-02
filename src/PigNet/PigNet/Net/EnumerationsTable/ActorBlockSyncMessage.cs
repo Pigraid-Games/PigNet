@@ -1,5 +1,4 @@
-﻿
-namespace PigNet.Net.EnumerationsTable;
+﻿namespace PigNet.Net.EnumerationsTable;
 
 public enum ActorBlockSyncMessage
 {

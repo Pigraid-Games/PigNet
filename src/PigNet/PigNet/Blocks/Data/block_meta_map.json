@@ -360,10 +360,10 @@
 		"2": "minecraft:cut_red_sandstone",
 		"3": "minecraft:smooth_red_sandstone"
 	},
-    "minecraft:sand": {
+	"minecraft:sand": {
 		"1": "minecraft:red_sand"
 	},
-    "minecraft:sandstone": {
+	"minecraft:sandstone": {
 		"1": "minecraft:chiseled_sandstone",
 		"2": "minecraft:cut_sandstone",
 		"3": "minecraft:smooth_sandstone"
@@ -378,10 +378,10 @@
 		"2": "minecraft:prismarine_bricks"
 	},
 	"minecraft:purpur_block": {
-		"2": "minecraft:purpur_pillar",
+		"2": "minecraft:purpur_pillar"
 	},
 	"minecraft:anvil": {
 		"4": "minecraft:chipped_anvil",
-		"8": "minecraft:damaged_anvil",
+		"8": "minecraft:damaged_anvil"
 	}
 }

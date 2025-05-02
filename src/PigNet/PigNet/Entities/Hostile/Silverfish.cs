@@ -25,16 +25,15 @@
 
 using PigNet.Worlds;
 
-namespace PigNet.Entities.Hostile
+namespace PigNet.Entities.Hostile;
+
+public class Silverfish : HostileMob
 {
-	public class Silverfish : HostileMob
+	public Silverfish(Level level) : base(EntityType.Silverfish, level)
 	{
-		public Silverfish(Level level) : base(EntityType.Silverfish, level)
-		{
-			Width = Length = 0.4;
-			Height = 0.3;
-			HealthManager.MaxHealth = 80;
-			HealthManager.ResetHealth();
-		}
+		Width = Length = 0.4;
+		Height = 0.3;
+		HealthManager.MaxHealth = 80;
+		HealthManager.ResetHealth();
 	}
 }
