@@ -845,24 +845,18 @@ public class Level : IBlockAccess
 			if (players.Length == 1 && entiyMoveCount == 0) return;
 
 			foreach (Player player in players)
-				if (now - player.LastUpdatedTime <= now - lastSendTime)
-				{
-					var knownPosition = (PlayerLocation) player.KnownPosition.Clone();
+			{
+				if (now - player.LastUpdatedTime > now - lastSendTime) continue;
 
-					McpeMovePlayer move = McpeMovePlayer.CreateObject();
-					move.playerRuntimeId = player.EntityId;
-					move.x = knownPosition.X;
-					move.y = knownPosition.Y + 1.62f;
-					move.z = knownPosition.Z;
-					move.pitch = knownPosition.Pitch;
-					move.yaw = knownPosition.Yaw;
-					move.headYaw = knownPosition.HeadYaw;
-					move.mode = (PositionMode)(player.Vehicle == 0 ? 0 : 3);
-					move.onGround = !player.IsGliding && player.IsOnGround;
-					move.ridingRuntimeId = player.Vehicle;
-					movePackets.Add(move);
-					playerMoveCount++;
-				}
+				McpeMoveActorDelta move = McpeMoveActorDelta.CreateObject();
+				move.runtimeEntityId = player.EntityId;
+				move.prevSentPosition = player.LastSentPosition;
+				move.currentPosition = new PlayerLocation(player.KnownPosition.X, player.KnownPosition.Y + 1.62f, player.KnownPosition.Z, player.KnownPosition.HeadYaw, player.KnownPosition.Yaw, player.KnownPosition.Pitch);
+				move.isOnGround = player.IsWalker && player.IsOnGround;
+				if (move.SetFlags()) RelayBroadcast(move);
+				movePackets.Add(move);
+				playerMoveCount++;
+			}
 			
 			if (playerMoveCount == 0 && entiyMoveCount == 0) return;
 
