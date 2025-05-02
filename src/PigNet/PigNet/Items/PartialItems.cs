@@ -6869,7 +6869,7 @@ namespace PigNet.Items
 		public override string Id { get; protected set; } = "minecraft:prize_pottery_sherd";
 	}
 
-	public partial class ItemPufferfish : Item
+	public partial class ItemPufferfish : FoodItemBase
 	{
 		public override string Id { get; protected set; } = "minecraft:pufferfish";
 	}

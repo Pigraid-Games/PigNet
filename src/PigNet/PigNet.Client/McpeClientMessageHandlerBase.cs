@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Threading;
 using Jose;
@@ -14,7 +12,6 @@ using PigNet.Utils.Cryptography;
 using PigNet.Utils.Vectors;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
-using PigNet;
 
 namespace PigNet.Client;
 
@@ -713,11 +710,10 @@ public abstract class McpeClientMessageHandlerBase(MiNetClient client) : IMcpeCl
 	{
 
 	}
-}
 
-public class DefaultMessageHandler : McpeClientMessageHandlerBase
-{
-	public DefaultMessageHandler(MiNetClient client) : base(client)
+	public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 	{
 	}
 }
+
+public class DefaultMessageHandler(MiNetClient client) : McpeClientMessageHandlerBase(client);

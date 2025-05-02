@@ -1,16 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Microsoft.CodeAnalysis;
 using PigNet.Blocks;
 using PigNet.Entities;
 using PigNet.Entities.World;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
 
-namespace PigNet.Items.Tools;
+namespace PigNet.Items;
 
-public partial class ItemFlintAndSteel : Item
+public partial class ItemFlintAndSteel
 {
 	public static int MaxPortalHeight = 30;
 	public static int MaxPortalWidth = 30;

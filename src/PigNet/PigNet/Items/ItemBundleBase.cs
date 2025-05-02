@@ -1,6 +1,6 @@
-﻿namespace PigNet.Items.Tools;
+﻿namespace PigNet.Items;
 
-public class ItemBundleBase : Item
+public abstract class ItemBundleBase : Item
 {
 	// TODO: Implement this
 }

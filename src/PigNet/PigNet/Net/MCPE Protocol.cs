@@ -102,6 +102,7 @@ public interface IMcpeMessageHandler
 	void HandleMcpeSetInventoryOptions(McpeSetInventoryOptions message);
 	void HandleMcpeAnvilDamage(McpeAnvilDamage message);
 	void HandleMcpeServerboundLoadingScreen(McpeServerboundLoadingScreen message);
+	void HandleMcpeAdventureSettings(McpeAdventureSettings message);
 }
 
 public interface IMcpeClientMessageHandler
@@ -231,6 +232,7 @@ public interface IMcpeClientMessageHandler
 	void HandleMcpePlayerFog(McpePlayerFog message);
 	void HandleMcpeAnimateEntity(McpeAnimateEntity message);
 	void HandleMcpeCloseForm(McpeClientboundCloseForm message);
+	void HandleMcpeAdventureSettings(McpeAdventureSettings message);
 }
 
 public class McpeClientMessageDispatcher(IMcpeClientMessageHandler messageHandler)
@@ -484,7 +486,9 @@ public class McpeClientMessageDispatcher(IMcpeClientMessageHandler messageHandle
 		[typeof(McpeAnimateEntity)] = (h, p)
 			=> h.HandleMcpeAnimateEntity((McpeAnimateEntity) p),
 		[typeof(McpeClientboundCloseForm)] = (h, p)
-			=> h.HandleMcpeCloseForm((McpeClientboundCloseForm) p)
+			=> h.HandleMcpeCloseForm((McpeClientboundCloseForm) p),
+		[typeof(McpeAdventureSettings)] = (h, p)
+			=> h.HandleMcpeAdventureSettings((McpeAdventureSettings) p),
 	};
 
 	public void HandlePacket(Packet message)
@@ -575,6 +579,7 @@ public static class PacketFactory
 			[0x33] = buffer => McpeContainerSetData.CreateObject().Decode(buffer),
 			[0x34] = buffer => McpeCraftingData.CreateObject().Decode(buffer),
 			[0x36] = buffer => McpeGuiDataPickItem.CreateObject().Decode(buffer),
+			[0x37] = buffer => McpeAdventureSettings.CreateObject().Decode(buffer),
 			[0x38] = buffer => McpeBlockActorData.CreateObject().Decode(buffer),
 			[0x39] = buffer => McpePlayerInput.CreateObject().Decode(buffer),
 			[0x3a] = buffer => McpeLevelChunk.CreateObject().Decode(buffer),

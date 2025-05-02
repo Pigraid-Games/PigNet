@@ -5,7 +5,7 @@ using PigNet.Worlds;
 
 namespace PigNet.Items;
 
-public partial class ItemEnchantedApple() : FoodItemBase(4, 9.6)
+public partial class ItemEnchantedGoldenApple() : FoodItemBase(4, 9.6)
 {
 	private bool _isUsing;
 

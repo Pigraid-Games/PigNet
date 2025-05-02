@@ -734,6 +734,41 @@ public abstract class Packet
 	{
 		return Transaction.Read(this);
 	}
+	
+	public McpePlayerAuthInput.PlayerBlockActions ReadPlayerBlockActions()
+	{
+		var actions = new McpePlayerAuthInput.PlayerBlockActions();
+		int actionCount = ReadSignedVarInt();
+		for (int i = 0; i < actionCount; i++)
+		{
+			var actionType = (PlayerAction) ReadSignedVarInt();
+			if (actionType is PlayerAction.StartBreak or PlayerAction.AbortBreak or PlayerAction.StopBreak or PlayerAction.Breaking or PlayerAction.PredictDestroyBlock or PlayerAction.ContinueDestroyBlock)
+				actions.PlayerBlockAction.Add(new McpePlayerAuthInput.PlayerBlockActionData
+				{
+					PlayerActionType = actionType,
+					BlockCoordinates = new BlockCoordinates(ReadSignedVarInt(), ReadSignedVarInt(), ReadSignedVarInt()),
+					Facing = ReadVarInt()
+				});
+			else
+				actions.PlayerBlockAction.Add(new McpePlayerAuthInput.PlayerBlockActionData { PlayerActionType = actionType });
+		}
+		return actions;
+	}
+	
+	public StackRequestSlotInfo ReadStackRequestSlotInfo()
+	{
+		FullContainerName containerName = ReadFullContainerName();
+		byte slot = ReadByte();
+		int stackNetworkId = ReadSignedVarInt();
+		//Log.Warn("ContainerId | Slot | DynamicID | NetworkId");
+		//Log.Warn($"{containerName.ContainerId} | {slot} | {containerName.DynamicId} | {stackNetworkId}");
+		return new StackRequestSlotInfo
+		{
+			ContainerName = ReadFullContainerName(),
+			Slot = slot,
+			StackNetworkId = stackNetworkId
+		};
+	}
 
 	public ItemStackRequests ReadItemStackRequests()
 	{

@@ -62,7 +62,9 @@ using PigNet.Utils.Nbt;
 using PigNet.Utils.Skins;
 using PigNet.Utils.Vectors;
 using PigNet.Worlds;
+// ReSharper disable RemoveRedundantBraces
 
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -438,16 +440,24 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		lock (_mapInfoSync)
 		{
+
 			long mapId = message.mapUniqueId;
 
 			Log.Trace($"Requested map with ID: {mapId} 0x{mapId:X2}");
 
-			if (!Level.TryGetEntity(mapId, out MapEntity mapEntity))
+			if (mapId == 0)
 			{
-				mapEntity = new MapEntity(Level, mapId);
-				mapEntity.SpawnEntity();
 			}
-			else mapEntity?.AddToMapListeners(this, mapId);
+			else
+			{
+				if (!Level.TryGetEntity(mapId, out MapEntity mapEntity))
+				{
+					mapEntity = new MapEntity(Level, mapId);
+					mapEntity.SpawnEntity();
+				}
+				else
+					mapEntity?.AddToMapListeners(this, mapId);
+			}
 		}
 	}
 
@@ -484,6 +494,13 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		if (Level == null) return;
 
+		Item itemInHand = Inventory.GetItemInHand();
+		if (itemInHand != null)
+		{
+			bool isHandled = itemInHand.Animate(Level, this);
+			if (isHandled) return;
+		}
+
 		McpeAnimate msg = McpeAnimate.CreateObject();
 		msg.runtimeActorId = EntityId;
 		msg.actionId = message.actionId;
@@ -492,6 +509,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		Level.RelayBroadcast(this, msg);
 	}
 	
+	Action _dimensionFunc;
+
 	public void HandleMcpePlayerAction(McpePlayerAction message)
 	{
 		switch ((PlayerAction) message.actionId)
@@ -513,11 +532,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				{
 					Block target = Level.GetBlock(message.coordinates);
 					Item[] drops = target.GetDrops(Level, Inventory.GetItemInHand());
-					float toolTypeFactor = drops == null || drops.Length == 0 ? 5f : 1.5f;
+					float toolTypeFactor = drops == null || drops.Length == 0 ? 5f : 1.5f; // 1.5 if proper tool
 					double breakTime = Math.Ceiling(target.Hardness * toolTypeFactor * 20);
 
 					McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
-					breakEvent.eventId = LevelEventType.SimTimeStep;
+					breakEvent.eventId = LevelEventType.StartBlockCracking;
 					breakEvent.position = message.coordinates;
 					breakEvent.data = (int) (65535 / breakTime);
 					Log.Debug("Break speed: " + breakEvent.data);
@@ -529,7 +548,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			case PlayerAction.Breaking:
 			{
 				Block target = Level.GetBlock(message.coordinates);
-				int data = target.RuntimeId | ((byte) (message.face << 24));
+				int data = (target.RuntimeId) | ((byte) (message.face << 24));
 
 				McpeLevelEvent breakEvent = McpeLevelEvent.CreateObject();
 				breakEvent.eventId = LevelEventType.ParticlesCrackBlock;
@@ -554,15 +573,18 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			case PlayerAction.StopSleeping:
 			{
 				IsSleeping = false;
-				if (Level.GetBlock(SpawnPosition) is Bed bed)
-					bed.SetOccupied(Level, false);
-				else
-					Log.Warn($"Did not find a bed at {SpawnPosition}");
+				if (Level.GetBlock(SpawnPosition) is Bed bed) bed.SetOccupied(Level, false);
+				else Log.Warn($"Did not find a bed at {SpawnPosition}");
 				break;
 			}
+			//case PlayerAction.Respawn:
+			//{
+			//	MiNetServer.FastThreadPool.QueueUserWorkItem(HandleMcpeRespawn);
+			//	break;
+			//}
 			case PlayerAction.Jump:
 			{
-				HungerManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
+				HungerManager.IncreaseExhaustion(IsSprinting ? 0.8f : 0.2f);
 				break;
 			}
 			case PlayerAction.StartSprint:
@@ -593,7 +615,12 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			}
 			case PlayerAction.DimensionChangeAck:
 			{
-				SendPlayerStatus(3);
+				if (_dimensionFunc != null)
+				{
+					_dimensionFunc();
+					_dimensionFunc = null;
+				}
+
 				break;
 			}
 			case PlayerAction.WorldImmutable:
@@ -605,7 +632,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 				IsGliding = true;
 				Height = 0.6;
 
-				var particle = new WhiteSmokeParticle(Level) { Position = KnownPosition.ToVector3() };
+				var particle = new WhiteSmokeParticle(Level);
+				particle.Position = KnownPosition.ToVector3();
 				particle.Spawn();
 
 				break;
@@ -625,64 +653,55 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			{
 				break;
 			}
-			case PlayerAction.StartSwimming:
-			{
-				IsSwimming = true;
-				break;
-			}
-			case PlayerAction.StopSwimming:
-			{
-				IsSwimming = false;
-				break;
-			}
-			case PlayerAction.MissedSwing:
-			{
-				break;
-			}
-			case PlayerAction.StartCrawling:
-			{
-				break;
-			}
-			case PlayerAction.StopCrawling:
-			{
-				break;
-			}
 			case PlayerAction.StartItemUse:
 			{
-				IsUsingItem = true;
-				break;
-			}
-			case PlayerAction.StopItemUse:
-			{
-				IsUsingItem = false;
+				Level.UseItem(this, Inventory.GetItemInHand(), message.coordinates, (BlockFace) message.face);
 				break;
 			}
 			case PlayerAction.StartFlying:
 			{
+				if (!AllowFly && !GameMode.AllowsFlying())
+				{
+					SendAbilities();
+					return;
+				}
+
+				IsFlying = true;
 				break;
 			}
 			case PlayerAction.StopFlying:
 			{
+				IsFlying = false;
 				break;
 			}
-			case PlayerAction.Respawn:
-			{
-				break;
-			}
-			case PlayerAction.ChangeSkin:
 			case PlayerAction.GetUpdatedBlock:
 			case PlayerAction.DropItem:
+			case PlayerAction.Respawn:
+			case PlayerAction.ChangeSkin:
+			case PlayerAction.StartSwimming:
+			case PlayerAction.StopSwimming:
 			case PlayerAction.StartSpinAttack:
 			case PlayerAction.StopSpinAttack:
 			case PlayerAction.PredictDestroyBlock:
 			case PlayerAction.ContinueDestroyBlock:
+			case PlayerAction.StopItemUse:
 			case PlayerAction.HandledTeleport:
+			case PlayerAction.MissedSwing:
+			case PlayerAction.StartCrawling:
+			case PlayerAction.StopCrawling:
+			case PlayerAction.ClientAckServerData:
+			case PlayerAction.StartUsingItem:
+			{
+				break;
+			}
 			default:
 			{
 				Log.Warn($"Unhandled action ID={message.actionId}");
 				throw new ArgumentOutOfRangeException(nameof(message.actionId));
 			}
 		}
+
+		IsUsingItem = false;
 
 		BroadcastSetEntityData();
 	}
@@ -719,12 +738,14 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			Log.DebugFormat("NBT {0}", message.actorDataTags.NbtFile);
 		}
 
-		BlockEntity blockEntity = Level.GetBlockEntity(message.blockPosition);
-
-		if (blockEntity == null) return;
-
-		blockEntity.SetCompound((NbtCompound) message.actorDataTags.NbtFile.RootTag);
-		Level.SetBlockEntity(blockEntity);
+		Level.UpdateBlockEntity(message.blockPosition, message.actorDataTags.NbtFile.RootTag);
+	}
+	
+	public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
+	{
+		uint flags = message.flags;
+		IsAutoJump = (flags & 0x20) == 0x20;
+		IsFlying = (flags & 0x200) == 0x200;
 	}
 
 	public void SendEntitiesAnimation(string animationName, long[] entityIds)
@@ -834,9 +855,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		abilities.Add(PlayerAbility.OperatorCommands, PermissionLevel == PermissionLevel.Operator);
 		abilities.Add(PlayerAbility.Muted, IsMuted);
 
-		var layers = new AbilityLayers()
+		var layers = new AbilityLayers
 		{
-			new AbilityLayer()
+			new AbilityLayer
 			{
 				Type = AbilityLayerType.Base,
 				Abilities = abilities,
@@ -981,9 +1002,8 @@ public sealed class Player : Entity, IMcpeMessageHandler
 		{
 			NbtFile = new NbtFile
 			{
-				BigEndian = false,
-				UseVarInt = true,
-				RootTag = new NbtCompound("") { EntityHelpers.GenerateEntityIdentifiers() }
+				Flavor = NbtFlavor.Bedrock,
+				RootTag = new NbtCompound("") {EntityHelpers.GenerateEntityIdentifiers()}
 			}
 		};
 
@@ -999,11 +1019,11 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			NbtFile = new NbtFile
 			{
 				Flavor = NbtFlavor.Bedrock,
-				RootTag = BiomeUtils.BiomesCache
+				RootTag = BiomeUtils.BiomesCache,
 			}
 		};
 
-		var pk = McpeBiomeDefinitionList.CreateObject();
+		McpeBiomeDefinitionList pk = McpeBiomeDefinitionList.CreateObject();
 		pk.namedtag = nbt;
 		SendPacket(pk);
 	}
@@ -1437,12 +1457,12 @@ public sealed class Player : Entity, IMcpeMessageHandler
 			};
 		}
 		BuildPortal(level, closestPortal);
-		return closestPortal?.Coordinates;
+		return closestPortal.Coordinates;
 	}
 
 	public static void BuildPortal(Level level, PortalInfo portalInfo)
 	{
-		var bbox = portalInfo.Size;
+		BoundingBox bbox = portalInfo.Size;
 
 		Log.Debug($"Building portal from BBOX: {bbox}");
 
@@ -1881,7 +1901,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		CurrentTick = message.Tick;
 
-		var newLocation = new PlayerLocation(message.Position.X, message.Position.Y - 1.62f, message.Position.Z, message.Yaw, message.Pitch, message.HeadYaw);
+		var newLocation = new PlayerLocation(message.Position.X, message.Position.Y - 1.62f, message.Position.Z, message.Position.HeadYaw, message.Position.Yaw, message.Position.Pitch);
 
 		if (KnownPosition.ToVector3() != newLocation.ToVector3())
 		{
@@ -2036,32 +2056,33 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	{
 		if (HealthManager.IsDead) return;
 
-		if (message.containerId == 0)
+		switch (message.containerId)
 		{
-			byte selectedHotbarSlot = message.selectedSlot;
-			if (selectedHotbarSlot > 8)
+			case 0:
 			{
-				Log.Error($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
-				return;
+				byte selectedHotbarSlot = message.selectedSlot;
+				if (selectedHotbarSlot > 8)
+				{
+					Log.Error($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
+					return;
+				}
+
+				if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
+
+				Inventory.SetHeldItemSlot(selectedHotbarSlot, false);
+				if (Log.IsDebugEnabled)
+					Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()}");
+				break;
 			}
-
-			if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with held hotbar slot {message.selectedSlot} with item {message.item}");
-
-			Inventory.SetHeldItemSlot(selectedHotbarSlot, false);
-			if (Log.IsDebugEnabled)
-				Log.Debug($"Player {Username} now holding {Inventory.GetItemInHand()}");
-		}
-		else if (message.containerId == (byte) WindowId.Offhand)
-		{
-			if (message.slot != 1)
-			{
+			case (byte) WindowId.Offhand when message.slot != 1:
 				Log.Error($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
 				return;
+			case (byte) WindowId.Offhand:
+			{
+				if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
+				Inventory.SetOffHandSlot(message.item);
+				break;
 			}
-
-			if (Log.IsDebugEnabled) Log.Debug($"Player {Username} called set equipment with offhand slot {message.slot} with item {message.item}");
-
-			var offHandItem = Inventory.OffHand;
 		}
 	}
 	
@@ -2202,7 +2223,7 @@ public sealed class Player : Entity, IMcpeMessageHandler
 
 		short fireAspectLevel = itemInHand.GetEnchantingLevel(EnchantingType.FireAspect);
 		if (fireAspectLevel > 0)
-			target?.HealthManager.Ignite(fireAspectLevel * 80);
+			target.HealthManager.Ignite(fireAspectLevel * 80);
 
 		Inventory.DamageItemInHand(ItemDamageReason.EntityAttack, target, null);
 		HungerManager.IncreaseExhaustion(0.1f);
@@ -2493,9 +2514,9 @@ public sealed class Player : Entity, IMcpeMessageHandler
 	public void HandleMcpeBlockPickRequest(McpeBlockPickRequest message)
 	{
 		Block block = Level.GetBlock(message.x, message.y, message.z);
-		Log.Debug($"Picked block {block.Id} from blockstate {block.RuntimeId}. Expected block to be in slot {message.selectedSlot}");
+		Log.Debug($"Picked block {block.Id} from blockState {block.RuntimeId}. Expected block to be in slot {message.selectedSlot}");
 
-		var item = block.GetItem(Level);
+		Item item = block.GetItem(Level);
 		switch (item)
 		{
 			case ItemBlock blockItem:

@@ -2,7 +2,7 @@
 
 namespace PigNet.Items;
 
-public partial class ItemPufferFish() : FoodItemBase(1, 0.2)
+public partial class ItemPufferfish() : FoodItemBase(1, 0.2)
 {
 	protected override void Consume(Player player)
 	{

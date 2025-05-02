@@ -660,6 +660,10 @@ public sealed class LoginMessageHandler : IMcpeMessageHandler
 	public void HandleMcpeServerboundLoadingScreen(McpeServerboundLoadingScreen message)
 	{
 	}
+
+	public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
+	{
+	}
 }
 
 public interface IServerManager

@@ -22,9 +22,6 @@ public static class ResourceUtil
 
 		string resourcePath = $"{ns}.{filename}";
 
-		// Debug: list all embedded resources
-		// Console.WriteLine("Available resources: " + string.Join(", ", assembly.GetManifestResourceNames()));
-
 		var stream = assembly.GetManifestResourceStream(resourcePath);
 		if (stream == null)
 			throw new FileNotFoundException($"Embedded resource not found: '{resourcePath}' in assembly '{assembly.FullName}'");

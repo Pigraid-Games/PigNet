@@ -336,6 +336,7 @@ public class AnvilWorldProvider : IWorldProvider, ICachingWorldProvider, IClonea
 			spawnPoint.Y = ChunkColumn.WorldMaxY - 1;
 		}
 
+		spawnPoint.Y = 20;
 		return spawnPoint;
 	}
 
